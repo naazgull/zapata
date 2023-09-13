@@ -1105,6 +1105,18 @@ auto zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::
     return _end;
 }
 
+auto zpt::json::find(zpt::JSONElementT const& _to_search, zpt::json _to_find)
+  -> zpt::json::iterator {
+    zpt::json _target{ _to_search };
+    return zpt::json::find(_target.begin(), _target.end(), _to_find);
+}
+
+auto zpt::json::contains(zpt::JSONElementT const& _to_search, zpt::json _to_find) -> bool {
+    zpt::json _target{ _to_search };
+    auto _end = _target.end();
+    return zpt::json::find(_target.begin(), _end, _to_find) != _end;
+}
+
 zpt::JSONIterator::JSONIterator(zpt::json const& _target, size_t _pos)
   : __target{ _target }
   , __index{ _pos } {

@@ -96,14 +96,16 @@ auto zpt::ast::cpp_variable::to_string() const -> std::string {
     return _oss.str();
 }
 
-zpt::ast::cpp_instruction::cpp_instruction(std::string const& _code)
-  : zpt::ast::basic_instruction{ _code } {}
+zpt::ast::cpp_instruction::cpp_instruction(std::string const& _code, bool _no_end_of_line)
+  : zpt::ast::basic_instruction{ _code }
+  , __no_endl_of_line{ _no_end_of_line } {}
 
 auto zpt::ast::cpp_instruction::to_string() const -> std::string {
     std::ostringstream _oss;
     _oss << this->get_indentation() << this->__instruction;
     if (this->__body != nullptr) { _oss << *this->__body; }
-    else if (this->__instruction.find("#") != 0 && this->__instruction.length() != 0) {
+    else if (!this->__no_endl_of_line && this->__instruction.find("#") != 0 &&
+             this->__instruction.length() != 0) {
         _oss << ";";
     }
     _oss << std::flush;

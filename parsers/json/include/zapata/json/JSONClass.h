@@ -299,6 +299,9 @@ class json {
     static auto flatten(zpt::json _document) -> zpt::json;
     static auto find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
       -> zpt::json::iterator;
+    static auto find(zpt::JSONElementT const& _to_search, zpt::json _to_find)
+      -> zpt::json::iterator;
+    static auto contains(zpt::JSONElementT const& _to_search, zpt::json _to_find) -> bool;
 
   private:
     std::shared_ptr<zpt::JSONElementT> __underlying{ nullptr };
@@ -820,6 +823,9 @@ class JSONElementT {
     virtual auto clear() -> void;
     virtual auto size() const -> size_t;
     virtual auto hash() const -> size_t;
+
+    auto find(zpt::json _to_find) const -> zpt::json::iterator;
+    auto contains(zpt::json _to_find) const -> bool;
 
     auto parent() -> JSONElementT*;
     auto parent(JSONElementT* _parent) -> JSONElementT&;

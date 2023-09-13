@@ -35,7 +35,8 @@ class module {
     module(std::string const& _name,
            std::filesystem::path const& _base_path_backend,
            std::filesystem::path const& _base_path_frontend,
-           zpt::json _schema);
+           zpt::json _schema,
+           zpt::json languages);
     ~module() = default;
 
     auto generate_operations() -> module&;
@@ -53,6 +54,7 @@ class module {
     zpt::json __schema;
     std::vector<std::string> __header_files;
     std::map<std::string, zpt::json> __schema_components;
+    zpt::json __languages;
 
     static inline std::map<std::string, std::string> __sql_types{
         { "string", "text" },     { "integer", "bigint" }, { "double", "double" },
@@ -117,8 +119,12 @@ class module {
       -> std::shared_ptr<zpt::ast::basic_file>;
     auto generate_document_ui(zpt::json _def, zpt::json _path)
       -> std::shared_ptr<zpt::ast::basic_file>;
-    auto extract_list_fields(zpt::json _def) -> std::string;
-    auto extract_form_fields(zpt::json _def) -> std::string;
+    auto extract_languages() -> std::string;
+    auto extract_field_translations(zpt::json _def) -> std::string;
+    auto extract_static_translations() -> std::string;
+    auto extract_fields(zpt::json _def) -> std::string;
+    auto extract_visible_fields(zpt::json _def, std::string const& _where) -> std::string;
+    auto replace_additional_components(std::string& _html, zpt::json _def) -> void;
 };
 
 inline std::string collection_html_template = R"(
@@ -137,7 +143,8 @@ inline std::string collection_html_template = R"(
           "zpt::side_tab": "/components/zpt/side_tab.js",
           "zpt::list": "/components/zpt/list.js",
           "zpt::form": "/components/zpt/form.js",
-          "zpt::new_record": "./components/zpt/new_record.js"
+{{additional-imports}}
+          "zpt::new_record": "/components/zpt/new_record.js"
       } }
     </script>
   </head>
@@ -153,6 +160,7 @@ inline std::string collection_html_template = R"(
       import { default as ZptList } from 'zpt::list'
       import { default as ZptForm } from 'zpt::form'
       import { default as ZptNewRecord } from 'zpt::new_record'
+{{additional-import-from}}
 
       init_menu(config)
       init_dictionary(config)
@@ -164,6 +172,7 @@ inline std::string collection_html_template = R"(
               ZptSideTab,
               ZptList,
               ZptForm,
+{{additional-app-components}}
               ZptNewRecord
           },
           data() {
@@ -171,12 +180,13 @@ inline std::string collection_html_template = R"(
               let lang = config.get_lang()
               return {
                   config: config,
+                  fields: {{fields}},
                   list: {
-                      fields: {{list-fields}},
+                      visible: {{list-fields}},
                       page_sizes: [ 10, 25, 50, 100 ]
                   },
                   form: {
-                      fields: {{form-fields}}
+                      visible: {{form-fields}},
                   }
               }
           }
@@ -192,7 +202,8 @@ inline std::string collection_html_template = R"(
         :dictionary="config.pages.{{collection-name}}.dictionary"
         :id="'{{collection-name}}'"
         :url="config.get_url_prefix() + '{{collection-uri}}'"
-        :columns="list.fields"
+        :fields="fields"
+        :visible="list.visible"
         :sizes="list.page_sizes">
       </zpt-list>
       <zpt-new-record
@@ -207,10 +218,14 @@ inline std::string collection_html_template = R"(
             <zpt-form
               :lang="config.get_lang() "
               :dictionary="config.pages.{{collection-name}}.dictionary"
-              :id="'{{collection-name}}'"
-              :target_url="config.get_url_prefix() + '{{collection-uri}}'"
-              :fields="form.fields"
+              :id="'{{collection-name}}_form'"
+              :target_url="config.get_url_prefix() + '{{collection-uri}}/{id}'"
+              :fields="fields"
+              :visible="form.visible"
               :clear_on_save="true">
+              <template #components>
+{{additional-components}}
+              </template>
             </zpt-form>
           </template>
         </zpt-side-tab>
@@ -233,7 +248,9 @@ inline std::string document_html_template = R"(
           "zpt": "/components/zpt/zpt.js",
           "zpt::menu": "/components/zpt/menu.js",
           "zpt::modal": "/components/zpt/modal.js",
-          "zpt::form": "/components/zpt/form.js"
+          "zpt::form": "/components/zpt/form.js",
+{{additional-imports}}
+          "zpt::new_record": "/components/zpt/new_record.js"
       } }
     </script>
   </head>
@@ -245,9 +262,9 @@ inline std::string document_html_template = R"(
       import { createApp } from 'vue'
       import { default as ZptMenu } from 'zpt::menu'
       import { default as ZptModal } from 'zpt::modal'
-      import { default as ZptSideTab } from 'zpt::side_tab'
-      import { default as ZptList } from 'zpt::list'
       import { default as ZptForm } from 'zpt::form'
+      import { default as ZptNewRecord } from 'zpt::new_record'
+{{additional-import-from}}
 
       init_menu(config)
       init_dictionary(config)
@@ -256,15 +273,18 @@ inline std::string document_html_template = R"(
           components: {
               ZptMenu,
               ZptModal,
-              ZptForm
+              ZptForm,
+{{additional-app-components}}
+              ZptNewRecord
           },
           data() {
               let dictionary = config.pages.{{document-name}}.dictionary
               let lang = config.get_lang()
               return {
                   config: config,
+                  fields: {{fields}},
                   form: {
-                      fields: {{form-fields}}
+                      visible: {{form-fields}},
                   }
               }
           }
@@ -275,13 +295,22 @@ inline std::string document_html_template = R"(
         :config="config"
         :items="config.menu.items">
       </zpt-menu>
+      <zpt-new-record
+        :trigger="'hashtag'"
+        :label="'+'"
+        :event="'?action=new'">
+      </zpt-new-record>
       <zpt-form
         :lang="config.get_lang() "
         :dictionary="config.pages.{{document-name}}.dictionary"
         :id="'{{document-name}}'"
         :target_url="config.get_url_prefix() + '{{document-uri}}'"
-        :fields="form.fields"
+        :fields="fields"
+        :visible="form.visible"
         :clear_on_save="false">
+        <template #components>
+{{additional-components}}
+        </template>
       </zpt-form>
     </div>
   </body>
@@ -291,11 +320,14 @@ inline std::string document_html_template = R"(
 inline std::string dictionary_js_template = R"(
 export const init_dictionary = (config) => {
     config.languages = { {{languages}} }
-    config.pages.index = {
+    config.pages.{{page-name}} = {
         dictionary: {
-            {{field-translations}}
+            {{field-translations}},
             {{static-translations}}
         }
+    }
+    config.get_url_prefix = () => {
+        return '{{url-prefix}}'
     }
 }
 )";

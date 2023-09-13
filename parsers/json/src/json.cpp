@@ -400,8 +400,8 @@ auto zpt::parameters::verify(zpt::json _to_check, zpt::json _rules) -> void {
     }
 
     for (auto const& [_, _key, _config] : _rules) {
-        for (auto const& [_, _cfg_name, _cfg_value] : _config("options")) {
-            if (_cfg_name == "mandatory") {
+        for (auto const& [_, __, _cfg_value] : _config("options")) {
+            if (_cfg_value == "mandatory") {
                 expect(_to_check(_key)->ok(), "'" << _key << "' is a required parameter");
             }
             if (_cfg_value == "single") {

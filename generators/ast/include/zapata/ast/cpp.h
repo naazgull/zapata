@@ -62,10 +62,13 @@ class cpp_variable : public zpt::ast::basic_variable {
 
 class cpp_instruction : public zpt::ast::basic_instruction {
   public:
-    cpp_instruction(std::string const& _code);
+    cpp_instruction(std::string const& _code, bool _no_end_of_line = false);
     ~cpp_instruction() = default;
 
     auto to_string() const -> std::string override;
+
+  private:
+    bool __no_endl_of_line;
 };
 
 class cmake_instruction : public zpt::ast::basic_instruction {

@@ -24,7 +24,7 @@
 
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/catalogue.h>
+#include <zapata/catalog.h>
 #include <zapata/transport/engine.h>
 
 namespace zpt {
@@ -53,7 +53,7 @@ class resolver_t : public zpt::events::resolver_t {
       -> std::list<zpt::event>;
 
   private:
-    zpt::catalogue<std::string, zpt::json> __catalogue{ "rest_catalogue" };
+    zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
     std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
     zpt::json __configuration;
 
@@ -92,7 +92,7 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                    (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                            : zpt::ontology::to_str(_performative)) +
                    _path;
-    this->__catalogue.add(_to_add, _metadata);
+    this->__catalog.add(_to_add, _metadata);
     return (*this);
 }
 

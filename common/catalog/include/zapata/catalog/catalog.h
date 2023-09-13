@@ -33,40 +33,40 @@ static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{
 } // namespace
 
 namespace zpt {
-auto CATALOGUE() -> ssize_t&;
+auto CATALOG() -> ssize_t&;
 
 template<typename K, typename M>
-class catalogue {
+class catalog {
   public:
-    catalogue(std::string const& _catalogue_name);
-    virtual ~catalogue() = default;
+    catalog(std::string const& _catalog_name);
+    virtual ~catalog() = default;
 
-    auto clear() -> catalogue&;
-    auto add(K _key, M _metadata) -> catalogue&;
+    auto clear() -> catalog&;
+    auto add(K _key, M _metadata) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
 
   private:
     mutable zpt::storage::connection __connection;
-    mutable zpt::storage::collection __catalogue;
+    mutable zpt::storage::collection __catalog;
 
     auto query(std::string const& _query) const -> zpt::json const;
 };
 
-namespace catalogue_id {
+namespace catalog_id {
 template<typename K>
 auto separator() -> std::string;
 auto split(std::string const& _pattern) -> zpt::json;
-} // namespace catalogue_id
+} // namespace catalog_id
 } // namespace zpt
 
 template<typename K, typename M>
-zpt::catalogue<K, M>::catalogue(std::string const& _catalogue_name) {
+zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
     this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(zpt::undefined);
     auto _session = this->__connection->session();
-    auto _database = _session->database(_catalogue_name);
+    auto _database = _session->database(_catalog_name);
 
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
-                 "CREATE TABLE IF NOT EXISTS catalogue ("
+                 "CREATE TABLE IF NOT EXISTS catalog ("
                  "    _id TEXT PRIMARY KEY,"
                  "    metadata TEXT NOT NULL"
                  ")",
@@ -74,20 +74,20 @@ zpt::catalogue<K, M>::catalogue(std::string const& _catalogue_name) {
                  nullptr,
                  nullptr);
 
-    this->__catalogue = _database->collection("catalogue");
+    this->__catalog = _database->collection("catalog");
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::clear() -> catalogue& {
+auto zpt::catalog<K, M>::clear() -> catalog& {
     this
-      ->__catalogue //
+      ->__catalog //
       ->remove({})
       ->execute();
     return (*this);
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
+auto zpt::catalog<K, M>::add(K _key, M _metadata) -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -95,7 +95,7 @@ auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
     _oss << _metadata << std::flush;
 
     this
-      ->__catalogue //
+      ->__catalog //
       ->replace(_key, { "metadata", _oss.str() })
       ->execute();
 
@@ -103,9 +103,9 @@ auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::search(K const& _pattern) const -> zpt::json const {
-    auto _separator = zpt::catalogue_id::separator<K>();
-    auto _parts = zpt::catalogue_id::split(_pattern);
+auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
+    auto _separator = zpt::catalog_id::separator<K>();
+    auto _parts = zpt::catalog_id::split(_pattern);
     zpt::json _result = zpt::json::array();
     zpt::json _prefixes{ zpt::array, "" };
 
@@ -159,16 +159,16 @@ auto zpt::catalogue<K, M>::search(K const& _pattern) const -> zpt::json const {
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::query(std::string const& _query) const -> zpt::json const {
+auto zpt::catalog<K, M>::query(std::string const& _query) const -> zpt::json const {
     return this
-      ->__catalogue //
+      ->__catalog //
       ->find(_query)
       ->execute()
       ->fetch();
 }
 
 template<typename K>
-auto zpt::catalogue_id::separator() -> std::string {
+auto zpt::catalog_id::separator() -> std::string {
     if constexpr (std::is_same<K, std::string>::value) { return "/"; }
     return "";
 }

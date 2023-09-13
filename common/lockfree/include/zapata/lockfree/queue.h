@@ -133,7 +133,7 @@ class queue {
     auto clear_thread_context() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
-    std::string to_string() const __attribute__((noinline));
+    __attribute__((noinline)) auto to_string() const -> std::string;
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {

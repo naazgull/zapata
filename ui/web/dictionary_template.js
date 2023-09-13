@@ -1,8 +1,8 @@
 export const init_dictionary = (config) => {
     config.languages = { {{languages}} }
-    config.pages.index = {
+    config.pages.{{page-name}} = {
         dictionary: {
-            {{field-translations}}
+            {{field-translations}},
             {{static-translations}}
         }
     }

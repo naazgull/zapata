@@ -22,4 +22,4 @@
 
 #pragma once
 
-#include <zapata/catalogue/catalogue.h>
+#include <zapata/catalog/catalog.h>

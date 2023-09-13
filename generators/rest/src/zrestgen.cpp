@@ -18,11 +18,18 @@ auto main(int _argc, char* _argv[]) -> int {
                                   "root directory for the generated backend files" },
                                 "--frontend-output-dir",
                                 { "options",
-                                  { zpt::array, "mandatory", "single" },
+                                  { zpt::array, "optional", "single" },
                                   "type",
                                   "string",
                                   "description",
                                   "root directory for the generated frontend files" },
+                                "--frontend-languages",
+                                { "options",
+                                  { zpt::array, "optional", "single" },
+                                  "type",
+                                  "string",
+                                  "description",
+                                  "comma separated list of support languages" },
                                 "--with-cmake",
                                 { "options",
                                   { zpt::array, "optional", "single" },
@@ -41,8 +48,18 @@ auto main(int _argc, char* _argv[]) -> int {
 
     std::filesystem::path _output_backend =
       std::filesystem::absolute(_parameters("--backend-output-dir")->string());
-    std::filesystem::path _output_frontend =
-      std::filesystem::absolute(_parameters("--frontend-output-dir")->string());
+
+    std::filesystem::path _output_frontend;
+    if (_parameters("--frontend-output-dir")->ok()) {
+        _output_frontend =
+          std::filesystem::absolute(_parameters("--frontend-output-dir")->string());
+    }
+    zpt::json _languages;
+    if (_parameters("--frontend-languages")->ok()) {
+        _languages = zpt::split(_parameters("--frontend-languages")->string(), ",");
+    }
+    else if (!_output_frontend.empty()) { _languages = zpt::json{ zpt::array, "en" }; }
+
     std::filesystem::path _context = std::filesystem::absolute(_parameters("--schema")->string());
     _context.remove_filename();
 
@@ -53,15 +70,15 @@ auto main(int _argc, char* _argv[]) -> int {
     zpt::conf::evaluate_ref(_schema, _schema, "", _context, _schema);
 
     zpt::gen::rest::module _module{
-        _schema("module")->string(), _output_backend, _output_frontend, _schema
+        _schema("module")->string(), _output_backend, _output_frontend, _schema, _languages
     };
     _module //
       .generate_operations()
       .generate_sql()
-      .generate_plugin()
-      .generate_ui();
+      .generate_plugin();
 
     if (_parameters("--with-cmake")->ok()) { _module.generate_cmake(); }
+    if (_parameters("--frontend-output-dir")->ok()) { _module.generate_ui(); }
 
     _module.dump();
     return 0;

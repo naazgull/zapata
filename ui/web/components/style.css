@@ -72,7 +72,7 @@
 /* ZptSideTab */
 .side-tab-mask {
   position: fixed;
-  z-index: 9998;
+  z-index: 9997;
   top: 0;
   left: 0;
   width: 100%;
@@ -82,13 +82,24 @@
   transition: opacity 0.3s ease;
 }
 
+.side-tab-click-out {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
 .side-tab-container {
   position: absolute;
-  right: 0;
-  width: auto;
-  height: 100%;
+  z-index: 9999;
+  bottom: 0;
+  height: 70%;
+  width: 98%;
   overflow: auto;
-  padding: 20px 30px;
+  padding: 1% 30px;
   background-color: #fff;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
@@ -118,5 +129,5 @@
 
 .side-tab-enter-from .side-tab-container,
 .side-tab-leave-to .side-tab-container {
-  right: -50%;
+  bottom: -50%;
 }

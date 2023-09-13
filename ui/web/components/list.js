@@ -4,7 +4,8 @@ export default {
         dictionary: Object,
         id: String,
         url: String,
-        columns: Object,
+        fields: Object,
+        visible: Array,
         sizes: Array
     },
     data() {
@@ -12,7 +13,7 @@ export default {
             collection: [],
             received: false,
             show: 0,
-            filter_key: Object.keys(this.columns)[0],
+            filter_key: this.visible[0],
             filter_term: null,
             sort_key: null,
             sort_order: 1,
@@ -34,7 +35,7 @@ export default {
             if (this.refresh) {
                 this.refresh = false
             }
-            
+
             if (this.received) {
                 if (!this.show) {
                     this.show = 100;
@@ -42,9 +43,9 @@ export default {
                 this.received = false
                 return this.collection
             }
-            
+
             let url = this.url
-            url += '?fields=' + Object.keys(this.columns).join(",")
+            url += '?fields=' + this.visible.join(",") + this.get_url_filter_terms()
             if (filter_term) {
                 url += '&' + this.filter_key + '={.like(%25' + encodeURI(filter_term) + '%25,i).}'
             }
@@ -62,7 +63,7 @@ export default {
     },
     methods: {
         listen_to_hash() {
-            if (window.location.hash.indexOf('?action=') == -1) {
+            if (window.location.hash == '' && window.location.hash.indexOf('?action=') == -1) {
                 this.refresh = true;
             }
         },
@@ -97,8 +98,57 @@ export default {
                 ++this.page_nr
             }
         },
-        change_route(item) {
-            window.location.hash = '/' + item
+        change_route(key, item) {
+            if (this.fields[key].type != 'link') {
+                window.location.hash = '/' + item
+            }
+        },
+        get_url_filter_terms() {
+            let uri = window.location.href.split('?');
+            if(uri.length == 2) {
+                return '&' + uri[1]
+            }
+            return "";
+        },
+        translate_value(key, record) {
+            switch(this.fields[key].type) {
+            case 'link':{
+                let link = (record[key] ? record[key] : this.fields[key].value.href).replaceAll('{id}', record._id)
+                for (let name of Object.keys(record)) {
+                    link = link.replaceAll('{' + name + '}', record[key])
+                }
+                return '<a href="' + link + '" title="' + this.fields[key].help + '">' + this.fields[key].value.text + '</a>'
+            }
+            case 'dropbox':
+            case 'checkbox':
+            case 'radio':{
+                if (this.fields[key].multiple) {
+                    let values = ''
+                    let first = true
+                    for (let option of this.fields[key].options) {
+                        if (record[key].indexOf(option.value) != -1) {
+                            if (!first) {
+                                values += '<br>'
+                            }
+                            first = false
+                            values += option.text
+                        }
+                    }
+                    return values
+                }
+                else {
+                    for (let option of this.fields[key].options) {
+                        if (option.value == record[key]) {
+                            return option.text
+                        }
+                    }
+                    return record[key];
+                }
+            }
+            default:{
+                return record[key];
+            }
+            }
         }
     },
     created() {
@@ -110,31 +160,31 @@ export default {
     template: `
     <div :id="id" :style="{ opacity: show }" style="transition: opacity 0.5s ease">
       <form id="search">
-          {{ dictionary.search_by[lang].label }} <select name="field" v-model="filter_key">
-          <option v-for="key in Object.keys(columns)"
+          {{ dictionary.search_by[lang] }} <select name="field" v-model="filter_key">
+          <option v-for="key in visible"
             :value="key">
-            {{ columns[key].label }}
+            {{ fields[key].label }}
           </option>
         </select>: <input name="term" v-model="filter_term">
       </form>
       <table>
         <thead>
           <tr>
-            <th v-for="key in Object.keys(columns)"
+            <th v-for="key in visible"
               @click="sort_by(key)"
               :class="{ active: sort_key == key }">
-              {{ columns[key].label }}
+              {{ fields[key].label }}
             </th>
           </tr>
         </thead>
         <transition-group tag="tbody" name="list-item-fade">
-          <tr v-for="entry in filtered_data" v-if="filtered_data.length" 
-            :key="entry._id" @click="change_route(entry._id)">
-            <td v-for="key in Object.keys(columns)">
-              {{ entry[key] }}
-            </td>
+          <tr v-for="entry in filtered_data" v-if="filtered_data.length"
+            :key="entry._id">
+            <td v-for="key in visible"
+              @click="change_route(key, entry._id)"
+              v-html="translate_value(key, entry)"></td>
           </tr>
-          <tr v-else :key="'empty_row'"><td :colspan="Object.keys(columns).length" style="text-align: center">--</td></tr>
+          <tr v-else :key="'empty_row'"><td :colspan="visible.length" style="text-align: center">--</td></tr>
         </transition-group>
       </table>
       <button @click="prev_page()">&lt;</button>

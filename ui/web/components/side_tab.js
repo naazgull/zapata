@@ -18,14 +18,14 @@ export default {
                     let id = window.location.hash.substring(2)
                     this.show = id ? true : false
 		            })
-                break;
+                break
             }
             }
         },
         close() {
             switch(this.listen) {
             case 'hashtag':{
-                window.location.hash = ''
+                window.history.back()
                 break
             }
             default: {
@@ -37,6 +37,7 @@ export default {
     template: `
     <transition name="side-tab">
       <div v-if="show" class="side-tab-mask">
+        <div class="side-tab-click-out" @click="close()"></div>
         <div class="side-tab-container">
           <button
             class="side-tab-default-button"

@@ -14,7 +14,7 @@ add_dependencies(zapata-engine-rest
   zapata-parser-json
   zapata-parser-uri
   zapata-engine-transport
-  zapata-common-catalogue
+  zapata-common-catalog
 )
 target_sources(zapata-engine-rest
   PRIVATE
@@ -35,7 +35,7 @@ target_include_directories(zapata-engine-rest
     $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,INTERFACE_INCLUDE_DIRECTORIES>
     ${ENGINE_REST_INCLUDE_DIR}
   INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}
@@ -55,7 +55,7 @@ target_link_libraries(zapata-engine-rest
     $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
     ${SQLite3_LIBRARIES}
     $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,LIBRARIES>
 )
 set_target_properties(zapata-engine-rest
   PROPERTIES
@@ -79,7 +79,7 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
-  zapata-common-catalogue
+  zapata-common-catalog
 )
 target_sources(zapata-engine-rest-plugin
   PRIVATE
@@ -97,7 +97,7 @@ target_include_directories(zapata-engine-rest-plugin
     $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,INTERFACE_INCLUDE_DIRECTORIES>
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-rest-plugin
@@ -116,7 +116,7 @@ target_link_libraries(zapata-engine-rest-plugin
     $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
     ${SQLite3_LIBRARIES}
     $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,LIBRARIES>
 )
 set_target_properties(zapata-engine-rest-plugin
   PROPERTIES
@@ -139,7 +139,7 @@ add_dependencies(zapata-rest-example
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
-  zapata-common-catalogue
+  zapata-common-catalog
 )
 target_sources(zapata-rest-example
   PRIVATE
@@ -159,7 +159,7 @@ target_include_directories(zapata-rest-example
     $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,INTERFACE_INCLUDE_DIRECTORIES>
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-rest-example
@@ -178,7 +178,7 @@ target_link_libraries(zapata-rest-example
     ${SQLite3_LIBRARIES}
     $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
     $<TARGET_PROPERTY:zapata-engine-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalog,LIBRARIES>
 )
 set_target_properties(zapata-rest-example
   PROPERTIES

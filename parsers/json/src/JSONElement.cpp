@@ -311,6 +311,15 @@ auto zpt::JSONElementT::hash() const -> size_t {
     return 0;
 }
 
+
+auto zpt::JSONElementT::find(zpt::json _to_find) const -> zpt::json::iterator {
+    return zpt::json::find(*this, _to_find);
+}
+
+auto zpt::JSONElementT::contains(zpt::json _to_find) const -> bool {
+    return zpt::json::contains(*this, _to_find);
+}
+
 auto zpt::JSONElementT::parent() -> JSONElementT* { return this->__parent; }
 
 auto zpt::JSONElementT::parent(JSONElementT* _parent) -> JSONElementT& {
