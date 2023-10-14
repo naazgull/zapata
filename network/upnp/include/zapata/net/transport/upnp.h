@@ -20,33 +20,34 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-#include <zapata/startup.h>
-#include <zapata/rest.h>
+#pragma once
+#include <string>
+#include <utility>
+#include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/http.h>
 
-namespace {
-auto register_service_broadcast_listeners(zpt::json) -> void {
-    auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());    
-    _resolver->add<zpt::rest::service_broadcast>(zpt::Notify, "*");
-}
-} // namespace
+#ifndef CRLF
+#define CRLF "\r\n"
+#endif
 
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
-      .add_resolver(zpt::make_global<zpt::rest::resolver>(
-        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
-    if (_config("rest")("prefix")->ok()) {
-        _config["rest"]["prefix_path_len"] =
-          zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
-    }
-    else { _config["rest"]["prefix_path_len"] = 0; }
-    ::register_service_broadcast_listeners(_config);
-    zlog("Added REST event resolver", zpt::info);
+namespace zpt {
+namespace net {
+namespace upnp {
+auto setup_broadcast(int sockfd, zpt::json _config) -> void;
 }
+namespace transport {
+class upnp : public zpt::basic_transport {
+  public:
+    upnp() = default;
+    virtual ~upnp() = default;
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Disposing REST event resolver", zpt::info);
-    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
-}
+    auto make_request() const -> zpt::message override;
+    auto make_reply() const -> zpt::message override;
+    auto make_reply(zpt::message _request) const -> zpt::message override;
+    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
+};
+} // namespace transport
+} // namespace net
+} // namespace zpt

@@ -132,6 +132,7 @@ inline std::string collection_html_template = R"(
 <html>
   <head>
     <link rel="preload stylesheet" href="/components/zpt/style.css" as="style">
+    <link rel="preload stylesheet" href="/style.css" as="style">
     <script type="importmap">
       { "imports": {
           "data::menu": "/menu.js",
@@ -240,6 +241,7 @@ inline std::string document_html_template = R"(
 <html>
   <head>
     <link rel="preload stylesheet" href="/components/zpt/style.css" as="style">
+    <link rel="preload stylesheet" href="/style.css" as="style">
     <script type="importmap">
       { "imports": {
           "data::menu": "/menu.js",

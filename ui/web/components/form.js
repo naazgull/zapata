@@ -219,10 +219,16 @@ export default {
         this.listen_to_hash()
     },
     template: `
-    <div :id="id" :style="{ opacity: show }" style="transition: opacity 0.5s ease">
-      <p v-if="messages.result" :class="messages.type">{{ messages.result }}</p>
+    <div :id="id"
+      class="zpt-form" :class="id.replace('_', '-')"
+      :style="{ opacity: show }" style="transition: opacity 0.5s ease">
+      <p v-if="messages.result"
+        class="zpt-form-message" :class="messages.type">
+        {{ messages.result }}
+      </p>
       <form :id="id + '_document'" @submit.prevent="send_data">
-        <div v-for="key in visible">
+        <div v-for="key in visible"
+          class="zpt-input-container" :class="'zpt-' + fields[key].type.replace('zpt:', '') + '-container'">
           <label v-if="[ 'link', 'separator' ].indexOf(fields[key].type) == -1 && fields[key].type.indexOf('zpt:') == -1"
             :for="fields[key].id">{{ fields[key].label }}</label>
           <div v-if="[ 'radio', 'dropbox', 'checkbox', 'link', 'separator', 'static' ].indexOf(fields[key].type) == -1 && fields[key].type.indexOf('zpt:') == -1">
@@ -279,9 +285,11 @@ export default {
         </div>
         <slot name="components"></slot>
         <input type="submit"
+          class="zpt-form-ok"
           :id="id + '_ok'"
           :value="dictionary.ok_button_label[lang]">
         <input type="submit"
+          class="zpt-form-remove"
           :id="id + '_remove'"
           :value="dictionary.remove_button_label[lang]">
       </form>

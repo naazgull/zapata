@@ -22,31 +22,31 @@
 
 #include <iostream>
 #include <zapata/startup.h>
-#include <zapata/rest.h>
-#include <zapata/transport.h>
-
-namespace {
-auto register_service_broadcast_listeners(zpt::json) -> void {
-    auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());    
-    _resolver->add<zpt::rest::service_broadcast>(zpt::Notify, "*");
-}
-} // namespace
+#include <zapata/net/socket.h>
+#include <zapata/net/upnp.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
-      .add_resolver(zpt::make_global<zpt::rest::resolver>(
-        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
-    if (_config("rest")("prefix")->ok()) {
-        _config["rest"]["prefix_path_len"] =
-          zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
+    auto& _config = _plugin.config();
+
+    zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER())
+      .add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
+
+    if (_config("port")->ok()) {
+        auto _stream = zpt::make_stream<zpt::socketstream>(
+          _config("host")->string(), _config("port")->integer(), false, IPPROTO_UDP);
+
+        zpt::net::upnp::setup_broadcast(static_cast<int>(*_stream), _config);
+
+        auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+        _polling.listen_on(std::move(_stream));
+
+        zlog("Started UPNP transport on " << _config("host")->string() << ":" << _config("port"),
+             zpt::info);
     }
-    else { _config["rest"]["prefix_path_len"] = 0; }
-    ::register_service_broadcast_listeners(_config);
-    zlog("Added REST event resolver", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Disposing REST event resolver", zpt::info);
-    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+    auto& _config = _plugin.config();
+    zlog("Stopped UPNP transport on " << _config("host")->string() << ":" << _config("port"),
+         zpt::info);
 }

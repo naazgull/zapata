@@ -42,6 +42,9 @@
     begin(StartCondition_::anchor);
     return zpt::uri::lex::CARDINAL;
 }
+"*" {
+    return zpt::uri::lex::STAR;
+}
 
 <scheme> {
     ":" {

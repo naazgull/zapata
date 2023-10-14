@@ -56,12 +56,24 @@ class resolver_t : public zpt::events::resolver_t {
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
     std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
     zpt::json __configuration;
+    zpt::stream __broadcast_stream;
 
+    auto broadcast_service(zpt::performative _performtive, std::string _path, zpt::json _metadata)
+      -> void;
     template<typename T>
     static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
       -> zpt::event;
 };
 using resolver = std::shared_ptr<zpt::rest::resolver_t>;
+
+class service_broadcast : public zpt::events::process {
+  public:
+    service_broadcast(zpt::message _received);
+    ~service_broadcast() = default;
+
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+};
 } // namespace rest
 } // namespace zpt
 
@@ -93,6 +105,9 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                                                            : zpt::ontology::to_str(_performative)) +
                    _path;
     this->__catalog.add(_to_add, _metadata);
+    zlog(zpt::pretty(_metadata), zpt::info);
+    this->broadcast_service(_performative, _path, _metadata);
+
     return (*this);
 }
 

@@ -21,6 +21,8 @@
 */
 
 #include <zapata/rest/rest.h>
+#include <zapata/http.h>
+#include <zapata/net/socket/socket_stream.h>
 
 auto zpt::REST_RESOLVER() -> ssize_t& {
     static ssize_t _global{ -1 };
@@ -28,7 +30,13 @@ auto zpt::REST_RESOLVER() -> ssize_t& {
 }
 
 zpt::rest::resolver_t::resolver_t(zpt::json _rest_config)
-  : __configuration{ _rest_config } {}
+  : __configuration{ _rest_config } {
+    this->__broadcast_stream =
+      zpt::make_stream<zpt::socketstream>(this->__configuration("broadcast")("host")->string(),
+                                          this->__configuration("broadcast")("port")->integer(),
+                                          false,
+                                          IPPROTO_UDP);
+}
 
 auto zpt::rest::resolver_t::resolve(zpt::message _received,
                                     zpt::events::initializer_t _initializer) const
@@ -49,4 +57,36 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
     expect(_return.size() != 0,
            "Couldn't find callback for (" << _received->resource()->string() << ")");
     return _return;
+}
+
+auto zpt::rest::resolver_t::broadcast_service(zpt::performative _performative,
+                                              std::string _path,
+                                              zpt::json _metadata) -> void {
+    if (_path != "*") {
+        auto _service = zpt::make_message<zpt::http::basic_request>();
+        _service->performative(zpt::Notify);
+        _service->uri("*");
+        _service->headers() << "Content-Type"
+                            << "application/json";
+        _service->body() = zpt::json{ "resource",     _path,
+                                      "performative", static_cast<int>(_performative),
+                                      "uri",          this->__configuration("uri") };
+
+        std::cout << _service << std::endl;
+
+        // (*this->__broadcast_stream) << _service << std::flush;
+    }
+}
+
+zpt::rest::service_broadcast::service_broadcast(zpt::message _received)
+  : zpt::events::process{ _received } {}
+
+auto zpt::rest::service_broadcast::blocked() const -> bool { return false; }
+
+auto zpt::rest::service_broadcast::operator()(zpt::events::dispatcher& _dispatcher)
+  -> zpt::events::state {
+    zlog(this->received(), zpt::debug);
+    // auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    // _resolver.add<
+    return zpt::events::finish;
 }
