@@ -29,13 +29,15 @@ auto zpt::REST_RESOLVER() -> ssize_t& {
     return _global;
 }
 
-zpt::rest::resolver_t::resolver_t(zpt::json _rest_config)
-  : __configuration{ _rest_config } {
-    this->__broadcast_stream =
-      zpt::make_stream<zpt::socketstream>(this->__configuration("broadcast")("host")->string(),
-                                          this->__configuration("broadcast")("port")->integer(),
-                                          false,
-                                          IPPROTO_UDP);
+zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
+  : __configuration{ _global_config } {
+    if (this->__configuration("upnp")->ok()) {
+        this->__broadcast_stream =
+          zpt::make_stream<zpt::socketstream>(this->__configuration("upnp")("bind")->string(),
+                                              this->__configuration("upnp")("port")->integer(),
+                                              false,
+                                              IPPROTO_UDP);
+    }
 }
 
 auto zpt::rest::resolver_t::resolve(zpt::message _received,
@@ -59,23 +61,29 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
     return _return;
 }
 
-auto zpt::rest::resolver_t::broadcast_service(zpt::performative _performative,
-                                              std::string _path,
-                                              zpt::json _metadata) -> void {
-    if (_path != "*") {
-        auto _service = zpt::make_message<zpt::http::basic_request>();
-        _service->performative(zpt::Notify);
-        _service->uri("*");
-        _service->headers() << "Content-Type"
-                            << "application/json";
-        _service->body() = zpt::json{ "resource",     _path,
-                                      "performative", static_cast<int>(_performative),
-                                      "uri",          this->__configuration("uri") };
+auto zpt::rest::resolver_t::broadcast_service(std::string _query) -> void {
+    if (this->__broadcast_stream == nullptr) { return; }
 
-        std::cout << _service << std::endl;
+    auto _service = zpt::make_message<zpt::http::basic_request>();
+    _service->performative(zpt::Notify);
+    _service->uri("/services");
+    _service->headers() << "Content-Type"
+                        << "application/json"
+                        << "ST"
+                        << "urn:schemas-upnp-org:service:*"
+                        << "MAN"
+                        << "\"ssdp:discover\""
+                        << "MX"
+                        << "3";
 
-        // (*this->__broadcast_stream) << _service << std::flush;
-    }
+    auto _resources = zpt::json::array();
+    if (_query != "") {}
+    else {}
+    _service->body() = zpt::json{
+        "resources", _resources, "addresses", this->__configuration("transport")("addresses")
+    };
+    std::cout << _service << std::endl;
+    // (*this->__broadcast_stream) << _service << std::flush;
 }
 
 zpt::rest::service_broadcast::service_broadcast(zpt::message _received)

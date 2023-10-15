@@ -94,9 +94,10 @@ auto zpt::catalog<K, M>::add(K _key, M _metadata) -> catalog& {
     _oss.str("");
     _oss << _metadata << std::flush;
 
+    zlog("Registered " << _t_key, zpt::trace);
     this
       ->__catalog //
-      ->replace(_key, { "metadata", _oss.str() })
+      ->replace(_t_key, { "metadata", _oss.str() })
       ->execute();
 
     return (*this);
@@ -116,7 +117,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                                                    _prefix->string(),
                                                    _separator,
                                                    _part->string(),
-                                                   _prefix->string(),
+                                                  _prefix->string(),
                                                    _separator));
             }
             expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");

@@ -178,7 +178,8 @@ auto zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_sen
     }
 }
 
-zpt::network::layer::layer() {
+zpt::network::layer::layer(zpt::json _global_config)
+  : __configuration{ _global_config } {
     this->add_content_provider("*/*",
                                zpt::network::layer::translate_from_default,
                                zpt::network::layer::translate_to_default);
@@ -200,6 +201,38 @@ zpt::network::layer::layer() {
 
 auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
   -> zpt::network::layer& {
+    expect(this->__configuration("transport")("bind")->ok(),
+           "Configuration value 'transport.bind' is mandatory");
+    expect(this->__configuration(_scheme)->ok(),
+           zpt::format("Configuration value '{}' is mandatory", _scheme));
+
+    if (!this->__configuration("transport")("addresses")->ok()) {
+        this->__configuration["transport"]["addresses"] = zpt::json::array();
+    }
+    if (this->__configuration(_scheme)->ok()) {
+        std::string _host;
+        std::string _port;
+
+        if (this->__configuration(_scheme)("bind")->ok()) {
+            _host.assign(zpt::format("//{}", this->__configuration(_scheme)("bind")->string()));
+        }
+        else if (!this->__configuration(_scheme)("path")->ok()) {
+            _host.assign(zpt::format("//{}", this->__configuration("transport")("bind")->string()));
+        }
+
+        if (this->__configuration(_scheme)("port")->ok()) {
+            _port.assign(zpt::format(":{}", this->__configuration(_scheme)("port")->integer()));
+        }
+        else if (this->__configuration(_scheme)("path")->ok()) {
+            _port.assign(this->__configuration(_scheme)("path")->string());
+        }
+        expect(_port.length() != 0,
+               zpt::format("Transport {} must have defined listening port or path", _scheme));
+
+        this->__configuration["transport"]["addresses"]
+          << zpt::format("{}:{}{}", _scheme, _host, _port);
+    }
+
     this->__underlying.insert(std::make_pair(_scheme, _transport));
     return (*this);
 }

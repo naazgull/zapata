@@ -95,7 +95,7 @@ auto main(int _argc, char* _argv[]) -> int {
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
     zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
     zlog("Initialized stream polling", zpt::info);
-    zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER(), _config);
     zlog("Initialized transport layer", zpt::info);
     if (_consumers != 0) {
         zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //

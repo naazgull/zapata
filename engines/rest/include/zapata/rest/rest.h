@@ -58,8 +58,7 @@ class resolver_t : public zpt::events::resolver_t {
     zpt::json __configuration;
     zpt::stream __broadcast_stream;
 
-    auto broadcast_service(zpt::performative _performtive, std::string _path, zpt::json _metadata)
-      -> void;
+    auto broadcast_service(std::string _query) -> void;
     template<typename T>
     static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
       -> zpt::event;
@@ -105,9 +104,6 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                                                            : zpt::ontology::to_str(_performative)) +
                    _path;
     this->__catalog.add(_to_add, _metadata);
-    zlog(zpt::pretty(_metadata), zpt::info);
-    this->broadcast_service(_performative, _path, _metadata);
-
     return (*this);
 }
 

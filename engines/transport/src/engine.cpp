@@ -13,10 +13,9 @@ auto catch_error(std::exception const& _e) -> zpt::json {
 }
 
 auto catch_error(zpt::failed_expectation const& _e) -> zpt::json {
-    return { "error",      500,                              //
-             "exception",  zpt::demangle(typeid(_e).name()), //
-             "what",       _e.what(),                        //
-             "stacktrace", zpt::split(zpt::r_replace(_e.backtrace(), "\t", ""), "\n") };
+    return { "error",     500,                              //
+             "exception", zpt::demangle(typeid(_e).name()), //
+             "what",      _e.what() };
 }
 } // namespace
 
@@ -106,9 +105,7 @@ zpt::events::process::~process() {
         this->__dispatcher->trigger<zpt::events::send>(
           *this->__polling, *this->__stream, this->__to_send);
     }
-    else {
-        this->__polling->unmute(*this->__stream);        
-    }
+    else { this->__polling->unmute(*this->__stream); }
 }
 
 auto zpt::events::process::catch_error(std::exception const& _e) -> bool {

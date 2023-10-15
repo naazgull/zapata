@@ -27,16 +27,16 @@
 
 namespace {
 auto register_service_broadcast_listeners(zpt::json) -> void {
-    auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());    
-    _resolver->add<zpt::rest::service_broadcast>(zpt::Notify, "*");
+    auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    _resolver->add<zpt::rest::service_broadcast>(zpt::Notify, "/services");
 }
 } // namespace
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
     zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
-      .add_resolver(zpt::make_global<zpt::rest::resolver>(
-        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
+      .add_resolver(zpt::make_global<zpt::rest::resolver>(zpt::REST_RESOLVER(),
+                                                          new zpt::rest::resolver_t(_config)));
     if (_config("rest")("prefix")->ok()) {
         _config["rest"]["prefix_path_len"] =
           zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());

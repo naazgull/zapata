@@ -29,7 +29,7 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 std::string _desc,
                                                 int _line,
                                                 std::string _file)
-  : zpt::exception{ _what, true }
+  : zpt::exception{ _what }
   , __description(_desc)
   , __line(_line)
   , __file(_file) {

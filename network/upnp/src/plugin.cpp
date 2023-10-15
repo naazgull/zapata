@@ -33,20 +33,20 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
     if (_config("port")->ok()) {
         auto _stream = zpt::make_stream<zpt::socketstream>(
-          _config("host")->string(), _config("port")->integer(), false, IPPROTO_UDP);
+          _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
 
         zpt::net::upnp::setup_broadcast(static_cast<int>(*_stream), _config);
 
         auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
         _polling.listen_on(std::move(_stream));
 
-        zlog("Started UPNP transport on " << _config("host")->string() << ":" << _config("port"),
+        zlog("Started UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
              zpt::info);
     }
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    zlog("Stopped UPNP transport on " << _config("host")->string() << ":" << _config("port"),
+    zlog("Stopped UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
          zpt::info);
 }

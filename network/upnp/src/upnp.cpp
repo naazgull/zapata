@@ -49,7 +49,7 @@ auto zpt::net::upnp::setup_broadcast(int _sockfd, zpt::json _config) -> void {
     ::bind(_sockfd, (struct sockaddr*)&_local_addr, sizeof _local_addr);
 
     struct ip_mreq _group_addr;
-    _group_addr.imr_multiaddr.s_addr = inet_addr(_config("host")->string().data());
+    _group_addr.imr_multiaddr.s_addr = inet_addr(_config("bind")->string().data());
     _group_addr.imr_interface.s_addr = inet_addr(_interface.data());
     setsockopt(_sockfd, IPPROTO_TCP, IP_ADD_MEMBERSHIP, (char*)&_group_addr, sizeof _group_addr);
 

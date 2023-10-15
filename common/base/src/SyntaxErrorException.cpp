@@ -23,6 +23,6 @@
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 zpt::SyntaxErrorException::SyntaxErrorException(std::string const& _what)
-  : zpt::exception{ _what, true } {}
+  : zpt::exception{ _what } {}
 
 zpt::SyntaxErrorException::~SyntaxErrorException() throw() {}

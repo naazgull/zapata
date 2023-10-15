@@ -121,7 +121,7 @@ class layer {
     using translate_from_func = std::function<zpt::json(std::istream&)>;
     using translate_to_func = std::function<std::string(std::ostream&, zpt::json)>;
 
-    layer();
+    layer(zpt::json _global_config);
     virtual ~layer() = default;
 
     auto add(std::string const& _scheme, zpt::transport _transport) -> layer&;
@@ -138,6 +138,7 @@ class layer {
   private:
     std::map<std::string, zpt::transport> __underlying;
     std::map<std::string, std::tuple<translate_from_func, translate_to_func>> __content_providers;
+    zpt::json __configuration;
 
     auto add_content_provider(std::string const& _mime,
                               translate_from_func _callback_from,

@@ -13,7 +13,7 @@
 //%debug
 %no-lines
 
-%left STRING DOUBLE_DOT SLASH AT QMARK EQ E CARDINAL DOT DOT_DOT STAR
+%left STRING DOUBLE_DOT SLASH AT QMARK EQ E CARDINAL DOT DOT_DOT
 
 %%
 
@@ -21,8 +21,6 @@ exp :
 	scheme object params anchor
 |
 	object params anchor
-|
-    STAR
 ;
 
 scheme :
