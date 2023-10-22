@@ -60,20 +60,21 @@ auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
     if (_version == "1.0") { _out << " " << zpt::http::status_names[_status]; }
     _out << CRLF;
 
-    std::string _body{ "" };
-    if (this->__underlying("body")->ok()) {
-        if (this->__underlying("headers")("Content-Type") == "application/json") {
-            _body.assign(static_cast<std::string>(this->__underlying("body")));
-        }
-        else { _body.assign(this->__underlying("body")->string()); }
-    }
-
     for (auto const& [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
-    _out << "Content-Length: " << _body.length() << CRLF;
 
-    _out << CRLF << _body << std::flush;
+    if (this->__underlying("body")->ok()) {
+        if (this->__underlying("headers")("Content-Type") == "application/json") {
+            _out << "Content-Length: " << this->__underlying("body")->string_length() << CRLF
+                 << CRLF << this->__underlying("body");
+        }
+        else {
+            _out << "Content-Length: " << this->__underlying("body")->string().length() << CRLF
+                 << CRLF << this->__underlying("body")->string();
+        }
+    }
+    else { _out << "Content-Length: 0" << CRLF << CRLF; }
 }
 
 auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {

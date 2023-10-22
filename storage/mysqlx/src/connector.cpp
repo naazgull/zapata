@@ -61,11 +61,12 @@ auto zpt::storage::mysqlx::to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc {
 
 auto zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json {
     if (!_document.isNull()) {
-        std::stringstream _ss;
-        _document.print(_ss);
-        zpt::json _to_return;
-        _ss >> _to_return;
-        return _to_return;
+        // std::stringstream _ss;
+        // _document.print(_ss);
+        // zpt::json _to_return;
+        // _ss >> _to_return;
+        // return _to_return;
+        return zpt::storage::mysqlx::translate_object_from_db(_document);
     }
     return zpt::undefined;
 }

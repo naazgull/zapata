@@ -213,7 +213,7 @@ auto zpt::fromstr(std::string s, long* i) -> void {
 auto zpt::fromstr(std::string s, long long* i) -> void {
     size_t sz = 0;
     try {
-        int r = std::stoll(s, &sz);
+        auto r = std::stoll(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }

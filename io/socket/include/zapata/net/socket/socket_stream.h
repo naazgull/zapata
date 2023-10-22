@@ -88,7 +88,7 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
 
   protected:
     static const int char_size = sizeof(__char_type);
-    static const int SIZE = 1024;
+    static const int SIZE = 4096;
     __char_type obuf[SIZE];
     __char_type ibuf[SIZE];
 
@@ -438,6 +438,7 @@ auto zpt::basic_socketbuf<Char>::underflow() -> __int_type {
 template<typename Char>
 auto zpt::basic_socketbuf<Char>::output_buffer_ip() -> __int_type {
     auto _num = __buf_type::pptr() - __buf_type::pbase();
+    if (_num == 0) { return 0; }
     auto _actually_written = -1;
     if ((_actually_written =
            ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
@@ -632,24 +633,24 @@ zpt::basic_socketstream<Char>::operator std::string() {
         case IPPROTO_TCP: {
             auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(_address);
             _oss << "tcp" << (__buf.ssl() ? "+ssl" : "") << "://" << inet_ntoa(_in_address.sin_addr)
-                 << ":" << _in_address.sin_port << std::flush;
+                 << ":" << _in_address.sin_port;
             break;
         }
         case IPPROTO_UDP: {
             auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(_address);
             _oss << "udp" << (__buf.ssl() ? "+ssl" : "") << "://" << inet_ntoa(_in_address.sin_addr)
-                 << ":" << _in_address.sin_port << std::flush;
+                 << ":" << _in_address.sin_port;
             break;
         }
         case UNIXPROTO_RAW: {
-            _oss << "unix:" << reinterpret_cast<zpt::sockaddrun_t&>(_address).sun_path
-                 << std::flush;
+            _oss << "unix:" << reinterpret_cast<zpt::sockaddrun_t&>(_address).sun_path;
             break;
         }
         default: {
             _oss << "raw";
         }
     }
+    _oss << std::flush;
     return _oss.str();
 }
 

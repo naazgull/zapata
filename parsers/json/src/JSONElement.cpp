@@ -311,7 +311,6 @@ auto zpt::JSONElementT::hash() const -> size_t {
     return 0;
 }
 
-
 auto zpt::JSONElementT::find(zpt::json _to_find) const -> zpt::json::iterator {
     return zpt::json::find(*this, _to_find);
 }
@@ -1456,36 +1455,36 @@ auto zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT
         case zpt::JSString: {
             std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
-            _out << "\"" << _str << "\"" << std::flush;
+            _out << "\"" << _str << "\"";
             break;
         }
         case zpt::JSInteger: {
-            _out << this->integer() << std::flush;
+            _out << this->integer();
             break;
         }
         case zpt::JSDouble: {
-            _out << std::fixed << std::setprecision(3) << this->floating() << std::flush;
+            _out << std::fixed << std::setprecision(3) << this->floating();
             break;
         }
         case zpt::JSBoolean: {
-            _out << std::boolalpha << this->boolean() << std::flush;
+            _out << std::boolalpha << this->boolean();
             break;
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
-            _out << "null" << std::flush;
+            _out << "null";
             break;
         }
         case zpt::JSDate: {
-            _out << "\"" << zpt::timestamp(this->date()) << "\"" << std::flush;
+            _out << "\"" << zpt::timestamp(this->date()) << "\"";
             break;
         }
         case zpt::JSLambda: {
-            _out << this->lambda()->signature() << std::flush;
+            _out << this->lambda()->signature();
             break;
         }
         case zpt::JSRegex: {
-            _out << "/" << this->regex().to_string() << "/" << std::flush;
+            _out << "/" << this->regex().to_string() << "/";
             break;
         }
     }
@@ -1553,6 +1552,53 @@ auto zpt::JSONElementT::stringify() const -> std::string {
     return _out;
 }
 
+auto zpt::JSONElementT::string_length() const -> size_t {
+    switch (this->__underlying.index()) {
+        case zpt::JSObject: {
+            return this->object()->string_length();
+        }
+        case zpt::JSArray: {
+            return this->array()->string_length();
+        }
+        case zpt::JSString: {
+            std::string _str{ this->string() };
+            zpt::json::to_unicode(_str);
+            return 2 + _str.length();
+        }
+        case zpt::JSInteger: {
+            std::ostringstream _oss;
+            _oss << this->integer() << std::flush;
+            return _oss.str().length();
+        }
+        case zpt::JSDouble: {
+            std::ostringstream _oss;
+            _oss << std::fixed << std::setprecision(3) << this->floating() << std::flush;
+            return _oss.str().length();
+        }
+        case zpt::JSBoolean: {
+            return (this->boolean() ? 4 : 5);
+        }
+        case zpt::JSUndefined:
+        case zpt::JSNil: {
+            return 4;
+        }
+        case zpt::JSDate: {
+            return 29;
+        }
+        case zpt::JSLambda: {
+            std::ostringstream _oss;
+            _oss << this->lambda()->signature() << std::flush;
+            return _oss.str().length();
+        }
+        case zpt::JSRegex: {
+            std::ostringstream _oss;
+            _oss << "/" << this->regex().to_string() << "/" << std::flush;
+            return _oss.str().length();
+        }
+    }
+    return 0;
+}
+
 auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
@@ -1576,40 +1622,40 @@ auto zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSON
         case zpt::JSString: {
             std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
-            _out << "\"" << _str << "\"" << std::flush;
+            _out << "\"" << _str << "\"";
             break;
         }
         case zpt::JSInteger: {
-            _out << this->integer() << std::flush;
+            _out << this->integer();
             break;
         }
         case zpt::JSDouble: {
-            _out << std::fixed << std::setprecision(3) << this->floating() << std::flush;
+            _out << std::fixed << std::setprecision(3) << this->floating();
             break;
         }
         case zpt::JSBoolean: {
-            _out << std::boolalpha << this->boolean() << std::flush;
+            _out << std::boolalpha << this->boolean();
             break;
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
-            _out << "null" << std::flush;
+            _out << "null";
             break;
         }
         case zpt::JSDate: {
-            _out << "\"" << zpt::timestamp(this->date()) << "\"" << std::flush;
+            _out << "\"" << zpt::timestamp(this->date()) << "\"";
             break;
         }
         case zpt::JSLambda: {
-            _out << this->lambda()->signature() << std::flush;
+            _out << this->lambda()->signature();
             break;
         }
         case zpt::JSRegex: {
-            _out << "/" << this->regex().to_string() << "/" << std::flush;
+            _out << "/" << this->regex().to_string() << "/";
             break;
         }
     }
-    if (_n_tabs == 0) { _out << std::endl << std::flush; }
+    if (_n_tabs == 0) { _out << "\n"; }
     return (*this);
 }
 

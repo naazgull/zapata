@@ -21,5 +21,33 @@
 */
 
 #include <zapata/base.h>
+#include <zapata/allocator.h>
 
-auto main(int, char**) -> int { return 0; }
+class A {
+  public:
+    std::string __member{ "xpto xpto xpto xpto" };
+};
+
+auto main(int, char*[]) -> int {
+    {
+        zpt::mem::pool _pool{ 64 };
+        for (size_t _idx = 0; _idx != 100; ++_idx) {
+            std::shared_ptr<A> _ptr = std::allocate_shared<A>(zpt::allocator<A>{ _pool });
+            std::cout << "Allocate object holding '" << _ptr->__member << "'" << std::endl;
+        }
+    }
+    {
+        try {
+            zpt::mem::pool _pool{ sizeof(A) };
+            for (size_t _idx = 0; _idx != 100; ++_idx) {
+                std::shared_ptr<A> _ptr = std::allocate_shared<A>(zpt::allocator<A>{ _pool });
+            }
+        }
+        catch (std::bad_alloc const&) {
+            std::cout
+              << sizeof(A)
+              << " is not enough because the allocator object is stored in the control block"
+              << std::endl;
+        }
+    }
+}

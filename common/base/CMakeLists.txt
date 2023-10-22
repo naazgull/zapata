@@ -33,6 +33,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp    
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp    
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
@@ -63,6 +64,8 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha1.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha256.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/atomics/padded_atomic.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator/allocator.h
 )
 target_include_directories(zapata-base
   PRIVATE
@@ -107,7 +110,7 @@ target_include_directories(zapata_test_common_base
     $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
 )
 target_link_libraries(zapata_test_common_base
-  INTERFACE
+  PRIVATE
     zapata-base
 )
 set_target_properties(zapata_test_common_base

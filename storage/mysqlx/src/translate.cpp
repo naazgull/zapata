@@ -41,7 +41,7 @@ auto zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt
             return zpt::json{ static_cast<double>(_rhs) };
         }
         case ::mysqlx::Value::Type::BOOL: {
-            return zpt::json{ static_cast<long long>(static_cast<int64_t>(_rhs)) };
+            return zpt::json{ static_cast<bool>(_rhs) };
         }
         case ::mysqlx::Value::Type::STRING: {
             return zpt::json{ static_cast<std::string>(_rhs) };

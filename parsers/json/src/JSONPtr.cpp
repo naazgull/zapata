@@ -967,6 +967,10 @@ auto zpt::json::stringify(std::string& _out) const -> zpt::json const& {
     return (*this);
 }
 
+auto zpt::json::string_length() const -> size_t {
+    return this->__underlying->string_length();
+}
+
 auto zpt::json::begin() -> zpt::json::iterator { return zpt::json::iterator{ *this, 0 }; }
 
 auto zpt::json::end() -> zpt::json::iterator {

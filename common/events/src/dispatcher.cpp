@@ -107,3 +107,8 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     --(*this->__running_consumers);
     zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
 }
+
+auto zpt::events::memory_pool(size_t _max_size) -> zpt::mem::pool& {
+    static zpt::mem::pool _pool{ _max_size };
+    return _pool;
+}

@@ -66,9 +66,6 @@ auto test_json_init() -> int {
 }
 
 int main(int argc, char* argv[]) {
-    test_json_init();
-    return 0;
-
     if (argc > 1) {
         zpt::json _parameter_config{ "--print",
                                      { "options", { zpt::array, "optional", "single" } } };

@@ -25,6 +25,7 @@
 #include <memory>
 #include <zapata/base.h>
 #include <zapata/lockfree.h>
+#include <zapata/allocator.h>
 
 namespace zpt {
 auto DISPATCHER() -> ssize_t&;
@@ -40,11 +41,11 @@ concept Operation = requires(T t,
                              zpt::events::dispatcher& _d,
                              std::exception const& _e,
                              zpt::failed_expectation const& _fe) {
-    { t(_d) } -> std::convertible_to<zpt::events::state>;
-    { t.blocked() } -> std::convertible_to<bool>;
-    { t.catch_error(_e) } -> std::convertible_to<bool>;
-    { t.catch_error(_fe) } -> std::convertible_to<bool>;
-};
+                        { t(_d) } -> std::convertible_to<zpt::events::state>;
+                        { t.blocked() } -> std::convertible_to<bool>;
+                        { t.catch_error(_e) } -> std::convertible_to<bool>;
+                        { t.catch_error(_fe) } -> std::convertible_to<bool>;
+                    };
 
 namespace zpt {
 class abstract_event {
@@ -106,6 +107,7 @@ class dispatcher {
 
     auto loop(long _consumer_nr) -> void;
 };
+auto memory_pool(size_t _max_size = 0) -> zpt::mem::pool&;
 } // namespace events
 template<typename T>
 auto event_cast(zpt::event& _event) -> T&;
@@ -148,13 +150,15 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::e
 
 template<typename T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::shared_ptr<zpt::abstract_event>{ new zpt::event_t<T>{ _operator } };
+    return std::allocate_shared<zpt::event_t<T>>(
+      zpt::allocator<zpt::event_t<T>>{ zpt::events::memory_pool() }, _operator);
 }
 
 template<typename T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::shared_ptr<zpt::abstract_event>(
-      static_cast<zpt::abstract_event*>(new zpt::event_t<T>{ std::forward<Args>(_args)... }));
+    return std::allocate_shared<zpt::event_t<T>>(
+      zpt::allocator<zpt::event_t<T>>{ zpt::events::memory_pool() },
+      std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>

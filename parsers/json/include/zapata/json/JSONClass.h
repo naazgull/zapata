@@ -129,6 +129,7 @@ class json {
     auto stringify(std::string& _out) -> zpt::json&;
     auto stringify(std::ostream& _out) const -> zpt::json const&;
     auto stringify(std::string& _out) const -> zpt::json const&;
+    auto string_length() const -> size_t;
 
     auto begin() -> zpt::json::iterator;
     auto end() -> zpt::json::iterator;
@@ -385,6 +386,7 @@ class JSONObjT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONObjT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONObjT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONObjT const&;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
@@ -469,6 +471,7 @@ class JSONArrT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONArrT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONArrT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONArrT const&;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
@@ -957,6 +960,7 @@ class JSONElementT {
     virtual auto stringify(std::string& _out) const -> JSONElementT const&;
     virtual auto stringify(std::ostream& _out) const -> JSONElementT const&;
     virtual auto stringify() const -> std::string;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> JSONElementT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> JSONElementT&;
