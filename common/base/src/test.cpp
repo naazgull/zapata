@@ -50,4 +50,16 @@ auto main(int, char*[]) -> int {
               << std::endl;
         }
     }
+    {
+        zpt::mem::pool _pool{ 1024 * 1024 * 1024 };
+        {
+            std::vector<A, zpt::allocator<A>> _v{ zpt::allocator<A>{ _pool } };
+            for (size_t _idx = 0; _idx != 100; ++_idx) {
+                _v.emplace_back();
+                std::cout << "Allocate object holding '" << _v[_idx].__member << "'" << std::endl;
+            }
+            std::cout << "Allocated " << _pool.allocated_size() << " bytes" << std::endl;
+        }
+        std::cout << "Remaining " << _pool.allocated_size() << " bytes" << std::endl;
+    }
 }
