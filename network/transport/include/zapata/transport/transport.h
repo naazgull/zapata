@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <zapata/allocator.h>
+#include <zapata/globals.h>
 #include <zapata/streams.h>
 #include <zapata/json.h>
 
@@ -106,12 +108,12 @@ class basic_transport {
     virtual ~basic_transport() = default;
 
     virtual auto make_request() const -> zpt::message = 0;
-    virtual auto make_reply() const -> zpt::message = 0;
-    virtual auto make_reply(zpt::message _reuqest) const -> zpt::message = 0;
-    virtual auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message = 0;
-    virtual auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message = 0;
-    virtual auto receive(zpt::basic_stream& _stream) const -> zpt::message final;
-    virtual auto send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void final;
+    virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
+    virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
+    virtual auto process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
+    virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message = 0;
+    virtual auto receive(zpt::stream _stream) const -> zpt::message final;
+    virtual auto send(zpt::stream _stream, zpt::message _to_send) const -> void final;
 };
 using transport = std::shared_ptr<basic_transport>;
 
@@ -160,6 +162,8 @@ template<typename T, typename... Args>
 auto make_transport(Args... _args) -> zpt::transport;
 template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
+template<typename T, typename... Args>
+auto allocate_message(Args... _args) -> zpt::message;
 } // namespace zpt
 
 auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
@@ -179,10 +183,19 @@ auto zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {
 
 template<typename T, typename... Args>
 auto zpt::make_transport(Args... _args) -> zpt::transport {
-    return zpt::transport{ new T{ std::forward<Args>(_args)... } };
+    return std::allocate_shared<T>(
+      zpt::allocator<T>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
+      std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>
 auto zpt::make_message(Args... _args) -> zpt::message {
-    return zpt::message{ new T{ std::forward<Args>(_args)... } };
+    return std::make_shared<T>(std::forward<Args>(_args)...);
+}
+
+template<typename T, typename... Args>
+auto zpt::allocate_message(Args... _args) -> zpt::message {
+    return std::allocate_shared<T>(
+      zpt::allocator<T>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
+      std::forward<Args>(_args)...);
 }

@@ -10,6 +10,34 @@ if (NOT THIRD_PARTY_INSTALL_PREFIX)
   set(THIRD_PARTY_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/third_party/install)
 endif()
 
+option(WITH_ASAN "Enable address sanitizer" OFF)
+option(WITH_UBSAN "Enable undefined-behavior sanitizer" OFF)
+option(WITH_TSAN "Enable thread sanitizer" OFF)
+
+if(WITH_ASAN AND WITH_TSAN)
+  message(FATAL_ERROR "Can't use address-sanitizer along with thread-sanitizer")
+endif()
+if(WITH_UBSAN AND WITH_TSAN)
+  message(FATAL_ERROR "Can't use undefined-behavior-sanitizer along with thread-sanitizer")
+endif()
+if(WITH_TSAN AND
+    "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" AND
+     ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS "10.0.0")
+  message(FATAL_ERROR "GNU GCC 10.+ is the lowest version that supports thread-sanitizer")
+endif()
+IF(WITH_ASAN)
+  add_compile_options(-fsanitize=address)
+  add_link_options(-fsanitize=address)
+ENDIF()
+IF(WITH_UBSAN)
+  add_compile_options(-fsanitize=undefined)
+  add_link_options(-fsanitize=undefined)
+ENDIF()
+IF(WITH_TSAN)
+  add_compile_options(-fsanitize=thread)
+  add_link_options(-fsanitize=thread)
+ENDIF()
+
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
   ${CMAKE_INSTALL_PREFIX}/lib

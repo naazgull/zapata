@@ -18,23 +18,23 @@ target_sources(zapata-common-catalog
 )
 target_include_directories(zapata-common-catalog
  PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-storage-connector
+    zapata-storage-sqlite
     ${COMMON_CATALOG_INCLUDE_DIR}
  INTERFACE
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-storage-connector
+    zapata-storage-sqlite
     ${COMMON_CATALOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata-common-catalog
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
+    zapata-storage-sqlite
 )
 set_target_properties(zapata-common-catalog
   PROPERTIES
@@ -68,20 +68,20 @@ target_sources(zapata_test_common_catalog
 )
 target_include_directories(zapata_test_common_catalog
  PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-storage-sqlite
+    zapata-storage-connector
     ${COMMON_CATALOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_catalog
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalog,LIBRARIES>
+    zapata-storage-sqlite
+    zapata-common-catalog
 )
 set_target_properties(zapata_test_common_catalog
   PROPERTIES

@@ -86,7 +86,7 @@ auto fromstr(std::string s, float* i) -> void;
 auto fromstr(std::string s, double* i) -> void;
 auto fromstr(std::string s, char* i) -> void;
 auto fromstr(std::string s, bool* i) -> void;
-auto fromstr(std::string s, time_t* i, const char* f, bool _no_timezone = false) -> void;
+auto fromstr(std::string s, time_t* i, const char* f) -> void;
 template<typename T>
 auto fromstr(T _in) -> std::string;
 

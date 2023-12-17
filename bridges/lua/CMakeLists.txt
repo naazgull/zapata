@@ -17,18 +17,18 @@ target_sources(zapata-bridge-lua
 )
 target_include_directories(zapata-bridge-lua
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE    
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
     ${LUA_LIBRARIES}
 )
 set_target_properties(zapata-bridge-lua
@@ -55,27 +55,27 @@ target_sources(zapata-bridge-lua-plugin
 )
 target_include_directories(zapata-bridge-lua-plugin
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-lua,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-globals
+    zapata-events
+    zapata-lockfree
+    zapata-parser-json
+    zapata-engine-startup
+    zapata-bridge-base
+    zapata-bridge-lua
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-lua,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-events
+    zapata-lockfree
+    zapata-engine-startup
+    zapata-bridge-base
+    zapata-bridge-lua
     ${LUA_LIBRARIES}
 )
 set_target_properties(zapata-bridge-lua-plugin
@@ -109,18 +109,18 @@ target_sources(zapata_test_bridge_lua
 )
 target_include_directories(zapata_test_bridge_lua
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-lua,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
+    zapata-bridge-lua
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_lua
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-lua,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
+    zapata-bridge-lua
     ${LUA_LIBRARIES}
 )
 set_target_properties(zapata_test_bridge_lua

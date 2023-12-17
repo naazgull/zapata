@@ -16,8 +16,8 @@ target_sources(zapata-io-socket
 )
 target_include_directories(zapata-io-socket
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
   INTERFACE
     ${IO_SOCKET_INCLUDE_DIR}
@@ -26,8 +26,8 @@ target_link_libraries(zapata-io-socket
   PRIVATE
     ssl
     crypto
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
+    zapata-base
+    zapata-io-stream
 )
 set_target_properties(zapata-io-socket
   PROPERTIES
@@ -60,17 +60,17 @@ target_sources(zapata_test_io_socket_client
 )
 target_include_directories(zapata_test_io_socket_client
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_io_socket_client
   PRIVATE
     ssl
     crypto
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-socket,LIBRARIES>
+    zapata-base
+    zapata-io-stream
+    zapata-io-socket
 )
 set_target_properties(zapata_test_io_socket_client
   PROPERTIES
@@ -90,17 +90,17 @@ target_sources(zapata_test_io_socket_server
 )
 target_include_directories(zapata_test_io_socket_server
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_io_socket_server
   PRIVATE
     ssl
     crypto
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-socket,LIBRARIES>
+    zapata-base
+    zapata-io-stream
+    zapata-io-socket
 )
 set_target_properties(zapata_test_io_socket_server
   PROPERTIES

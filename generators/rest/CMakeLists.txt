@@ -13,25 +13,25 @@ target_sources(zapata-generator-rest
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
   INTERFACE
-    ${GENERATOR_REST_INCLUDE_DIR}/zapata/rest.h
-    ${GENERATOR_REST_INCLUDE_DIR}/zapata/rest/rest.h
+    ${GENERATOR_REST_INCLUDE_DIR}/zapata/generator/rest.h
+    ${GENERATOR_REST_INCLUDE_DIR}/zapata/generator/rest/rest.h
 )
 target_include_directories(zapata-generator-rest
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-generator-ast
     ${GENERATOR_REST_INCLUDE_DIR}
   INTERFACE
     ${GENERATOR_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-generator-rest
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-generator-ast
 )
 set_target_properties(zapata-generator-rest
   PROPERTIES
@@ -56,18 +56,18 @@ target_sources(zrestgen
 )
 target_include_directories(zrestgen
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-generator-rest,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-generator-ast
+    zapata-generator-rest
     ${ENGINE_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zrestgen
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-generator-rest,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-generator-ast
+    zapata-generator-rest
 )
 set_target_properties(zrestgen
   PROPERTIES

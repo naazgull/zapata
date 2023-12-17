@@ -40,10 +40,12 @@ template<typename T>
 concept Operation = requires(T t,
                              zpt::events::dispatcher& _d,
                              std::exception const& _e,
+                             std::bad_alloc const& _bae,
                              zpt::failed_expectation const& _fe) {
                         { t(_d) } -> std::convertible_to<zpt::events::state>;
                         { t.blocked() } -> std::convertible_to<bool>;
                         { t.catch_error(_e) } -> std::convertible_to<bool>;
+                        { t.catch_error(_bae) } -> std::convertible_to<bool>;
                         { t.catch_error(_fe) } -> std::convertible_to<bool>;
                     };
 
@@ -55,6 +57,7 @@ class abstract_event {
 
     virtual auto blocked() const -> bool = 0;
     virtual auto catch_error(std::exception const& _e) -> bool = 0;
+    virtual auto catch_error(std::bad_alloc const& _e) -> bool = 0;
     virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
 };
@@ -71,6 +74,7 @@ class event_t : public zpt::abstract_event {
     auto operator*() const -> T const&;
     virtual auto blocked() const -> bool override final;
     virtual auto catch_error(std::exception const& _e) -> bool override final;
+    virtual auto catch_error(std::bad_alloc const& _e) -> bool override final;
     virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher)
       -> zpt::events::state override final;
@@ -107,7 +111,6 @@ class dispatcher {
 
     auto loop(long _consumer_nr) -> void;
 };
-auto memory_pool(size_t _max_size = 0) -> zpt::mem::pool&;
 } // namespace events
 template<typename T>
 auto event_cast(zpt::event& _event) -> T&;
@@ -139,6 +142,11 @@ auto zpt::event_t<T>::catch_error(std::exception const& _e) -> bool {
 }
 
 template<Operation T>
+auto zpt::event_t<T>::catch_error(std::bad_alloc const& _e) -> bool {
+    return this->__underlying.catch_error(_e);
+}
+
+template<Operation T>
 auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
     return this->__underlying.catch_error(_e);
 }
@@ -151,13 +159,15 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::e
 template<typename T>
 auto zpt::make_event(T _operator) -> zpt::event {
     return std::allocate_shared<zpt::event_t<T>>(
-      zpt::allocator<zpt::event_t<T>>{ zpt::events::memory_pool() }, _operator);
+      zpt::allocator<zpt::event_t<T>>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
+      _operator);
+    return std::allocate_shared<zpt::event_t<T>>(std::allocator<zpt::event_t<T>>{}, _operator);
 }
 
 template<typename T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
     return std::allocate_shared<zpt::event_t<T>>(
-      zpt::allocator<zpt::event_t<T>>{ zpt::events::memory_pool() },
+      zpt::allocator<zpt::event_t<T>>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
       std::forward<Args>(_args)...);
 }
 

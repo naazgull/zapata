@@ -92,9 +92,10 @@ auto main(int _argc, char* _argv[]) -> int {
                         ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
                         : 0;
 
-    zpt::events::memory_pool(_config("dispatcher")("limits")("max_memory")->ok()
-                               ? _config("dispatcher")("limits")("max_memory")->integer()
-                               : 0);
+    zpt::make_global<zpt::mem::pool>(zpt::MEM_POOL(),
+                                     _config("dispatcher")("limits")("max_memory")->ok()
+                                       ? _config("dispatcher")("limits")("max_memory")->integer()
+                                       : 0);
 
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
     zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());

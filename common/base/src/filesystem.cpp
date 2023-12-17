@@ -111,9 +111,8 @@
 //         _ifs.seekg(0, std::ios::end);
 //         _out.reserve(_ifs.tellg());
 //         _ifs.seekg(0, std::ios::beg);
-//         _out.assign((std::istreambuf_iterator<wchar_t>(_ifs)), std::istreambuf_iterator<wchar_t>());
-//         _ifs.close();
-//         return true;
+//         _out.assign((std::istreambuf_iterator<wchar_t>(_ifs)),
+//         std::istreambuf_iterator<wchar_t>()); _ifs.close(); return true;
 //     }
 //     return false;
 // }

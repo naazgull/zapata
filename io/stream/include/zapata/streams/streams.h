@@ -33,7 +33,7 @@
 namespace zpt {
 auto STREAM_POLLING() -> ssize_t&;
 
-enum class stream_state { IDLE, WAITING, PROCESSING };
+enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };
 using epoll_event_t = struct epoll_event;
 
 class basic_stream {
@@ -76,11 +76,11 @@ class basic_stream {
     zpt::stream_state __state{ zpt::stream_state::IDLE };
 };
 
-using stream = std::unique_ptr<zpt::basic_stream>;
+using stream = std::shared_ptr<zpt::basic_stream>;
 
 class polling {
   public:
-    using delegate_fn_type = std::function<bool(zpt::polling& _poll, zpt::basic_stream& _stream)>;
+    using delegate_fn_type = std::function<bool(zpt::polling& _poll, zpt::stream _stream)>;
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
     polling();
@@ -88,8 +88,8 @@ class polling {
 
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
-    auto mute(zpt::basic_stream& _stream) -> zpt::polling&;
-    auto unmute(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto mute(zpt::stream _stream) -> zpt::polling&;
+    auto unmute(zpt::stream _stream) -> zpt::polling&;
 
     auto poll() -> void;
     auto shutdown() -> void;
@@ -101,8 +101,8 @@ class polling {
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
 
-    auto erase(zpt::basic_stream& _stream) -> zpt::polling&;
-    auto delegate(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto erase(zpt::stream _stream) -> zpt::polling&;
+    auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
 
 template<typename T, typename... Args>

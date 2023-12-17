@@ -27,19 +27,19 @@ class some_protocol : public zpt::basic_transport {
   public:
     auto make_request() const -> zpt::message override { return nullptr; }
 
-    auto make_reply() const -> zpt::message override { return nullptr; }
+    auto make_reply(bool) const -> zpt::message override { return nullptr; }
 
     auto make_reply(zpt::message) const -> zpt::message override { return nullptr; }
 
-    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override {
-        auto _message = zpt::make_message<zpt::json_message>();
-        _stream >> _message;
+    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override {
+        auto _message = zpt::allocate_message<zpt::json_message>();
+        (*_stream) >> _message;
         return _message;
     }
 
-    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override {
-        auto _message = zpt::make_message<zpt::json_message>();
-        _stream >> _message;
+    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override {
+        auto _message = zpt::allocate_message<zpt::json_message>();
+        (*_stream) >> _message;
         return _message;
     }
 };
@@ -56,12 +56,12 @@ auto main(int argc, char* argv[]) -> int {
         do {
             auto _stream = _ssock->accept();
             auto _t1 = std::chrono::high_resolution_clock::now();
-            auto _received = _transport->receive(*_stream);
+            auto _received = _transport->receive(_stream);
             auto _t2 = std::chrono::high_resolution_clock::now();
             auto _duration1 =
               std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
             auto _t3 = std::chrono::high_resolution_clock::now();
-            _transport->send(*_stream, _received);
+            _transport->send(_stream, _received);
             auto _t4 = std::chrono::high_resolution_clock::now();
             auto _duration2 =
               std::chrono::duration_cast<std::chrono::microseconds>(_t4 - _t3).count();

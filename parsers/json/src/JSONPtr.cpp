@@ -159,7 +159,7 @@ auto zpt::json::operator!=(std::nullptr_t) const -> bool {
 }
 
 auto zpt::json::operator<<(std::initializer_list<zpt::json> _in) -> zpt::json& {
-    (*this->__underlying.get()) << _in;
+    (*this->__underlying.get()) << zpt::json{ _in };
     return (*this);
 }
 
@@ -967,9 +967,7 @@ auto zpt::json::stringify(std::string& _out) const -> zpt::json const& {
     return (*this);
 }
 
-auto zpt::json::string_length() const -> size_t {
-    return this->__underlying->string_length();
-}
+auto zpt::json::string_length() const -> size_t { return this->__underlying->string_length(); }
 
 auto zpt::json::begin() -> zpt::json::iterator { return zpt::json::iterator{ *this, 0 }; }
 
@@ -1271,18 +1269,12 @@ auto zpt::timestamp(std::string const& _json_date) -> zpt::timestamp_t {
         if (!_prev_is_zero || _s[_idx + 2] != '0') { _mss.push_back(_s[_idx + 2]); }
         _mss.push_back(_s[_idx + 3]);
         _s.erase(_idx, 4);
-        if (_s.length() < 20) { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true); }
-        else if (_s[_idx] == '+' || _s[_idx] == '-') {
-            zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
-        }
-        else { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z"); }
-        zpt::fromstr(_mss, &_ms);
     }
+    if (_s.length() < 20) { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S"); }
+    else if (_s[_idx] == '+' || _s[_idx] == '-') { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z"); }
+    else { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z"); }
+    zpt::fromstr(_mss, &_ms);
     return _n * 1000 + _ms;
-}
-
-auto zpt::timestamp(zpt::json _json_date) -> zpt::timestamp_t {
-    return (zpt::timestamp_t)_json_date;
 }
 
 auto zpt::timestamp(zpt::timestamp_t _timestamp) -> std::string {

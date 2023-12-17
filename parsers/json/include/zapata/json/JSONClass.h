@@ -995,8 +995,6 @@ auto get(std::string const& _path, zpt::json _source) -> zpt::json;
 template<typename T>
 auto set(std::string const& _path, T _value, zpt::json _target = zpt::undefined) -> zpt::json;
 
-auto timestamp(zpt::json _json_date) -> zpt::timestamp_t;
-
 auto timestamp(zpt::timestamp_t _timestamp) -> std::string;
 } // namespace zpt
 
@@ -1279,7 +1277,7 @@ auto zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
             break;
         }
         default: {
-            (*this) << zpt::json{ _in };
+            this->__underlying = _in;
             break;
         }
     }

@@ -16,15 +16,16 @@ target_sources(zapata-events
 )
 target_include_directories(zapata-events
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-lockfree
     ${COMMON_EVENTS_INCLUDE_DIR}
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zapata-events
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
+    zapata-lockfree
 )
 set_target_properties(zapata-events
   PROPERTIES
@@ -57,14 +58,15 @@ target_sources(zapata_test_common_events
 )
 target_include_directories(zapata_test_common_events
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-lockfree
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_events
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
+    zapata-base
+    zapata-lockfree
+    zapata-events
 )
 set_target_properties(zapata_test_common_events
   PROPERTIES

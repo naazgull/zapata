@@ -1,5 +1,10 @@
 #include <zapata/allocator.h>
 
+auto zpt::MEM_POOL() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
 zpt::mem::pool::pool(size_t _max_memory)
   : __max_size{ _max_memory }
   , __allocated_size{ 0 } {}

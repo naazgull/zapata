@@ -32,6 +32,8 @@
 #include <zapata/base/expect.h>
 
 namespace zpt {
+auto MEM_POOL() -> ssize_t&;
+
 namespace mem {
 class pool {
   public:

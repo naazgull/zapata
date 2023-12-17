@@ -100,7 +100,7 @@ auto zpt::http::basic_request::from_stream(std::istream& _in) -> void {
 
 auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::message {
     std::istringstream _oss;
-    auto _to_return = zpt::make_message<zpt::http::basic_request>();
+    auto _to_return = zpt::allocate_message<zpt::http::basic_request>();
     _oss.str(std::string{ _string, _length });
     _oss >> _to_return;
     return _to_return;

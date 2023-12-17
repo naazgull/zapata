@@ -23,10 +23,17 @@
 #include <zapata/streams/streams.h>
 #include <systemd/sd-daemon.h>
 #include <errno.h>
+#include <assert.h>
 
 namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
+
+namespace zpt {
+struct stream_ptr {
+    zpt::stream __stream;
+};
+} // namespace zpt
 
 auto zpt::STREAM_POLLING() -> ssize_t& {
     static ssize_t _global{ -1 };
@@ -99,18 +106,20 @@ auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling
 
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
-        this->unmute(*_stream);
+        zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
+             zpt::info);
+        this->unmute(_stream);
         {
             zpt::locks::spin_lock::guard _sentry{ this->__poll_lock,
                                                   zpt::locks::spin_lock::exclusive };
-            this->__polled_streams.emplace(static_cast<int>(*_stream), std::move(_stream));
+            this->__polled_streams.emplace(static_cast<int>(*_stream), _stream);
         }
     }
     return (*this);
 }
 
-auto zpt::polling::erase(zpt::basic_stream& _stream) -> zpt::polling& {
-    auto _fd = static_cast<int>(_stream);
+auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
+    auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     {
         zpt::locks::spin_lock::guard _sentry{ this->__poll_lock, zpt::locks::spin_lock::exclusive };
@@ -119,28 +128,32 @@ auto zpt::polling::erase(zpt::basic_stream& _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto zpt::polling::mute(zpt::basic_stream& _stream) -> zpt::polling& {
-    auto _fd = static_cast<int>(_stream);
+auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
+    auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     return (*this);
 }
 
-auto zpt::polling::unmute(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
+    assert(_stream->state() == zpt::stream_state::IDLE);
+    expect(_stream->state() == zpt::stream_state::IDLE, "Can't add an active stream to the poll");
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
-    _new_event.data.ptr = static_cast<void*>(&_stream);
+    _new_event.data.ptr = new zpt::stream_ptr{ _stream };
 
-    auto _fd = static_cast<int>(_stream);
+    auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
 
     return (*this);
 }
 
-auto zpt::polling::delegate(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     this->mute(_stream);
     for (auto& d : this->__delegates) {
         if (d((*this), _stream)) { return (*this); }
     }
+    zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
+         zpt::info);
     this->unmute(_stream);
     return (*this);
 }
@@ -159,15 +172,16 @@ auto zpt::polling::poll() -> void {
         if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
 
         for (auto _k = 0; _k != _n_alive; ++_k) {
-            auto _stream = static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr);
+            auto _stream = static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream;
+            delete static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr);
 
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                 ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
                 ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
                 ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
-                this->erase(*_stream);
+                this->erase(_stream);
             }
-            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(*_stream); }
+            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
             else {
                 expect(((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                          ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||

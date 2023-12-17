@@ -107,7 +107,7 @@ target_sources(zapata_test_common_base
 )
 target_include_directories(zapata_test_common_base
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
 )
 target_link_libraries(zapata_test_common_base
   PRIVATE

@@ -30,6 +30,7 @@ class my_operator {
 
     auto blocked() const -> bool { return false; }
     auto catch_error(std::exception const&) -> bool { return false; }
+    auto catch_error(std::bad_alloc const&) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher&) -> zpt::events::state {
@@ -50,6 +51,7 @@ class my_other_operator {
 
     auto blocked() const -> bool { return false; }
     auto catch_error(std::exception const&) -> bool { return false; }
+    auto catch_error(std::bad_alloc const&) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {

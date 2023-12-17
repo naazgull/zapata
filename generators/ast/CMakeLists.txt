@@ -17,14 +17,14 @@ target_sources(zapata-generator-ast
 )
 target_include_directories(zapata-generator-ast
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${GENERATOR_AST_INCLUDE_DIR}
   INTERFACE
     ${GENERATOR_AST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-generator-ast
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
 )
 set_target_properties(zapata-generator-ast
   PROPERTIES
@@ -56,14 +56,14 @@ target_sources(zapata_test_ast
 )
 target_include_directories(zapata_test_ast
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-generator-ast
     ${GENERATOR_AST_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_ast
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-generator-ast,LIBRARIES>
+    zapata-base
+    zapata-generator-ast
 )
 set_target_properties(zapata_test_ast
   PROPERTIES

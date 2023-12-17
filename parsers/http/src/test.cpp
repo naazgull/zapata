@@ -35,10 +35,10 @@ auto main(int argc, char* argv[]) -> int {
         do {
             auto _csock = _ssock->accept();
             auto _t1 = std::chrono::high_resolution_clock::now();
-            auto _request = zpt::make_message<zpt::http::basic_request>();
+            auto _request = zpt::allocate_message<zpt::http::basic_request>();
             (*_csock) >> std::noskipws >> _request;
 
-            auto _reply = zpt::make_message<zpt::http::basic_reply>(
+            auto _reply = zpt::allocate_message<zpt::http::basic_reply>(
               message_cast<zpt::http::basic_request>(_request), true);
             _reply->status(zpt::http::status::HTTP200);
             if (argc > 2) {

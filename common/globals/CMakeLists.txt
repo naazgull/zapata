@@ -17,14 +17,14 @@ target_sources(zapata-globals
 )
 target_include_directories(zapata-globals
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${COMMON_GLOBALS_INCLUDE_DIR}
   INTERFACE
     ${COMMON_GLOBALS_INCLUDE_DIR}
 )
 target_link_libraries(zapata-globals
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
 )
 set_target_properties(zapata-globals
   PROPERTIES
@@ -56,13 +56,13 @@ target_sources(zapata_test_common_globals
 )
 target_include_directories(zapata_test_common_globals
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${COMMON_GLOBALS_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_globals
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
+    zapata-base
+    zapata-globals
 )
 
 set_target_properties(zapata_test_common_globals

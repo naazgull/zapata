@@ -18,20 +18,20 @@ target_sources(zapata-storage-lmdb
 )
 target_include_directories(zapata-storage-lmdb
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_LMDB_INCLUDE_DIR}
   INTERFACE
     ${STORAGE_LMDB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-lmdb
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${LMDB_LIBS}
 )
 set_target_properties(zapata-storage-lmdb
@@ -67,20 +67,20 @@ target_sources(zapata_test_storage_lmdb
 )
 target_include_directories(zapata_test_storage_lmdb
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_LMDB_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_lmdb
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${LMDB_LIBS}
-    $<TARGET_PROPERTY:zapata-storage-lmdb,LIBRARIES>
+    zapata-storage-lmdb
 )
 set_target_properties(zapata_test_storage_lmdb
   PROPERTIES

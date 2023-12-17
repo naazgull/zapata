@@ -16,16 +16,16 @@ target_sources(zapata-io-pipe
 )
 target_include_directories(zapata-io-pipe
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-io-stream
     ${IO_PIPE_INCLUDE_DIR}
   INTERFACE
     ${IO_PIPE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-io-pipe
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
+    zapata-base
+    zapata-io-stream
 )
 set_target_properties(zapata-io-pipe
   PROPERTIES
@@ -58,15 +58,15 @@ target_sources(zapata_test_io_pipe
 )
 target_include_directories(zapata_test_io_pipe
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-io-stream
     ${IO_PIPE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_io_pipe
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-pipe,LIBRARIES>
+    zapata-base
+    zapata-io-stream
+    zapata-io-pipe
 )
 set_target_properties(zapata_test_io_pipe
   PROPERTIES

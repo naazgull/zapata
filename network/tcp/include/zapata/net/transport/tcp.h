@@ -36,10 +36,10 @@ class tcp : public zpt::basic_transport {
     virtual ~tcp() = default;
 
     auto make_request() const -> zpt::message override;
-    auto make_reply() const -> zpt::message override;
+    auto make_reply(bool _with_allocator = true) const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
-    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

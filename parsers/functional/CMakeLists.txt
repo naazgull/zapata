@@ -29,16 +29,16 @@ target_sources(zapata-parser-functional
 )
 target_include_directories(zapata-parser-functional
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
   INTERFACE
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
 )
 target_link_libraries(zapata-parser-functional
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    zapata-base
+    zapata-parser-json
 )
 set_target_properties(zapata-parser-functional
   PROPERTIES
@@ -71,15 +71,15 @@ target_sources(zapata_test_parser_functional
 )
 target_include_directories(zapata_test_parser_functional
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_parser_functional
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
 )
 set_target_properties(zapata_test_parser_functional
   PROPERTIES

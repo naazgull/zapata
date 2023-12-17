@@ -16,16 +16,16 @@ target_sources(zapata-bridge-base
 )
 target_include_directories(zapata-bridge-base
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
     ${BRIDGE_BASE_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-base
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    zapata-base
+    zapata-parser-json
 )
 set_target_properties(zapata-bridge-base
   PROPERTIES
@@ -58,16 +58,16 @@ target_sources(zapata_test_bridge_base
 )
 target_include_directories(zapata_test_bridge_base
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_base
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
 )
 set_target_properties(zapata_test_bridge_base
   PROPERTIES

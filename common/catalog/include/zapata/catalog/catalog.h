@@ -117,7 +117,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                                                    _prefix->string(),
                                                    _separator,
                                                    _part->string(),
-                                                  _prefix->string(),
+                                                   _prefix->string(),
                                                    _separator));
             }
             expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");

@@ -79,9 +79,7 @@ class basic_element : public std::enable_shared_from_this<basic_element> {
 };
 
 template<typename T>
-concept BasicASTElement = requires(T _t) {
-    requires std::derived_from<T, basic_element>;
-};
+concept BasicASTElement = requires(T _t) { requires std::derived_from<T, basic_element>; };
 
 class basic_module {
   public:

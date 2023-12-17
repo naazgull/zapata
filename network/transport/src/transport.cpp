@@ -140,41 +140,48 @@ auto zpt::json_message::version(std::string const& _version) -> void {
     this->__underlying["headers"]["X-Version"] = _version;
 }
 
-auto zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::message {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::WAITING,
+auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
+    assert(_stream->state() == zpt::stream_state::IDLE ||
+           _stream->state() == zpt::stream_state::WAITING);
+    expect(_stream->state() == zpt::stream_state::IDLE ||
+             _stream->state() == zpt::stream_state::WAITING,
            "Stream not in a valid state for receiving");
 
     zpt::message _to_return;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::PROCESSING;
+    if (_stream->state() == zpt::stream_state::IDLE) {
+        _stream->state() = zpt::stream_state::PROCESSING;
         _to_return = this->process_incoming_request(_stream);
     }
-    else if (_stream.state() == zpt::stream_state::WAITING) {
-        _stream.state() = zpt::stream_state::IDLE;
+    else if (_stream->state() == zpt::stream_state::WAITING) {
+        _stream->state() = zpt::stream_state::IDLE;
         _to_return = this->process_incoming_reply(_stream);
     }
-    zlog("Received '" << _stream.transport()
+    zlog("Received '" << _stream->transport()
                       << "' message: " << zpt::ontology::to_str(_to_return->performative()) << " "
                       << _to_return->resource()->string(),
          zpt::trace);
     return _to_return;
 }
 
-auto zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::PROCESSING,
+auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) const -> void {
+    assert(_stream->state() == zpt::stream_state::IDLE ||
+           _stream->state() == zpt::stream_state::PROCESSING ||
+           _stream->state() == zpt::stream_state::ERRORING_OUT);
+    expect(_stream->state() == zpt::stream_state::IDLE ||
+             _stream->state() == zpt::stream_state::PROCESSING ||
+             _stream->state() == zpt::stream_state::ERRORING_OUT,
            "Stream not in a valid state for sending");
 
-    zlog("Sending '" << _stream.transport() << "' message: " << _to_send->status() << " "
+    zlog("Sending '" << _stream->transport() << "' message: " << _to_send->status() << " "
                      << _to_send->content_type(),
          zpt::trace);
-    _stream << _to_send << std::flush;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::WAITING;
+    (*_stream) << _to_send << std::flush;
+    if (_stream->state() == zpt::stream_state::IDLE) {
+        _stream->state() = zpt::stream_state::WAITING;
     }
-    else if (_stream.state() == zpt::stream_state::PROCESSING) {
-        _stream.state() = zpt::stream_state::IDLE;
+    else if (_stream->state() == zpt::stream_state::PROCESSING ||
+             _stream->state() == zpt::stream_state::ERRORING_OUT) {
+        _stream->state() = zpt::stream_state::IDLE;
     }
 }
 
@@ -240,7 +247,8 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
 auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::transport {
     auto _found = this->__underlying.find(_scheme);
     if (_found == this->__underlying.end()) {
-        throw zpt::NoMoreElementsException("there is no such transport");
+        throw zpt::NoMoreElementsException(std::string{ "there is no such transport '" } + _scheme +
+                                           std::string{ "'" });
     }
     return _found->second;
 }

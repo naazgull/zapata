@@ -117,12 +117,13 @@ auto zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
 }
 
 auto zpt::net::transport::websocket::make_request() const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::json_message>();
+    auto _to_return = zpt::allocate_message<zpt::json_message>();
     return _to_return;
 }
 
-auto zpt::net::transport::websocket::make_reply() const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::json_message>();
+auto zpt::net::transport::websocket::make_reply(bool _with_allocator) const -> zpt::message {
+    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::json_message>()
+                                      : zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
@@ -132,18 +133,18 @@ auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> 
     return _to_return;
 }
 
-auto zpt::net::transport::websocket::process_incoming_request(zpt::basic_stream& _stream) const
+auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream.transport() == "websocket", "Stream underlying transport isn't 'websocket'");
-    auto _message = zpt::make_message<zpt::json_message>();
+    expect(_stream->transport() == "websocket", "Stream underlying transport isn't 'websocket'");
+    auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }
 
-auto zpt::net::transport::websocket::process_incoming_reply(zpt::basic_stream& _stream) const
+auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream.transport() == "websocket", "Stream underlying transport isn't 'websocket'");
-    auto _message = zpt::make_message<zpt::json_message>();
+    expect(_stream->transport() == "websocket", "Stream underlying transport isn't 'websocket'");
+    auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }

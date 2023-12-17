@@ -57,6 +57,9 @@ auto test_json_init() -> int {
     _obj2["a"]["b"][0] = "hello";
     _obj2["a"]["b"][1] = "world";
     _obj2["a"]["b"][3] = "!!";
+    _obj2["date"]["begin"] = zpt::timestamp("2000-12-11T16:09:54");
+    zlog(zpt::timestamp("2000-12-11T16:09:54"), zpt::info);
+    zlog(_obj2, zpt::info);
     if (_obj1("x")("y")("z")->ok()) zlog(_obj1["x"], zpt::info);
     zlog(_obj1, zpt::info);
     zlog((_obj1 & _obj2), zpt::info);

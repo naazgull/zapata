@@ -59,6 +59,4 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     // _resolver->add<logger>("/{}/{}");
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Stopping event processing", zpt::info);
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Stopping event processing", zpt::info); }

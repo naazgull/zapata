@@ -64,7 +64,7 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
 auto zpt::rest::resolver_t::broadcast_service(std::string _query) -> void {
     if (this->__broadcast_stream == nullptr) { return; }
 
-    auto _service = zpt::make_message<zpt::http::basic_request>();
+    auto _service = zpt::allocate_message<zpt::http::basic_request>();
     _service->performative(zpt::Notify);
     _service->uri("/services");
     _service->headers() << "Content-Type"

@@ -81,6 +81,11 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
+    catch (std::bad_alloc const& _e) {
+        if (!_event->catch_error(_e)) {
+            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        }
+    }
     catch (std::exception const& _e) {
         if (!_event->catch_error(_e)) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
@@ -106,9 +111,4 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     this->__queue.clear_thread_context();
     --(*this->__running_consumers);
     zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
-}
-
-auto zpt::events::memory_pool(size_t _max_size) -> zpt::mem::pool& {
-    static zpt::mem::pool _pool{ _max_size };
-    return _pool;
 }

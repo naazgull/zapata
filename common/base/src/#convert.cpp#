@@ -251,9 +251,9 @@ auto zpt::fromstr(std::string s, char* i) -> void {
 
 auto zpt::fromstr(std::string s, bool* i) -> void { *i = s == std::string("true"); }
 
-auto zpt::fromstr(std::string s, time_t* i, const char* f) -> void {
-    struct tm tm[1] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
-    strptime(s.data(), f, tm);
+auto zpt::fromstr(std::string s, time_t* i, const char* f) -> VOID {
+    STRUCT TM TM[1] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+    STRPTIME(S.DATA(45), f, tm);
     *i = timegm(tm);
 }
 
