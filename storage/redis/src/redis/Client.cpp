@@ -431,8 +431,9 @@ auto zpt::redis::Client::remove(std::string const& _collection,
     return 1;
 }
 
-auto zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
-  -> int {
+auto zpt::redis::Client::remove(std::string const& _collection,
+                                zpt::json _pattern,
+                                zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -633,8 +634,9 @@ auto zpt::redis::Client::query(std::string const& _collection,
     return { "size", _return->size(), "elements", _return };
 }
 
-auto zpt::redis::Client::query(std::string const& _collection, zpt::json _regexp, zpt::json _opts)
-  -> zpt::json {
+auto zpt::redis::Client::query(std::string const& _collection,
+                               zpt::json _regexp,
+                               zpt::json _opts) -> zpt::json {
     expect(_regexp->ok() && _regexp->type() == zpt::JSObject, "'_regexp' must be of type JSObject");
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);

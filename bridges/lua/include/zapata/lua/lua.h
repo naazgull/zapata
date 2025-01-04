@@ -23,9 +23,7 @@
 #pragma once
 
 #include <zapata/bridge.h>
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 
 namespace zpt {
 auto LUA_BRIDGE() -> ssize_t&;
@@ -70,10 +68,12 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
     auto state() -> lua_State*;
     auto thread_instance() -> bridge&;
 
-    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
-      -> zpt::lua::bridge&;
-    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
-      -> zpt::lua::bridge&;
+    auto setup_module(zpt::json _conf,
+                      std::string _external_path,
+                      bool _persist = true) -> zpt::lua::bridge&;
+    auto setup_module(zpt::json _conf,
+                      callback_type _callback,
+                      bool _persist = true) -> zpt::lua::bridge&;
     auto find(zpt::json _to_locate) -> object_type;
 
     auto clear_stack() -> zpt::lua::bridge&;

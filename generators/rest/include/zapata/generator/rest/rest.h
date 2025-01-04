@@ -67,12 +67,12 @@ class module {
     auto generate_operation_cpp_file(zpt::json _def, std::string const& _method)
       -> std::shared_ptr<zpt::ast::basic_file>;
 
-    auto generate_collection(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_document(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_controller(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_collection(zpt::json _def,
+                             zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_document(zpt::json _def,
+                           zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_controller(zpt::json _def,
+                             zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
     auto generate_store(zpt::json _def, zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
 
     auto generate_add_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
@@ -97,13 +97,13 @@ class module {
                                   zpt::json _def,
                                   zpt::json _path) -> void;
 
-    auto add_db_configuration(std::shared_ptr<zpt::ast::basic_code_block> _block, zpt::json _def)
-      -> void;
+    auto add_db_configuration(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                              zpt::json _def) -> void;
     auto add_parameters_and_validation(std::shared_ptr<zpt::ast::basic_code_block> _block,
                                        zpt::json _def,
                                        zpt::json _path) -> void;
-    auto add_schema_validation(std::shared_ptr<zpt::ast::basic_code_block> _block, zpt::json _def)
-      -> void;
+    auto add_schema_validation(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                               zpt::json _def) -> void;
     auto add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
                        zpt::json _def,
                        std::string const& _generate) -> void;
@@ -115,10 +115,10 @@ class module {
       -> std::shared_ptr<zpt::ast::basic_file>;
     auto generate_operation_html_file(zpt::json _def, std::string const& _method)
       -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_collection_ui(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_document_ui(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_collection_ui(zpt::json _def,
+                                zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_document_ui(zpt::json _def,
+                              zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
     auto extract_languages() -> std::string;
     auto extract_field_translations(zpt::json _def) -> std::string;
     auto extract_static_translations() -> std::string;

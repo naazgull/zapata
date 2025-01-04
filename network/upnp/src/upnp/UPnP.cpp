@@ -188,9 +188,7 @@ auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
     }
 
     zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
-    _envelope << "resource"
-              << "*"
-              << "protocol" << this->protocol() << "params"
+    _envelope << "resource" << "*" << "protocol" << this->protocol() << "params"
               << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) +
                   _uri["query"]);
 
@@ -229,9 +227,7 @@ auto zpt::UPnP::recv() -> zpt::json {
         zpt::http::req _request;
         (*this->__underlying) >> _request;
         _in = zpt::http2internal(_request);
-        _in << "resource"
-            << "*"
-            << "protocol" << this->protocol();
+        _in << "resource" << "*" << "protocol" << this->protocol();
     }
     ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) +
            std::string(" ") + _in["resource"]->string() +

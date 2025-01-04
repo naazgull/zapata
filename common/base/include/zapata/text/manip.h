@@ -36,7 +36,7 @@ namespace zpt {
 void ltrim(std::string& _in_out);
 void rtrim(std::string& _in_out);
 void trim(std::string& _in_out);
-auto replace(std::string& str, std::string find, std::string replace) -> void;
+auto replace(std::string& str, std::string const& find, std::string const& replace) -> void;
 
 void normalize_path(std::string& _in_out, bool _with_trailing);
 
@@ -45,11 +45,11 @@ void prettify_header_name(std::string& name);
 std::string r_ltrim(std::string const& _in_out);
 std::string r_rtrim(std::string const& _in_out);
 std::string r_trim(std::string const& _in_out);
-std::string r_replace(std::string str, std::string find, std::string replace);
+std::string r_replace(std::string const& str, std::string const& find, std::string const& replace);
 
 std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
-std::string r_prettify_header_name(std::string name);
+std::string r_prettify_header_name(std::string const& name);
 
 template<typename... Args>
 auto format(std::string _to_format, Args... _params) -> std::string;

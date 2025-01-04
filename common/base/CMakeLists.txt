@@ -5,7 +5,7 @@ set(COMMON_BASE_INCLUDE_DIR
 add_library(zapata-base SHARED)
 target_sources(zapata-base
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_lock.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_mutex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ExpectationException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha512.cpp
@@ -55,7 +55,7 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/convert.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/locks/spin_lock.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/locks/spin_mutex.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/file/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/net/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mem/ref_ptr.h

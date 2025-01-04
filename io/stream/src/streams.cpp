@@ -106,12 +106,11 @@ auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling
 
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
-        zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
-             zpt::info);
+        // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
+        //      zpt::info);
         this->unmute(_stream);
         {
-            zpt::locks::spin_lock::guard _sentry{ this->__poll_lock,
-                                                  zpt::locks::spin_lock::exclusive };
+            std::unique_lock _sentry{ this->__poll_lock };
             this->__polled_streams.emplace(static_cast<int>(*_stream), _stream);
         }
     }
@@ -122,7 +121,7 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     {
-        zpt::locks::spin_lock::guard _sentry{ this->__poll_lock, zpt::locks::spin_lock::exclusive };
+        std::unique_lock _sentry{ this->__poll_lock };
         this->__polled_streams.erase(this->__polled_streams.find(_fd));
     }
     return (*this);
@@ -152,8 +151,8 @@ auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     for (auto& d : this->__delegates) {
         if (d((*this), _stream)) { return (*this); }
     }
-    zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
-         zpt::info);
+    // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
+    //      zpt::info);
     this->unmute(_stream);
     return (*this);
 }

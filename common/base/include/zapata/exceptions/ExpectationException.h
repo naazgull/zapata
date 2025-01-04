@@ -39,8 +39,8 @@ class ExpectationException : public zpt::exception {
 
     virtual auto description() const -> const char*;
 
-    friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
-      -> std::ostream& {
+    friend auto operator<<(std::ostream& _out,
+                           zpt::ExpectationException const& _in) -> std::ostream& {
         _out << _in.what() << ": " << _in.description() << ")";
         return _out;
     }

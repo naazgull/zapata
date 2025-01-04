@@ -73,8 +73,9 @@ auto zpt::redis::ZList::reconnect() -> void {
     zpt::Connector::reconnect();
 }
 
-auto zpt::redis::ZList::set(std::string const& _key, zpt::timestamp_t _score, zpt::json _data)
-  -> void {
+auto zpt::redis::ZList::set(std::string const& _key,
+                            zpt::timestamp_t _score,
+                            zpt::json _data) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -95,8 +96,9 @@ auto zpt::redis::ZList::set(std::string const& _key, zpt::timestamp_t _score, zp
     expect(_success, "something whent wrong while accessing Redis");
 }
 
-auto zpt::redis::ZList::reset(std::string const& _key, zpt::timestamp_t _increment, zpt::json _data)
-  -> void {
+auto zpt::redis::ZList::reset(std::string const& _key,
+                              zpt::timestamp_t _increment,
+                              zpt::json _data) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -160,8 +162,9 @@ auto zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min) -> v
     expect(_success, "something whent wrong while accessing Redis");
 }
 
-auto zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min, zpt::timestamp_t _max)
-  -> void {
+auto zpt::redis::ZList::del(std::string const& _key,
+                            zpt::timestamp_t _min,
+                            zpt::timestamp_t _max) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -180,8 +183,9 @@ auto zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min, zpt:
     expect(_success, "something whent wrong while accessing Redis");
 }
 
-auto zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _max)
-  -> zpt::json {
+auto zpt::redis::ZList::rangebypos(std::string const& _key,
+                                   long int _min,
+                                   long int _max) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,

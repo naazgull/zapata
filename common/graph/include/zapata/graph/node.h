@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>
 #include <zapata/log/log.h>
 
 #include <memory>
@@ -51,8 +51,8 @@ class node {
 
     auto to_string(uint _n_tabs = 0) const -> std::string;
 
-    friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in)
-      -> std::ostream& {
+    friend auto operator<<(std::ostream& _out,
+                           zpt::tree::node<T, P, C> const& _in) -> std::ostream& {
         _out << _in.to_string();
         return _out;
     }

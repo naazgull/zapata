@@ -1375,8 +1375,8 @@ auto zpt::gen::rest::module::extract_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::extract_visible_fields(zpt::json _def, std::string const& _where)
-  -> std::string {
+auto zpt::gen::rest::module::extract_visible_fields(zpt::json _def,
+                                                    std::string const& _where) -> std::string {
     std::ostringstream _oss;
     std::string _indent1(26, ' ');
     bool _first{ true };
@@ -1402,8 +1402,8 @@ auto zpt::gen::rest::module::extract_visible_fields(zpt::json _def, std::string 
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::replace_additional_components(std::string& _html, zpt::json _def)
-  -> void {
+auto zpt::gen::rest::module::replace_additional_components(std::string& _html,
+                                                           zpt::json _def) -> void {
     std::string _indent1(14, ' ');
     std::string _indent2(6, ' ');
     std::string _indent3(10, ' ');

@@ -35,6 +35,10 @@ namespace zpt {
 auto BOOT() -> ssize_t&;
 auto GLOBAL_CONFIG() -> ssize_t&;
 
+inline constexpr std::uint64_t PLUGIN_STATE_UNLOADED{ 0 };
+inline constexpr std::uint64_t PLUGIN_STATE_IN_SHUTDOWN{ 1 };
+inline constexpr std::uint64_t PLUGIN_STATE_LOADED{ 2 };
+
 class plugin {
   public:
     using plugin_fn_type = std::function<bool(zpt::plugin& _plugin)>;
@@ -51,6 +55,8 @@ class plugin {
     auto source() -> std::string&;
     auto config() -> zpt::json&;
     auto is_shutdown_ongoing() -> bool;
+    auto is_loaded() -> bool;
+    auto is_unloaded() -> bool;
 
     auto add_thread(std::function<void()> _callback) -> plugin&;
 
@@ -61,7 +67,7 @@ class plugin {
     bool __running{ false };
     zpt::json __config;
     std::vector<std::thread> __threads;
-    zpt::padded_atomic<bool> __shutdown{ false };
+    zpt::padded_atomic<std::uint16_t> __state{ PLUGIN_STATE_UNLOADED };
 };
 
 namespace startup {

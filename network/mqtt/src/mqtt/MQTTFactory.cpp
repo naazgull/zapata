@@ -66,8 +66,8 @@ auto zpt::MQTTFactory::on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt
     }
 }
 
-auto zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable
-  -> void {
+auto zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data,
+                                     zpt::mqtt::broker _mqtt) mutable -> void {
     zpt::poll::instance()->vanished(_mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
         int _attempts = 0;
         do {

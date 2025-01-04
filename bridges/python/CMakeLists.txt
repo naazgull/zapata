@@ -5,6 +5,7 @@ set(BRIDGE_PYTHON_INCLUDE_DIR
 add_library(zapata-bridge-python SHARED)
 add_dependencies(zapata-bridge-python
   zapata-base
+  zapata-globals
   zapata-parser-json
   zapata-bridge-base
 )
@@ -18,6 +19,7 @@ target_sources(zapata-bridge-python
 target_include_directories(zapata-bridge-python
   PRIVATE
     zapata-base
+    zapata-globals
     zapata-parser-json
     zapata-bridge-base
     ${BRIDGE_PYTHON_INCLUDE_DIR}
@@ -27,6 +29,7 @@ target_include_directories(zapata-bridge-python
 target_link_libraries(zapata-bridge-python
   PUBLIC
     zapata-base
+    zapata-globals
     zapata-parser-json
     zapata-bridge-base
     ${Python3_LIBRARIES}
@@ -43,6 +46,7 @@ set_target_properties(zapata-bridge-python
 add_library(zapata-bridge-python-plugin SHARED)
 add_dependencies(zapata-bridge-python-plugin
   zapata-base
+  zapata-globals
   zapata-parser-json
   zapata-events
   zapata-engine-startup

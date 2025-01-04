@@ -60,29 +60,29 @@ auto zpt::net::upnp::setup_broadcast(int _sockfd, zpt::json _config) -> void {
 }
 
 auto zpt::net::transport::upnp::make_request() const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::http::basic_request>();
-    zpt::init(message_cast<zpt::http::basic_request>(_to_return));
+    auto _to_return = zpt::allocate_message<zpt::upnp::basic_request>();
+    zpt::init(message_cast<zpt::upnp::basic_request>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::upnp::make_reply(bool _with_allocator) const -> zpt::message {
-    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::http::basic_reply>()
-                                      : zpt::make_message<zpt::http::basic_reply>();
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::upnp::basic_reply>()
+                                      : zpt::make_message<zpt::upnp::basic_reply>();
+    zpt::init(message_cast<zpt::upnp::basic_reply>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::upnp::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::http::basic_reply>(
-      message_cast<zpt::http::basic_request>(_request), true);
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+    auto _to_return = zpt::allocate_message<zpt::upnp::basic_reply>(
+      message_cast<zpt::upnp::basic_request>(_request), true);
+    zpt::init(message_cast<zpt::upnp::basic_reply>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::upnp::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "upnp", "Stream underlying transport isn't 'upnp'");
-    auto _request = zpt::allocate_message<zpt::http::basic_request>();
+    auto _request = zpt::allocate_message<zpt::upnp::basic_request>();
     (*_stream) >> std::noskipws >> _request;
     _request->uri()["domain"] = _request->headers()["Host"];
     return _request;
@@ -90,7 +90,7 @@ auto zpt::net::transport::upnp::process_incoming_request(zpt::stream _stream) co
 
 auto zpt::net::transport::upnp::process_incoming_reply(zpt::stream _stream) const -> zpt::message {
     expect(_stream->transport() == "upnp", "Stream underlying transport isn't 'upnp'");
-    auto _reply = zpt::allocate_message<zpt::http::basic_reply>();
+    auto _reply = zpt::allocate_message<zpt::upnp::basic_reply>();
     (*_stream) >> std::noskipws >> _reply;
     return _reply;
 }

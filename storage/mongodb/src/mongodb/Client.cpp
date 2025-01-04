@@ -67,11 +67,10 @@ auto zpt::mongodb::Client::insert(std::string const& _collection,
 
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (this->connection()["user"]->ok()) {
-        _conn->auth(BSON("mechanism"
-                         << "MONGODB-CR"
-                         << "user" << (std::string)this->connection()["user"] << "pwd"
-                         << (std::string)this->connection()["passwd"] << "db"
-                         << (std::string)this->connection()["db"]));
+        _conn->auth(BSON("mechanism" << "MONGODB-CR" << "user"
+                                     << (std::string)this->connection()["user"] << "pwd"
+                                     << (std::string)this->connection()["passwd"] << "db"
+                                     << (std::string)this->connection()["db"]));
     }
     _conn->setWriteConcern((mongo::WriteConcern)2);
 

@@ -64,9 +64,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
 
 auto init_module_x(cpp_bridge::object_type, cpp_bridge& _bridge) -> zpt::json {
     _bridge.add_lambda(
-      [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json {
-          return { "a", _a };
-      },
+      [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json { return { "a", _a }; },
       { "module", "x", "name", "to_a" });
     return zpt::undefined;
 }

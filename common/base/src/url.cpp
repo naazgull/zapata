@@ -40,8 +40,8 @@ auto zpt::quoted_printable::encode(std::string const& _quote,
     _out.append(_oss.str());
 }
 
-auto zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset)
-  -> std::string {
+auto zpt::quoted_printable::r_encode(std::string const& _quote,
+                                     std::string const& _charset) -> std::string {
     std::string _out;
     zpt::quoted_printable::encode(_quote, _charset, _out);
     return _out;

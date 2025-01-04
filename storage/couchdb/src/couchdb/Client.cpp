@@ -35,10 +35,7 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string const& _conf_path)
   , __round_robin(0) {
     try {
         zpt::json _uri = zpt::uri::parse((std::string)_options->get_path(_conf_path)["bind"]);
-        if (_uri["scheme"] == zpt::json::string("zpt")) {
-            _uri << "scheme"
-                 << "http";
-        }
+        if (_uri["scheme"] == zpt::json::string("zpt")) { _uri << "scheme" << "http"; }
         this->connection(_options->get_path(_conf_path) + zpt::json{ "uri", _uri });
     }
     catch (std::exception const& _e) {
@@ -640,8 +637,9 @@ auto zpt::couchdb::Client::query(std::string const& _collection,
     return this->query(_collection, zpt::json(_regexp), _opts);
 }
 
-auto zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, zpt::json _opts)
-  -> zpt::json {
+auto zpt::couchdb::Client::query(std::string const& _collection,
+                                 zpt::json _regexp,
+                                 zpt::json _opts) -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;

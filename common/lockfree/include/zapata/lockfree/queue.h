@@ -248,8 +248,7 @@ auto zpt::lf::queue<T>::pop() -> T {
         if (_next == nullptr) { break; }
 
         if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
-            while (_head->__is_null)
-                ;
+            while (_head->__is_null);
             --(*this->__size);
             _head->__is_null = true;
             _head_sentry.retire();

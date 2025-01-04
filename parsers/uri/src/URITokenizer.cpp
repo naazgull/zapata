@@ -773,8 +773,7 @@ void URITokenizer::executeAction_(int production) try {
             if ((*d_scanner)->type() == zpt::JSObject) {
                 if (!(*d_scanner)("path")->ok()) {
                     (*d_scanner) << "path" << zpt::json::array();
-                    (*d_scanner) << "raw_path"
-                                 << "";
+                    (*d_scanner) << "raw_path" << "";
                     (*d_scanner) << "is_relative" << false;
                 }
                 (*d_scanner)["raw_path"]->string().append("/");
@@ -792,8 +791,7 @@ void URITokenizer::executeAction_(int production) try {
             if ((*d_scanner)->type() == zpt::JSObject) {
                 if (!(*d_scanner)("path")->ok()) {
                     (*d_scanner) << "path" << zpt::json::array();
-                    (*d_scanner) << "raw_path"
-                                 << "";
+                    (*d_scanner) << "raw_path" << "";
                     (*d_scanner) << "is_relative" << true;
                 }
                 (*d_scanner)["raw_path"]->string().append("/.");
@@ -810,8 +808,7 @@ void URITokenizer::executeAction_(int production) try {
             if ((*d_scanner)->type() == zpt::JSObject) {
                 if (!(*d_scanner)("path")->ok()) {
                     (*d_scanner) << "path" << zpt::json::array();
-                    (*d_scanner) << "raw_path"
-                                 << "";
+                    (*d_scanner) << "raw_path" << "";
                     (*d_scanner) << "is_relative" << true;
                 }
                 (*d_scanner)["raw_path"]->string().append("/..");

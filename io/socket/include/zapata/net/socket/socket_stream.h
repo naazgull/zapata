@@ -986,7 +986,8 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
                 throw zpt::ClosedException("server socket file descriptor has been closed");
             }
 
-            expect(_newsockfd > 0, "error while accepting new connection");
+            expect(_newsockfd > 0,
+                   "error while accepting new connection: " << std::string(std::strerror(errno)));
 
             struct linger _so_linger;
             _so_linger.l_onoff = 1;

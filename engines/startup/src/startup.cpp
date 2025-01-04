@@ -56,8 +56,7 @@ zpt::plugin::plugin(zpt::json _options, zpt::json _config)
 }
 
 zpt::plugin::~plugin() {
-    this->__shutdown->store(true);
-
+    this->__state->store(PLUGIN_STATE_IN_SHUTDOWN);
     if (this->__lib_handler == nullptr) {
         zlog("plugin " << this->__name << " wasn't properly loaded", zpt::warning);
         return;
@@ -72,6 +71,7 @@ zpt::plugin::~plugin() {
 
     dlclose(this->__lib_handler);
     this->__lib_handler = nullptr;
+    this->__state->store(PLUGIN_STATE_UNLOADED);
 }
 
 auto zpt::plugin::name() -> std::string& { return this->__name; }
@@ -80,7 +80,13 @@ auto zpt::plugin::source() -> std::string& { return this->__source; }
 
 auto zpt::plugin::config() -> zpt::json& { return this->__config; }
 
-auto zpt::plugin::is_shutdown_ongoing() -> bool { return this->__shutdown->load(); }
+auto zpt::plugin::is_shutdown_ongoing() -> bool {
+    return this->__state->load() == PLUGIN_STATE_IN_SHUTDOWN;
+}
+
+auto zpt::plugin::is_loaded() -> bool { return this->__state->load() == PLUGIN_STATE_LOADED; }
+
+auto zpt::plugin::is_unloaded() -> bool { return this->__state->load() == PLUGIN_STATE_UNLOADED; }
 
 auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin& {
     this->__threads.emplace_back(_callback);

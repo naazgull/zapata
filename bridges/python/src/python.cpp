@@ -22,6 +22,7 @@
 
 #include <zapata/python/python.h>
 #include <zapata/base/sentry.h>
+#include <zapata/globals/globals.h>
 #include <datetime.h>
 
 auto zpt::PYTHON_BRIDGE() -> ssize_t& {
@@ -75,7 +76,7 @@ zpt::py_object::operator PyObject*() { return this->__underlying; }
 auto zpt::py_object::get() -> PyObject* { return this->__underlying; }
 
 zpt::python::bridge::~bridge() {
-    // if (this->is_initialized()) { Py_Finalize(); }
+    if (this->is_initialized()) { Py_Finalize(); }
 }
 
 auto zpt::python::bridge::name() const -> std::string { return "python"; }
@@ -86,8 +87,8 @@ auto zpt::python::bridge::setup_module(zpt::json _conf, std::string _name) -> zp
     return (*this);
 }
 
-auto zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback)
-  -> zpt::python::bridge& {
+auto zpt::python::bridge::setup_module(zpt::json _conf,
+                                       callback_type _callback) -> zpt::python::bridge& {
     expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
     this->__builtin_to_load.insert(
       std::make_pair(_conf("name")->string(), std::make_tuple(_callback, _conf)));
@@ -102,7 +103,8 @@ auto zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
     if (_found != this->__modules.end()) {
         auto& _module = _found->second;
         auto _dictionary = PyModule_GetDict(_module);
-        auto _func = PyDict_GetItemString(_dictionary, _to_locate("function")->string().data());
+        auto _key = PyUnicode_FromString(_to_locate("function")->string().data());
+        auto _func = PyDict_GetItemWithError(_dictionary, _key);
         return _func;
     }
     return nullptr;
@@ -534,8 +536,8 @@ auto zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
     return nullptr;
 }
 
-auto zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
-  -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(zpt::json _func_name,
+                                  zpt::json _args) -> zpt::python::bridge::object_type {
     this->initialize();
 
     expect(_func_name->is_object(), "Python: cannot call a null function");
@@ -550,8 +552,8 @@ auto zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
     return this->execute(_func, _tuple);
 }
 
-auto zpt::python::bridge::execute(object_type _func, object_type _args)
-  -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(object_type _func,
+                                  object_type _args) -> zpt::python::bridge::object_type {
     this->initialize();
 
     expect(_func.get() != nullptr, "Python: cannot call a null function");
@@ -569,15 +571,17 @@ auto zpt::python::bridge::execute(object_type _func, object_type _args)
     return _ret;
 }
 
-auto zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
-  -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(zpt::json _self,
+                                  std::string _func_name,
+                                  std::nullptr_t) -> zpt::python::bridge::object_type {
     this->initialize();
     expect(_self->ok(), "Python: cannot call a function over a null instance");
     return this->execute(this->to_object(_self), _func_name, nullptr);
 }
 
-auto zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
-  -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(object_type _self,
+                                  std::string _func_name,
+                                  std::nullptr_t) -> zpt::python::bridge::object_type {
     this->initialize();
 
     expect(_self != nullptr, "Python: cannot call a function over a null instance");
@@ -595,9 +599,8 @@ auto zpt::python::bridge::execute(object_type _self, std::string _func_name, std
 }
 
 auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
-    auto _not_initialized{ false };
-    if (this->__initialized.compare_exchange_strong(_not_initialized, true)) {
-        Py_SetProgramName((wchar_t*)("zpt"));
+    if (!this->__initialized.exchange(true)) {
+        // Py_SetProgramName((wchar_t*)("zpt"));
 
         std::unique_ptr<struct _inittab[]> _initt{
             new struct _inittab[this->__builtin_to_load.size() + 1]

@@ -101,8 +101,9 @@ auto zpt::lua::bridge::thread_instance() -> bridge& {
     return _return;
 }
 
-auto zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
-  -> zpt::lua::bridge& {
+auto zpt::lua::bridge::setup_module(zpt::json _conf,
+                                    std::string _external_path,
+                                    bool _persist) -> zpt::lua::bridge& {
     expect(_conf("module")->is_string(), "Lua: module name must be provided");
     expect(!luaL_loadfile(this->__underlying, _external_path.data()),
            "Lua: error loading module '" << _external_path
@@ -114,8 +115,9 @@ auto zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path,
     return (*this);
 }
 
-auto zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
-  -> zpt::lua::bridge& {
+auto zpt::lua::bridge::setup_module(zpt::json _conf,
+                                    callback_type _callback,
+                                    bool _persist) -> zpt::lua::bridge& {
     expect(_conf("module")->is_string(), "Lua: module name must be provided");
     zlog("Lua: loading builtin module " << _conf("module"), zpt::info);
     _callback(this->__underlying);
@@ -227,8 +229,8 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert) -> zpt::lua::bridge::obj
     return this->to_object(_to_convert, this->__underlying);
 }
 
-auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
-  -> zpt::lua::bridge::object_type {
+auto zpt::lua::bridge::to_object(zpt::json _to_convert,
+                                 object_type _return) -> zpt::lua::bridge::object_type {
     switch (_to_convert->type()) {
         case zpt::JSObject: {
             lua_newtable(_return);
@@ -285,8 +287,8 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
     return _return;
 }
 
-auto zpt::lua::bridge::from_ref(zpt::json _to_convert, object_type _return)
-  -> zpt::lua::bridge::object_type {
+auto zpt::lua::bridge::from_ref(zpt::json _to_convert,
+                                object_type _return) -> zpt::lua::bridge::object_type {
     unsigned long _ref{ 0 };
     if (_to_convert->is_lambda()) {
         std::istringstream _iss;

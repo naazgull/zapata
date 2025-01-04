@@ -24,8 +24,7 @@
 #include <zapata/globals.h>
 
 auto zpt::globals::to_string() -> std::string {
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
-                                          zpt::locks::spin_lock::shared };
+    std::shared_lock _sentry{ zpt::globals::__variables_lock };
     std::ostringstream _out;
     _out << "Global variables:" << std::endl;
     for (auto [_key, _value] : zpt::globals::__variables) {

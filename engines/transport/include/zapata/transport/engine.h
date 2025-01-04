@@ -17,8 +17,8 @@ class resolver_t {
     resolver_t() = default;
     virtual ~resolver_t() = default;
 
-    virtual auto resolve(zpt::message _received, initializer_t _initializer) const
-      -> std::list<zpt::event> = 0;
+    virtual auto resolve(zpt::message _received,
+                         initializer_t _initializer) const -> std::list<zpt::event> = 0;
 };
 using resolver = std::shared_ptr<resolver_t>;
 } // namespace events
@@ -30,8 +30,8 @@ class engine {
     virtual ~engine() = default;
 
     auto add_resolver(zpt::events::resolver _resolver) -> zpt::transports::engine&;
-    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
-      -> std::list<zpt::event>;
+    auto resolve(zpt::message _received,
+                 zpt::events::initializer_t _initializer) const -> std::list<zpt::event>;
 
   private:
     zpt::json __configuration;

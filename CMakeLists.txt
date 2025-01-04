@@ -5,11 +5,6 @@ project(zapata VERSION 2.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(THIRD_PARTY_INSTALL_PREFIX "Third-party library installation directory")
-if (NOT THIRD_PARTY_INSTALL_PREFIX)
-  set(THIRD_PARTY_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/third_party/install)
-endif()
-
 option(WITH_ASAN "Enable address sanitizer" OFF)
 option(WITH_UBSAN "Enable undefined-behavior sanitizer" OFF)
 option(WITH_TSAN "Enable thread sanitizer" OFF)
@@ -43,18 +38,12 @@ list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/lib
   ${CMAKE_INSTALL_PREFIX}/lib64
 )
-list(APPEND CMAKE_BUILD_RPATH
-  ${THIRD_PARTY_INSTALL_PREFIX}/bin
-  ${THIRD_PARTY_INSTALL_PREFIX}/lib
-  ${THIRD_PARTY_INSTALL_PREFIX}/lib64
-)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
 set(CMAKE_SKIP_INSTALL_RPATH OFF)
 set(CMAKE_SKIP_BUILD_RPATH OFF)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 
 message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
-message("-- Build runtime path: ${CMAKE_BUILD_RPATH}")
 
 add_compile_options(
   -fno-omit-frame-pointer
@@ -73,7 +62,7 @@ else()
 endif()
 
 find_package(Python3 COMPONENTS Interpreter Development)
-find_package(Lua)
+find_package(Lua 5.4)
 find_package(OpenSSL)
 find_package(SQLite3)
 find_library(LMDB_LIBS NAMES lmdb
@@ -85,14 +74,11 @@ find_library(LMDB_LIBS NAMES lmdb
     /usr/local/lib64
 )
 
-include(third_party/third_party.cmake)
-
 include_directories(
   SYSTEM
     ${Python3_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIR}
     ${SQLite3_INCLUDE_DIRS}
-    ${THIRD_PARTY_INSTALL_PREFIX}/include
 )
 
 add_subdirectory(bridges/base)

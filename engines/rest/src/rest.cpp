@@ -40,9 +40,8 @@ zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
     }
 }
 
-auto zpt::rest::resolver_t::resolve(zpt::message _received,
-                                    zpt::events::initializer_t _initializer) const
-  -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
+  const -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wrestrict"
@@ -67,13 +66,8 @@ auto zpt::rest::resolver_t::broadcast_service(std::string _query) -> void {
     auto _service = zpt::allocate_message<zpt::http::basic_request>();
     _service->performative(zpt::Notify);
     _service->uri("/services");
-    _service->headers() << "Content-Type"
-                        << "application/json"
-                        << "ST"
-                        << "urn:schemas-upnp-org:service:*"
-                        << "MAN"
-                        << "\"ssdp:discover\""
-                        << "MX"
+    _service->headers() << "Content-Type" << "application/json" << "ST"
+                        << "urn:schemas-upnp-org:service:*" << "MAN" << "\"ssdp:discover\"" << "MX"
                         << "3";
 
     auto _resources = zpt::json::array();

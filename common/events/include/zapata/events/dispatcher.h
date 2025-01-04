@@ -42,12 +42,12 @@ concept Operation = requires(T t,
                              std::exception const& _e,
                              std::bad_alloc const& _bae,
                              zpt::failed_expectation const& _fe) {
-                        { t(_d) } -> std::convertible_to<zpt::events::state>;
-                        { t.blocked() } -> std::convertible_to<bool>;
-                        { t.catch_error(_e) } -> std::convertible_to<bool>;
-                        { t.catch_error(_bae) } -> std::convertible_to<bool>;
-                        { t.catch_error(_fe) } -> std::convertible_to<bool>;
-                    };
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.blocked() } -> std::convertible_to<bool>;
+    { t.catch_error(_e) } -> std::convertible_to<bool>;
+    { t.catch_error(_bae) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe) } -> std::convertible_to<bool>;
+};
 
 namespace zpt {
 class abstract_event {

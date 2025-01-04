@@ -136,8 +136,9 @@ auto zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> voi
       _signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
 
-auto zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _lambda)
-  -> void {
+auto zpt::lambda::add(std::string const& _name,
+                      unsigned short _n_args,
+                      zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_name, _n_args);
         expect(true, "lambda already defined");

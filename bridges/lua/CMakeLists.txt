@@ -25,7 +25,8 @@ target_include_directories(zapata-bridge-lua
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua
-  PRIVATE
+  PUBLIC
+    lua5.4
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -69,6 +70,7 @@ target_include_directories(zapata-bridge-lua-plugin
 )
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
+    lua5.4
     zapata-base
     zapata-parser-json
     zapata-events
@@ -117,6 +119,7 @@ target_include_directories(zapata_test_bridge_lua
 )
 target_link_libraries(zapata_test_bridge_lua
   PUBLIC
+    lua5.4
     zapata-base
     zapata-parser-json
     zapata-bridge-base

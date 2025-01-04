@@ -47,10 +47,11 @@ class resolver_t : public zpt::events::resolver_t {
     template<typename T>
     auto add(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
-    auto add(zpt::performative _performtive, std::string _path, zpt::json _metadata)
-      -> zpt::rest::resolver_t&;
-    virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
-      -> std::list<zpt::event>;
+    auto add(zpt::performative _performtive,
+             std::string _path,
+             zpt::json _metadata) -> zpt::rest::resolver_t&;
+    virtual auto resolve(zpt::message _received,
+                         zpt::events::initializer_t _initializer) const -> std::list<zpt::event>;
 
   private:
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
@@ -60,8 +61,8 @@ class resolver_t : public zpt::events::resolver_t {
 
     auto broadcast_service(std::string _query) -> void;
     template<typename T>
-    static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
-      -> zpt::event;
+    static auto make_callback(zpt::message _received,
+                              zpt::events::initializer_t _initializer) -> zpt::event;
 };
 using resolver = std::shared_ptr<zpt::rest::resolver_t>;
 
@@ -87,8 +88,8 @@ auto zpt::rest::resolver_t::add(std::string _path, zpt::json _metadata) -> zpt::
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::add(zpt::performative _performative, std::string _path)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::performative _performative,
+                                std::string _path) -> zpt::rest::resolver_t& {
     return this->add<T>(_performative, _path, { "host", "localhost" });
 }
 

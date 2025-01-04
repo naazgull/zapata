@@ -28,7 +28,7 @@
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/text/convert.h>
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
 auto STREAM_POLLING() -> ssize_t&;
@@ -96,7 +96,7 @@ class polling {
 
   private:
     int __epoll_fd{ -1 };
-    zpt::locks::spin_lock __poll_lock{};
+    zpt::locks::spin_mutex __poll_lock{};
     std::map<int, zpt::stream> __polled_streams;
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
