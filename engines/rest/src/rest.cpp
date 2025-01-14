@@ -24,11 +24,6 @@
 #include <zapata/http.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::REST_RESOLVER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
   : __configuration{ _global_config } {
     if (this->__configuration("upnp")->ok()) {
@@ -88,7 +83,12 @@ auto zpt::rest::service_broadcast::blocked() const -> bool { return false; }
 auto zpt::rest::service_broadcast::operator()(zpt::events::dispatcher& _dispatcher)
   -> zpt::events::state {
     zlog(this->received(), zpt::debug);
-    // auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    // auto& _resolver = zpt::REST_RESOLVER();
     // _resolver.add<
     return zpt::events::finish;
+}
+
+auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::rest::resolver {
+    static zpt::rest::resolver _global = std::make_shared<zpt::rest::resolver_t>(_config);
+    return _global;
 }

@@ -27,9 +27,7 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-
-    zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER())
-      .add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
+    zpt::TRANSPORT_LAYER().add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
 
     if (_config("port")->ok()) {
         auto _stream = zpt::make_stream<zpt::socketstream>(
@@ -37,7 +35,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
         zpt::net::upnp::setup_broadcast(static_cast<int>(*_stream), _config);
 
-        auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+        auto& _polling = zpt::STREAM_POLLING();
         _polling.listen_on(std::move(_stream));
 
         zlog("Started UPNP transport on " << _config("bind")->string() << ":" << _config("port"),

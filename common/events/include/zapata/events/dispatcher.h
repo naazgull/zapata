@@ -28,8 +28,6 @@
 #include <zapata/allocator.h>
 
 namespace zpt {
-auto DISPATCHER() -> ssize_t&;
-
 namespace events {
 enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
 class dispatcher;
@@ -112,6 +110,7 @@ class dispatcher {
     auto loop(long _consumer_nr) -> void;
 };
 } // namespace events
+auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher&;
 template<typename T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt
@@ -158,17 +157,15 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::e
 
 template<typename T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::allocate_shared<zpt::event_t<T>>(
-      zpt::allocator<zpt::event_t<T>>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
-      _operator);
+    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
+                                                 _operator);
     return std::allocate_shared<zpt::event_t<T>>(std::allocator<zpt::event_t<T>>{}, _operator);
 }
 
 template<typename T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::allocate_shared<zpt::event_t<T>>(
-      zpt::allocator<zpt::event_t<T>>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
-      std::forward<Args>(_args)...);
+    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
+                                                 std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>

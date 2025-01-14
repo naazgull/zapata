@@ -24,11 +24,6 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/uri/uri.h>
 
-auto zpt::TRANSPORT_LAYER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::json_message::json_message() {
     auto _rawtime = time(nullptr);
     struct tm _ptm;
@@ -385,4 +380,9 @@ auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream& {
 auto operator>>(std::istream& _in, zpt::message _out) -> std::istream& {
     _out->from_stream(_in);
     return _in;
+}
+
+auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {
+    static zpt::network::layer _global{ _config };
+    return _global;
 }

@@ -27,8 +27,6 @@
 #include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
-auto PYTHON_BRIDGE() -> ssize_t&;
-
 class py_object {
   public:
     py_object() = default;
@@ -100,6 +98,8 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
     std::map<std::string, zpt::json> __external_to_load;
 };
 } // namespace python
+
+auto PYTHON_BRIDGE() -> zpt::python::bridge&;
 } // namespace zpt
 
 template<typename... Args>

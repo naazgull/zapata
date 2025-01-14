@@ -35,11 +35,6 @@ struct stream_ptr {
 };
 } // namespace zpt
 
-auto zpt::STREAM_POLLING() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::basic_stream::basic_stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() } {
     this->__underlying->rdbuf(_rhs.rdbuf());
@@ -96,8 +91,7 @@ auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
 zpt::polling::polling()
   : __epoll_fd{ epoll_create(1) } {}
 
-zpt::polling::~polling() { // ::close(this->__epoll_fd);
-}
+zpt::polling::~polling() { ::close(this->__epoll_fd); }
 
 auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling& {
     this->__delegates.push_back(_callback);
@@ -157,7 +151,7 @@ auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto zpt::polling::poll() -> void {
+auto zpt::polling::poll() -> zpt::polling& {
     std::uint64_t _sd_watchdog_usec{ ::POLL_WAIT_TIMEOUT * 1000 };
     auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
     zpt::epoll_event_t _epoll_events[MAX_EVENT_PER_POLL];
@@ -192,6 +186,15 @@ auto zpt::polling::poll() -> void {
         }
 
     } while (!this->__shutdown.load());
+    return (*this);
 }
 
-auto zpt::polling::shutdown() -> void { this->__shutdown.store(true); }
+auto zpt::polling::shutdown() -> zpt::polling& {
+    this->__shutdown.store(true);
+    return (*this);
+}
+
+auto zpt::STREAM_POLLING() -> zpt::polling& {
+    static zpt::polling _global;
+    return _global;
+}

@@ -32,8 +32,6 @@
 #include <zapata/base/expect.h>
 
 namespace zpt {
-auto MEM_POOL() -> ssize_t&;
-
 namespace mem {
 class pool {
   public:
@@ -52,6 +50,8 @@ class pool {
     zpt::padded_atomic<size_t> __allocated_size{ 0 };
 };
 } // namespace mem
+
+auto MEM_POOL(std::uint64_t _max_mem = 0) -> zpt::mem::pool&;
 
 template<typename T>
 class allocator {

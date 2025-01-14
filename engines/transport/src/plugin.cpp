@@ -26,7 +26,7 @@
 #include <zapata/transport/engine.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::make_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE(), _plugin.config());
+    zpt::TRANSPORT_ENGINE(_plugin.config());
     zlog("Started multi-transport engine ("
            << (_plugin.config()("limits")("max_consumer_threads")->ok()
                  ? _plugin.config()("limits")("max_consumer_threads")->integer()
@@ -36,6 +36,5 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zpt::release_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE());
     zlog("Stopped multi-transport engine", zpt::info);
 }

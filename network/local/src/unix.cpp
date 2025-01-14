@@ -25,11 +25,6 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::UNIX_SERVER_SOCKET() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 auto zpt::net::transport::unix_socket::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();
     return _to_return;
@@ -61,4 +56,9 @@ auto zpt::net::transport::unix_socket::process_incoming_reply(zpt::stream _strea
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
+}
+
+auto zpt::UNIX_SERVER_SOCKET(std::string const& _path) -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ _path };
+    return _global;
 }

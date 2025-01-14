@@ -22,11 +22,6 @@
 
 #include <zapata/lua/lua.h>
 
-auto zpt::LUA_BRIDGE() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::lua_object::lua_object()
   : __underlying{ luaL_newstate() }
   , __initialized_internally{ true } {
@@ -345,4 +340,9 @@ auto zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
         this->setup_module(_conf, _callback, false);
     }
     return (*this);
+}
+
+auto zpt::LUA_BRIDGE() -> zpt::lua::bridge& {
+    static zpt::lua::bridge _global;
+    return _global;
 }

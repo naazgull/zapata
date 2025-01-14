@@ -31,8 +31,6 @@
 #include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
-auto STREAM_POLLING() -> ssize_t&;
-
 enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };
 using epoll_event_t = struct epoll_event;
 
@@ -91,8 +89,8 @@ class polling {
     auto mute(zpt::stream _stream) -> zpt::polling&;
     auto unmute(zpt::stream _stream) -> zpt::polling&;
 
-    auto poll() -> void;
-    auto shutdown() -> void;
+    auto poll() -> zpt::polling&;
+    auto shutdown() -> zpt::polling&;
 
   private:
     int __epoll_fd{ -1 };
@@ -104,6 +102,8 @@ class polling {
     auto erase(zpt::stream _stream) -> zpt::polling&;
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
+
+auto STREAM_POLLING() -> zpt::polling&;
 
 template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;

@@ -23,16 +23,16 @@
 #include <zapata/base.h>
 #include <zapata/globals.h>
 
-auto zpt::globals::to_string() -> std::string {
-    std::shared_lock _sentry{ zpt::globals::__variables_lock };
-    std::ostringstream _out;
-    _out << "Global variables:" << std::endl;
-    for (auto [_key, _value] : zpt::globals::__variables) {
-        _out << _key << ":" << std::endl << std::flush;
-        for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
-    }
-    return _out.str();
-}
+// auto zpt::globals::to_string() -> std::string {
+//     std::shared_lock _sentry{ zpt::globals::__variables_lock };
+//     std::ostringstream _out;
+//     _out << "Global variables:" << std::endl;
+//     for (auto [_key, _value] : zpt::globals::__variables) {
+//         _out << _key << ":" << std::endl << std::flush;
+//         for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
+//     }
+//     return _out.str();
+// }
 
 auto zpt::thread_local_table::to_string() -> std::string {
     std::ostringstream _out;

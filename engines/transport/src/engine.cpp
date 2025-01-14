@@ -2,11 +2,6 @@
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
-auto zpt::TRANSPORT_ENGINE() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 namespace {
 template<typename T>
 auto get_error_body(T const& _e) -> zpt::json {
@@ -21,7 +16,7 @@ auto get_error_body(T const& _e) -> zpt::json {
 template<typename T>
 auto report_error(T const& _e, zpt::stream _stream) -> void {
     _stream->state() = zpt::stream_state::ERRORING_OUT;
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+    auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
     auto _reply = _transport->make_reply(false);
     _reply->status(400);
@@ -70,7 +65,7 @@ auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> boo
 }
 
 auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+    auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     try {
         auto _received = _transport->receive(this->__stream);
@@ -129,7 +124,7 @@ auto zpt::events::send::catch_error(std::bad_alloc const& _e) -> bool {
 auto zpt::events::send::catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
 auto zpt::events::send::operator()(zpt::events::dispatcher&) -> zpt::events::state {
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+    auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send->headers()["Content-Type"] = "application/json";
     _transport->send(this->__stream, this->__to_send);
@@ -142,7 +137,7 @@ zpt::events::process::process(zpt::message _received)
 zpt::events::process::~process() {
     try {
         if (this->__to_send == nullptr) {
-            auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+            auto _transport = zpt::TRANSPORT_LAYER() //
                                 .get(this->__stream->transport());
             this->__to_send = _transport->make_reply(this->__received);
         }
@@ -189,7 +184,7 @@ auto zpt::events::process::initialize(zpt::events::dispatcher& _dispatcher,
     this->__dispatcher = _dispatcher;
     this->__polling = _polling;
     this->__stream = _stream;
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+    auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send = _transport->make_reply(this->__received);
     this->__to_send->status(0);
@@ -205,7 +200,7 @@ zpt::transports::engine::engine(zpt::json _config)
   , __dispatcher{ _config("limits")("max_consumer_threads")->ok()
                     ? _config("limits")("max_consumer_threads")->integer()
                     : 1 } {
-    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
+    zpt::STREAM_POLLING() //
       .register_delegate([this](zpt::polling& _poll, zpt::stream _stream) -> bool {
           try {
               this->__dispatcher.trigger<zpt::events::receive>(*this, _poll, _stream);
@@ -244,4 +239,9 @@ auto zpt::transports::engine::resolve(zpt::message _received,
         }
     }
     return _return;
+}
+
+auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {
+    static zpt::transports::engine _global{ _config };
+    return _global;
 }

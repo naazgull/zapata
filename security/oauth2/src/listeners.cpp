@@ -30,8 +30,8 @@ auto zpt::auth::oauth2::authorize_listener(zpt::pipeline::event<zpt::exchange>& 
     auto& _channel = _event->content();
     auto _message = _channel->received();
     auto _body = _message["body"];
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    auto& _server = zpt::global_cast<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto& _server = zpt::OAUTH2_SERVER();
     auto _authorization =
       _server.authorize(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _authorization;
@@ -41,8 +41,8 @@ auto zpt::auth::oauth2::token_listener(zpt::pipeline::event<zpt::exchange>& _eve
     auto& _channel = _event->content();
     auto _message = _channel->received();
     auto _body = _message["body"];
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    auto& _server = zpt::global_cast<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto& _server = zpt::OAUTH2_SERVER();
     auto _token = _server.token(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _token;
 }
@@ -51,8 +51,8 @@ auto zpt::auth::oauth2::refresh_listener(zpt::pipeline::event<zpt::exchange>& _e
     auto& _channel = _event->content();
     auto _message = _channel->received();
     auto _body = _message["body"];
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    auto& _server = zpt::global_cast<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto& _server = zpt::OAUTH2_SERVER();
     auto _refresh =
       _server.refresh(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _refresh;
@@ -62,8 +62,8 @@ auto zpt::auth::oauth2::validate_listener(zpt::pipeline::event<zpt::exchange>& _
     auto& _channel = _event->content();
     auto _message = _channel->received();
     auto _body = _message["body"];
-    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
-    auto& _server = zpt::global_cast<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto& _server = zpt::OAUTH2_SERVER();
     auto _validate =
       _server.validate(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _validate;

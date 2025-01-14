@@ -28,7 +28,6 @@
 #include <zapata/transport/engine.h>
 
 namespace zpt {
-auto REST_RESOLVER() -> ssize_t&;
 namespace rest {
 class resolver_t : public zpt::events::resolver_t {
   public:
@@ -75,6 +74,7 @@ class service_broadcast : public zpt::events::process {
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
 };
 } // namespace rest
+auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;
 } // namespace zpt
 
 template<typename T>

@@ -25,9 +25,9 @@
 #include <utility>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/net/socket/socket_stream.h>
 
 namespace zpt {
-auto WEBSOCKET_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace ws {
 auto handshake(zpt::stream& _stream) -> void;
@@ -48,4 +48,5 @@ class websocket : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+auto WEBSOCKET_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

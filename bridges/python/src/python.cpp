@@ -25,11 +25,6 @@
 #include <zapata/globals/globals.h>
 #include <datetime.h>
 
-auto zpt::PYTHON_BRIDGE() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::py_object::py_object(PyObject* _rhs)
   : __underlying{ _rhs } {
     if (this->__underlying != nullptr) { Py_INCREF(this->__underlying); }
@@ -644,3 +639,8 @@ auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
 }
 
 auto zpt::python::bridge::is_initialized() const -> bool { return this->__initialized.load(); }
+
+auto zpt::PYTHON_BRIDGE() -> zpt::python::bridge& {
+    static zpt::python::bridge _global;
+    return _global;
+}

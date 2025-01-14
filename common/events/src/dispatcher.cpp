@@ -22,11 +22,6 @@
 
 #include <zapata/events/dispatcher.h>
 
-auto zpt::DISPATCHER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::events::dispatcher::dispatcher(long _max_consumers)
   : __queue{ _max_consumers + 1 }
   , __max_consumers{ _max_consumers } {}
@@ -111,4 +106,9 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     this->__queue.clear_thread_context();
     --(*this->__running_consumers);
     zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
+}
+
+auto zpt::DISPATCHER(long int _consumers) -> zpt::events::dispatcher& {
+    static zpt::events::dispatcher _global{ _consumers };
+    return _global;
 }

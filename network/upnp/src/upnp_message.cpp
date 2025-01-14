@@ -30,12 +30,12 @@
 #include <zapata/json/json.h>
 #include <zapata/uri.h>
 
-zpt::http::basic_request::basic_request() {
+zpt::upnp::basic_request::basic_request() {
     this->__underlying["performative"] = zpt::ontology::to_str(zpt::Get);
     zpt::init(*this);
 }
 
-zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool)
+zpt::upnp::basic_request::basic_request(zpt::basic_message const& _request, bool)
   : basic_request{} {
     auto _req_headers = _request.headers();
     auto _headers = zpt::json::object();
@@ -51,7 +51,7 @@ zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool
       << "headers" << _headers;
 }
 
-auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
+auto zpt::upnp::basic_request::to_stream(std::ostream& _out) const -> void {
     _out << this->__underlying("performative")->string() << " "
          << static_cast<std::string>(this->__underlying("uri")("raw_path"));
 
@@ -84,7 +84,7 @@ auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
     _out << CRLF << _body;
 }
 
-auto zpt::http::basic_request::from_stream(std::istream& _in) -> void {
+auto zpt::upnp::basic_request::from_stream(std::istream& _in) -> void {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
@@ -100,7 +100,7 @@ auto zpt::http::basic_request::from_stream(std::istream& _in) -> void {
 
 auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::message {
     std::istringstream _oss;
-    auto _to_return = zpt::allocate_message<zpt::http::basic_request>();
+    auto _to_return = zpt::allocate_message<zpt::upnp::basic_request>();
     _oss.str(std::string{ _string, _length });
     _oss >> _to_return;
     return _to_return;

@@ -38,7 +38,7 @@ export default {
 
             if (this.received) {
                 if (!this.show) {
-                    this.show = 100;
+                    this.show = 100
                 }
                 this.received = false
                 return this.collection

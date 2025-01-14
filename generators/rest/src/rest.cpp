@@ -73,10 +73,8 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
     _load_block //
       ->add<zpt::ast::cpp_instruction>(zpt::format(
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
-      .add<zpt::ast::cpp_instruction>(
-        "auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG())")
-      .add<zpt::ast::cpp_instruction>(
-        "auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER())")
+      .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      .add<zpt::ast::cpp_instruction>("auto& _resolver = zpt::REST_RESOLVER()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
                                       "_config(\"rest\")(\"prefix\")->string() : \"\"");
 
@@ -166,7 +164,7 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
                                                             "    zapata-storage-mysqlx\n"
                                                             "    zapata-engine-transport\n"
                                                             "    zapata-engine-rest\n"
-                                                            "    mysqlcppconn8\n"
+                                                            "    mysqlcppconnx\n"
                                                             ")",
                                                             _lib));
         _file->add<zpt::ast::cmake_instruction>(
@@ -936,8 +934,7 @@ auto zpt::gen::rest::module::add_db_configuration(
   std::shared_ptr<zpt::ast::basic_code_block> _block,
   zpt::json _def) -> void {
     _block //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG())")
+      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>(zpt::format(
         "auto _session = zpt::make_connection<zpt::storage::{}::connection>(_config)->session()",
         this->__schema("info")("dbDriver")->string()))
@@ -965,9 +962,9 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
             if (!_has_path) {
                 _block
                   ->add<zpt::ast::cpp_instruction>("auto _path = this->received()->uri()(\"path\")")
-                  .add<zpt::ast::cpp_instruction>("size_t _prefix_len = "
-                                                  "zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG()"
-                                                  ")(\"rest\")(\"prefix_path_len\")->integer()");
+                  .add<zpt::ast::cpp_instruction>(
+                    "size_t _prefix_len = "
+                    "zpt::GLOBAL_CONFIG()(\"rest\")(\"prefix_path_len\")->integer()");
                 _has_path = true;
             }
         }

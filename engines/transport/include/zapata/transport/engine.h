@@ -7,8 +7,6 @@
 #include <list>
 
 namespace zpt {
-auto TRANSPORT_ENGINE() -> ssize_t&;
-
 namespace events {
 class process;
 using initializer_t = std::function<void(zpt::events::process& _event)>;
@@ -117,4 +115,5 @@ class process {
     zpt::message __to_send;
 };
 } // namespace events
+auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 } // namespace zpt

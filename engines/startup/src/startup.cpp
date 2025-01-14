@@ -24,15 +24,6 @@
 #include <zapata/transport.h>
 #include <zapata/startup/startup.h>
 
-auto zpt::BOOT() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-auto zpt::GLOBAL_CONFIG() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
   : __config{ _config } {
     expect(_options("name")->ok(), "missing name definition in plugin configuration");
@@ -129,6 +120,11 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
     return (*this);
 }
 
+auto zpt::startup::boot::unload() -> zpt::startup::boot& {
+    this->__plugins.clear();
+    return (*this);
+}
+
 auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
     expect(_plugin_options("name")->ok(), "missing name definition in plugin configuration");
     expect(this->__plugins.find(_plugin_options("name")->string()) == this->__plugins.end(),
@@ -144,4 +140,14 @@ auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_confi
 auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
     return static_cast<std::string>(_event("plugin")) + std::string("/") +
            std::to_string(static_cast<int>(_event("step")));
+}
+
+auto zpt::BOOT(zpt::json _config) -> zpt::startup::boot& {
+    static zpt::startup::boot _global{ _config };
+    return _global;
+}
+
+auto zpt::GLOBAL_CONFIG() -> zpt::json {
+    static zpt::json _global = zpt::json::object();
+    return _global;
 }

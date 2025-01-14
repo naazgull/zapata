@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int) -> void { zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown(); }
+auto deallocate(int) -> void { zpt::STREAM_POLLING().shutdown(); }
 
 auto nostop(int) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
@@ -77,7 +77,7 @@ auto main(int _argc, char* _argv[]) -> int {
 
     zpt::parameters::verify(_parameters, _parameter_setup);
 
-    auto _config = zpt::make_global<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object());
+    auto _config = zpt::GLOBAL_CONFIG();
     zpt::log_lvl = 8;
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
@@ -92,38 +92,37 @@ auto main(int _argc, char* _argv[]) -> int {
                         ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
                         : 0;
 
-    zpt::make_global<zpt::mem::pool>(zpt::MEM_POOL(),
-                                     _config("dispatcher")("limits")("max_memory")->ok()
-                                       ? _config("dispatcher")("limits")("max_memory")->integer()
-                                       : 0);
+    zpt::MEM_POOL(_config("dispatcher")("limits")("max_memory")->ok()
+                    ? _config("dispatcher")("limits")("max_memory")->integer()
+                    : 0);
 
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
-    zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
+    zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
-    zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER(), _config);
+    zpt::TRANSPORT_LAYER(_config);
     zlog("Initialized transport layer", zpt::info);
     if (_consumers != 0) {
-        zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //
+        zpt::DISPATCHER(_consumers) //
           .start_consumers(_consumers);
         zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
     }
-    zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config) //
+    zpt::BOOT(_config) //
       .load();
     zlog("All plugins loaded", zpt::notice);
-    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
-      .poll();
-
-    zpt::release_global<zpt::polling>(zpt::STREAM_POLLING());
+    zpt::STREAM_POLLING() //
+      .poll()
+      .shutdown();
     zlog("Unloaded stream polling service", zpt::info);
+
     if (_consumers != 0) {
-        zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER());
+        zpt::DISPATCHER() //
+          .stop_consumers();
         zlog("Stopped global event dispatcher", zpt::info);
     }
-    zpt::release_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     zlog("Unloaded transport layer", zpt::info);
-    zpt::release_global<zpt::startup::boot>(zpt::BOOT());
+    zpt::BOOT() //
+      .unload();
     zlog("Unloaded all plugins", zpt::notice);
-    zpt::release_global<zpt::json>(zpt::GLOBAL_CONFIG());
 
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }

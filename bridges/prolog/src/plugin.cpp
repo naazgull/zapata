@@ -25,7 +25,7 @@
 #include <zapata/prolog.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    // auto& _bridge = zpt::make_global<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
+    // auto& _bridge = zpt::PROLOG_BRIDGE();
     // _bridge.set_options(_plugin.config());
     // if (_bridge.options()("modules")->is_array()) {
     //     for (auto [_, __, _module] : _bridge.options()("modules")) {
@@ -36,6 +36,5 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    // zpt::release_global<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
     // zlog("Unloaded PROLOG bridge", zpt::info);
 }

@@ -1,7 +1,7 @@
 #include <zapata/allocator.h>
 
-auto zpt::MEM_POOL() -> ssize_t& {
-    static ssize_t _global{ -1 };
+auto zpt::MEM_POOL(std::uint64_t _max_mem) -> zpt::mem::pool& {
+    static zpt::mem::pool _global{ _max_mem };
     return _global;
 }
 

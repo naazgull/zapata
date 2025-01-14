@@ -25,11 +25,6 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::WEBSOCKET_SERVER_SOCKET() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     std::string _key;
     std::string _line;
@@ -147,4 +142,9 @@ auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream)
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
+}
+
+auto zpt::WEBSOCKET_SERVER_SOCKET(std::uint16_t _port) -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ _port };
+    return _global;
 }

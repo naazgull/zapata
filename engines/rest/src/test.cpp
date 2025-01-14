@@ -54,8 +54,8 @@ class logger : public zpt::events::process {
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Registering event in REST resolver", zpt::info);
-    auto _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
-    _resolver->add<collection>(zpt::Get, "/collection/{}");
+    zpt::REST_RESOLVER() //
+      ->add<collection>(zpt::Get, "/collection/{}");
     // _resolver->add<logger>("/{}/{}");
 }
 

@@ -26,13 +26,13 @@
 #include <zapata/streams.h>
 #include <zapata/transport.h>
 #include <zapata/http.h>
+#include <zapata/net/socket/socket_stream.h>
 
 #ifndef CRLF
 #define CRLF "\r\n"
 #endif
 
 namespace zpt {
-auto HTTP_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
 class http : public zpt::basic_transport {
@@ -48,4 +48,5 @@ class http : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+auto HTTP_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

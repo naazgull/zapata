@@ -28,8 +28,6 @@
 #include <zapata/json.h>
 
 namespace zpt {
-auto TRANSPORT_LAYER() -> ssize_t&;
-
 class basic_message {
   public:
     basic_message() = default;
@@ -158,6 +156,7 @@ class layer {
 auto resolve_content_type(zpt::basic_message const& _message) -> std::string;
 } // namespace network
 
+auto TRANSPORT_LAYER(zpt::json _config = nullptr) -> zpt::network::layer&;
 template<typename T, typename... Args>
 auto make_transport(Args... _args) -> zpt::transport;
 template<typename T, typename... Args>
@@ -184,7 +183,7 @@ auto zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {
 template<typename T, typename... Args>
 auto zpt::make_transport(Args... _args) -> zpt::transport {
     return std::allocate_shared<T>(
-      zpt::allocator<T>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
+      zpt::allocator<T>{ zpt::MEM_POOL() },
       std::forward<Args>(_args)...);
 }
 
@@ -196,6 +195,7 @@ auto zpt::make_message(Args... _args) -> zpt::message {
 template<typename T, typename... Args>
 auto zpt::allocate_message(Args... _args) -> zpt::message {
     return std::allocate_shared<T>(
-      zpt::allocator<T>{ zpt::global_cast<zpt::mem::pool>(zpt::MEM_POOL()) },
+      zpt::allocator<T>{ zpt::MEM_POOL() },
       std::forward<Args>(_args)...);
 }
+

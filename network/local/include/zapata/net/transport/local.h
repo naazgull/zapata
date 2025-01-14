@@ -25,9 +25,9 @@
 #include <utility>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/net/socket/socket_stream.h>
 
 namespace zpt {
-auto UNIX_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
 class unix_socket : public zpt::basic_transport {
@@ -54,4 +54,5 @@ class file : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+auto UNIX_SERVER_SOCKET(std::string const& _path = "") -> zpt::serversocketstream&;
 } // namespace zpt
