@@ -318,6 +318,17 @@ class json {
 };
 } // namespace zpt
 
+template<>
+struct std::formatter<zpt::json> {
+    constexpr auto parse(std::format_parse_context& _context) { return _context.begin(); }
+
+    auto format(zpt::json const& _in, std::format_context& _context) const {
+        std::ostringstream _out;
+        _in.stringify(_out);
+        return std::format_to(_context.out(), "{}", _out.str());
+    }
+};
+
 namespace zpt {
 class JSONIterator {
   public:

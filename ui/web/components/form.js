@@ -23,6 +23,7 @@ export default {
             fetched: {},
             messages: { result: null, fields: {} },
             received: false,
+            refresh: false,
             show: 0,
             submission_url: this.target_url,
             submission_method: 'POST'
@@ -30,35 +31,30 @@ export default {
     },
     computed: {
         document() {
-            let show = this.show
-            let document_id = this.document_id
+            if (this.refresh) {
+                if (!this.document_id) {
+                    this.show = 100
+                    this.submission_url = this.target_url.replaceAll('{id}', '')
+                    this.submission_method = 'POST'
+                    this.fetched = this.initialize_document()
+                }
+                else {
+                    this.submission_url = this.target_url.replaceAll('{id}', this.document_id)
 
-            if (!document_id) {
-                this.show = 100
-                this.submission_url = this.target_url.replaceAll('{id}', '')
-                this.submission_method = 'POST'
-                return this.initialize_document()
+                    let url = this.submission_url
+                    url += '?fields=' + this.visible.join(",")
+
+                    this.fetch_data(url).then((data) => {
+                        this.fetched = data
+                        this.refresh = false
+                        if (!this.show) {
+                            this.show = 100
+                        }
+                    })
+                    this.submission_method = 'PATCH'
+                }
             }
-
-            this.submission_url = this.target_url.replaceAll('{id}', document_id)
-
-            if (this.received) {
-                this.show = 100
-                this.received = false
-                return this.fetched
-            }
-
-            if (document_id) {
-                let url = this.submission_url
-                url += '?fields=' + this.visible.join(",")
-
-                this.fetch_data(url).then((data) => {
-                    this.received = true
-                    this.fetched = data
-                })
-                this.submission_method = 'PATCH'
-                return this.fetched
-            }
+            return this.fetched
         }
     },
     watch: {
@@ -105,6 +101,7 @@ export default {
             else {
                 this.document_id = null
             }
+            this.refresh = true;
         },
         async fetch_data(url) {
             try {
@@ -280,7 +277,8 @@ export default {
                :title="fields[key].help">{{ fields[key].label }}</a>
           </div>
           <div v-if="fields[key].type == 'separator'">
-            <p><hr/>{{ fields[key].label }}</p>
+            <hr>
+            <p>{{ fields[key].label }}</p>
           </div>
         </div>
         <slot name="components"></slot>

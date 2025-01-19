@@ -137,7 +137,7 @@ inline std::string collection_html_template = R"(
       { "imports": {
           "data::menu": "/menu.js",
           "data::lang": "/lang/{{collection-dictionary}}.js",
-          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js",
           "zpt": "/components/zpt/zpt.js",
           "zpt::menu": "/components/zpt/menu.js",
           "zpt::modal": "/components/zpt/modal.js",
@@ -219,7 +219,7 @@ inline std::string collection_html_template = R"(
             <zpt-form
               :lang="config.get_lang() "
               :dictionary="config.pages.{{collection-name}}.dictionary"
-              :id="'{{collection-name}}_form'"
+              :id="'{{collection-name}}'"
               :target_url="config.get_url_prefix() + '{{collection-uri}}/{id}'"
               :fields="fields"
               :visible="form.visible"

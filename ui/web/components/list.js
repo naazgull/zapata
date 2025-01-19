@@ -11,7 +11,6 @@ export default {
     data() {
         return {
             collection: [],
-            received: false,
             show: 0,
             filter_key: this.visible[0],
             filter_term: null,
@@ -24,40 +23,25 @@ export default {
     },
     computed: {
         filtered_data() {
-            let sort_key = this.sort_key
-            let sort_order = this.sort_order
-            let filter_key = this.filter_key
-            let filter_term = this.filter_term
-            let page_size = this.page_size
-            let page_nr = this.page_nr
-            let refresh = this.refresh
-
             if (this.refresh) {
-                this.refresh = false
-            }
-
-            if (this.received) {
-                if (!this.show) {
-                    this.show = 100
+                let url = this.url
+                url += '?fields=' + this.visible.join(",") + this.get_url_filter_terms()
+                if (this.filter_term) {
+                    url += '&' + this.filter_key + '={.like(%25' + encodeURI(this.filter_term) + '%25,i).}'
                 }
-                this.received = false
-                return this.collection
-            }
+                if (this.sort_key) {
+                    url += '&order_by=' + this.sort_key + '%20' + (this.sort_order == 1 ? 'asc' : 'desc')
+                }
+                url += '&page_size=' + this.page_size + '&page_start_index=' + (this.page_nr * this.page_size)
 
-            let url = this.url
-            url += '?fields=' + this.visible.join(",") + this.get_url_filter_terms()
-            if (filter_term) {
-                url += '&' + this.filter_key + '={.like(%25' + encodeURI(filter_term) + '%25,i).}'
+                this.fetch_data(url).then((data) => {
+                    this.collection = data
+                    this.refresh = false
+                    if (!this.show) {
+                        this.show = 100
+                    }
+                })
             }
-            if (sort_key) {
-                url += '&order_by=' + sort_key + '%20' + (this.sort_order == 1 ? 'asc' : 'desc')
-            }
-            url += '&page_size=' + page_size + '&page_start_index=' + (page_nr * page_size)
-
-            this.fetch_data(url).then((data) => {
-                this.received = true
-                this.collection = data
-            })
             return this.collection
         }
     },
@@ -76,6 +60,7 @@ export default {
                 }
             } catch (error) {
                 console.log(error)
+                alert(error)
             }
             return []
         },

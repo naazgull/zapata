@@ -66,7 +66,7 @@ class event_t : public zpt::abstract_event {
   public:
     template<typename... Args>
     event_t(Args&&... _args);
-    virtual ~event_t() = default;
+    virtual ~event_t() override = default;
 
     auto operator*() -> T&;
     auto operator*() const -> T const&;

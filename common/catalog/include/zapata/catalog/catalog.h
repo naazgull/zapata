@@ -113,12 +113,13 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
             for (auto [_, __, _prefix] : _prefixes) {
-                _result += this->query(zpt::format(EXACT_SEARCH_STMT, //
+                _result += this->query(std::format(EXACT_SEARCH_STMT, //
                                                    _prefix->string(),
                                                    _separator,
                                                    _part->string(),
                                                    _prefix->string(),
-                                                   _separator));
+                                                   _separator,
+                                                   "{}"));
             }
             expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");
         }
@@ -127,7 +128,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
 
             for (auto [_, __, _prefix] : _prefixes) {
                 if (this
-                      ->query(zpt::format(SEARCH_STMT, //
+                      ->query(std::format(SEARCH_STMT, //
                                           _prefix->string(),
                                           _separator,
                                           _part->string()))
@@ -135,9 +136,10 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                     _matching << (_prefix->string() + _separator + static_cast<std::string>(_part));
                 }
                 if (this
-                      ->query(zpt::format(SEARCH_STMT, //
+                      ->query(std::format(SEARCH_STMT, //
                                           _prefix->string(),
-                                          _separator))
+                                          _separator,
+                                          "{}"))
                       ->size() != 0) {
                     _matching << (_prefix->string() + _separator + std::string{ "{}" });
                 }

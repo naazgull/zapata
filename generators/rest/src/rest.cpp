@@ -50,7 +50,7 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
     _file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
 
     for (auto const& _include : this->__header_files) {
-        _file->add<zpt::ast::cpp_instruction>(zpt::format("#include <{}>", _include));
+        _file->add<zpt::ast::cpp_instruction>(std::format("#include <{}>", _include));
     }
 
     auto _load =
@@ -66,15 +66,15 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
     auto _unload_block = zpt::make_code_block<zpt::ast::cpp_code_block>();
     _unload_block //
       ->add<zpt::ast::cpp_instruction>(
-        zpt::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()));
+        std::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()));
     _unload->add(_unload_block);
     _file->add(_unload);
 
     _load_block //
-      ->add<zpt::ast::cpp_instruction>(zpt::format(
+      ->add<zpt::ast::cpp_instruction>(std::format(
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
       .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>("auto& _resolver = zpt::REST_RESOLVER()")
+      .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
                                       "_config(\"rest\")(\"prefix\")->string() : \"\"");
 
@@ -86,23 +86,20 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
         else if (_path_def("resource")->string() == "store") { _method = "*"; }
 
         auto _operation =
-          zpt::format("{}::{}", this->__namespace, _path_def(_method)("operationId")->string());
+          std::format("{}::{}", this->__namespace, _path_def(_method)("operationId")->string());
         auto _split = zpt::uri::parse(_path);
         std::string _ref;
         for (auto const& [_idx, _, _part] : _split("path")) {
-            if (_part->string().find("{") == 0) { _ref += std::string{ "/{}" }; }
-            else { _ref += zpt::format("/{}", _part->string()); }
+            if (_part->string().find("{") == 0) { _ref += std::string{ "/{{}}" }; }
+            else { _ref += std::format("/{}", _part->string()); }
         }
         if (_path_def("resource")->string() == "controller") {
-            _load_block->add<zpt::ast::cpp_instruction>(
-              zpt::format("_resolver->add<{}>(zpt::Post, zpt::format(\"{{}}{}\", _prefix))",
-                          _operation,
-                          "",
-                          _ref));
+            _load_block->add<zpt::ast::cpp_instruction>(std::format(
+              "_resolver->add<{}>(zpt::Post, std::format(\"{{}}{}\", _prefix))", _operation, _ref));
         }
         else {
-            _load_block->add<zpt::ast::cpp_instruction>(zpt::format(
-              "_resolver->add<{}>(zpt::format(\"{{}}{}\", _prefix))", _operation, "", _ref));
+            _load_block->add<zpt::ast::cpp_instruction>(std::format(
+              "_resolver->add<{}>(std::format(\"{{}}{}\", _prefix))", _operation, _ref));
         }
     }
     return (*this);
@@ -125,14 +122,14 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
         this->__module.add(_file);
         std::cout << "> Generating " << _file_path << "." << std::endl;
 
-        auto _lib = zpt::format("{}-{}",
+        auto _lib = std::format("{}-{}",
                                 this->__schema("info")("namespace")->ok()
                                   ? this->__schema("info")("namespace")->string()
                                   : "",
                                 zpt::r_replace(this->__module.name(), "_", "-"));
-        _file->add<zpt::ast::cmake_instruction>(zpt::format("add_library({} SHARED)", _lib));
+        _file->add<zpt::ast::cmake_instruction>(std::format("add_library({} SHARED)", _lib));
         std::ostringstream _oss;
-        _oss << zpt::format("target_sources({}\n"
+        _oss << std::format("target_sources({}\n"
                             "  PRIVATE\n",
                             _lib);
         this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
@@ -152,14 +149,14 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
         _oss << ")";
         _file->add<zpt::ast::cmake_instruction>(_oss.str());
         _file->add<zpt::ast::cmake_instruction>(
-          zpt::format("target_include_directories({}\n"
+          std::format("target_include_directories({}\n"
                       "  PRIVATE\n"
-                      "    ${CMAKE_CURRENT_SOURCE_DIR}/include\n"
+                      "    ${{CMAKE_CURRENT_SOURCE_DIR}}/include\n"
                       "  INTERFACE\n"
-                      "    ${CMAKE_CURRENT_SOURCE_DIR}/include\n"
+                      "    ${{CMAKE_CURRENT_SOURCE_DIR}}/include\n"
                       ")",
                       _lib));
-        _file->add<zpt::ast::cmake_instruction>(zpt::format("target_link_libraries({}\n"
+        _file->add<zpt::ast::cmake_instruction>(std::format("target_link_libraries({}\n"
                                                             "  PRIVATE\n"
                                                             "    zapata-storage-mysqlx\n"
                                                             "    zapata-engine-transport\n"
@@ -168,26 +165,26 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
                                                             ")",
                                                             _lib));
         _file->add<zpt::ast::cmake_instruction>(
-          zpt::format("set_target_properties({}\n"
+          std::format("set_target_properties({}\n"
                       "  PROPERTIES\n"
-                      "    VERSION ${PROJECT_VERSION}\n"
-                      "    SOVERSION ${PROJECT_VERSION_MAJOR}\n"
+                      "    VERSION ${{PROJECT_VERSION}}\n"
+                      "    SOVERSION ${{PROJECT_VERSION_MAJOR}}\n"
                       "    COMPILE_FLAGS -fPIC\n"
                       "    LINK_FLAGS -shared\n"
-                      "    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/lib{}.so\n"
+                      "    LIBRARIES ${{CMAKE_CURRENT_BINARY_DIR}}/lib{}.so\n"
                       ")",
                       _lib,
                       _lib));
         _file->add<zpt::ast::cmake_instruction>("include(GNUInstallDirs)");
         _file->add<zpt::ast::cmake_instruction>(
-          zpt::format("install(TARGETS {}\n"
+          std::format("install(TARGETS {}\n"
                       "  LIBRARY\n"
-                      "    DESTINATION ${CMAKE_INSTALL_LIBDIR}\n"
+                      "    DESTINATION ${{CMAKE_INSTALL_LIBDIR}}\n"
                       ")",
                       _lib));
         _file->add<zpt::ast::cmake_instruction>(
-          zpt::format("install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/{}\n"
-                      "  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}\n"
+          std::format("install(DIRECTORY ${{CMAKE_CURRENT_SOURCE_DIR}}/include/{}\n"
+                      "  DESTINATION ${{CMAKE_INSTALL_INCLUDEDIR}}\n"
                       "  FILES_MATCHING PATTERN \"*.h\"\n"
                       ")",
                       this->__schema("info")("namespace")->string()));
@@ -224,8 +221,8 @@ auto zpt::gen::rest::module::generate_operation_h_file(zpt::json _def, std::stri
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() /
                       "include" / this->__schema("info")("namespace")->string() /
                       this->__module.name();
-    auto _file_path = _directory / zpt::format("{}.h", _def(_method)("operationId")->string());
-    this->__header_files.push_back(zpt::format("{}/{}/{}.h",
+    auto _file_path = _directory / std::format("{}.h", _def(_method)("operationId")->string());
+    this->__header_files.push_back(std::format("{}/{}/{}.h",
                                                this->__schema("info")("namespace")->string(),
                                                this->__module.name(),
                                                _def(_method)("operationId")->string()));
@@ -246,7 +243,7 @@ auto zpt::gen::rest::module::generate_operation_h_file(zpt::json _def, std::stri
 auto zpt::gen::rest::module::generate_operation_cpp_file(zpt::json _def, std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
-    auto _file_path = _directory / zpt::format("{}.cpp", _def(_method)("operationId")->string());
+    auto _file_path = _directory / std::format("{}.cpp", _def(_method)("operationId")->string());
     if (!std::filesystem::exists(_file_path)) {
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
@@ -267,7 +264,7 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
     if (_h_file != nullptr) {
         _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          zpt::format("namespace {}", this->__namespace));
+          std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
@@ -279,7 +276,7 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
 
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
-                                        zpt::format("~{}", _def("*")("operationId")->string()),
+                                        std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
@@ -296,20 +293,20 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = zpt::format("{}/{}/{}.h",
+        auto _include_path = std::format("{}/{}/{}.h",
                                          this->__schema("info")("namespace")->string(),
                                          this->__module.name(),
                                          _def("*")("operationId")->string());
         auto _class_method_prefix =
-          zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+          std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(zpt::format(
+        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
+          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
         _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
         auto _cpp_constructor_body =
           zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
@@ -318,7 +315,7 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
         _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false");
         _cpp_blocked->add(_cpp_blocked_body);
@@ -329,7 +326,7 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
         this->generate_remove_elements(_cpp_file, _def, _path);
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
+          std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
                                                    "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
@@ -367,7 +364,7 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
     if (_h_file != nullptr) {
         _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          zpt::format("namespace {}", this->__namespace));
+          std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
@@ -379,7 +376,7 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
 
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
-                                        zpt::format("~{}", _def("*")("operationId")->string()),
+                                        std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
@@ -396,20 +393,20 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = zpt::format("{}/{}/{}.h",
+        auto _include_path = std::format("{}/{}/{}.h",
                                          this->__schema("info")("namespace")->string(),
                                          this->__module.name(),
                                          _def("*")("operationId")->string());
         auto _class_method_prefix =
-          zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+          std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(zpt::format(
+        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
+          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
         _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
         auto _cpp_constructor_body =
           zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
@@ -418,7 +415,7 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
         _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false");
         _cpp_blocked->add(_cpp_blocked_body);
@@ -429,7 +426,7 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
         this->generate_remove_element(_cpp_file, _def, _path);
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
+          std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
                                                    "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
@@ -467,7 +464,7 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
     if (_h_file != nullptr) {
         _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          zpt::format("namespace {}", this->__namespace));
+          std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("post")("operationId")->string(),
@@ -479,7 +476,7 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
 
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
-                                        zpt::format("~{}", _def("post")("operationId")->string()),
+                                        std::format("~{}", _def("post")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
@@ -494,20 +491,20 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "post");
     if (_cpp_file != nullptr) {
-        auto _include_path = zpt::format("{}/{}/{}.h",
+        auto _include_path = std::format("{}/{}/{}.h",
                                          this->__schema("info")("namespace")->string(),
                                          this->__module.name(),
                                          _def("post")("operationId")->string());
         auto _class_method_prefix =
-          zpt::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
+          std::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(zpt::format(
+        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}{}", _class_method_prefix, _def("post")("operationId")->string()), "");
+          std::format("{}{}", _class_method_prefix, _def("post")("operationId")->string()), "");
         _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
         auto _cpp_constructor_body =
           zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
@@ -516,7 +513,7 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
         _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false");
         _cpp_blocked->add(_cpp_blocked_body);
@@ -525,7 +522,7 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
         this->generate_process_request(_cpp_file, _def, _path);
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
+          std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
                                                    "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
@@ -554,7 +551,7 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
     if (_h_file != nullptr) {
         _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          zpt::format("namespace {}", this->__namespace));
+          std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
@@ -566,7 +563,7 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
 
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
-                                        zpt::format("~{}", _def("*")("operationId")->string()),
+                                        std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
@@ -583,20 +580,20 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = zpt::format("{}/{}/{}.h",
+        auto _include_path = std::format("{}/{}/{}.h",
                                          this->__schema("info")("namespace")->string(),
                                          this->__module.name(),
                                          _def("*")("operationId")->string());
         auto _class_method_prefix =
-          zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+          std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(zpt::format(
+        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
+          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
         _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
         auto _cpp_constructor_body =
           zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
@@ -605,7 +602,7 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
         _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false");
         _cpp_blocked->add(_cpp_blocked_body);
@@ -616,7 +613,7 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
         this->generate_remove_elements(_cpp_file, _def, _path);
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
-          zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
+          std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
                                                    "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
@@ -652,10 +649,10 @@ auto zpt::gen::rest::module::generate_add_element(std::shared_ptr<zpt::ast::basi
                                                   zpt::json _def,
                                                   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}add_element", _class_method_prefix), "zpt::events::state");
+      std::format("{}add_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
@@ -689,10 +686,10 @@ auto zpt::gen::rest::module::generate_list_elements(std::shared_ptr<zpt::ast::ba
                                                     zpt::json _def,
                                                     zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}list_elements", _class_method_prefix), "zpt::events::state");
+      std::format("{}list_elements", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
@@ -704,7 +701,7 @@ auto zpt::gen::rest::module::generate_list_elements(std::shared_ptr<zpt::ast::ba
       ->add<zpt::ast::cpp_instruction>(
         "auto _find = zpt::storage::filter_find(_collection, _params)")
       .add<zpt::ast::cpp_instruction>(
-        zpt::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>("auto _result = _find->fields(_fields)->execute()->fetch()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
@@ -737,10 +734,10 @@ auto zpt::gen::rest::module::generate_remove_elements(
   zpt::json _def,
   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}remove_elements", _class_method_prefix), "zpt::events::state");
+      std::format("{}remove_elements", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
@@ -774,10 +771,10 @@ auto zpt::gen::rest::module::generate_update_element(
   zpt::json _def,
   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}update_element", _class_method_prefix), "zpt::events::state");
+      std::format("{}update_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
@@ -817,10 +814,10 @@ auto zpt::gen::rest::module::generate_get_element(std::shared_ptr<zpt::ast::basi
                                                   zpt::json _def,
                                                   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}get_element", _class_method_prefix), "zpt::events::state");
+      std::format("{}get_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
@@ -830,7 +827,7 @@ auto zpt::gen::rest::module::generate_get_element(std::shared_ptr<zpt::ast::basi
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        zpt::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>("auto _result = _collection->find(\"_id = :id\")->bind({ "
                                       "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
@@ -862,10 +859,10 @@ auto zpt::gen::rest::module::generate_remove_element(
   zpt::json _def,
   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}remove_element", _class_method_prefix), "zpt::events::state");
+      std::format("{}remove_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     this->add_parameters_and_validation(_method_body, _def, _path);
@@ -903,10 +900,10 @@ auto zpt::gen::rest::module::generate_process_request(
   zpt::json _def,
   zpt::json _path) -> void {
     auto _class_method_prefix =
-      zpt::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
-      zpt::format("{}process_request", _class_method_prefix), "zpt::events::state");
+      std::format("{}process_request", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     _method_body->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
     this->add_parameters_and_validation(_method_body, _def, _path);
@@ -935,11 +932,11 @@ auto zpt::gen::rest::module::add_db_configuration(
   zpt::json _def) -> void {
     _block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>(zpt::format(
+      .add<zpt::ast::cpp_instruction>(std::format(
         "auto _session = zpt::make_connection<zpt::storage::{}::connection>(_config)->session()",
         this->__schema("info")("dbDriver")->string()))
       .add<zpt::ast::cpp_instruction>(
-        zpt::format("auto _collection = _session->database(\"{}\")->collection(\"{}\")",
+        std::format("auto _collection = _session->database(\"{}\")->collection(\"{}\")",
                     this->__schema("info")("database")->string(),
                     _def("*")("requestBody")("dbCollection")->string()));
 }
@@ -972,7 +969,7 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
 
     for (auto const& [_, __, _param] : _def("parameters")) {
         if (_param("in")->string() == "query") {
-            _block->add<zpt::ast::cpp_instruction>(zpt::format(
+            _block->add<zpt::ast::cpp_instruction>(std::format(
               "auto _{} = _params(\"{}\")", _param("name")->string(), _param("name")->string()));
         }
     }
@@ -981,14 +978,14 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
         if (_variable.find("{") == 0) {
             std::string _name = _variable.substr(1, _variable.length() - 2);
             _block->add<zpt::ast::cpp_instruction>(
-              zpt::format("auto _{} = _path(_prefix_len + {})", _name, _idx));
+              std::format("auto _{} = _path(_prefix_len + {})", _name, _idx));
         }
     }
     for (auto const& [_, __, _param] : _def("parameters")) {
         if (_param("in")->string() == "path" ||
             (_param("in")->string() == "query" && _param("required")->boolean())) {
             _block->add<zpt::ast::cpp_instruction>(
-              zpt::format("expect(_{}->ok(), \"Required {} parameter '{}'\")",
+              std::format("expect(_{}->ok(), \"Required {} parameter '{}'\")",
                           _param("name")->string(),
                           _param("in")->string(),
                           _param("name")->string()));
@@ -1003,7 +1000,7 @@ auto zpt::gen::rest::module::add_schema_validation(
         auto _required = _object("required");
         if (_required->is_array()) {
             for (auto const& [_, __, _name] : _required) {
-                _block->add<zpt::ast::cpp_instruction>(zpt::format(
+                _block->add<zpt::ast::cpp_instruction>(std::format(
                   "expect(_received(\"{}\")->ok(), \"Required request member field '{}'\")",
                   _name->string(),
                   _name->string()));
@@ -1020,12 +1017,12 @@ auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_
             if (_prop("rest:generation_expr")->ok() &&
                 (_prop("rest:generate")->contains(_generate) ||
                  _prop("rest:generate")->contains("always"))) {
-                _block->add<zpt::ast::cpp_instruction>(zpt::format(
+                _block->add<zpt::ast::cpp_instruction>(std::format(
                   "_received[\"{}\"] = {}", _name, _prop("rest:generation_expr")->string()));
             }
             else if (_prop("default")->ok() && _generate == "create") {
                 auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
-                  zpt::format("if (!_received(\"{}\")->ok())", _name));
+                  std::format("if (!_received(\"{}\")->ok())", _name));
                 if (_prop("type")->string() == "object") {
                     std::string _value = _prop("default");
                     _value = _value.substr(1);
@@ -1037,9 +1034,9 @@ auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::object()"; }
-                    else { _value = zpt::format("zpt::json{ {} }", _value); }
+                    else { _value = std::format("zpt::json{{ {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
-                      zpt::format("_received[\"{}\"] = {}", _name, _value));
+                      std::format("_received[\"{}\"] = {}", _name, _value));
                 }
                 else if (_prop("type")->string() == "array") {
                     std::string _value = _prop("default");
@@ -1052,13 +1049,15 @@ auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::array()"; }
-                    else { _value = zpt::format("zpt::json{ zpt::array, {} }", _value); }
+                    else { _value = std::format("zpt::json{{ zpt::array, {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
-                      zpt::format("_received[\"{}\"] = {}", _name, _value));
+                      std::format("_received[\"{}\"] = {}", _name, _value));
                 }
                 else {
                     _if_block->add<zpt::ast::cpp_instruction>(
-                      zpt::format("_received[\"{}\"] = {}", _name, _prop("default")));
+                      std::format("_received[\"{}\"] = {}",
+                                  _name,
+                                  _prop("default")->ok() ? _prop("default") : "zpt::undefined"));
                 }
                 _block->add(_if_block);
             }
@@ -1086,7 +1085,7 @@ auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _collection = _def("dbCollection")->string();
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
-    auto _file_path = _directory / zpt::format("{}_mysql.sql", _collection);
+    auto _file_path = _directory / std::format("{}_mysql.sql", _collection);
     if (std::filesystem::exists(_file_path)) { return nullptr; }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
@@ -1118,7 +1117,7 @@ auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
             std::string _type = zpt::gen::rest::module::__sql_types[_field("type")->string()];
             if (_field("sql:type")->ok()) { _type = _field("sql:type")->string(); }
             else if (_field("type")->string() == "string") {
-                _type = zpt::format("varchar({})",
+                _type = std::format("varchar({})",
                                     (_field("maximum")->ok() ? _field("maximum")->integer() : 512));
             }
 
@@ -1142,7 +1141,7 @@ auto zpt::gen::rest::module::generate_operation_lang_file(zpt::json _def,
                                                           std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__ui_path) / "lang" / this->__module.name();
-    auto _file_path = _directory / zpt::format("{}.js", _def(_method)("operationId")->string());
+    auto _file_path = _directory / std::format("{}.js", _def(_method)("operationId")->string());
     if (!std::filesystem::exists(_file_path)) {
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
@@ -1161,7 +1160,7 @@ auto zpt::gen::rest::module::generate_operation_html_file(zpt::json _def,
                                                           std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__ui_path) / this->__module.name();
-    auto _file_path = _directory / zpt::format("{}.html", _def(_method)("operationId")->string());
+    auto _file_path = _directory / std::format("{}.html", _def(_method)("operationId")->string());
     if (!std::filesystem::exists(_file_path)) {
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
@@ -1197,7 +1196,7 @@ auto zpt::gen::rest::module::generate_collection_ui(zpt::json _def, zpt::json _p
         zpt::replace(_html,
                      "{{collection-dictionary}}",
                      this->__module.name() + std::string{ "/" } +
-                       zpt::format("{}", _collection_name));
+                       std::format("{}", _collection_name));
         zpt::replace(_html, "{{collection-name}}", _collection_name);
         zpt::replace(_html, "{{collection-uri}}", _path("raw_path")->string());
         zpt::replace(_html, "{{fields}}", this->extract_fields(_def));
@@ -1231,7 +1230,7 @@ auto zpt::gen::rest::module::generate_document_ui(zpt::json _def, zpt::json _pat
         zpt::replace(_html,
                      "{{document-dictionary}}",
                      this->__module.name() + std::string{ "/" } +
-                       zpt::format("{}", _document_name));
+                       std::format("{}", _document_name));
         zpt::replace(_html, "{{document-name}}", _document_name);
         zpt::replace(_html, "{{document-uri}}", _path("raw_path")->string());
         zpt::replace(_html, "{{fields}}", this->extract_fields(_def));
@@ -1425,28 +1424,28 @@ auto zpt::gen::rest::module::replace_additional_components(std::string& _html,
                 zpt::replace(
                   _html,
                   "{{additional-imports}}",
-                  zpt::format("{}\"zpt::{}\": \"/components/zpt/{}.js\",\n{{additional-imports}}",
-                              _indent3,
-                              _widget,
-                              _widget));
-                zpt::replace(
-                  _html,
-                  "{{additional-import-from}}",
-                  zpt::format(
-                    "{}import { default as Zpt{} } from 'zpt::{}'\n{{additional-import-from}}",
-                    _indent2,
-                    _widget_capitalize,
+                  std::format(
+                    "{}\"zpt::{}\": \"/components/zpt/{}.js\",\n{{{{additional-imports}}}}",
+                    _indent3,
+                    _widget,
                     _widget));
                 zpt::replace(_html,
+                             "{{additional-import-from}}",
+                             std::format("{}import {{ default as Zpt{} }} from "
+                                         "'zpt::{}'\n{{{{additional-import-from}}}}",
+                                         _indent2,
+                                         _widget_capitalize,
+                                         _widget));
+                zpt::replace(_html,
                              "{{additional-app-components}}",
-                             zpt::format("{}Zpt{},\n{{additional-app-components}}",
+                             std::format("{}Zpt{},\n{{{{additional-app-components}}}}",
                                          _indent1,
                                          _widget_capitalize));
                 zpt::replace(_html,
                              "{{additional-components}}",
-                             zpt::format("{}<zpt-{} :lang=\"config.get_lang()\" "
+                             std::format("{}<zpt-{} :lang=\"config.get_lang()\" "
                                          ":dictionary=\"config.pages.{}.dictionary\" "
-                                         ":field=\"'{}'\"></zpt-{}>\n{{additional-components}}",
+                                         ":field=\"'{}'\"></zpt-{}>\n{{{{additional-components}}}}",
                                          _indent1,
                                          _widget,
                                          _resource_name,

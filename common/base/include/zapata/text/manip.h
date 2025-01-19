@@ -51,8 +51,8 @@ std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
 std::string r_prettify_header_name(std::string const& name);
 
-template<typename... Args>
-auto format(std::string _to_format, Args... _params) -> std::string;
+// template<typename... Args>
+// auto format(std::string _to_format, Args... _params) -> std::string;
 
 } // namespace zpt
 
@@ -88,12 +88,12 @@ auto ___format(std::istringstream& _in, std::ostringstream& _out, P _param, Args
 }
 } // namespace
 
-template<typename... Args>
-auto zpt::format(std::string _to_format, Args... _params) -> std::string {
-    std::istringstream _iss;
-    _iss.str(_to_format);
-    std::ostringstream _oss;
-    ::___format(_iss, _oss, _params...);
-    _oss << std::flush;
-    return _oss.str();
-}
+// template<typename... Args>
+// auto std::format(std::string _to_format, Args... _params) -> std::string {
+//     std::istringstream _iss;
+//     _iss.str(_to_format);
+//     std::ostringstream _oss;
+//     ::___format(_iss, _oss, _params...);
+//     _oss << std::flush;
+//     return _oss.str();
+// }
