@@ -72,15 +72,18 @@ export default {
             else {
                 this.sort_order *= -1
             }
+            this.refresh = true
         },
         prev_page() {
             if (this.page_nr > 0) {
                 --this.page_nr
+                this.refresh = true
             }
         },
         next_page() {
             if (this.collection.length == this.page_size) {
                 ++this.page_nr
+                this.refresh = true
             }
         },
         change_route(key, item) {
