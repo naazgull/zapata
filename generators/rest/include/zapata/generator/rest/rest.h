@@ -184,6 +184,7 @@ inline std::string collection_html_template = R"(
                   fields: {{fields}},
                   list: {
                       visible: {{list-fields}},
+                      filter: {{filter-fields}},
                       page_sizes: [ 10, 25, 50, 100 ]
                   },
                   form: {
@@ -205,6 +206,7 @@ inline std::string collection_html_template = R"(
         :url="config.get_url_prefix() + '{{collection-uri}}'"
         :fields="fields"
         :visible="list.visible"
+        :filter="list.filter"
         :sizes="list.page_sizes">
       </zpt-list>
       <zpt-new-record

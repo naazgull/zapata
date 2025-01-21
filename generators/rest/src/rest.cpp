@@ -1201,6 +1201,7 @@ auto zpt::gen::rest::module::generate_collection_ui(zpt::json _def, zpt::json _p
         zpt::replace(_html, "{{collection-uri}}", _path("raw_path")->string());
         zpt::replace(_html, "{{fields}}", this->extract_fields(_def));
         zpt::replace(_html, "{{list-fields}}", this->extract_visible_fields(_def, "list"));
+        zpt::replace(_html, "{{filter-fields}}", this->extract_visible_fields(_def, "filter"));
         zpt::replace(_html, "{{form-fields}}", this->extract_visible_fields(_def, "quick-form"));
         this->replace_additional_components(_html, _def);
         _html_file->add<zpt::ast::cpp_instruction>(_html, true);

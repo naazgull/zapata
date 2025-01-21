@@ -6,6 +6,7 @@ export default {
         url: String,
         fields: Object,
         visible: Array,
+        filter: Array,
         sizes: Array
     },
     data() {
@@ -147,13 +148,13 @@ export default {
     },
     template: `
     <div :id="id" :style="{ opacity: show }" style="transition: opacity 0.5s ease">
-      <form id="search">
+      <form id="search" v-if="filter.length != 0">
           {{ dictionary.search_by[lang] }} <select name="field" v-model="filter_key">
-          <option v-for="key in visible"
+          <option v-for="key in filter"
             :value="key">
             {{ fields[key].label }}
           </option>
-        </select>: <input name="term" v-model="filter_term">
+        </select>: <input name="term" v-model="filter_term" @keyup="refresh = true">
       </form>
       <table>
         <thead>
