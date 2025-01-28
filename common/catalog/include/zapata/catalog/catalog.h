@@ -43,6 +43,7 @@ class catalog {
 
     auto clear() -> catalog&;
     auto add(K _key, M _metadata) -> catalog&;
+    auto remove(K _key) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
 
   private:
@@ -98,6 +99,21 @@ auto zpt::catalog<K, M>::add(K _key, M _metadata) -> catalog& {
     this
       ->__catalog //
       ->replace(_t_key, { "metadata", _oss.str() })
+      ->execute();
+
+    return (*this);
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::remove(K _key) -> catalog& {
+    std::ostringstream _oss;
+    _oss << _key << std::flush;
+    std::string _t_key{ _oss.str() };
+
+    zlog("Unregistered " << _t_key, zpt::trace);
+    this
+      ->__catalog //
+      ->remove({ "_id", _t_key })
       ->execute();
 
     return (*this);

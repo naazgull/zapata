@@ -133,6 +133,7 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative,
                "Couldn't find callback for [" << _hash_code << "](" << _path << ")");
         this->__callbacks[_hash_code] = nullptr;
     }
+    this->__catalog.remove(_to_search);
     return (*this);
 }
 
