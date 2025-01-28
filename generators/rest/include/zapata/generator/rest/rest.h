@@ -30,21 +30,21 @@
 namespace zpt {
 namespace gen {
 namespace rest {
-class module {
+class unit {
   public:
-    module(std::string const& _name,
-           std::filesystem::path const& _base_path_backend,
-           std::filesystem::path const& _base_path_frontend,
-           zpt::json _schema,
-           zpt::json languages);
-    ~module() = default;
+    unit(std::string const& _name,
+         std::filesystem::path const& _base_path_backend,
+         std::filesystem::path const& _base_path_frontend,
+         zpt::json _schema,
+         zpt::json languages);
+    ~unit() = default;
 
-    auto generate_operations() -> module&;
-    auto generate_plugin() -> module&;
-    auto generate_sql() -> module&;
-    auto generate_cmake() -> module&;
-    auto generate_ui() -> module&;
-    auto dump() -> module&;
+    auto generate_operations() -> unit&;
+    auto generate_plugin() -> unit&;
+    auto generate_sql() -> unit&;
+    auto generate_cmake() -> unit&;
+    auto generate_ui() -> unit&;
+    auto dump() -> unit&;
 
   private:
     std::filesystem::path __base_path;

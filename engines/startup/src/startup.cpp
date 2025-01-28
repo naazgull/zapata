@@ -113,7 +113,8 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
                     }
                 }
             }
-            this->load(_lib, this->__configuration[_name]);
+            this->load(_lib, this->__configuration(_name));
+            this->__load_order.push_back(_name);
             _to_load->object()->pop(_name);
         }
     }
@@ -121,6 +122,9 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
 }
 
 auto zpt::startup::boot::unload() -> zpt::startup::boot& {
+    for (auto it = this->__load_order.rbegin(); it != this->__load_order.rend(); ++it) {
+        this->__plugins.erase(*it);
+    }
     this->__plugins.clear();
     return (*this);
 }

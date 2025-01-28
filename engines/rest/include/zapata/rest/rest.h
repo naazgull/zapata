@@ -49,8 +49,13 @@ class resolver_t : public zpt::events::resolver_t {
     auto add(zpt::performative _performtive,
              std::string _path,
              zpt::json _metadata) -> zpt::rest::resolver_t&;
-    virtual auto resolve(zpt::message _received,
-                         zpt::events::initializer_t _initializer) const -> std::list<zpt::event>;
+    template<typename T>
+    auto remove(std::string _path) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto remove(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
+    auto clear() -> zpt::rest::resolver_t&;
+    virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event> override;
 
   private:
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
@@ -100,11 +105,34 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
     auto hash_code = this->__callbacks.size();
     this->__callbacks.push_back(zpt::rest::resolver_t::make_callback<T>);
     _metadata << "callback" << hash_code;
-    auto _to_add = std::string{ "/" } +
-                   (_performative == zpt::Performative_end ? std::string{ "{}" }
-                                                           : zpt::ontology::to_str(_performative)) +
-                   _path;
+    auto _to_add =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path);
     this->__catalog.add(_to_add, _metadata);
+    return (*this);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::remove(std::string _path) -> zpt::rest::resolver_t& {
+    return this->remove<T>(zpt::Performative_end, _path);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::remove(zpt::performative _performative,
+                                   std::string _path) -> zpt::rest::resolver_t& {
+    auto _to_search =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path);
+    for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
+        auto _hash_code = _record("metadata")("callback")->integer();
+        expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
+               "Couldn't find callback for [" << _hash_code << "](" << _path << ")");
+        this->__callbacks[_hash_code] = nullptr;
+    }
     return (*this);
 }
 

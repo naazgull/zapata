@@ -35,6 +35,11 @@ zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
     }
 }
 
+auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
+    this->__callbacks.clear();
+    return (*this);
+}
+
 auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
   const -> std::list<zpt::event> {
     std::list<zpt::event> _return;

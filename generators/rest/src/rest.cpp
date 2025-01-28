@@ -2,11 +2,11 @@
 #include <zapata/uri.h>
 #include <set>
 
-zpt::gen::rest::module::module(std::string const& _module_name,
-                               std::filesystem::path const& _base_path_backend,
-                               std::filesystem::path const& _base_path_frontend,
-                               zpt::json _schema,
-                               zpt::json _languages)
+zpt::gen::rest::unit::unit(std::string const& _module_name,
+                           std::filesystem::path const& _base_path_backend,
+                           std::filesystem::path const& _base_path_frontend,
+                           zpt::json _schema,
+                           zpt::json _languages)
   : __base_path{ _base_path_backend }
   , __ui_path{ _base_path_frontend }
   , __module{ _module_name }
@@ -18,7 +18,7 @@ zpt::gen::rest::module::module(std::string const& _module_name,
                         this->__module.name();
 }
 
-auto zpt::gen::rest::module::generate_operations() -> module& {
+auto zpt::gen::rest::unit::generate_operations() -> unit& {
     for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
         if (_path_def("resource")->string() == "collection") {
             this->generate_collection(_path_def, zpt::uri::parse(_path));
@@ -36,7 +36,7 @@ auto zpt::gen::rest::module::generate_operations() -> module& {
     return (*this);
 }
 
-auto zpt::gen::rest::module::generate_plugin() -> module& {
+auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / "plugin.cpp";
     if (std::filesystem::exists(_file_path)) { return (*this); }
@@ -64,15 +64,19 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
       zpt::make_function<zpt::ast::cpp_function>("_zpt_unload_", "void", zpt::ast::EXTERNC);
     _unload->add<zpt::ast::cpp_variable>("_plugin [[maybe_unused]]", "zpt::plugin&");
     auto _unload_block = zpt::make_code_block<zpt::ast::cpp_code_block>();
-    _unload_block //
-      ->add<zpt::ast::cpp_instruction>(
-        std::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()));
     _unload->add(_unload_block);
     _file->add(_unload);
 
     _load_block //
       ->add<zpt::ast::cpp_instruction>(std::format(
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
+      .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
+      .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
+                                      "_config(\"rest\")(\"prefix\")->string() : \"\"");
+    _unload_block //
+      ->add<zpt::ast::cpp_instruction>(
+        std::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()))
       .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
@@ -96,23 +100,29 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
         if (_path_def("resource")->string() == "controller") {
             _load_block->add<zpt::ast::cpp_instruction>(std::format(
               "_resolver->add<{}>(zpt::Post, std::format(\"{{}}{}\", _prefix))", _operation, _ref));
+            _unload_block->add<zpt::ast::cpp_instruction>(
+              std::format("_resolver->remove<{}>(zpt::Post, std::format(\"{{}}{}\", _prefix))",
+                          _operation,
+                          _ref));
         }
         else {
             _load_block->add<zpt::ast::cpp_instruction>(std::format(
               "_resolver->add<{}>(std::format(\"{{}}{}\", _prefix))", _operation, _ref));
+            _unload_block->add<zpt::ast::cpp_instruction>(std::format(
+              "_resolver->remove<{}>(std::format(\"{{}}{}\", _prefix))", _operation, _ref));
         }
     }
     return (*this);
 }
 
-auto zpt::gen::rest::module::generate_sql() -> module& {
+auto zpt::gen::rest::unit::generate_sql() -> unit& {
     for (auto const& [_, __, _schema] : this->__schema("components")("schemas")) {
         this->generate_sql_schemata_mysql(_schema);
     }
     return (*this);
 }
 
-auto zpt::gen::rest::module::generate_cmake() -> module& {
+auto zpt::gen::rest::unit::generate_cmake() -> unit& {
     auto _base_path = std::filesystem::absolute(this->__base_path) / this->__module.name();
     auto _file_path = _base_path / "CMakeLists.txt";
 
@@ -196,7 +206,7 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
     return (*this);
 }
 
-auto zpt::gen::rest::module::generate_ui() -> module& {
+auto zpt::gen::rest::unit::generate_ui() -> unit& {
     for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
         if (_path_def("resource")->string() == "collection") {
             this->generate_collection_ui(_path_def, zpt::uri::parse(_path));
@@ -211,12 +221,12 @@ auto zpt::gen::rest::module::generate_ui() -> module& {
     return (*this);
 }
 
-auto zpt::gen::rest::module::dump() -> module& {
+auto zpt::gen::rest::unit::dump() -> unit& {
     this->__module.dump();
     return (*this);
 }
 
-auto zpt::gen::rest::module::generate_operation_h_file(zpt::json _def, std::string const& _method)
+auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() /
                       "include" / this->__schema("info")("namespace")->string() /
@@ -240,7 +250,7 @@ auto zpt::gen::rest::module::generate_operation_h_file(zpt::json _def, std::stri
     return nullptr;
 }
 
-auto zpt::gen::rest::module::generate_operation_cpp_file(zpt::json _def, std::string const& _method)
+auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / std::format("{}.cpp", _def(_method)("operationId")->string());
@@ -258,7 +268,7 @@ auto zpt::gen::rest::module::generate_operation_cpp_file(zpt::json _def, std::st
     return nullptr;
 }
 
-auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
@@ -358,7 +368,7 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
     return _h_file;
 }
 
-auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
@@ -458,7 +468,7 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "post");
     if (_h_file != nullptr) {
@@ -545,7 +555,7 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
     return _h_file;
 }
 
-auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
@@ -645,9 +655,9 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-auto zpt::gen::rest::module::generate_add_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-                                                  zpt::json _def,
-                                                  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_add_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                zpt::json _def,
+                                                zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -682,9 +692,9 @@ auto zpt::gen::rest::module::generate_add_element(std::shared_ptr<zpt::ast::basi
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_list_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-                                                    zpt::json _def,
-                                                    zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_list_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                  zpt::json _def,
+                                                  zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -729,10 +739,9 @@ auto zpt::gen::rest::module::generate_list_elements(std::shared_ptr<zpt::ast::ba
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_remove_elements(
-  std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-  zpt::json _def,
-  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_remove_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                    zpt::json _def,
+                                                    zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -766,10 +775,9 @@ auto zpt::gen::rest::module::generate_remove_elements(
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_update_element(
-  std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-  zpt::json _def,
-  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_update_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                   zpt::json _def,
+                                                   zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -810,9 +818,9 @@ auto zpt::gen::rest::module::generate_update_element(
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_get_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-                                                  zpt::json _def,
-                                                  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                zpt::json _def,
+                                                zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -854,10 +862,9 @@ auto zpt::gen::rest::module::generate_get_element(std::shared_ptr<zpt::ast::basi
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_remove_element(
-  std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-  zpt::json _def,
-  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_remove_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                   zpt::json _def,
+                                                   zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -895,10 +902,9 @@ auto zpt::gen::rest::module::generate_remove_element(
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::generate_process_request(
-  std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-  zpt::json _def,
-  zpt::json _path) -> void {
+auto zpt::gen::rest::unit::generate_process_request(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                                    zpt::json _def,
+                                                    zpt::json _path) -> void {
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
 
@@ -927,9 +933,8 @@ auto zpt::gen::rest::module::generate_process_request(
     _cpp_file->add(_method);
 }
 
-auto zpt::gen::rest::module::add_db_configuration(
-  std::shared_ptr<zpt::ast::basic_code_block> _block,
-  zpt::json _def) -> void {
+auto zpt::gen::rest::unit::add_db_configuration(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                                                zpt::json _def) -> void {
     _block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>(std::format(
@@ -941,7 +946,7 @@ auto zpt::gen::rest::module::add_db_configuration(
                     _def("*")("requestBody")("dbCollection")->string()));
 }
 
-auto zpt::gen::rest::module::add_parameters_and_validation(
+auto zpt::gen::rest::unit::add_parameters_and_validation(
   std::shared_ptr<zpt::ast::basic_code_block> _block,
   zpt::json _def,
   zpt::json _path) -> void {
@@ -993,9 +998,8 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
     }
 }
 
-auto zpt::gen::rest::module::add_schema_validation(
-  std::shared_ptr<zpt::ast::basic_code_block> _block,
-  zpt::json _def) -> void {
+auto zpt::gen::rest::unit::add_schema_validation(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                                                 zpt::json _def) -> void {
     for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
         auto _required = _object("required");
         if (_required->is_array()) {
@@ -1009,9 +1013,9 @@ auto zpt::gen::rest::module::add_schema_validation(
     }
 }
 
-auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
-                                           zpt::json _def,
-                                           std::string const& _generate) -> void {
+auto zpt::gen::rest::unit::add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                                         zpt::json _def,
+                                         std::string const& _generate) -> void {
     for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
         for (auto const& [___, _name, _prop] : _object("properties")) {
             if (_prop("rest:generation_expr")->ok() &&
@@ -1065,7 +1069,7 @@ auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_
     }
 }
 
-auto zpt::gen::rest::module::get_visible_fields(zpt::json _def) -> std::string {
+auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     _oss << R"((_params("fields")->ok() ? zpt::split(_params("fields")->string(), ",") : )";
     if (_def("*")("requestBody")("allOf")->ok()) {
@@ -1081,7 +1085,7 @@ auto zpt::gen::rest::module::get_visible_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
+auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _collection = _def("dbCollection")->string();
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
@@ -1114,7 +1118,7 @@ auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
         for (auto const& [_, _name, _field] : _object("properties")) {
             if (!_field("sql:add_to_table")->ok()) { continue; }
 
-            std::string _type = zpt::gen::rest::module::__sql_types[_field("type")->string()];
+            std::string _type = zpt::gen::rest::unit::__sql_types[_field("type")->string()];
             if (_field("sql:type")->ok()) { _type = _field("sql:type")->string(); }
             else if (_field("type")->string() == "string") {
                 _type = std::format("varchar({})",
@@ -1137,8 +1141,7 @@ auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
     return _file;
 }
 
-auto zpt::gen::rest::module::generate_operation_lang_file(zpt::json _def,
-                                                          std::string const& _method)
+auto zpt::gen::rest::unit::generate_operation_lang_file(zpt::json _def, std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__ui_path) / "lang" / this->__module.name();
     auto _file_path = _directory / std::format("{}.js", _def(_method)("operationId")->string());
@@ -1156,8 +1159,7 @@ auto zpt::gen::rest::module::generate_operation_lang_file(zpt::json _def,
     return nullptr;
 }
 
-auto zpt::gen::rest::module::generate_operation_html_file(zpt::json _def,
-                                                          std::string const& _method)
+auto zpt::gen::rest::unit::generate_operation_html_file(zpt::json _def, std::string const& _method)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _directory = std::filesystem::absolute(this->__ui_path) / this->__module.name();
     auto _file_path = _directory / std::format("{}.html", _def(_method)("operationId")->string());
@@ -1175,7 +1177,7 @@ auto zpt::gen::rest::module::generate_operation_html_file(zpt::json _def,
     return nullptr;
 }
 
-auto zpt::gen::rest::module::generate_collection_ui(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_collection_ui(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _collection_name = _def("*")("operationId")->string();
 
@@ -1210,7 +1212,7 @@ auto zpt::gen::rest::module::generate_collection_ui(zpt::json _def, zpt::json _p
     return _html_file;
 }
 
-auto zpt::gen::rest::module::generate_document_ui(zpt::json _def, zpt::json _path)
+auto zpt::gen::rest::unit::generate_document_ui(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _document_name = _def("*")("operationId")->string();
 
@@ -1243,7 +1245,7 @@ auto zpt::gen::rest::module::generate_document_ui(zpt::json _def, zpt::json _pat
     return _html_file;
 }
 
-auto zpt::gen::rest::module::extract_languages() -> std::string {
+auto zpt::gen::rest::unit::extract_languages() -> std::string {
     std::ostringstream _oss;
     bool _first{ true };
     for (auto const& [__, ___, _lang] : this->__languages) {
@@ -1257,7 +1259,7 @@ auto zpt::gen::rest::module::extract_languages() -> std::string {
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::extract_field_translations(zpt::json _def) -> std::string {
+auto zpt::gen::rest::unit::extract_field_translations(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     std::string _indent1(12, ' ');
     std::string _indent2(16, ' ');
@@ -1296,7 +1298,7 @@ auto zpt::gen::rest::module::extract_field_translations(zpt::json _def) -> std::
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::extract_static_translations() -> std::string {
+auto zpt::gen::rest::unit::extract_static_translations() -> std::string {
     std::ostringstream _oss;
     std::string _indent1(12, ' ');
     std::string _indent2(16, ' ');
@@ -1326,7 +1328,7 @@ auto zpt::gen::rest::module::extract_static_translations() -> std::string {
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::extract_fields(zpt::json _def) -> std::string {
+auto zpt::gen::rest::unit::extract_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     std::string _indent1(22, ' ');
     std::string _indent2(26, ' ');
@@ -1372,8 +1374,8 @@ auto zpt::gen::rest::module::extract_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::extract_visible_fields(zpt::json _def,
-                                                    std::string const& _where) -> std::string {
+auto zpt::gen::rest::unit::extract_visible_fields(zpt::json _def,
+                                                  std::string const& _where) -> std::string {
     std::ostringstream _oss;
     std::string _indent1(26, ' ');
     bool _first{ true };
@@ -1399,8 +1401,8 @@ auto zpt::gen::rest::module::extract_visible_fields(zpt::json _def,
     return _oss.str();
 }
 
-auto zpt::gen::rest::module::replace_additional_components(std::string& _html,
-                                                           zpt::json _def) -> void {
+auto zpt::gen::rest::unit::replace_additional_components(std::string& _html,
+                                                         zpt::json _def) -> void {
     std::string _indent1(14, ' ');
     std::string _indent2(6, ' ');
     std::string _indent3(10, ' ');

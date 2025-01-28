@@ -69,7 +69,7 @@ auto main(int _argc, char* _argv[]) -> int {
     _ifs >> _schema;
     zpt::conf::evaluate_ref(_schema, _schema, "", _context, _schema);
 
-    zpt::gen::rest::module _module{
+    zpt::gen::rest::unit _module{
         _schema("module")->string(), _output_backend, _output_frontend, _schema, _languages
     };
     _module //

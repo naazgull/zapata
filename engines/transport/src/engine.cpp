@@ -39,27 +39,18 @@ auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling.unmute(this->__stream);
     return true;
 }
 
 auto zpt::events::receive::catch_error(std::bad_alloc const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling.unmute(this->__stream);
     return true;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling.unmute(this->__stream);
     return true;
 }
@@ -77,9 +68,6 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> z
             auto _reply = _transport->make_reply();
             _reply->status(404);
             _transport->send(this->__stream, _reply);
-            // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " "
-            //                 << __PRETTY_FUNCTION__,
-            //      zpt::info);
             this->__polling.unmute(this->__stream);
         }
         else {
@@ -93,9 +81,6 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> z
     catch (std::exception const& _e) {
         ::report_error(_e, this->__stream);
     }
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling.unmute(this->__stream);
     return zpt::events::abort;
 }
@@ -106,9 +91,6 @@ zpt::events::send::send(zpt::polling& _polling, zpt::stream _stream, zpt::messag
   , __to_send{ _to_send } {}
 
 zpt::events::send::~send() {
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling.unmute(this->__stream);
 }
 
@@ -153,9 +135,6 @@ zpt::events::process::~process() {
     catch (std::exception const& _e) {
         ::report_error(_e, this->__stream);
     }
-    // zlog("stream: " << std::hex << this->__stream.get() << std::dec << " " <<
-    // __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->__polling->unmute(this->__stream);
 }
 
@@ -212,8 +191,6 @@ zpt::transports::engine::engine(zpt::json _config)
           catch (std::exception const& _e) {
               ::report_error(_e, _stream);
           }
-          // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
-          //      zpt::info);
           _poll.unmute(_stream);
           return true;
       });
