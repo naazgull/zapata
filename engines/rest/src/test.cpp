@@ -32,7 +32,7 @@ class collection : public zpt::events::process {
     virtual ~collection() = default;
 
     auto blocked() const -> bool { return false; }
-    auto operator()(zpt::events::dispatcher&) -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         this->to_send()->status(200);
         this->to_send()->body() = { "a", 1 };
         return zpt::events::finish;
@@ -46,7 +46,7 @@ class logger : public zpt::events::process {
     virtual ~logger() = default;
 
     auto blocked() const -> bool { return false; }
-    auto operator()(zpt::events::dispatcher&) -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         zlog(this->received(), zpt::info);
         return zpt::events::finish;
     }

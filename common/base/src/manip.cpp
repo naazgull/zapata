@@ -114,18 +114,13 @@ auto zpt::r_replace(std::string const& str,
                     std::string const& find,
                     std::string const& replace) -> std::string {
     std::string _return{ str.data() };
-    try {
-        if (_return.length() == 0) { return _return; }
+    if (_return.length() == 0) { return _return; }
 
-        size_t start{ 0 };
+    size_t start{ 0 };
 
-        while ((start = _return.find(find, start)) != std::string::npos) {
-            _return.replace(start, find.size(), replace);
-            start += replace.length();
-        }
-    }
-    catch (std::exception const& _e) {
-        std::cout << (_e.what()) << std::endl << std::flush;
+    while ((start = _return.find(find, start)) != std::string::npos) {
+        _return.replace(start, find.size(), replace);
+        start += replace.length();
     }
     return _return;
 }

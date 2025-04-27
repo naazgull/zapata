@@ -15,7 +15,9 @@ add_dependencies(zapata-net-upnp
 target_sources(zapata-net-upnp
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp_message.cpp
   INTERFACE
+    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/upnp/UPNPObj.h
     ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/upnp.h
     ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/transport/upnp.h
 )
@@ -117,4 +119,47 @@ install(TARGETS zapata-net-upnp zapata-net-upnp-plugin
 install(DIRECTORY ${NETWORK_UPNP_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
+)
+
+add_executable(zapata_test_upnp_transport)
+add_dependencies(zapata_test_upnp_transport
+  zapata-base
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-net-transport
+  zapata-net-upnp
+)
+target_sources(zapata_test_upnp_transport
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+)
+target_include_directories(zapata_test_upnp_transport
+  PRIVATE
+    zapata-base
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-net-transport
+    ${NETWORK_TCP_INCLUDE_DIR}
+)
+target_link_libraries(zapata_test_upnp_transport
+  PRIVATE
+    ssl
+    crypto
+    zapata-base
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-net-transport
+    zapata-net-upnp
+)
+set_target_properties(zapata_test_upnp_transport
+  PROPERTIES
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

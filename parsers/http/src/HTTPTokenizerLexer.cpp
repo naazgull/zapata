@@ -59,6 +59,7 @@ auto zpt::HTTPTokenizerLexer::init(int _in_type) -> void {
 auto zpt::HTTPTokenizerLexer::version() -> void {
     std::string _s(this->matched());
     zpt::replace(_s, "HTTP/", "");
+    zpt::replace(_s, "UPNP/", "");
     switch (this->__root_type) {
         case 0: {
             this->__root_req->version(_s);
@@ -89,7 +90,6 @@ auto zpt::HTTPTokenizerLexer::url() -> void {
     switch (this->__root_type) {
         case 0: {
             this->__root_req->uri(this->matched());
-            this->__root_req->uri()["scheme"] = "http";
             break;
         }
         case 1: {

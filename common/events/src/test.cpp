@@ -33,7 +33,7 @@ class my_operator {
     auto catch_error(std::bad_alloc const&) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
-    auto operator()(zpt::events::dispatcher&) -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         zlog("job1: " << this->__str << " " << this->__i, zpt::info);
         ++this->__i;
         return zpt::events::retrigger;
@@ -54,9 +54,9 @@ class my_other_operator {
     auto catch_error(std::bad_alloc const&) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
         zlog("job2: xpto " << this->__i, zpt::info);
-        _dispatcher.trigger<my_other_operator>(this->__i + 1);
+        _dispatcher->trigger<my_other_operator>(this->__i + 1);
         return zpt::events::finish;
     }
 

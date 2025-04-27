@@ -13,7 +13,7 @@
 //%debug
 %no-lines
 
-%left METHOD HTTP_VERSION
+%left METHOD PROTOCOL_VERSION
 %left URL STATUS
 %left CR_LF
 %left COLON
@@ -32,7 +32,7 @@ exp :
 	{
 		d_scanner.url();
 	}
-	SPACE HTTP_VERSION
+	SPACE PROTOCOL_VERSION
     {
 		d_scanner.version();
     }
@@ -50,7 +50,7 @@ exp :
         d_scanner.justLeave();
 	}
 |
-	HTTP_VERSION
+	PROTOCOL_VERSION
 	{
 		d_scanner.d_content_length = 0;
 		d_scanner.init(1);

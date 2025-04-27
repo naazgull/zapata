@@ -61,7 +61,6 @@ class resolver_t : public zpt::events::resolver_t {
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
     std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
     zpt::json __configuration;
-    zpt::stream __broadcast_stream;
 
     auto broadcast_service(std::string _query) -> void;
     template<typename T>
@@ -76,7 +75,7 @@ class service_broadcast : public zpt::events::process {
     ~service_broadcast() = default;
 
     auto blocked() const -> bool;
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 } // namespace rest
 auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;

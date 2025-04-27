@@ -58,7 +58,6 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/locks/spin_mutex.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/file/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/net/manip.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/mem/ref_ptr.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mem/usage.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha512.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha1.h

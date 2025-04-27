@@ -107,12 +107,12 @@ enum // size to expand the state-stack with when
 // Productions Info Records:
 PI_ const s_productionInfo[] = {
     { 0, 0 },    // not used: reduction values are negative
-    { 266, 10 }, // 1: exp (METHOD) ->  METHOD #0001 SPACE URL #0002 SPACE HTTP_VERSION #0003
+    { 266, 10 }, // 1: exp (METHOD) ->  METHOD #0001 SPACE URL #0002 SPACE PROTOCOL_VERSION #0003
                  // headers rest
     { 267, 0 },  // 2: #0001 ->  <empty>
     { 268, 0 },  // 3: #0002 ->  <empty>
     { 270, 0 },  // 4: #0003 ->  <empty>
-    { 266, 8 },  // 5: exp (HTTP_VERSION) ->  HTTP_VERSION #0004 SPACE STATUS #0005
+    { 266, 8 },  // 5: exp (PROTOCOL_VERSION) ->  PROTOCOL_VERSION #0004 SPACE STATUS #0005
                  // status_description headers rest
     { 272, 0 },  // 6: #0004 ->  <empty>
     { 274, 0 },  // 7: #0005 ->  <empty>
@@ -134,7 +134,7 @@ PI_ const s_productionInfo[] = {
 SR_ const s_0[] = {
     { { REQ_TOKEN }, { 4 } }, { { 266 }, { 1 } }, // exp
     { { 257 }, { 2 } },                           // METHOD
-    { { 258 }, { 3 } },                           // HTTP_VERSION
+    { { 258 }, { 3 } },                           // PROTOCOL_VERSION
     { { 0 }, { 0 } },
 };
 
@@ -207,7 +207,7 @@ SR_ const s_11[] = {
 
 SR_ const s_12[] = {
     { { REQ_TOKEN }, { 2 } },
-    { { 258 }, { 15 } }, // HTTP_VERSION
+    { { 258 }, { 15 } }, // PROTOCOL_VERSION
     { { 0 }, { 0 } },
 };
 

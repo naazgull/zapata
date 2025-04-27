@@ -20,30 +20,36 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-#include <zapata/startup.h>
-#include <zapata/net/socket.h>
-#include <zapata/net/upnp.h>
+#pragma once
 
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _config = _plugin.config();
-    zpt::TRANSPORT_LAYER().add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
+#include <zapata/http/HTTPObj.h>
 
-    if (_config("port")->ok()) {
-        auto _stream = zpt::make_stream<zpt::socketstream>(
-          _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
-        _stream->transport("upnp");
+namespace zpt {
+namespace upnp {
 
-        auto _polling = zpt::STREAM_POLLING();
-        _polling->listen_on(std::move(_stream));
+class basic_request : public zpt::http::basic_request {
+  public:
+    basic_request();
+    basic_request(zpt::basic_message const& _request, bool);
+    virtual ~basic_request() = default;
 
-        zlog("Started UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
-             zpt::info);
-    }
-}
+    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+};
+using request = std::shared_ptr<zpt::upnp::basic_request>;
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    auto& _config = _plugin.config();
-    zlog("Stopped UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
-         zpt::info);
-}
+class basic_reply : public zpt::http::basic_reply {
+  public:
+    basic_reply();
+    basic_reply(zpt::basic_message const& _request, bool);
+    virtual ~basic_reply() = default;
+
+    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+};
+using reply = std::shared_ptr<zpt::upnp::basic_reply>;
+} // namespace upnp
+
+void init(zpt::upnp::basic_request& _out);
+void init(zpt::upnp::basic_reply& _out);
+} // namespace zpt

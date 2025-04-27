@@ -65,14 +65,6 @@ find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Lua 5.4)
 find_package(OpenSSL)
 find_package(SQLite3)
-find_library(LMDB_LIBS NAMES lmdb
-  PATHS
-    /usr/lib
-    /usr/lib64
-    /usr/lib//x86_64-linux-gnu/
-    /usr/local/lib
-    /usr/local/lib64
-)
 
 include_directories(
   SYSTEM
@@ -105,7 +97,7 @@ add_subdirectory(network/local)
 add_subdirectory(network/transport)
 add_subdirectory(network/pipe)
 add_subdirectory(network/tcp)
-# add_subdirectory(network/upnp)
+add_subdirectory(network/upnp)
 add_subdirectory(network/websocket)
 add_subdirectory(parsers/functional)
 add_subdirectory(parsers/http)
@@ -113,7 +105,6 @@ add_subdirectory(parsers/json)
 add_subdirectory(parsers/uri)
 # add_subdirectory(security/oauth2)
 add_subdirectory(storage/connector)
-add_subdirectory(storage/lmdb)
 add_subdirectory(storage/mysqlx)
 add_subdirectory(storage/sqlite)
 # add_subdirectory(network/mqtt)

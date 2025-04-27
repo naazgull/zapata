@@ -143,7 +143,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
 auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     this->mute(_stream);
     for (auto& d : this->__delegates) {
-        if (d((*this), _stream)) { return (*this); }
+        if (d(this->shared_from_this(), _stream)) { return (*this); }
     }
     // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
     //      zpt::info);
@@ -194,7 +194,7 @@ auto zpt::polling::shutdown() -> zpt::polling& {
     return (*this);
 }
 
-auto zpt::STREAM_POLLING() -> zpt::polling& {
-    static zpt::polling _global;
+auto zpt::STREAM_POLLING() -> zpt::polling::ptr {
+    static zpt::polling::ptr _global = std::make_shared<zpt::polling>();
     return _global;
 }

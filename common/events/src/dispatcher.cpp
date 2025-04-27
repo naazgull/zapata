@@ -68,7 +68,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         return (*this);
     }
     try {
-        auto state = (*_event)((*this));
+        auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(_event); }
     }
     catch (zpt::failed_expectation const& _e) {
@@ -108,7 +108,8 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
 }
 
-auto zpt::DISPATCHER(long int _consumers) -> zpt::events::dispatcher& {
-    static zpt::events::dispatcher _global{ _consumers };
+auto zpt::DISPATCHER(long int _consumers) -> zpt::events::dispatcher::ptr {
+    static zpt::events::dispatcher::ptr _global =
+      std::make_shared<zpt::events::dispatcher>(_consumers);
     return _global;
 }

@@ -27,7 +27,7 @@ auto report_error(T const& _e, zpt::stream _stream) -> void {
 } // namespace
 
 zpt::events::receive::receive(zpt::transports::engine& _engine,
-                              zpt::polling& _polling,
+                              zpt::polling::ptr _polling,
                               zpt::stream _stream)
   : __engine{ _engine }
   , __polling{ _polling }
@@ -39,23 +39,24 @@ auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    this->__polling.unmute(this->__stream);
+    this->__polling->unmute(this->__stream);
     return true;
 }
 
 auto zpt::events::receive::catch_error(std::bad_alloc const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    this->__polling.unmute(this->__stream);
+    this->__polling->unmute(this->__stream);
     return true;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> bool {
     ::report_error(_e, this->__stream);
-    this->__polling.unmute(this->__stream);
+    this->__polling->unmute(this->__stream);
     return true;
 }
 
-auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
+  -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     try {
@@ -68,10 +69,10 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> z
             auto _reply = _transport->make_reply();
             _reply->status(404);
             _transport->send(this->__stream, _reply);
-            this->__polling.unmute(this->__stream);
+            this->__polling->unmute(this->__stream);
         }
         else {
-            for (auto _event : _events) { _dispatcher.trigger(_event); }
+            for (auto _event : _events) { _dispatcher->trigger(_event); }
         }
         return zpt::events::finish;
     }
@@ -81,18 +82,16 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher& _dispatcher) -> z
     catch (std::exception const& _e) {
         ::report_error(_e, this->__stream);
     }
-    this->__polling.unmute(this->__stream);
+    this->__polling->unmute(this->__stream);
     return zpt::events::abort;
 }
 
-zpt::events::send::send(zpt::polling& _polling, zpt::stream _stream, zpt::message _to_send)
+zpt::events::send::send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::message _to_send)
   : __polling{ _polling }
   , __stream{ _stream }
   , __to_send{ _to_send } {}
 
-zpt::events::send::~send() {
-    this->__polling.unmute(this->__stream);
-}
+zpt::events::send::~send() { this->__polling->unmute(this->__stream); }
 
 auto zpt::events::send::blocked() const -> bool { return false; }
 
@@ -105,7 +104,7 @@ auto zpt::events::send::catch_error(std::bad_alloc const& _e) -> bool {
 
 auto zpt::events::send::catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
-auto zpt::events::send::operator()(zpt::events::dispatcher&) -> zpt::events::state {
+auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send->headers()["Content-Type"] = "application/json";
@@ -126,7 +125,7 @@ zpt::events::process::~process() {
         if (this->__to_send->status() == 0) { this->__to_send->status(204); }
 
         this->__dispatcher->trigger<zpt::events::send>(
-          *this->__polling, this->__stream, this->__to_send);
+          this->__polling, this->__stream, this->__to_send);
         return;
     }
     catch (std::bad_alloc const& _e) {
@@ -157,8 +156,8 @@ auto zpt::events::process::catch_error(zpt::failed_expectation const& _e) -> boo
     return true;
 }
 
-auto zpt::events::process::initialize(zpt::events::dispatcher& _dispatcher,
-                                      zpt::polling& _polling,
+auto zpt::events::process::initialize(zpt::events::dispatcher::ptr _dispatcher,
+                                      zpt::polling::ptr _polling,
                                       zpt::stream _stream) -> process& {
     this->__dispatcher = _dispatcher;
     this->__polling = _polling;
@@ -180,7 +179,7 @@ zpt::transports::engine::engine(zpt::json _config)
                     ? _config("limits")("max_consumer_threads")->integer()
                     : 1 } {
     zpt::STREAM_POLLING() //
-      .register_delegate([this](zpt::polling& _poll, zpt::stream _stream) -> bool {
+      ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
           try {
               this->__dispatcher.trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
@@ -191,7 +190,7 @@ zpt::transports::engine::engine(zpt::json _config)
           catch (std::exception const& _e) {
               ::report_error(_e, _stream);
           }
-          _poll.unmute(_stream);
+          _poll->unmute(_stream);
           return true;
       });
     this->__dispatcher.start_consumers();

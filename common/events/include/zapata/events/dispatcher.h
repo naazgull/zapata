@@ -28,67 +28,15 @@
 #include <zapata/allocator.h>
 
 namespace zpt {
-namespace events {
-enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
-class dispatcher;
-} // namespace events
-} // namespace zpt
-
-template<typename T>
-concept Operation = requires(T t,
-                             zpt::events::dispatcher& _d,
-                             std::exception const& _e,
-                             std::bad_alloc const& _bae,
-                             zpt::failed_expectation const& _fe) {
-    { t(_d) } -> std::convertible_to<zpt::events::state>;
-    { t.blocked() } -> std::convertible_to<bool>;
-    { t.catch_error(_e) } -> std::convertible_to<bool>;
-    { t.catch_error(_bae) } -> std::convertible_to<bool>;
-    { t.catch_error(_fe) } -> std::convertible_to<bool>;
-};
-
-namespace zpt {
-class abstract_event {
-  public:
-    abstract_event() = default;
-    virtual ~abstract_event() = default;
-
-    virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e) -> bool = 0;
-    virtual auto catch_error(std::bad_alloc const& _e) -> bool = 0;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
-};
+class abstract_event;
 using event = std::shared_ptr<zpt::abstract_event>;
 
-template<Operation T>
-class event_t : public zpt::abstract_event {
-  public:
-    template<typename... Args>
-    event_t(Args&&... _args);
-    virtual ~event_t() override = default;
-
-    auto operator*() -> T&;
-    auto operator*() const -> T const&;
-    virtual auto blocked() const -> bool override final;
-    virtual auto catch_error(std::exception const& _e) -> bool override final;
-    virtual auto catch_error(std::bad_alloc const& _e) -> bool override final;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher)
-      -> zpt::events::state override final;
-
-  private:
-    T __underlying;
-};
-
-template<typename T>
-auto make_event(T _operator) -> zpt::event;
-template<typename T, typename... Args>
-auto make_event(Args&&... _args) -> zpt::event;
-
 namespace events {
-class dispatcher {
+enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
+class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
+    using ptr = std::shared_ptr<dispatcher>;
+
     dispatcher(long _max_consumers);
     virtual ~dispatcher();
 
@@ -110,7 +58,61 @@ class dispatcher {
     auto loop(long _consumer_nr) -> void;
 };
 } // namespace events
-auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher&;
+} // namespace zpt
+
+template<typename T>
+concept Operation = requires(T t,
+                             zpt::events::dispatcher::ptr _d,
+                             std::exception const& _e,
+                             std::bad_alloc const& _bae,
+                             zpt::failed_expectation const& _fe) {
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.blocked() } -> std::convertible_to<bool>;
+    { t.catch_error(_e) } -> std::convertible_to<bool>;
+    { t.catch_error(_bae) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe) } -> std::convertible_to<bool>;
+};
+
+namespace zpt {
+class abstract_event {
+  public:
+    abstract_event() = default;
+    virtual ~abstract_event() = default;
+
+    virtual auto blocked() const -> bool = 0;
+    virtual auto catch_error(std::exception const& _e) -> bool = 0;
+    virtual auto catch_error(std::bad_alloc const& _e) -> bool = 0;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
+    virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
+};
+using event = std::shared_ptr<zpt::abstract_event>;
+
+template<Operation T>
+class event_t : public zpt::abstract_event {
+  public:
+    template<typename... Args>
+    event_t(Args&&... _args);
+    virtual ~event_t() override = default;
+
+    auto operator*() -> T&;
+    auto operator*() const -> T const&;
+    virtual auto blocked() const -> bool override final;
+    virtual auto catch_error(std::exception const& _e) -> bool override final;
+    virtual auto catch_error(std::bad_alloc const& _e) -> bool override final;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
+    virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
+      -> zpt::events::state override final;
+
+  private:
+    T __underlying;
+};
+
+template<typename T>
+auto make_event(T _operator) -> zpt::event;
+template<typename T, typename... Args>
+auto make_event(Args&&... _args) -> zpt::event;
+
+auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher::ptr;
 template<typename T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt
@@ -151,7 +153,7 @@ auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
 }
 
 template<Operation T>
-auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
     return this->__underlying(_dispatcher);
 }
 

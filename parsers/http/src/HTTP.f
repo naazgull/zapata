@@ -2,7 +2,7 @@
     enum Tokens__
     {
         METHOD = 257,
-        HTTP_VERSION = 258,
+        PROTOCOL_VERSION = 258,
         URL = 259,
         STATUS = 260,
         CR_LF = 261,
@@ -85,12 +85,26 @@ string	d_chunked;
 	begin(StartCondition_::reply);
 	return 258;
 }
+"UPNP/1.0" {
+	begin(StartCondition_::reply);
+	return 258;
+}
+"UPNP/1.1" {
+	begin(StartCondition_::reply);
+	return 258;
+}
 
 <request>{
 	"HTTP/1.0" {
 		return 258;
 	}
 	"HTTP/1.1" {
+		return 258;
+	}
+	"UPNP/1.0" {
+		return 258;
+	}
+	"UPNP/1.1" {
 		return 258;
 	}
 	"\r\n"   {

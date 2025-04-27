@@ -78,31 +78,39 @@ auto zpt::http::basic_message::anchor() const -> std::string {
     return this->__underlying("uri")("anchor")->string();
 }
 
-auto zpt::http::basic_message::performative(zpt::performative _performative) -> void {
+auto zpt::http::basic_message::performative(zpt::performative _performative)
+  -> zpt::basic_message& {
     this->__underlying["performative"] = zpt::ontology::to_str(_performative);
+    return (*this);
 }
 
-auto zpt::http::basic_message::status(zpt::status _status) -> void {
+auto zpt::http::basic_message::status(zpt::status _status) -> zpt::basic_message& {
     this->__underlying["status"] = _status;
+    return (*this);
 }
 
-auto zpt::http::basic_message::uri(std::string const& _uri) -> void {
+auto zpt::http::basic_message::uri(std::string const& _uri) -> zpt::basic_message& {
     this->__underlying["uri"] = zpt::uri::parse(_uri);
+    return (*this);
 }
 
-auto zpt::http::basic_message::version(std::string const& _version) -> void {
+auto zpt::http::basic_message::version(std::string const& _version) -> zpt::basic_message& {
     this->__underlying["headers"]["X-Version"] = _version;
+    return (*this);
 }
 
-auto zpt::http::basic_message::body(std::string const& _body) -> void {
+auto zpt::http::basic_message::body(std::string const& _body) -> zpt::basic_message& {
     if (this->content_type() == "application/json") {
         this->__underlying["body"] = zpt::json::parse_json_str(_body);
     }
     else { this->__underlying["body"] = _body; }
+    return (*this);
 }
 
-auto zpt::http::basic_message::header(std::string const& _name, std::string const& _value) -> void {
+auto zpt::http::basic_message::header(std::string const& _name,
+                                      std::string const& _value) -> zpt::basic_message& {
     this->__underlying["headers"][_name] = _value;
+    return (*this);
 }
 
 auto zpt::init(zpt::http::basic_request& _req) -> void {

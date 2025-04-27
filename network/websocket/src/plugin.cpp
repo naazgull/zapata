@@ -35,14 +35,14 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
 
         _plugin.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::STREAM_POLLING();
+            auto _polling = zpt::STREAM_POLLING();
             zlog("Started WebSocket transport on port " << _config("port"), zpt::info);
 
             try {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("ws");
-                    _polling.listen_on(std::move(_client));
+                    _polling->listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {

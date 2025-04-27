@@ -76,9 +76,10 @@ class basic_stream {
 
 using stream = std::shared_ptr<zpt::basic_stream>;
 
-class polling {
+class polling : public std::enable_shared_from_this<polling> {
   public:
-    using delegate_fn_type = std::function<bool(zpt::polling& _poll, zpt::stream _stream)>;
+    using ptr = std::shared_ptr<polling>;
+    using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
     polling();
@@ -103,7 +104,7 @@ class polling {
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
 
-auto STREAM_POLLING() -> zpt::polling&;
+auto STREAM_POLLING() -> zpt::polling::ptr;
 
 template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;
@@ -131,6 +132,7 @@ auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
         _in->to_stream(*this->__underlying.get());
     }
     else { (*this->__underlying.get()) << _in; }
+
     return (*this);
 }
 

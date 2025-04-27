@@ -113,26 +113,34 @@ auto zpt::json_message::keep_alive() const -> bool {
 
 auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
 
-auto zpt::json_message::to_stream(std::ostream& _out) const -> void { _out << this->__underlying; }
+auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
+    _out << this->__underlying;
+    return (*this);
+}
 
-auto zpt::json_message::from_stream(std::istream& _in) -> void {
+auto zpt::json_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     _in >> std::noskipws >> this->__underlying;
+    return (*this);
 }
 
-auto zpt::json_message::performative(zpt::performative _performative) -> void {
+auto zpt::json_message::performative(zpt::performative _performative) -> zpt::basic_message& {
     this->__underlying["performative"] = zpt::ontology::to_str(_performative);
+    return (*this);
 }
 
-auto zpt::json_message::status(zpt::status _status) -> void {
+auto zpt::json_message::status(zpt::status _status) -> zpt::basic_message& {
     this->__underlying["satus"] = _status;
+    return (*this);
 }
 
-auto zpt::json_message::uri(std::string const& _uri) -> void {
+auto zpt::json_message::uri(std::string const& _uri) -> zpt::basic_message& {
     this->__underlying["uri"] = zpt::uri::parse(_uri);
+    return (*this);
 }
 
-auto zpt::json_message::version(std::string const& _version) -> void {
+auto zpt::json_message::version(std::string const& _version) -> zpt::basic_message& {
     this->__underlying["headers"]["X-Version"] = _version;
+    return (*this);
 }
 
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
@@ -151,10 +159,10 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
         _stream->state() = zpt::stream_state::IDLE;
         _to_return = this->process_incoming_reply(_stream);
     }
-    zlog("Received '" << _stream->transport()
-                      << "' message: " << zpt::ontology::to_str(_to_return->performative()) << " "
-                      << _to_return->resource()->string(),
-         zpt::trace);
+    // zlog("Received '" << _stream->transport()
+    //                   << "' message: " << zpt::ontology::to_str(_to_return->performative()) << " "
+    //                   << _to_return->resource()->string(),
+    //      zpt::trace);
     return _to_return;
 }
 

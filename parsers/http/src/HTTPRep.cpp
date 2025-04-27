@@ -49,7 +49,7 @@ zpt::http::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
       << "headers" << _headers;
 }
 
-auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
+auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
                             ? static_cast<int>(this->__underlying("status"))
                             : 100;
@@ -75,9 +75,11 @@ auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
         }
     }
     else { _out << "Content-Length: 0" << CRLF << CRLF; }
+
+    return (*this);
 }
 
-auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
+auto zpt::http::basic_reply::from_stream(std::istream& _in) -> zpt::basic_message& {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
@@ -89,6 +91,8 @@ auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
     }
     catch (...) {
     }
+
+    return (*this);
 }
 
 auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message {

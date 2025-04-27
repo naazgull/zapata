@@ -25,15 +25,7 @@
 #include <zapata/net/socket/socket_stream.h>
 
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
-  : __configuration{ _global_config } {
-    if (this->__configuration("upnp")->ok()) {
-        this->__broadcast_stream =
-          zpt::make_stream<zpt::socketstream>(this->__configuration("upnp")("bind")->string(),
-                                              this->__configuration("upnp")("port")->integer(),
-                                              false,
-                                              IPPROTO_UDP);
-    }
-}
+  : __configuration{ _global_config } {}
 
 auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     this->__callbacks.clear();
@@ -57,10 +49,14 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initial
     return _return;
 }
 
+auto zpt::rest::resolver_t::set_broadcast_stream(zpt::strem _broadcast_stream) -> void {
+    this->__broadcast_stream = _broadcast_stream;
+}
+
 auto zpt::rest::resolver_t::broadcast_service(std::string _query) -> void {
     if (this->__broadcast_stream == nullptr) { return; }
 
-    auto _service = zpt::allocate_message<zpt::http::basic_request>();
+    auto _service = zpt::allocate_message<zpt::upnp::basic_request>();
     _service->performative(zpt::Notify);
     _service->uri("/services");
     _service->headers() << "Content-Type" << "application/json" << "ST"
@@ -73,7 +69,6 @@ auto zpt::rest::resolver_t::broadcast_service(std::string _query) -> void {
     _service->body() = zpt::json{
         "resources", _resources, "addresses", this->__configuration("transport")("addresses")
     };
-    std::cout << _service << std::endl;
     // (*this->__broadcast_stream) << _service << std::flush;
 }
 
@@ -82,7 +77,7 @@ zpt::rest::service_broadcast::service_broadcast(zpt::message _received)
 
 auto zpt::rest::service_broadcast::blocked() const -> bool { return false; }
 
-auto zpt::rest::service_broadcast::operator()(zpt::events::dispatcher&) -> zpt::events::state {
+auto zpt::rest::service_broadcast::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     zlog(this->received(), zpt::debug);
     // auto& _resolver = zpt::REST_RESOLVER();
     // _resolver.add<

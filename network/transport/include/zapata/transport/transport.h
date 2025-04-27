@@ -48,12 +48,12 @@ class basic_message {
     virtual auto body() const -> zpt::json const = 0;
     virtual auto keep_alive() const -> bool = 0;
     virtual auto content_type() const -> std::string = 0;
-    virtual auto performative(zpt::performative _performative) -> void = 0;
-    virtual auto status(zpt::status _status) -> void = 0;
-    virtual auto uri(std::string const& _uri) -> void = 0;
-    virtual auto version(std::string const& _version) -> void = 0;
-    virtual auto to_stream(std::ostream& _out) const -> void = 0;
-    virtual auto from_stream(std::istream& _in) -> void = 0;
+    virtual auto performative(zpt::performative _performative) -> basic_message& = 0;
+    virtual auto status(zpt::status _status) -> basic_message& = 0;
+    virtual auto uri(std::string const& _uri) -> basic_message& = 0;
+    virtual auto version(std::string const& _version) -> basic_message& = 0;
+    virtual auto to_stream(std::ostream& _out) const -> basic_message const& = 0;
+    virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
 
     friend auto operator<<(std::ostream& _out, zpt::basic_message const& _in) -> std::ostream& {
         _in.to_stream(_out);
@@ -87,12 +87,12 @@ class json_message : public basic_message {
     auto body() const -> zpt::json const override;
     auto keep_alive() const -> bool override;
     auto content_type() const -> std::string override;
-    auto to_stream(std::ostream& _out) const -> void override;
-    auto from_stream(std::istream& _in) -> void override;
-    auto performative(zpt::performative _performative) -> void override;
-    auto status(zpt::status _status) -> void override;
-    auto uri(std::string const& _uri) -> void override;
-    auto version(std::string const& _version) -> void override;
+    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+    auto performative(zpt::performative _performative) -> zpt::basic_message& override;
+    auto status(zpt::status _status) -> zpt::basic_message& override;
+    auto uri(std::string const& _uri) -> zpt::basic_message& override;
+    auto version(std::string const& _version) -> zpt::basic_message& override;
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 
@@ -182,9 +182,8 @@ auto zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {
 
 template<typename T, typename... Args>
 auto zpt::make_transport(Args... _args) -> zpt::transport {
-    return std::allocate_shared<T>(
-      zpt::allocator<T>{ zpt::MEM_POOL() },
-      std::forward<Args>(_args)...);
+    return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
+                                   std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>
@@ -194,8 +193,6 @@ auto zpt::make_message(Args... _args) -> zpt::message {
 
 template<typename T, typename... Args>
 auto zpt::allocate_message(Args... _args) -> zpt::message {
-    return std::allocate_shared<T>(
-      zpt::allocator<T>{ zpt::MEM_POOL() },
-      std::forward<Args>(_args)...);
+    return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
+                                   std::forward<Args>(_args)...);
 }
-

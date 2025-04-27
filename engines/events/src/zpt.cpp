@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int) -> void { zpt::STREAM_POLLING().shutdown(); }
+auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
 
 auto nostop(int) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
@@ -103,20 +103,20 @@ auto main(int _argc, char* _argv[]) -> int {
     zlog("Initialized transport layer", zpt::info);
     if (_consumers != 0) {
         zpt::DISPATCHER(_consumers) //
-          .start_consumers(_consumers);
+          ->start_consumers(_consumers);
         zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
     }
     zpt::BOOT(_config) //
       .load();
     zlog("All plugins loaded", zpt::notice);
     zpt::STREAM_POLLING() //
-      .poll()
+      ->poll()
       .shutdown();
     zlog("Unloaded stream polling service", zpt::info);
 
     if (_consumers != 0) {
         zpt::DISPATCHER() //
-          .stop_consumers();
+          ->stop_consumers();
         zlog("Stopped global event dispatcher", zpt::info);
     }
     zlog("Unloaded transport layer", zpt::info);

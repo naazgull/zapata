@@ -33,9 +33,6 @@
 
 namespace zpt {
 namespace net {
-namespace upnp {
-auto setup_broadcast(int sockfd, zpt::json _config) -> void;
-}
 namespace transport {
 class upnp : public zpt::basic_transport {
   public:

@@ -51,9 +51,9 @@ zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool
       << "headers" << _headers;
 }
 
-auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
+auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     _out << this->__underlying("performative")->string() << " "
-         << static_cast<std::string>(this->__underlying("uri")("raw_path"));
+         << zpt::uri::to_string(this->__underlying("uri"));
 
     if (this->__underlying("uri")("params")->ok()) {
         _out << "?";
@@ -82,9 +82,11 @@ auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
     _out << "Content-Length: " << _body.length() << CRLF;
 
     _out << CRLF << _body;
+
+    return (*this);
 }
 
-auto zpt::http::basic_request::from_stream(std::istream& _in) -> void {
+auto zpt::http::basic_request::from_stream(std::istream& _in) -> zpt::basic_message& {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
@@ -96,6 +98,8 @@ auto zpt::http::basic_request::from_stream(std::istream& _in) -> void {
     }
     catch (...) {
     }
+
+    return (*this);
 }
 
 auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::message {

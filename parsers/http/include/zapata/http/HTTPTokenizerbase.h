@@ -30,7 +30,7 @@ class HTTPTokenizerBase {
     // Symbolic tokens:
     enum Tokens_ {
         METHOD = 257,
-        HTTP_VERSION,
+        PROTOCOL_VERSION,
         URL,
         STATUS,
         CR_LF,

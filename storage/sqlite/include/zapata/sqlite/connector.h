@@ -24,7 +24,6 @@
 
 #include <zapata/json.h>
 #include <zapata/connector.h>
-#include <zapata/mem/ref_ptr.h>
 #include <sqlite3.h>
 
 namespace zpt {
