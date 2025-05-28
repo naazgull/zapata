@@ -161,7 +161,6 @@ template<typename T>
 auto zpt::make_event(T _operator) -> zpt::event {
     return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
                                                  _operator);
-    return std::allocate_shared<zpt::event_t<T>>(std::allocator<zpt::event_t<T>>{}, _operator);
 }
 
 template<typename T, typename... Args>

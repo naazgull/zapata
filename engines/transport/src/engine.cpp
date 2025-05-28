@@ -62,7 +62,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     try {
         auto _received = _transport->receive(this->__stream);
         auto _events =
-          this->__engine.resolve(_received, [this, &_dispatcher](zpt::events::process& _event) {
+          this->__engine.resolve(_received, [this, _dispatcher](zpt::events::process& _event) {
               _event.initialize(_dispatcher, this->__polling, this->__stream);
           });
         if (_events.size() == 0) {
@@ -175,25 +175,26 @@ auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
 
 zpt::transports::engine::engine(zpt::json _config)
   : __configuration{ _config }
-  , __dispatcher{ _config("limits")("max_consumer_threads")->ok()
-                    ? _config("limits")("max_consumer_threads")->integer()
-                    : 1 } {
+  , __dispatcher{ std::make_shared<zpt::events::dispatcher>(
+      _config("limits")("max_consumer_threads")->ok()
+        ? _config("limits")("max_consumer_threads")->integer()
+        : 1) } {
     zpt::STREAM_POLLING() //
       ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
-          try {
-              this->__dispatcher.trigger<zpt::events::receive>(*this, _poll, _stream);
+          // try {
+              this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
-          }
-          catch (std::bad_alloc const& _e) {
-              ::report_error(_e, _stream);
-          }
-          catch (std::exception const& _e) {
-              ::report_error(_e, _stream);
-          }
+          // }
+          // catch (std::bad_alloc const& _e) {
+          //     ::report_error(_e, _stream);
+          // }
+          // catch (std::exception const& _e) {
+          //     ::report_error(_e, _stream);
+          // }
           _poll->unmute(_stream);
           return true;
       });
-    this->__dispatcher.start_consumers();
+    this->__dispatcher->start_consumers();
 }
 
 auto zpt::transports::engine::add_resolver(zpt::events::resolver _resolver)

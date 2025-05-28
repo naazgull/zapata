@@ -625,7 +625,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
-                                                   "zpt::events::dispatcher&");
+                                                   "zpt::events::dispatcher::ptr");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
           "switch(this->received()->performative())");

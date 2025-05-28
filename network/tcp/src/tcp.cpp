@@ -25,6 +25,8 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
+auto zpt::net::transport::tcp::is_synchronous() const -> bool { return true; }
+
 auto zpt::net::transport::tcp::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();
     return _to_return;

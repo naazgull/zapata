@@ -35,6 +35,7 @@ class unix_socket : public zpt::basic_transport {
     unix_socket() = default;
     virtual ~unix_socket() = default;
 
+    auto is_synchronous() const -> bool override;
     auto make_request() const -> zpt::message override;
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;
@@ -46,6 +47,7 @@ class file : public zpt::basic_transport {
     file() = default;
     virtual ~file() = default;
 
+    auto is_synchronous() const -> bool override;
     auto make_request() const -> zpt::message override;
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;

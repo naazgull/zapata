@@ -100,8 +100,6 @@ auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling
 
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
-        // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
-        //      zpt::info);
         this->unmute(_stream);
         {
             std::unique_lock _sentry{ this->__poll_lock };
@@ -145,8 +143,6 @@ auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     for (auto& d : this->__delegates) {
         if (d(this->shared_from_this(), _stream)) { return (*this); }
     }
-    // zlog("stream: " << std::hex << _stream.get() << std::dec << " " << __PRETTY_FUNCTION__,
-    //      zpt::info);
     this->unmute(_stream);
     return (*this);
 }

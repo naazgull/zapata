@@ -41,20 +41,20 @@ auto main(int _argc, char* _argv[]) -> int {
         zlog(_stream->uri(), zpt::debug);
 
         if (_role == "server") {
-            zpt::polling _polling;
+            zpt::polling::ptr _polling = std::make_shared<zpt::polling>();
             _polling //
-              .register_delegate([&_transport](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
-                  try {
-                      auto _received = _transport->receive(_stream);
-                      zlog(_received, zpt::debug);
-                  }
-                  catch (...) {
-                      zlog("Nothing to receive", zpt::debug);
-                  }
-                  _stream->state() = zpt::stream_state::IDLE;
-                  _poll->unmute(_stream);
-                  return true;
-              })
+              ->register_delegate(
+                [&_transport](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
+                    try {
+                        auto _received = _transport->receive(_stream);
+                        zlog(_received, zpt::debug);
+                    }
+                    catch (...) {
+                        zlog("Nothing to receive", zpt::debug);
+                    }
+                    _poll->unmute(_stream);
+                    return true;
+                })
               .listen_on(std::move(_stream))
               .poll()
               .shutdown();

@@ -35,6 +35,7 @@ class tcp : public zpt::basic_transport {
     tcp() = default;
     virtual ~tcp() = default;
 
+    auto is_synchronous() const -> bool override;
     auto make_request() const -> zpt::message override;
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;

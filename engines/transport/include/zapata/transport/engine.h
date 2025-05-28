@@ -33,7 +33,7 @@ class engine {
   private:
     zpt::json __configuration;
     std::vector<zpt::events::resolver> __resolvers;
-    zpt::events::dispatcher __dispatcher;
+    zpt::events::dispatcher::ptr __dispatcher;
 };
 } // namespace transports
 

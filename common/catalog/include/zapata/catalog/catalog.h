@@ -42,7 +42,7 @@ class catalog {
     virtual ~catalog() = default;
 
     auto clear() -> catalog&;
-    auto add(K _key, M _metadata) -> catalog&;
+    auto add(K _key, std::string const& provider, std::uint64_t hash, M _metadata) -> catalog&;
     auto remove(K _key) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
 
@@ -69,6 +69,8 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS catalog ("
                  "    _id TEXT PRIMARY KEY,"
+                 "    provider TEXT,"
+                 "    hash INTEGER,"
                  "    metadata TEXT NOT NULL"
                  ")",
                  nullptr,
@@ -88,7 +90,8 @@ auto zpt::catalog<K, M>::clear() -> catalog& {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::add(K _key, M _metadata) -> catalog& {
+auto zpt::catalog<K, M>::add(K _key, std::string const& provider, std::uint64_t hash, M _metadata)
+  -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -98,7 +101,7 @@ auto zpt::catalog<K, M>::add(K _key, M _metadata) -> catalog& {
     zlog("Registered " << _t_key, zpt::trace);
     this
       ->__catalog //
-      ->replace(_t_key, { "metadata", _oss.str() })
+      ->replace(_t_key, { "provider", provider, "hash", hash, "metadata", _oss.str() })
       ->execute();
 
     return (*this);
@@ -166,14 +169,6 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
         }
     }
 
-    std::istringstream _iss;
-    for (auto [_, __, _row] : _result) {
-        M _metadata;
-        _iss.str(_row("metadata")->string());
-        _iss >> _metadata;
-        _iss.str("");
-        _row["metadata"] = _metadata;
-    }
     return _result;
 }
 

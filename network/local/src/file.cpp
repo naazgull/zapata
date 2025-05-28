@@ -25,6 +25,10 @@
 #include <zapata/uri.h>
 #include <zapata/globals/globals.h>
 
+auto zpt::net::transport::file::is_synchronous() const -> bool {
+    return false;
+}
+
 auto zpt::net::transport::file::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();
     return _to_return;

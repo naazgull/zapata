@@ -25,6 +25,8 @@
 
 class some_protocol : public zpt::basic_transport {
   public:
+    auto is_synchronous() const -> bool override { return true; }
+
     auto make_request() const -> zpt::message override { return nullptr; }
 
     auto make_reply(bool) const -> zpt::message override { return nullptr; }

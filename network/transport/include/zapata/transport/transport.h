@@ -105,6 +105,7 @@ class basic_transport {
     basic_transport() = default;
     virtual ~basic_transport() = default;
 
+    virtual auto is_synchronous() const -> bool = 0;
     virtual auto make_request() const -> zpt::message = 0;
     virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
     virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
