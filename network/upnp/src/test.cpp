@@ -70,7 +70,7 @@ auto main(int _argc, char* _argv[]) -> int {
             auto& _upnp = message_cast<zpt::upnp::basic_request>(_message);
             _upnp //
               .performative(zpt::Msearch)
-              .uri("/*");
+              .uri("*");
             zlog(_upnp, zpt::debug);
 
             (*_stream) << _message << std::flush;

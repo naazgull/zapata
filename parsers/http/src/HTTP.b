@@ -14,7 +14,7 @@
 %no-lines
 
 %left METHOD PROTOCOL_VERSION
-%left URL STATUS
+%left URL STAR STATUS
 %left CR_LF
 %left COLON
 %left STRING SPACE
@@ -28,7 +28,7 @@ exp :
 		d_scanner.d_content_length = 0;
 		d_scanner.init(0);
 	}
-	SPACE URL
+	SPACE resource
 	{
 		d_scanner.url();
 	}
@@ -74,6 +74,12 @@ exp :
 		}
         d_scanner.justLeave();
 	}
+;
+
+resource:
+    URL
+|
+    STAR
 ;
 
 status_description : | SPACE STRING;

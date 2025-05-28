@@ -62,7 +62,8 @@ auto zpt::uri::to_string(zpt::json _uri) -> std::string {
             _oss << _uri("domain")->string();
             if (_uri("port")->ok()) { _oss << ":" << _uri("port"); }
         }
-        _oss << (_uri("is_relative")->ok() && _uri("is_relative")->boolean() ? "" : "/");
+        if (_uri("is_wildcard")->ok() && _uri("is_wildcard")->boolean()) { _oss << "*"; }
+        else if (!_uri("is_relative")->ok() || !_uri("is_relative")->boolean()) { _oss << "/"; }
         if (_uri("path")->ok()) { _oss << zpt::join(_uri("path"), "/"); }
         if (_uri("params")->ok()) {
             bool _first{ true };

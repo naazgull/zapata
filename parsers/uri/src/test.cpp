@@ -31,6 +31,10 @@
 
 int main(int, char**) {
     try {
+        std::cout << zpt::uri::parse("*") << std::endl << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("*")) << std::endl
+                  << std::endl
+                  << std::flush;
         std::cout << zpt::uri::parse("/") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("/")) << std::endl
                   << std::endl
