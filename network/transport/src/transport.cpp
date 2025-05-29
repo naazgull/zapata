@@ -162,11 +162,6 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
         }
     }
     else { _to_return = this->process_incoming_request(_stream); }
-    // zlog("Received '" << _stream->transport()
-    //                   << "' message: " << zpt::ontology::to_str(_to_return->performative()) << "
-    //                   "
-    //                   << _to_return->resource()->string(),
-    //      zpt::trace);
     return _to_return;
 }
 

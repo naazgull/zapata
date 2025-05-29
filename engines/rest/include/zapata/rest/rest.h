@@ -56,29 +56,17 @@ class resolver_t : public zpt::events::resolver_t {
     auto clear() -> zpt::rest::resolver_t&;
     virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
-    auto set_broadcast_stream(zpt::stream _broadcast_stream) -> void;
 
   private:
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
     std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
     zpt::json __configuration;
-    zpt::stream __broadcast_stream;
 
-    auto broadcast_services() -> void;
     template<typename T>
     static auto make_callback(zpt::message _received,
                               zpt::events::initializer_t _initializer) -> zpt::event;
 };
 using resolver = std::shared_ptr<zpt::rest::resolver_t>;
-
-class service_broadcast : public zpt::events::process {
-  public:
-    service_broadcast(zpt::message _received);
-    ~service_broadcast() = default;
-
-    auto blocked() const -> bool;
-    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
-};
 } // namespace rest
 auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;
 } // namespace zpt

@@ -23,25 +23,22 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/rest.h>
+#include <zapata/rest/services.h>
 #include <zapata/transport.h>
-
-namespace {
-auto register_service_broadcast_listeners(zpt::json) -> void {
-    zpt::REST_RESOLVER() //
-      ->add<zpt::rest::service_broadcast>(zpt::Notify, "/services");
-}
-} // namespace
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zpt::TRANSPORT_ENGINE() //
       .add_resolver(zpt::REST_RESOLVER(_config));
+
     if (_config("rest")("prefix")->ok()) {
         _config["rest"]["prefix_path_len"] =
           zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
     }
     else { _config["rest"]["prefix_path_len"] = 0; }
-    ::register_service_broadcast_listeners(_config);
+
+    zpt::REST_RESOLVER()->add<zpt::rest::services>(zpt::Msearch, "*");
+
     zlog("Added REST event resolver", zpt::info);
 }
 

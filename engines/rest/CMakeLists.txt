@@ -21,9 +21,11 @@ add_dependencies(zapata-engine-rest
 target_sources(zapata-engine-rest
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/services.cpp
   INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest.h
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/rest.h
+    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/services.h
 )
 target_include_directories(zapata-engine-rest
   PRIVATE

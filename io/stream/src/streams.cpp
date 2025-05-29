@@ -126,8 +126,8 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
-    assert(_stream->state() == zpt::stream_state::IDLE);
-    expect(_stream->state() == zpt::stream_state::IDLE, "Can't add an active stream to the poll");
+    // assert(_stream->state() == zpt::stream_state::IDLE);
+    // expect(_stream->state() == zpt::stream_state::IDLE, "Can't add an active stream to the poll");
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = new zpt::stream_ptr{ _stream };

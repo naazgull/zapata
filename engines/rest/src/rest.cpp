@@ -49,39 +49,6 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initial
     return _return;
 }
 
-auto zpt::rest::resolver_t::set_broadcast_stream(zpt::stream _broadcast_stream) -> void {
-    this->__broadcast_stream = _broadcast_stream;
-}
-
-auto zpt::rest::resolver_t::broadcast_services() -> void {
-    if (this->__broadcast_stream == nullptr) { return; }
-
-    // auto _service = zpt::allocate_message<zpt::upnp::basic_request>();
-    // _service->performative(zpt::Notify);
-    // _service->uri("/services");
-    // _service->headers() << "Content-Type" << "application/json" << "ST"
-    //                     << "urn:schemas-upnp-org:service:*" << "MAN" << "\"ssdp:discover\"" << "MX"
-    //                     << "3";
-
-    // auto _resources = zpt::json::array();
-    // _service->body() = zpt::json{
-    //     "resources", _resources, "addresses", this->__configuration("transport")("addresses")
-    // };
-    // (*this->__broadcast_stream) << _service << std::flush;
-}
-
-zpt::rest::service_broadcast::service_broadcast(zpt::message _received)
-  : zpt::events::process{ _received } {}
-
-auto zpt::rest::service_broadcast::blocked() const -> bool { return false; }
-
-auto zpt::rest::service_broadcast::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-    zlog(this->received(), zpt::debug);
-    // auto& _resolver = zpt::REST_RESOLVER();
-    // _resolver.add<
-    return zpt::events::finish;
-}
-
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::rest::resolver {
     static zpt::rest::resolver _global = std::make_shared<zpt::rest::resolver_t>(_config);
     return _global;
