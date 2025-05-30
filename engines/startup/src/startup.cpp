@@ -24,6 +24,33 @@
 #include <zapata/transport.h>
 #include <zapata/startup/startup.h>
 
+namespace {
+zpt::json const __builtins = R"({
+        "builtin:lua": { "name": "builtin:lua", "source": "libzapata-bridge-lua-plugin.so",
+          "requires" : [] },
+        "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",
+          "requires" : [] },
+        "builtin:python": { "name": "builtin:python", "source": "libzapata-bridge-python-plugin.so",
+          "requires" : [] },
+        "builtin:rest": { "name": "builtin:rest", "source": "libzapata-engine-rest-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:transport": { "name": "builtin:transport",
+          "source": "libzapata-engine-transport-plugin.so", "requires" : [] },
+        "builtin:http": { "name": "builtin:http", "source": "libzapata-net-http-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:local": { "name": "builtin:local", "source": "libzapata-net-local-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:pipe": { "name": "builtin:pipe", "source": "libzapata-net-pipe-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:tcp": { "name": "builtin:tcp", "source": "libzapata-net-tcp-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:upnp": { "name": "builtin:upnp", "source": "libzapata-net-upnp-plugin.so",
+          "requires" : [ "builtin:transport" ] },
+        "builtin:ws": { "name": "builtin:ws", "source": "libzapata-net-websocket-plugin.so",
+          "requires" : [ "builtin:transport" ] }
+    })"_JSON;
+}
+
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
   : __config{ _config } {
     expect(_options("name")->ok(), "missing name definition in plugin configuration");
@@ -98,26 +125,43 @@ auto zpt::startup::boot::to_string() -> std::string {
 }
 
 auto zpt::startup::boot::load() -> zpt::startup::boot& {
+    this->resolve_builtin_dependencies();
+
     auto _to_load = zpt::json::object();
     for (auto [_idx, __, _lib] : this->__configuration("load")) {
-        _to_load << _lib("name")->string() << true;
+        auto _name = _lib("name")->string();
+        _to_load << _name << zpt::json::object();
     }
 
-    while (_to_load->size() != 0) {
+    bool _no_change{ false };
+    while (_to_load->size() != 0 && !_no_change) {
+        _no_change = true;
+
         for (auto [_idx, __, _lib] : this->__configuration("load")) {
             auto _name = _lib("name")->string();
-            if (_lib("requires")->ok() && _lib("requires")->is_array()) {
-                for (auto [___, ____, _required] : _lib("requires")) {
-                    if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
-                        continue;
-                    }
+            if (this->__plugins.find(_name) != this->__plugins.end()) { continue; }
+
+            expect(!_lib("requires")->ok() || _lib("requires")->is_array(),
+                   "Configuration error: library 'requires' field must be an array");
+
+            for (auto [___, ____, _required] : _lib("requires")) {
+                if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
+                    _to_load[_name] << _required->string() << false;
                 }
+                else { _to_load[_name]->object()->pop(_required->string()); }
             }
-            this->load(_lib, this->__configuration(_name));
+
+            if (_to_load(_name)->size() != 0) { continue; }
+
+            _no_change = false;
+            this->load(_lib, this->__configuration(zpt::r_replace(_name, "builtin:", "")));
             this->__load_order.push_back(_name);
             _to_load->object()->pop(_name);
         }
     }
+
+    expect(!_no_change, "Configuration error: unmet dependencies " << _to_load);
+
     return (*this);
 }
 
@@ -127,6 +171,25 @@ auto zpt::startup::boot::unload() -> zpt::startup::boot& {
     }
     this->__plugins.clear();
     return (*this);
+}
+
+auto zpt::startup::boot::resolve_builtin_dependencies() -> void {
+    zpt::json _already_added = zpt::json::object();
+
+    for (size_t _idx = 0; _idx != this->__configuration("load")->size(); ++_idx) {
+        auto _lib = this->__configuration["load"][_idx];
+        auto _name = _lib("name")->string();
+        if (::__builtins(_name)->ok()) {
+            _lib << "source" << ::__builtins(_name)("source") << "requires"
+                 << ::__builtins(_name)("requires");
+        }
+        for (auto const& [_, __, _dependency] : _lib("requires")) {
+            if (!_already_added(_dependency->string())->ok()) {
+                this->__configuration["load"] << zpt::json{ "name", _dependency };
+                _already_added << _dependency->string() << true;
+            }
+        }
+    }
 }
 
 auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {

@@ -28,9 +28,10 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    auto& _layer = zpt::TRANSPORT_LAYER();
 
-    _layer.add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
+    zpt::TRANSPORT_LAYER() //
+      .add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
+
     if (_config("path")->ok()) {
         expect(!std::filesystem::exists(_config("path")->string()),
                "Unix socket '" << _config("path")

@@ -28,9 +28,10 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    auto& _layer = zpt::TRANSPORT_LAYER();
 
-    _layer.add("tcp", zpt::make_transport<zpt::net::transport::tcp>());
+    zpt::TRANSPORT_LAYER() //
+      .add("tcp", zpt::make_transport<zpt::net::transport::tcp>());
+
     if (_config("port")->ok()) {
         auto& _server_sock = zpt::TCP_SERVER_SOCKET(
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));

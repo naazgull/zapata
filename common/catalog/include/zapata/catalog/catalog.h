@@ -99,7 +99,7 @@ auto zpt::catalog<K, M>::add(K _key, std::string const& provider, std::uint64_t 
     _oss << _metadata << std::flush;
     zpt::json _body{ "provider", provider, "hash", hash, "metadata", _oss.str() };
 
-    zlog("Registered " << _t_key << " " << _body, zpt::trace);
+    zlog("Registered " << _t_key, zpt::trace);
     this
       ->__catalog //
       ->replace(_t_key, _body)

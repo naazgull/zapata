@@ -65,7 +65,7 @@ class my_other_operator {
 };
 
 auto main(int, char**) -> int {
-    zpt::events::dispatcher _dispatcher{ 10 };
+    zpt::events::dispatcher _dispatcher{ "test", 10 };
 
     _dispatcher //
       .start_consumers()

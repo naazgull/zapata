@@ -27,7 +27,7 @@
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
-      .add("file", zpt::make_transport<zpt::net::transport::pipe_stream>());
+      .add("pipe", zpt::make_transport<zpt::net::transport::pipe_stream>());
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) {}

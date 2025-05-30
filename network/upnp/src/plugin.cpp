@@ -27,7 +27,9 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    zpt::TRANSPORT_LAYER().add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
+
+    zpt::TRANSPORT_LAYER() //
+      .add("upnp", zpt::make_transport<zpt::net::transport::upnp>());
 
     if (_config("port")->ok()) {
         auto _stream = zpt::make_stream<zpt::socketstream>(

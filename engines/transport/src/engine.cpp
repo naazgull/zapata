@@ -176,21 +176,22 @@ auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
 zpt::transports::engine::engine(zpt::json _config)
   : __configuration{ _config }
   , __dispatcher{ std::make_shared<zpt::events::dispatcher>(
+      "transport",
       _config("limits")("max_consumer_threads")->ok()
         ? _config("limits")("max_consumer_threads")->integer()
         : 1) } {
     zpt::STREAM_POLLING() //
       ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
-          // try {
+          try {
               this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
-          // }
-          // catch (std::bad_alloc const& _e) {
-          //     ::report_error(_e, _stream);
-          // }
-          // catch (std::exception const& _e) {
-          //     ::report_error(_e, _stream);
-          // }
+          }
+          catch (std::bad_alloc const& _e) {
+              ::report_error(_e, _stream);
+          }
+          catch (std::exception const& _e) {
+              ::report_error(_e, _stream);
+          }
           _poll->unmute(_stream);
           return true;
       });
@@ -216,6 +217,11 @@ auto zpt::transports::engine::resolve(zpt::message _received,
         }
     }
     return _return;
+}
+
+auto zpt::transports::engine::shutdown() -> zpt::transports::engine& {
+    this->__dispatcher->stop_consumers();
+    return (*this);
 }
 
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {

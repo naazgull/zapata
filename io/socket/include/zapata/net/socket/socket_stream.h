@@ -776,14 +776,7 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _host,
     this->__buf.set_protocol(_protocol);
     this->__buf.ssl() = _ssl;
 
-    // ::hostent* _he = gethostbyname(_host.c_str());
-    // if (_he == nullptr) { return false; }
-
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    // std::string _addr{ reinterpret_cast<char*>(_he->h_addr), static_cast<size_t>(_he->h_length)
-    // }; std::copy(_addr.c_str(),
-    //           _addr.c_str() + _addr.length(),
-    //           reinterpret_cast<char*>(&_in_address.sin_addr.s_addr));
     _in_address.sin_addr.s_addr = INADDR_ANY;
     _in_address.sin_family = AF_INET;
     _in_address.sin_port = htons(_port);

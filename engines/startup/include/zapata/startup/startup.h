@@ -95,6 +95,7 @@ class boot {
     std::map<std::string, plugin_map_element_type> __plugins;
     std::vector<std::string> __load_order;
 
+    auto resolve_builtin_dependencies() -> void;
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto hash(zpt::json& _event) -> std::string;
 };

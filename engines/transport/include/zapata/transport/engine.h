@@ -26,9 +26,10 @@ class engine {
     engine(zpt::json _config);
     virtual ~engine() = default;
 
-    auto add_resolver(zpt::events::resolver _resolver) -> zpt::transports::engine&;
+    auto add_resolver(zpt::events::resolver _resolver) -> engine&;
     auto resolve(zpt::message _received,
                  zpt::events::initializer_t _initializer) const -> std::list<zpt::event>;
+    auto shutdown() -> engine&;
 
   private:
     zpt::json __configuration;

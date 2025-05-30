@@ -27,9 +27,10 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    auto& _layer = zpt::TRANSPORT_LAYER();
 
-    _layer.add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+    zpt::TRANSPORT_LAYER() //
+      .add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+
     if (_config("port")->ok()) {
         auto& _server_sock = zpt::WEBSOCKET_SERVER_SOCKET(
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));

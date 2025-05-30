@@ -50,10 +50,6 @@ std::string r_replace(std::string const& str, std::string const& find, std::stri
 std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
 std::string r_prettify_header_name(std::string const& name);
-
-// template<typename... Args>
-// auto format(std::string _to_format, Args... _params) -> std::string;
-
 } // namespace zpt
 
 namespace {
@@ -87,13 +83,3 @@ auto ___format(std::istringstream& _in, std::ostringstream& _out, P _param, Args
     } while (_in.good());
 }
 } // namespace
-
-// template<typename... Args>
-// auto std::format(std::string _to_format, Args... _params) -> std::string {
-//     std::istringstream _iss;
-//     _iss.str(_to_format);
-//     std::ostringstream _oss;
-//     ::___format(_iss, _oss, _params...);
-//     _oss << std::flush;
-//     return _oss.str();
-// }

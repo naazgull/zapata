@@ -97,7 +97,7 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
-                  _path);
+                  _path == "*" ? "/*" : _path);
     this->__catalog.add(_to_add, "<self>", hash_code, _metadata);
     return (*this);
 }

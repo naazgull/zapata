@@ -37,7 +37,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
     using ptr = std::shared_ptr<dispatcher>;
 
-    dispatcher(long _max_consumers);
+    dispatcher(std::string const& _name, long _max_consumers);
     virtual ~dispatcher();
 
     auto start_consumers(long n_consumers = 0) -> dispatcher&;
@@ -54,6 +54,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     zpt::padded_atomic<bool> __shutdown{ false };
     zpt::padded_atomic<long> __running_consumers{ 0 };
     long __max_consumers{ 2 };
+    std::string __name{ "" };
 
     auto loop(long _consumer_nr) -> void;
 };

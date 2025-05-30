@@ -162,6 +162,7 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
         }
     }
     else { _to_return = this->process_incoming_request(_stream); }
+    zlog("Received '" << _stream->transport() << "' message: \n" << _to_return, zpt::trace);
     return _to_return;
 }
 
@@ -175,9 +176,7 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                  _stream->state() == zpt::stream_state::ERRORING_OUT,
                "Stream not in a valid state for sending");
     }
-    zlog("Sending '" << _stream->transport() << "' message: " << _to_send->status() << " "
-                     << _to_send->content_type(),
-         zpt::trace);
+    zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
     (*_stream) << _to_send << std::flush;
 
     if (this->is_synchronous()) {
@@ -257,6 +256,11 @@ auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::tr
                                            std::string{ "'" });
     }
     return _found->second;
+}
+
+auto zpt::network::layer::clear() -> zpt::network::layer& {
+    this->__underlying.clear();
+    return (*this);
 }
 
 auto zpt::network::layer::translate(std::istream& _io, std::string _mime) const -> zpt::json {
