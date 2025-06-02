@@ -102,8 +102,7 @@ auto zpt::events::send::catch_error(std::exception const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(std::bad_alloc const& _e,
-                                    zpt::events::dispatcher::ptr _dispatcher) -> bool {
+auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) -> bool {
     return false;
 }
 
