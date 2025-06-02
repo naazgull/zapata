@@ -69,9 +69,9 @@ concept Operation = requires(T t,
                              zpt::failed_expectation const& _fe) {
     { t(_d) } -> std::convertible_to<zpt::events::state>;
     { t.blocked() } -> std::convertible_to<bool>;
-    { t.catch_error(_e) } -> std::convertible_to<bool>;
-    { t.catch_error(_bae) } -> std::convertible_to<bool>;
-    { t.catch_error(_fe) } -> std::convertible_to<bool>;
+    { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
 };
 
 namespace zpt {
@@ -81,9 +81,12 @@ class abstract_event {
     virtual ~abstract_event() = default;
 
     virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e) -> bool = 0;
-    virtual auto catch_error(std::bad_alloc const& _e) -> bool = 0;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
+    virtual auto catch_error(std::exception const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
+    virtual auto catch_error(std::bad_alloc const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
 using event = std::shared_ptr<zpt::abstract_event>;
@@ -98,9 +101,12 @@ class event_t : public zpt::abstract_event {
     auto operator*() -> T&;
     auto operator*() const -> T const&;
     virtual auto blocked() const -> bool override final;
-    virtual auto catch_error(std::exception const& _e) -> bool override final;
-    virtual auto catch_error(std::bad_alloc const& _e) -> bool override final;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
+    virtual auto catch_error(std::exception const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
+    virtual auto catch_error(std::bad_alloc const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
       -> zpt::events::state override final;
 
@@ -139,18 +145,21 @@ auto zpt::event_t<T>::blocked() const -> bool {
 }
 
 template<Operation T>
-auto zpt::event_t<T>::catch_error(std::exception const& _e) -> bool {
-    return this->__underlying.catch_error(_e);
+auto zpt::event_t<T>::catch_error(std::exception const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
 }
 
 template<Operation T>
-auto zpt::event_t<T>::catch_error(std::bad_alloc const& _e) -> bool {
-    return this->__underlying.catch_error(_e);
+auto zpt::event_t<T>::catch_error(std::bad_alloc const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
 }
 
 template<Operation T>
-auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
-    return this->__underlying.catch_error(_e);
+auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
 }
 
 template<Operation T>

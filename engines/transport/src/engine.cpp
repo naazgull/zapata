@@ -14,15 +14,18 @@ auto get_error_body(T const& _e) -> zpt::json {
 }
 
 template<typename T>
-auto report_error(T const& _e, zpt::stream _stream) -> void {
+auto report_error(T const& _e,
+                  zpt::stream _stream,
+                  zpt::polling::ptr _polling,
+                  zpt::events::dispatcher::ptr _dispatcher) -> void {
     _stream->state() = zpt::stream_state::ERRORING_OUT;
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
     auto _reply = _transport->make_reply(false);
-    _reply->status(400);
+    _reply->status(500);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::get_error_body(_e);
-    _transport->send(_stream, _reply);
+    _dispatcher->trigger<zpt::events::send>(_polling, _stream, _reply);
 }
 } // namespace
 
@@ -37,21 +40,21 @@ zpt::events::receive::~receive() {}
 
 auto zpt::events::receive::blocked() const -> bool { return false; }
 
-auto zpt::events::receive::catch_error(std::exception const& _e) -> bool {
-    ::report_error(_e, this->__stream);
-    this->__polling->unmute(this->__stream);
+auto zpt::events::receive::catch_error(std::exception const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
-auto zpt::events::receive::catch_error(std::bad_alloc const& _e) -> bool {
-    ::report_error(_e, this->__stream);
-    this->__polling->unmute(this->__stream);
+auto zpt::events::receive::catch_error(std::bad_alloc const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
-auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> bool {
-    ::report_error(_e, this->__stream);
-    this->__polling->unmute(this->__stream);
+auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
@@ -66,10 +69,11 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
               _event.initialize(_dispatcher, this->__polling, this->__stream);
           });
         if (_events.size() == 0) {
-            auto _reply = _transport->make_reply();
-            _reply->status(404);
-            _transport->send(this->__stream, _reply);
-            this->__polling->unmute(this->__stream);
+            if (_transport->is_synchronous()) {
+                auto _to_send = _transport->make_reply(_received);
+                _to_send->status(404);
+                _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _to_send);
+            }
         }
         else {
             for (auto _event : _events) { _dispatcher->trigger(_event); }
@@ -77,12 +81,11 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         return zpt::events::finish;
     }
     catch (std::bad_alloc const& _e) {
-        ::report_error(_e, this->__stream);
+        this->catch_error(_e, _dispatcher);
     }
     catch (std::exception const& _e) {
-        ::report_error(_e, this->__stream);
+        this->catch_error(_e, _dispatcher);
     }
-    this->__polling->unmute(this->__stream);
     return zpt::events::abort;
 }
 
@@ -95,14 +98,19 @@ zpt::events::send::~send() { this->__polling->unmute(this->__stream); }
 
 auto zpt::events::send::blocked() const -> bool { return false; }
 
-auto zpt::events::send::catch_error(std::exception const&) -> bool { return false; }
-
-auto zpt::events::send::catch_error(std::bad_alloc const& _e) -> bool {
-    ::report_error(_e, this->__stream);
-    return true;
+auto zpt::events::send::catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool {
+    return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&) -> bool { return false; }
+auto zpt::events::send::catch_error(std::bad_alloc const& _e,
+                                    zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return false;
+}
+
+auto zpt::events::send::catch_error(zpt::failed_expectation const&,
+                                    zpt::events::dispatcher::ptr) -> bool {
+    return false;
+}
 
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
@@ -117,9 +125,13 @@ zpt::events::process::process(zpt::message _received)
 
 zpt::events::process::~process() {
     try {
+        auto _transport = zpt::TRANSPORT_LAYER() //
+                            .get(this->__stream->transport());
+        if (!_transport->is_synchronous() &&
+            (this->__to_send == nullptr || this->__to_send->status() == 0)) {
+            return;
+        }
         if (this->__to_send == nullptr) {
-            auto _transport = zpt::TRANSPORT_LAYER() //
-                                .get(this->__stream->transport());
             this->__to_send = _transport->make_reply(this->__received);
         }
         if (this->__to_send->status() == 0) { this->__to_send->status(204); }
@@ -129,30 +141,28 @@ zpt::events::process::~process() {
         return;
     }
     catch (std::bad_alloc const& _e) {
-        ::report_error(_e, this->__stream);
+        ::report_error(_e, this->__stream, this->__polling, this->__dispatcher);
     }
     catch (std::exception const& _e) {
-        ::report_error(_e, this->__stream);
+        ::report_error(_e, this->__stream, this->__polling, this->__dispatcher);
     }
-    this->__polling->unmute(this->__stream);
 }
 
-auto zpt::events::process::catch_error(std::exception const& _e) -> bool {
-    this->__to_send->status(400);
-    this->__to_send->headers()["Content-Type"] = "application/json";
-    this->__to_send->body() = ::get_error_body(_e);
+auto zpt::events::process::catch_error(std::exception const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
-auto zpt::events::process::catch_error(std::bad_alloc const& _e) -> bool {
-    ::report_error(_e, this->__stream);
+auto zpt::events::process::catch_error(std::bad_alloc const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
-auto zpt::events::process::catch_error(zpt::failed_expectation const& _e) -> bool {
-    this->__to_send->status(400);
-    this->__to_send->headers()["Content-Type"] = "application/json";
-    this->__to_send->body() = ::get_error_body(_e);
+auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
+                                       zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
@@ -187,12 +197,11 @@ zpt::transports::engine::engine(zpt::json _config)
               return true;
           }
           catch (std::bad_alloc const& _e) {
-              ::report_error(_e, _stream);
+              ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
           catch (std::exception const& _e) {
-              ::report_error(_e, _stream);
+              ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
-          _poll->unmute(_stream);
           return true;
       });
     this->__dispatcher->start_consumers();

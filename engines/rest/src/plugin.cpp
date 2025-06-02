@@ -37,7 +37,9 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     }
     else { _config["rest"]["prefix_path_len"] = 0; }
 
-    zpt::REST_RESOLVER()->add<zpt::rest::services>(zpt::Msearch, "*");
+    zpt::REST_RESOLVER() //
+      ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
+      .add<zpt::rest::services_collection>(zpt::Get, "/services");
 
     zlog("Added REST event resolver", zpt::info);
 }

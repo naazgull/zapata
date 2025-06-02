@@ -50,9 +50,10 @@ class receive {
     auto operator=(zpt::events::receive&& _rhs) -> receive& = delete;
 
     auto blocked() const -> bool;
-    auto catch_error(std::exception const& _e) -> bool;
-    auto catch_error(std::bad_alloc const& _e) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e) -> bool;
+    auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e,
+                     zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -72,9 +73,10 @@ class send {
     auto operator=(zpt::events::send&& _rhs) -> send& = delete;
 
     auto blocked() const -> bool;
-    auto catch_error(std::exception const& _e) -> bool;
-    auto catch_error(std::bad_alloc const& _e) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e) -> bool;
+    auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e,
+                     zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -102,9 +104,12 @@ class process {
     virtual auto to_send() -> zpt::message final;
 
     virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e) -> bool final;
-    virtual auto catch_error(std::bad_alloc const& _e) -> bool final;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool final;
+    virtual auto catch_error(std::exception const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+    virtual auto catch_error(std::bad_alloc const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
   private:

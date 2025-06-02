@@ -130,19 +130,9 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
     zpt::json _result = zpt::json::array();
     zpt::json _prefixes{ zpt::array, "" };
 
-    zlog(_pattern << " " << _parts, zpt::debug);
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
             for (auto [_, __, _prefix] : _prefixes) {
-                zlog(std::format(EXACT_SEARCH_STMT, //
-                                 _prefix->string(),
-                                 _separator,
-                                 _part->string(),
-                                 _prefix->string(),
-                                 _separator,
-                                 "{}"),
-                     zpt::debug);
-
                 _result += this->query(std::format(EXACT_SEARCH_STMT, //
                                                    _prefix->string(),
                                                    _separator,

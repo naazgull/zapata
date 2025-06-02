@@ -73,17 +73,17 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         if (state == zpt::events::retrigger) { this->trigger(_event); }
     }
     catch (zpt::failed_expectation const& _e) {
-        if (!_event->catch_error(_e)) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
     catch (std::bad_alloc const& _e) {
-        if (!_event->catch_error(_e)) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
     catch (std::exception const& _e) {
-        if (!_event->catch_error(_e)) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
