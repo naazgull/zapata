@@ -61,14 +61,12 @@ else()
   add_compile_options(-O3)
 endif()
 
-find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Lua 5.4)
 find_package(OpenSSL)
 find_package(SQLite3)
 
 include_directories(
   SYSTEM
-    ${Python3_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIR}
     ${SQLite3_INCLUDE_DIRS}
 )
@@ -76,7 +74,6 @@ include_directories(
 add_subdirectory(bridges/base)
 add_subdirectory(bridges/lua)
 add_subdirectory(bridges/prolog)
-add_subdirectory(bridges/python)
 add_subdirectory(common/base)
 add_subdirectory(common/catalog)
 add_subdirectory(common/events)
