@@ -18,6 +18,7 @@ class resolver_t {
                          initializer_t _initializer) const -> std::list<zpt::event> = 0;
 };
 using resolver = std::shared_ptr<resolver_t>;
+using resolver_callback = std::function<zpt::event(zpt::message, zpt::events::initializer_t)>;
 } // namespace events
 
 namespace transports {
@@ -87,6 +88,7 @@ class send {
 
 class process {
   public:
+    using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
     process(zpt::message _received);

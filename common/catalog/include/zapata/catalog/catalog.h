@@ -49,6 +49,7 @@ class catalog {
   private:
     mutable zpt::storage::connection __connection;
     mutable zpt::storage::collection __catalog;
+    mutable zpt::storage::collection __pending;
 
     auto query(std::string const& _query) const -> zpt::json const;
 };

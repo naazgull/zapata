@@ -25,6 +25,7 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 #include <zapata/catalog.h>
+#include <zapata/rest/pending_messages.h>
 #include <zapata/transport/engine.h>
 
 namespace zpt {
@@ -59,7 +60,8 @@ class resolver_t : public zpt::events::resolver_t {
 
   private:
     zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
-    std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
+    std::vector<zpt::events::resolver_callback> __callbacks;
+    mutable zpt::rest::pending_messages __pending_requests;
     zpt::json __configuration;
 
     template<typename T>

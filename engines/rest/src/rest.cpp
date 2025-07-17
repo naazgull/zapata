@@ -35,14 +35,22 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
 auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
   const -> std::list<zpt::event> {
     std::list<zpt::event> _return;
-    auto _to_search = std::format(
-      "/{}{}", zpt::ontology::to_str(_received->performative()), _received->resource()->string());
-    for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
-        auto _hash_code = _record("hash")->integer();
-        expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
-               "Couldn't find callback for [" << _hash_code << "]("
-                                              << _received->resource()->string() << ")");
-        _return.push_back(this->__callbacks[_hash_code](_received, _initializer));
+
+    if (_received->performative() != zpt::Reply) {
+        auto _to_search = std::format("/{}{}",
+                                      zpt::ontology::to_str(_received->performative()),
+                                      _received->resource()->string());
+        for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
+            auto _hash_code = _record("hash")->integer();
+            expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
+                   "Couldn't find callback for [" << _hash_code << "]("
+                                                  << _received->resource()->string() << ")");
+            _return.push_back(this->__callbacks[_hash_code](_received, _initializer));
+        }
+    }
+    else {
+        auto _callback = this->__pending_requests.pop(_received);
+        _return.push_back(_callback(_received, _initializer));
     }
     expect(_return.size() != 0,
            "Couldn't find callback for (" << _received->resource()->string() << ")");

@@ -45,7 +45,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto trigger(zpt::event _event) -> dispatcher&;
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
-    auto trap() -> dispatcher&;
+    auto tr ap() -> dispatcher&;
     auto is_stopping_ongoing() -> bool;
 
   public:
