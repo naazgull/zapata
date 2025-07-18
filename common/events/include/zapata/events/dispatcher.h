@@ -31,6 +31,11 @@ namespace zpt {
 class abstract_event;
 using event = std::shared_ptr<zpt::abstract_event>;
 
+class event_initialization {
+  public:
+    using ptr = std::shared_ptr<event_initialization>;
+};
+
 namespace events {
 enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
 class dispatcher : public std::enable_shared_from_this<dispatcher> {
@@ -40,6 +45,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     dispatcher(std::string const& _name, long _max_consumers);
     virtual ~dispatcher();
 
+    auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
     auto start_consumers(long n_consumers = 0) -> dispatcher&;
     auto stop_consumers() -> dispatcher&;
     auto trigger(zpt::event _event) -> dispatcher&;
@@ -55,12 +61,11 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     zpt::padded_atomic<long> __running_consumers{ 0 };
     long __max_consumers{ 2 };
     std::string __name{ "" };
+    zpt::event_initialization::ptr __event_init{ nullptr };
 
     auto loop(long _consumer_nr) -> void;
 };
 } // namespace events
-
-class event_initialization {};
 } // namespace zpt
 
 template<typename T>
@@ -192,7 +197,11 @@ auto zpt::make_event(Args&&... _args) -> zpt::event {
 
 template<typename T, typename... Args>
 auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
-    this->trigger(zpt::make_event<T>(std::forward<Args>(_args)...));
+    auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
+    if (this->__event_init != nullptr) {
+        _event->initialize(*this->__event_init);
+    }
+    this->trigger(_event);
     return (*this);
 }
 

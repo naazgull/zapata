@@ -29,6 +29,12 @@ zpt::events::dispatcher::dispatcher(std::string const& _name, long _max_consumer
 
 zpt::events::dispatcher::~dispatcher() { this->stop_consumers(); }
 
+auto zpt::events::dispatcher::set_event_initialization(zpt::event_initialization::ptr _event_init)
+  -> dispatcher& {
+    this->__event_init = _event_init;
+    return (*this);
+}
+
 auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
     if (_n_consumers == 0 ||
         _n_consumers + this->__consumers.size() >= static_cast<size_t>(this->__max_consumers)) {

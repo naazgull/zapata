@@ -147,10 +147,10 @@ zpt::events::process::~process() {
         return;
     }
     catch (std::bad_alloc const& _e) {
-        ::report_error(_e, this->__stream, this->__polling, this->__dispatcher);
+        this->catch_error(_e, this->__dispatcher);
     }
     catch (std::exception const& _e) {
-        ::report_error(_e, this->__stream, this->__polling, this->__dispatcher);
+        this->catch_error(_e, this->__dispatcher);
     }
 }
 
@@ -208,7 +208,13 @@ zpt::transports::engine::engine(zpt::json _config)
           }
           return true;
       });
-    this->__dispatcher->start_consumers();
+    auto _event_init = std::make_shared<zpt::events::transport_event_init>();
+    _event_init->__polling = zpt::STREAM_POLLING();
+    _event_init->__dispatcher = this->__dispatcher;
+    this
+      ->__dispatcher //
+      ->set_event_initialization(_event_init)
+      .start_consumers();
 }
 
 auto zpt::transports::engine::add_resolver(zpt::events::resolver _resolver)

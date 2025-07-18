@@ -39,7 +39,7 @@ class pending_messages {
     auto clear() -> pending_messages&;
 
   private:
-    std::unordered_map<std::uint64_t, zpt::events::resolver_callback> __pending;
+    std::unordered_map<std::string, zpt::events::resolver_callback> __pending;
     zpt::locks::spin_mutex __pending_mutex;
 };
 } // namespace rest

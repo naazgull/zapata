@@ -33,8 +33,56 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
-auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
-  const -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
+    this->__pending_requests.push(_sent, callback);
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::add(zpt::performative _performative,
+                                std::string _path,
+                                zpt::json _metadata,
+                                zpt::events::resolver_callback _callback)
+  -> zpt::rest::resolver_t& {
+    auto hash_code = this->__callbacks.size();
+    this->__callbacks.push_back(_callback);
+    auto _to_add =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path == "*" ? "/*" : _path);
+    this->__catalog.add(_to_add, "<self>", hash_code, _metadata);
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t& {
+    try {
+        this->__pending_requests.pop(_sent);
+    }
+    catch (...) {
+    }
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string _path)
+  -> zpt::rest::resolver_t& {
+    auto _to_search =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path);
+    for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
+        auto _hash_code = _record("hash")->integer();
+        expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
+               "Couldn't find callback for [" << _hash_code << "](" << _path << ")");
+        this->__callbacks[_hash_code] = nullptr;
+    }
+    this->__catalog.remove(_to_search);
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::resolve(zpt::message _received,
+                                    zpt::events::initializer_t _initializer) const
+  -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
     if (_received->performative() != zpt::Reply) {

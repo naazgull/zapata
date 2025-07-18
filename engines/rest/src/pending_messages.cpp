@@ -27,13 +27,13 @@ auto zpt::rest::pending_messages::push(zpt::message _sent,
   -> pending_messages& {
     std::unique_lock _guard{ this->__pending_mutex };
     this->__pending.insert(
-      std::make_pair(_sent->headers()("X-Conversation-ID")->integer(), _reply_callback));
+      std::make_pair(_sent->headers()("X-Conversation-ID")->string(), _reply_callback));
     return (*this);
 }
 
 auto zpt::rest::pending_messages::pop(zpt::message _received) -> zpt::events::resolver_callback {
     std::unique_lock _guard{ this->__pending_mutex };
-    auto _found = this->__pending.find(_received->headers()("X-Conversation-ID")->integer());
+    auto _found = this->__pending.find(_received->headers()("X-Conversation-ID")->string());
     expect(_found != this->__pending.end(), "No pending message found");
     auto _to_return = _found->second;
     this->__pending.erase(_found);
