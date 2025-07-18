@@ -47,9 +47,8 @@ class resolver_t : public zpt::events::resolver_t {
     template<typename T>
     auto add(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
-    auto add(zpt::performative _performtive,
-             std::string _path,
-             zpt::json _metadata) -> zpt::rest::resolver_t&;
+    auto add(zpt::performative _performtive, std::string _path, zpt::json _metadata)
+      -> zpt::rest::resolver_t&;
     template<typename T>
     auto add(zpt::message _sent) -> zpt::rest::resolver_t&;
     template<typename T>
@@ -67,8 +66,8 @@ class resolver_t : public zpt::events::resolver_t {
     zpt::json __configuration;
 
     template<typename T>
-    static auto make_callback(zpt::message _received,
-                              zpt::events::initializer_t _initializer) -> zpt::event;
+    static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
+      -> zpt::event;
 };
 using resolver = std::shared_ptr<zpt::rest::resolver_t>;
 } // namespace rest
@@ -86,8 +85,8 @@ auto zpt::rest::resolver_t::add(std::string _path, zpt::json _metadata) -> zpt::
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::add(zpt::performative _performative,
-                                std::string _path) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::performative _performative, std::string _path)
+  -> zpt::rest::resolver_t& {
     return this->add<T>(_performative, _path, { "host", "localhost" });
 }
 
@@ -118,8 +117,8 @@ auto zpt::rest::resolver_t::remove(std::string _path) -> zpt::rest::resolver_t& 
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::remove(zpt::performative _performative,
-                                   std::string _path) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string _path)
+  -> zpt::rest::resolver_t& {
     auto _to_search =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
@@ -139,6 +138,6 @@ template<typename T>
 auto zpt::rest::resolver_t::make_callback(zpt::message _received,
                                           zpt::events::initializer_t _initializer) -> zpt::event {
     auto _event = zpt::make_event<T>(_received);
-    _initializer(static_cast<zpt::events::process&>(zpt::event_cast<T>(_event)));
+    _initializer(_event);
     return _event;
 }

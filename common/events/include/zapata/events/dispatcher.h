@@ -60,16 +60,17 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
 };
 } // namespace events
 
-struct event_initialization {};
+class event_initialization {};
 } // namespace zpt
 
 template<typename T>
 concept Operation = requires(T t,
+                             zpt::event_initialization& _i,
                              zpt::events::dispatcher::ptr _d,
                              std::exception const& _e,
                              std::bad_alloc const& _bae,
                              zpt::failed_expectation const& _fe) {
-    { t.initialize(std::convertible_to<zpt::event_initiaalization&>) } -> std::convertible_to<void>;
+    { t.initialize(_i) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
     { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
     { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
@@ -83,12 +84,12 @@ class abstract_event {
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
-    virtual auto initialize(zpt::event_initiaalization& init_data) -> void = 0;
+    virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
     virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
-    virtual auto catch_error(std::bad_alloc const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool = 0;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool = 0;
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
@@ -104,12 +105,12 @@ class event_t : public zpt::abstract_event {
 
     auto operator*() -> T&;
     auto operator*() const -> T const&;
-    virtual auto initialize(zpt::event_initiaalization& init_data) -> void override final;
+    virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
     virtual auto blocked() const -> bool override final;
-    virtual auto catch_error(std::exception const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
-    virtual auto catch_error(std::bad_alloc const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool override final;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool override final;
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
@@ -145,7 +146,7 @@ auto zpt::event_t<T>::operator*() const -> T const& {
 }
 
 template<Operation T>
-auto zpt::event_t<T>::initialize(zpt::event_initiaalization& init_data) -> void {
+auto zpt::event_t<T>::initialize(zpt::event_initialization& init_data) -> void {
     return this->__underlying.initialize(init_data);
 }
 

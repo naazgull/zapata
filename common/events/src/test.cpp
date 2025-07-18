@@ -28,10 +28,13 @@ class my_operator {
       : __str{ _str }
       , __i{ _i } {}
 
+    auto initialize(zpt::event_initialization&) -> void {}
     auto blocked() const -> bool { return false; }
     auto catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) -> bool { return false; }
-    auto catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) -> bool { return false; }
+    auto catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) -> bool {
+        return false;
+    }
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         zlog("job1: " << this->__str << " " << this->__i, zpt::info);
@@ -49,6 +52,7 @@ class my_other_operator {
     my_other_operator(int _i)
       : __i{ _i } {}
 
+    auto initialize(zpt::event_initialization&) -> void {}
     auto blocked() const -> bool { return false; }
     auto catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) -> bool { return false; }

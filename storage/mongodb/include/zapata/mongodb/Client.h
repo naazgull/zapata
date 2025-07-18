@@ -23,7 +23,7 @@
 #pragma once
 
 #include <mutex>
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <zapata/events.h>
 #include <zapata/mongodb/convert_mongo.h>
 

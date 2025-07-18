@@ -9,7 +9,7 @@ auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
                                         [[maybe_unused]]) -> zpt::events::state {
 
-    zlog(this->to_send(), zpt::debug);
+    zlog(this->received(), zpt::debug);
     if (this->received()->performative() == zpt::Notify) {}
 
     return zpt::events::finish;

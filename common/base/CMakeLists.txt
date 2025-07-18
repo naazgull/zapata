@@ -75,7 +75,7 @@ target_include_directories(zapata-base
 target_link_libraries(zapata-base
   PUBLIC
     magic
-    ossp-uuid++
+    uuid
 )  
 set_target_properties(zapata-base
   PROPERTIES

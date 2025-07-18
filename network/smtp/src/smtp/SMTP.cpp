@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <zapata/smtp/SMTP.h>
 
 #ifndef CRLF

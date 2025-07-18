@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <sys/time.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
 auto zpt::ascii::encode(std::string& _out, bool) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
@@ -90,12 +91,12 @@ auto zpt::generate::r_hash() -> std::string {
 auto zpt::generate::uuid(std::string& _out) -> void { _out.append(zpt::generate::r_uuid()); }
 
 auto zpt::generate::r_uuid() -> std::string {
-    static thread_local ::uuid uuid_gen;
-    uuid_gen.make(UUID_MAKE_V1);
-    auto _generated = uuid_gen.string();
-    std::string _return{ _generated };
-    delete _generated;
-    return _return;
+    uuid_t _uuid;
+    uuid_generate(_uuid);
+    std::string _generated;
+    _generated.resize(37);
+    uuid_unparse(_uuid, _generated.data());
+    return _generated;
 }
 
 auto zpt::test::uuid(std::string const& _uuid) -> bool {

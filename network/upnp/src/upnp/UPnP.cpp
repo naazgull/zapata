@@ -23,7 +23,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <zapata/upnp/UPnP.h>

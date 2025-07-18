@@ -41,12 +41,7 @@
 #include <wctype.h>
 #include <zapata/text/manip.h>
 
-#include <ossp/uuid++.hh>
-
 namespace zpt {
-extern uuid uuid_gen;
-extern std::mutex uuid_mtx;
-
 auto tostr(std::string& s, int i) -> void;
 auto tostr(std::string& s, bool i) -> void;
 auto tostr(std::string&, int, std::ios_base& (&)(std::ios_base&)) -> void;

@@ -24,7 +24,7 @@
 
 #include <hiredis/hiredis.h>
 #include <mutex>
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <zapata/events.h>
 #include <zapata/json.h>
 #include <zapata/redis/convert_redis.h>

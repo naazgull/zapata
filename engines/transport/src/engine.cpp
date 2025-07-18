@@ -38,7 +38,7 @@ zpt::events::receive::receive(zpt::transports::engine& _engine,
 
 zpt::events::receive::~receive() {}
 
-auto zpt::event::received
+auto zpt::events::receive::initialize(zpt::event_initialization&) -> void {}
 
 auto zpt::events::receive::blocked() const -> bool { return false; }
 
@@ -66,10 +66,13 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                         .get(this->__stream->transport());
     try {
         auto _received = _transport->receive(this->__stream);
-        auto _events =
-          this->__engine.resolve(_received, [this, _dispatcher](zpt::events::process& _event) {
-              _event.initialize(_dispatcher, this->__polling, this->__stream);
-          });
+        auto _events = this->__engine.resolve(_received, [this, _dispatcher](zpt::event _event) {
+            zpt::events::transport_event_init _init;
+            _init.__dispatcher = _dispatcher;
+            _init.__polling = this->__polling;
+            _init.__stream = this->__stream;
+            _event->initialize(_init);
+        });
         if (_events.size() == 0) {
             if (_transport->is_synchronous()) {
                 auto _to_send = _transport->make_reply(_received);
@@ -98,6 +101,8 @@ zpt::events::send::send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::me
 
 zpt::events::send::~send() { this->__polling->unmute(this->__stream); }
 
+auto zpt::events::send::initialize(zpt::event_initialization&) -> void {}
+
 auto zpt::events::send::blocked() const -> bool { return false; }
 
 auto zpt::events::send::catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool {
@@ -108,8 +113,8 @@ auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&,
-                                    zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 
@@ -149,6 +154,21 @@ zpt::events::process::~process() {
     }
 }
 
+auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
+
+auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
+
+auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void {
+    auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
+    this->__dispatcher = _transport_init.__dispatcher;
+    this->__polling = _transport_init.__polling;
+    this->__stream = _transport_init.__stream;
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(this->__stream->transport());
+    this->__to_send = _transport->make_reply(this->__received);
+    this->__to_send->status(0);
+}
+
 auto zpt::events::process::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
     ::report_error(_e, this->__stream, this->__polling, _dispatcher);
@@ -166,23 +186,6 @@ auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
     ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
-
-auto zpt::events::process::initialize(zpt::events::dispatcher::ptr _dispatcher,
-                                      zpt::polling::ptr _polling,
-                                      zpt::stream _stream) -> process& {
-    this->__dispatcher = _dispatcher;
-    this->__polling = _polling;
-    this->__stream = _stream;
-    auto _transport = zpt::TRANSPORT_LAYER() //
-                        .get(this->__stream->transport());
-    this->__to_send = _transport->make_reply(this->__received);
-    this->__to_send->status(0);
-    return (*this);
-}
-
-auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
-
-auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
 
 zpt::transports::engine::engine(zpt::json _config)
   : __configuration{ _config }
