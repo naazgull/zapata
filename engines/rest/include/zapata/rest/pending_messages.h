@@ -34,8 +34,9 @@ class pending_messages {
     pending_messages() = default;
     virtual ~pending_messages() = default;
 
-    auto push(zpt::message _sent, zpt::events::resolver_callback _callback) -> void;
+    auto push(zpt::message _sent, zpt::events::resolver_callback _callback) -> pending_messages&;
     auto pop(zpt::message _received) -> zpt::events::resolver_callback;
+    auto clear() -> pending_messages&;
 
   private:
     std::unordered_map<std::uint64_t, zpt::events::resolver_callback> __pending;

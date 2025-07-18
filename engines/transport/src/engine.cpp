@@ -38,6 +38,8 @@ zpt::events::receive::receive(zpt::transports::engine& _engine,
 
 zpt::events::receive::~receive() {}
 
+auto zpt::event::received
+
 auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e,

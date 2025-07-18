@@ -7,7 +7,6 @@
 
 namespace zpt {
 namespace events {
-class process;
 using initializer_t = std::function<void(zpt::events::process& _event)>;
 class resolver_t {
   public:
@@ -40,6 +39,12 @@ class engine {
 } // namespace transports
 
 namespace events {
+struct transport_event_init : public zpt::event_initialization {
+    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::polling::ptr __polling;
+    zpt::stream __stream;
+};
+
 class receive {
   public:
     receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
@@ -50,6 +55,7 @@ class receive {
     auto operator=(zpt::events::receive const& _rhs) -> receive& = delete;
     auto operator=(zpt::events::receive&& _rhs) -> receive& = delete;
 
+    auto initialize(zpt::events::transport_event_init& init) -> void&;
     auto blocked() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
@@ -73,6 +79,7 @@ class send {
     auto operator=(zpt::events::send const& _rhs) -> send& = delete;
     auto operator=(zpt::events::send&& _rhs) -> send& = delete;
 
+    auto initialize(zpt::events::transport_event_init& init) -> void&;
     auto blocked() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
@@ -99,9 +106,7 @@ class process {
     auto operator=(zpt::events::process const& _rhs) -> process& = delete;
     auto operator=(zpt::events::process&& _rhs) -> process& = delete;
 
-    virtual auto initialize(zpt::events::dispatcher::ptr _dispatcher,
-                            zpt::polling::ptr _polling,
-                            zpt::stream _stream) -> process& final;
+    virtual auto initialize(zpt::events::transport_event_init& init) -> void& final;
     virtual auto received() const -> zpt::message const final;
     virtual auto to_send() -> zpt::message final;
 

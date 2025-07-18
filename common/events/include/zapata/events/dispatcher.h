@@ -45,7 +45,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto trigger(zpt::event _event) -> dispatcher&;
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
-    auto tr ap() -> dispatcher&;
+    auto trap() -> dispatcher&;
     auto is_stopping_ongoing() -> bool;
 
   public:
@@ -59,6 +59,8 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto loop(long _consumer_nr) -> void;
 };
 } // namespace events
+
+struct event_initialization {};
 } // namespace zpt
 
 template<typename T>
@@ -67,11 +69,12 @@ concept Operation = requires(T t,
                              std::exception const& _e,
                              std::bad_alloc const& _bae,
                              zpt::failed_expectation const& _fe) {
-    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.initialize(std::convertible_to<zpt::event_initiaalization&>) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
     { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
     { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
     { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
 };
 
 namespace zpt {
@@ -80,6 +83,7 @@ class abstract_event {
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
+    virtual auto initialize(zpt::event_initiaalization& init_data) -> void = 0;
     virtual auto blocked() const -> bool = 0;
     virtual auto catch_error(std::exception const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
@@ -100,6 +104,7 @@ class event_t : public zpt::abstract_event {
 
     auto operator*() -> T&;
     auto operator*() const -> T const&;
+    virtual auto initialize(zpt::event_initiaalization& init_data) -> void override final;
     virtual auto blocked() const -> bool override final;
     virtual auto catch_error(std::exception const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
@@ -137,6 +142,11 @@ auto zpt::event_t<T>::operator*() -> T& {
 template<Operation T>
 auto zpt::event_t<T>::operator*() const -> T const& {
     return this->__underlying;
+}
+
+template<Operation T>
+auto zpt::event_t<T>::initialize(zpt::event_initiaalization& init_data) -> void {
+    return this->__underlying.initialize(init_data);
 }
 
 template<Operation T>

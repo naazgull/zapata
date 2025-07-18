@@ -29,6 +29,7 @@ zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
 
 auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     this->__callbacks.clear();
+    this->__pending_requests.clear();
     return (*this);
 }
 

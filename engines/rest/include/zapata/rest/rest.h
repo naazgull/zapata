@@ -51,6 +51,8 @@ class resolver_t : public zpt::events::resolver_t {
              std::string _path,
              zpt::json _metadata) -> zpt::rest::resolver_t&;
     template<typename T>
+    auto add(zpt::message _sent) -> zpt::rest::resolver_t&;
+    template<typename T>
     auto remove(std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
     auto remove(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
@@ -101,6 +103,12 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                                                           : zpt::ontology::to_str(_performative)),
                   _path == "*" ? "/*" : _path);
     this->__catalog.add(_to_add, "<self>", hash_code, _metadata);
+    return (*this);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::add(zpt::message _sent) -> zpt::rest::resolver_t& {
+    this->__pending_requests.push(_sent, zpt::rest::resolver_t::make_callback<T>);
     return (*this);
 }
 

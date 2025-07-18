@@ -23,10 +23,12 @@
 #include <zapata/rest/pending_messages.h>
 
 auto zpt::rest::pending_messages::push(zpt::message _sent,
-                                       zpt::events::resolver_callback _reply_callback) -> void {
+                                       zpt::events::resolver_callback _reply_callback)
+  -> pending_messages& {
     std::unique_lock _guard{ this->__pending_mutex };
     this->__pending.insert(
       std::make_pair(_sent->headers()("X-Conversation-ID")->integer(), _reply_callback));
+    return (*this);
 }
 
 auto zpt::rest::pending_messages::pop(zpt::message _received) -> zpt::events::resolver_callback {
@@ -36,4 +38,9 @@ auto zpt::rest::pending_messages::pop(zpt::message _received) -> zpt::events::re
     auto _to_return = _found->second;
     this->__pending.erase(_found);
     return _to_return;
+}
+
+auto zpt::rest::pending_messages::clear() -> pending_messages& {
+    this->__pending.clear();
+    return (*this);
 }
