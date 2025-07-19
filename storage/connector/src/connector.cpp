@@ -380,8 +380,8 @@ auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
     return *this->__underlying.get();
 }
 
-auto zpt::storage::filter_find(zpt::storage::collection& _collection,
-                               zpt::json _to_find) -> zpt::storage::action {
+auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _to_find)
+  -> zpt::storage::action {
     if (_to_find->ok()) {
         auto _find = _collection->find(zpt::storage::extract_find(_to_find));
         if (_to_find("page_size")->ok()) {
@@ -415,8 +415,8 @@ auto zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
     }
 }
 
-auto zpt::storage::filter_remove(zpt::storage::collection& _collection,
-                                 zpt::json _to_remove) -> zpt::storage::action {
+auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _to_remove)
+  -> zpt::storage::action {
     if (_to_remove->ok()) {
         auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
         if (_to_remove("page_size")->ok()) {

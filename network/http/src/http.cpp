@@ -25,27 +25,25 @@
 #include <zapata/uri/uri.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::net::transport::http::is_synchronous() const -> bool {
-    return true;
-}
+auto zpt::net::transport::http::is_synchronous() const -> bool { return true; }
 
 auto zpt::net::transport::http::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::http::basic_request>();
-    zpt::init(message_cast<zpt::http::basic_request>(_to_return));
+    zpt::init(zpt::message_cast<zpt::http::basic_request>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::http::make_reply(bool _with_allocator) const -> zpt::message {
     auto _to_return = _with_allocator ? zpt::allocate_message<zpt::http::basic_reply>()
                                       : zpt::make_message<zpt::http::basic_reply>();
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+    zpt::init(zpt::message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::http::basic_reply>(
-      message_cast<zpt::http::basic_request>(_request), true);
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+      zpt::message_cast<zpt::http::basic_request>(_request), true);
+    zpt::init(zpt::message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 

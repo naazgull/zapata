@@ -377,10 +377,8 @@ auto zpt::MQTT::on_error(struct mosquitto* _mosq, void* _ptr) -> void {
     _self->trigger("error", _data);
 }
 
-auto zpt::MQTT::on_log(struct mosquitto* _mosq,
-                       void* _ptr,
-                       int _level,
-                       const char* _message) -> void {
+auto zpt::MQTT::on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message)
+  -> void {
     zlog(std::string(_message), (zpt::LogLevel)_level);
 }
 

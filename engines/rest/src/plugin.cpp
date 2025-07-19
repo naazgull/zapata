@@ -41,6 +41,8 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
       ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
       .add<zpt::rest::services_collection>(zpt::Get, "/services");
 
+    if (_config("tcp")->ok() && _config("upnp")->ok()) { zpt::rest::services::broadcast(_config); }
+
     zlog("Added REST event resolver", zpt::info);
 }
 

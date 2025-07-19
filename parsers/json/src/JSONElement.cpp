@@ -1355,8 +1355,8 @@ auto zpt::JSONElementT::operator>=(zpt::JSONElementT const& _in) const -> bool {
 
 auto zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool { return (*this) >= *_rhs; }
 
-auto zpt::JSONElementT::get_path(std::string const& _path,
-                                 std::string const& _separator) -> zpt::json {
+auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator)
+  -> zpt::json {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
             return this->object()->get_path(_path, _separator);
@@ -1406,8 +1406,8 @@ auto zpt::JSONElementT::set_path(std::string const& _path,
     return (*this);
 }
 
-auto zpt::JSONElementT::del_path(std::string const& _path,
-                                 std::string const& _separator) -> JSONElementT& {
+auto zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator)
+  -> JSONElementT& {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
             this->object()->del_path(_path, _separator);

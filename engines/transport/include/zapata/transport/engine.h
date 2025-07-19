@@ -3,6 +3,7 @@
 #include <zapata/events.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/net/socket.h>
 #include <list>
 
 namespace zpt {
@@ -230,11 +231,18 @@ auto zpt::events::call<T>::catch_error(zpt::failed_expectation const& _e,
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr _dispatcher)
-  -> zpt::events::state {
+auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    auto _uri = this->__to_send->uri();
+    auto _scheme = _uri("scheme")->string();
     auto _transport = zpt::TRANSPORT_LAYER() //
-                        .get(this->__stream->transport());
+                        .get(_scheme);
+    auto _stream = zpt::make_stream<zpt::socketstream>(
+      _uri("domain")->string(), _uri("port")->integer(), false, IPPROTO_TCP);
+
     this->__to_send->headers()["Content-Type"] = "application/json";
-    _transport->send(this->__stream, this->__to_send);
+    _stream->transport(_scheme);
+    _transport->send(_stream, this->__to_send);
+    this->__polling->listen_on(_stream);
+
     return zpt::events::finish;
 }

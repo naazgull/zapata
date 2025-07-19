@@ -443,9 +443,8 @@ auto zpt::pgsql::Client::remove(std::string const& _collection,
     return _size;
 }
 
-auto zpt::pgsql::Client::remove(std::string const& _collection,
-                                zpt::json _pattern,
-                                zpt::json _opts) -> int {
+auto zpt::pgsql::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -515,9 +514,8 @@ auto zpt::pgsql::Client::query(std::string const& _collection,
     return { "size", _elements->array()->size(), "elements", _elements };
 }
 
-auto zpt::pgsql::Client::query(std::string const& _collection,
-                               zpt::json _pattern,
-                               zpt::json _opts) -> zpt::json {
+auto zpt::pgsql::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> zpt::json {
     std::string _expression("SELECT ");
     _expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
     _expression += std::string(" FROM ");

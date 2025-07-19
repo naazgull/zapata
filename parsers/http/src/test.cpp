@@ -39,7 +39,7 @@ auto main(int argc, char* argv[]) -> int {
             (*_csock) >> std::noskipws >> _request;
 
             auto _reply = zpt::allocate_message<zpt::http::basic_reply>(
-              message_cast<zpt::http::basic_request>(_request), true);
+              zpt::message_cast<zpt::http::basic_request>(_request), true);
             _reply->status(zpt::http::status::HTTP200);
             if (argc > 2) {
                 std::ifstream _ifs;

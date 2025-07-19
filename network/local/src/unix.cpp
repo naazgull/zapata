@@ -25,9 +25,7 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::net::transport::unix_socket::is_synchronous() const -> bool {
-    return true;
-}
+auto zpt::net::transport::unix_socket::is_synchronous() const -> bool { return true; }
 
 auto zpt::net::transport::unix_socket::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();
@@ -42,7 +40,7 @@ auto zpt::net::transport::unix_socket::make_reply(bool _with_allocator) const ->
 
 auto zpt::net::transport::unix_socket::make_reply(zpt::message _request) const -> zpt::message {
     auto _to_return =
-      zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
+      zpt::make_message<zpt::json_message>(zpt::message_cast<zpt::json_message>(_request), true);
     return _to_return;
 }
 

@@ -42,7 +42,7 @@ class catalog {
     virtual ~catalog() = default;
 
     auto clear() -> catalog&;
-    auto add(K _key, std::string const& provider, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, zpt::json const provider, std::uint64_t hash, M _metadata) -> catalog&;
     auto remove(K _key) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
 
@@ -91,7 +91,7 @@ auto zpt::catalog<K, M>::clear() -> catalog& {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::add(K _key, std::string const& provider, std::uint64_t hash, M _metadata)
+auto zpt::catalog<K, M>::add(K _key, zpt::json const provider, std::uint64_t hash, M _metadata)
   -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;

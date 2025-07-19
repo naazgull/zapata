@@ -165,15 +165,15 @@ template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
 template<typename T, typename... Args>
 auto allocate_message(Args... _args) -> zpt::message;
-} // namespace zpt
-
-auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
-auto operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
 
 template<typename T>
 auto message_cast(zpt::message _rhs) -> T& {
     return static_cast<T&>(*_rhs);
 }
+} // namespace zpt
+
+auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
+auto operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
 
 template<typename T>
 auto zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {

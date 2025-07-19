@@ -110,9 +110,8 @@ auto zpt::r_trim(std::string const& _in_out) -> std::string {
     return _return;
 }
 
-auto zpt::r_replace(std::string const& str,
-                    std::string const& find,
-                    std::string const& replace) -> std::string {
+auto zpt::r_replace(std::string const& str, std::string const& find, std::string const& replace)
+  -> std::string {
     std::string _return{ str.data() };
     if (_return.length() == 0) { return _return; }
 

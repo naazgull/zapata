@@ -18,5 +18,17 @@ class services_collection : public zpt::events::process {
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
+
+class services_list : public zpt::events::process {
+  public:
+    services_list(zpt::message _received);
+    ~services_list() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
+namespace services {
+auto broadcast(zpt::json _config) -> void;
+}
 } // namespace rest
 } // namespace zpt

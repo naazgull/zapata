@@ -96,7 +96,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
     return (*this);
 }
 
-auto zpt::events::dispatcher::is_stopping_ongoing() -> bool { return this->__shutdown->load(); }
+auto zpt::events::dispatcher::is_in_shutdown() -> bool { return this->__shutdown->load(); }
 
 auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::timer<float> _timer{ 0.005f };

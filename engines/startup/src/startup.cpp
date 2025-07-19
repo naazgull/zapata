@@ -30,8 +30,6 @@ zpt::json const __builtins = R"({
           "requires" : [] },
         "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",
           "requires" : [] },
-        "builtin:python": { "name": "builtin:python", "source": "libzapata-bridge-python-plugin.so",
-          "requires" : [] },
         "builtin:rest": { "name": "builtin:rest", "source": "libzapata-engine-rest-plugin.so",
           "requires" : [ "builtin:transport" ] },
         "builtin:transport": { "name": "builtin:transport",

@@ -38,11 +38,14 @@ struct stream_ptr {
 zpt::basic_stream::basic_stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() } {
     this->__underlying->rdbuf(_rhs.rdbuf());
+    this->__underlying->exceptions(std::ios_base::failbit);
 }
 
 zpt::basic_stream::basic_stream(std::unique_ptr<std::iostream> _underlying)
   : __underlying{ _underlying.release() }
-  , __fd{ -1 } {}
+  , __fd{ -1 } {
+    this->__underlying->exceptions(std::ios_base::failbit);
+}
 
 zpt::basic_stream::~basic_stream() { this->close(); }
 
@@ -56,8 +59,6 @@ auto zpt::basic_stream::operator<<(ostream_manipulator _in) -> zpt::basic_stream
     return (*this);
 }
 
-auto zpt::basic_stream::operator->() -> std::iostream* { return this->__underlying.get(); }
-
 auto zpt::basic_stream::operator*() -> std::iostream& { return *this->__underlying.get(); }
 
 zpt::basic_stream::operator int() { return this->__fd; }
@@ -69,6 +70,12 @@ auto zpt::basic_stream::close() -> zpt::basic_stream& {
     this->__transport = "";
     this->__uri = "";
     this->__state = zpt::stream_state::IDLE;
+    return (*this);
+}
+
+auto zpt::basic_stream::shutdown() -> zpt::basic_stream& {
+    ::shutdown(this->__fd, SHUT_RDWR);
+    ::close(this->__fd);
     return (*this);
 }
 
@@ -91,7 +98,15 @@ auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
 zpt::polling::polling()
   : __epoll_fd{ epoll_create(1) } {}
 
-zpt::polling::~polling() { ::close(this->__epoll_fd); }
+zpt::polling::~polling() {
+    this->shutdown();
+    ::close(this->__epoll_fd);
+}
+
+auto zpt::polling::close() -> zpt::polling& {
+    for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
+    return (*this);
+}
 
 auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling& {
     this->__delegates.push_back(_callback);
@@ -184,9 +199,12 @@ auto zpt::polling::poll() -> zpt::polling& {
 }
 
 auto zpt::polling::shutdown() -> zpt::polling& {
-    this->__shutdown.store(true);
+    auto _already = this->__shutdown.exchange(true);
+    if (!_already) { this->close(); }
     return (*this);
 }
+
+auto zpt::polling::is_in_shutdown() const -> bool { return this->__shutdown.load(); }
 
 auto zpt::STREAM_POLLING() -> zpt::polling::ptr {
     static zpt::polling::ptr _global = std::make_shared<zpt::polling>();

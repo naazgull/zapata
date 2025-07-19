@@ -54,12 +54,12 @@ class basic_stream {
     template<typename T>
     auto operator<<(T _in) -> basic_stream&;
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
-    auto operator->() -> std::iostream*;
     auto operator*() -> std::iostream&;
 
     operator int();
 
     auto close() -> basic_stream&;
+    auto shutdown() -> basic_stream&;
     auto transport(const std::string& _rhs) -> basic_stream&;
     auto transport() -> std::string&;
     auto uri(const std::string& _rhs) -> basic_stream&;
@@ -85,6 +85,7 @@ class polling : public std::enable_shared_from_this<polling> {
     polling();
     virtual ~polling();
 
+    auto close() -> zpt::polling&;
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     auto mute(zpt::stream _stream) -> zpt::polling&;
@@ -92,12 +93,12 @@ class polling : public std::enable_shared_from_this<polling> {
 
     auto poll() -> zpt::polling&;
     auto shutdown() -> zpt::polling&;
+    auto is_in_shutdown() const -> bool;
 
   private:
     int __epoll_fd{ -1 };
     zpt::locks::spin_mutex __poll_lock{};
     std::map<int, zpt::stream> __polled_streams;
-    std::map<std::string, int> __named_streams;
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
 
@@ -111,12 +112,12 @@ template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
-} // namespace zpt
 
 template<typename T>
 auto stream_cast(zpt::stream& _rhs) -> T& {
     return static_cast<T&>(**_rhs);
 }
+} // namespace zpt
 
 template<typename T>
 auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {

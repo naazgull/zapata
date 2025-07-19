@@ -967,6 +967,12 @@ auto zpt::json::stringify(std::string& _out) const -> zpt::json const& {
     return (*this);
 }
 
+auto zpt::json::stringify() const -> std::string {
+    std::string _to_return;
+    this->stringify(_to_return);
+    return _to_return;
+}
+
 auto zpt::json::string_length() const -> size_t { return this->__underlying->string_length(); }
 
 auto zpt::json::begin() -> zpt::json::iterator { return zpt::json::iterator{ *this, 0 }; }
@@ -1099,17 +1105,16 @@ auto zpt::json::flatten(zpt::json _document) -> zpt::json {
     return { ".", _document };
 }
 
-auto zpt::json::find(zpt::json::iterator _begin,
-                     zpt::json::iterator _end,
-                     zpt::json _to_find) -> zpt::json::iterator {
+auto zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
+  -> zpt::json::iterator {
     for (zpt::json::iterator _to_return = _begin; _to_return != _end; ++_to_return) {
         if (std::get<2>(*_to_return) == _to_find) { return _to_return; }
     }
     return _end;
 }
 
-auto zpt::json::find(zpt::JSONElementT const& _to_search,
-                     zpt::json _to_find) -> zpt::json::iterator {
+auto zpt::json::find(zpt::JSONElementT const& _to_search, zpt::json _to_find)
+  -> zpt::json::iterator {
     zpt::json _target{ _to_search };
     return zpt::json::find(_target.begin(), _target.end(), _to_find);
 }

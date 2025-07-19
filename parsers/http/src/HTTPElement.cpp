@@ -107,8 +107,8 @@ auto zpt::http::basic_message::body(std::string const& _body) -> zpt::basic_mess
     return (*this);
 }
 
-auto zpt::http::basic_message::header(std::string const& _name,
-                                      std::string const& _value) -> zpt::basic_message& {
+auto zpt::http::basic_message::header(std::string const& _name, std::string const& _value)
+  -> zpt::basic_message& {
     this->__underlying["headers"][_name] = _value;
     return (*this);
 }

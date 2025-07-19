@@ -54,10 +54,10 @@
     }
 #define SHA2_PACK64(str, x)                                                                        \
     {                                                                                              \
-        *(x) = ((std::uint64_t) * ((str) + 7)) | ((std::uint64_t) * ((str) + 6) << 8) |            \
-               ((std::uint64_t) * ((str) + 5) << 16) | ((std::uint64_t) * ((str) + 4) << 24) |     \
-               ((std::uint64_t) * ((str) + 3) << 32) | ((std::uint64_t) * ((str) + 2) << 40) |     \
-               ((std::uint64_t) * ((str) + 1) << 48) | ((std::uint64_t) * ((str) + 0) << 56);      \
+        *(x) = ((std::uint64_t)*((str) + 7)) | ((std::uint64_t)*((str) + 6) << 8) |                \
+               ((std::uint64_t)*((str) + 5) << 16) | ((std::uint64_t)*((str) + 4) << 24) |         \
+               ((std::uint64_t)*((str) + 3) << 32) | ((std::uint64_t)*((str) + 2) << 40) |         \
+               ((std::uint64_t)*((str) + 1) << 48) | ((std::uint64_t)*((str) + 0) << 56);          \
     }
 
 namespace zpt::crypto {

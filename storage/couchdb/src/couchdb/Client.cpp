@@ -637,9 +637,8 @@ auto zpt::couchdb::Client::query(std::string const& _collection,
     return this->query(_collection, zpt::json(_regexp), _opts);
 }
 
-auto zpt::couchdb::Client::query(std::string const& _collection,
-                                 zpt::json _regexp,
-                                 zpt::json _opts) -> zpt::json {
+auto zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, zpt::json _opts)
+  -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;

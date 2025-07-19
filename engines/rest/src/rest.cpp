@@ -33,7 +33,8 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
-auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
+  -> zpt::rest::resolver_t& {
     this->__pending_requests.push(_sent, callback);
     return (*this);
 }

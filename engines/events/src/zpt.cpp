@@ -120,7 +120,7 @@ auto main(int _argc, char* _argv[]) -> int {
         zlog("Stopped global event dispatcher", zpt::info);
     }
     zpt::TRANSPORT_LAYER() //
-        .clear();
+      .clear();
     zlog("Unloaded transport layer", zpt::info);
     zpt::BOOT() //
       .unload();

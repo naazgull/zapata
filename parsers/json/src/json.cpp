@@ -45,9 +45,8 @@ auto zpt::to_string(zpt::JSONType _type) -> std::string {
 
 auto zpt::to_string(zpt::json _in) -> std::string { return static_cast<std::string>(_in); }
 
-auto zpt::split(std::string const& _to_split,
-                std::string const& _separator,
-                bool _trim) -> zpt::json {
+auto zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim)
+  -> zpt::json {
     zpt::json _ret = zpt::json::array();
     if (_to_split.length() == 0 || _separator.length() == 0) { return _ret; }
     std::istringstream _iss(_to_split);
@@ -188,9 +187,8 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
     }
 }
 
-auto zpt::conf::file(std::filesystem::path const& _file,
-                     zpt::json& _options,
-                     zpt::json _root) -> void {
+auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root)
+  -> void {
     zpt::json _conf;
     std::ifstream _ifs;
     _ifs.open(_file.string());

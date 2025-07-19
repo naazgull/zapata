@@ -43,8 +43,8 @@
     }
 #define SHA2_PACK32(str, x)                                                                        \
     {                                                                                              \
-        *(x) = ((std::uint32_t) * ((str) + 3)) | ((std::uint32_t) * ((str) + 2) << 8) |            \
-               ((std::uint32_t) * ((str) + 1) << 16) | ((std::uint32_t) * ((str) + 0) << 24);      \
+        *(x) = ((std::uint32_t)*((str) + 3)) | ((std::uint32_t)*((str) + 2) << 8) |                \
+               ((std::uint32_t)*((str) + 1) << 16) | ((std::uint32_t)*((str) + 0) << 24);          \
     }
 
 namespace zpt::crypto {

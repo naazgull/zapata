@@ -52,7 +52,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
     auto trap() -> dispatcher&;
-    auto is_stopping_ongoing() -> bool;
+    auto is_in_shutdown() -> bool;
 
   public:
     zpt::lf::queue<zpt::event> __queue;
@@ -198,9 +198,7 @@ auto zpt::make_event(Args&&... _args) -> zpt::event {
 template<typename T, typename... Args>
 auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
-    if (this->__event_init != nullptr) {
-        _event->initialize(*this->__event_init);
-    }
+    if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
     this->trigger(_event);
     return (*this);
 }

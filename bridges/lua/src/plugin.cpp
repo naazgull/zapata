@@ -35,6 +35,4 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Initialized LUA bridge", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Unloaded LUA bridge", zpt::info);
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded LUA bridge", zpt::info); }

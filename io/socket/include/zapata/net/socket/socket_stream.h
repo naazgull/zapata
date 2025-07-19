@@ -459,7 +459,7 @@ auto zpt::basic_socketbuf<Char>::output_buffer_ip() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
-        return __traits_type::eof();
+        throw zpt::ClosedException(this->__error_string);
     }
     __buf_type::pbump(-_actually_written);
     return _actually_written;
@@ -480,7 +480,7 @@ auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
-        return __traits_type::eof();
+        throw zpt::ClosedException(this->__error_string);
     }
     __buf_type::pbump(-_actually_written);
     return _actually_written;
@@ -503,7 +503,7 @@ auto zpt::basic_socketbuf<Char>::output_buffer_ssl() -> __int_type {
                 this->__context = nullptr;
                 this->__error_code = SSL_get_error(this->__sslstream, _actually_written);
                 this->__error_string = zpt::ssl_error_print(this->__sslstream, _actually_written);
-                return __traits_type::eof();
+                throw zpt::ClosedException(this->__error_string);
             }
         }
     } while (SSL_get_error(this->__sslstream, _actually_written) == SSL_ERROR_WANT_WRITE);
@@ -520,7 +520,7 @@ auto zpt::basic_socketbuf<Char>::underflow_ip() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
-        return __traits_type::eof();
+        throw zpt::ClosedException(this->__error_string);
     }
     if (_actually_read == 0) { return __traits_type::eof(); }
     __buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
@@ -542,7 +542,7 @@ auto zpt::basic_socketbuf<Char>::underflow_udp() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
-        return __traits_type::eof();
+        throw zpt::ClosedException(this->__error_string);
     }
     if (_actually_read == 0) { return __traits_type::eof(); }
     __buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
@@ -565,7 +565,7 @@ auto zpt::basic_socketbuf<Char>::underflow_ssl() -> __int_type {
                 this->__context = nullptr;
                 this->__error_code = SSL_get_error(this->__sslstream, _actually_read);
                 this->__error_string = zpt::ssl_error_print(this->__sslstream, _actually_read);
-                return __traits_type::eof();
+                throw zpt::ClosedException(this->__error_string);
             }
         }
     } while (SSL_get_error(this->__sslstream, _actually_read) == SSL_ERROR_WANT_READ);
@@ -673,7 +673,8 @@ auto zpt::basic_socketstream<Char>::set_peer(std::string const& _address, int _p
               _addr.c_str() + _addr.length(),
               reinterpret_cast<char*>(&_peer.sin_addr.s_addr));
     _peer.sin_family = AF_INET;
-    _peer.sin_port = htons(_port);}
+    _peer.sin_port = htons(_port);
+}
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::set_peer(int _port) -> void {
@@ -820,7 +821,7 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
         __is_error = true;
         this->__buf.error_code() = errno;
         this->__buf.error_string() = std::strerror(errno);
-        return false;
+        throw zpt::ClosedException(this->__buf.error_string());
     }
     else { this->__buf.set_socket(_sd); }
     return true;
@@ -835,7 +836,7 @@ auto zpt::basic_socketstream<Char>::open_ip() -> bool {
         __is_error = true;
         this->__buf.error_code() = errno;
         this->__buf.error_string() = std::strerror(errno);
-        return false;
+        throw zpt::ClosedException(this->__buf.error_string());
     }
     else { this->__buf.set_socket(_sd); }
     return true;
@@ -858,7 +859,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
         this->__is_error = true;
         this->__buf.error_code() = errno;
         this->__buf.error_string() = std::strerror(errno);
-        return false;
+        throw zpt::ClosedException(this->__buf.error_string());
     }
 
     this->__buf.set_socket(_sd);
@@ -876,7 +877,7 @@ auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
         __is_error = true;
         this->__buf.error_code() = errno;
         this->__buf.error_string() = std::strerror(errno);
-        return false;
+        throw zpt::ClosedException(this->__buf.error_string());
     }
     else {
         SSL_library_init();
@@ -889,7 +890,7 @@ auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
             __is_error = true;
             this->__buf.error_code() = ERR_get_error();
             this->__buf.error_string() = zpt::ssl_error_print(this->__buf.error_code());
-            return false;
+            throw zpt::ClosedException(this->__buf.error_string());
         }
         else { this->assign(_sd, _context); }
     }
@@ -950,7 +951,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = 0;
-        return false;
+        throw zpt::ClosedException(std::strerror(errno));
     }
 
     struct sockaddr_in _serv_addr;
@@ -963,7 +964,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = 0;
-        return false;
+        throw zpt::ClosedException(std::strerror(errno));
     }
     ::listen(this->__sockfd, 100);
     return true;
@@ -985,7 +986,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::string const& _path) -> bool
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = 0;
-        return false;
+        throw zpt::ClosedException(std::strerror(errno));
     }
     ::listen(this->__sockfd, 100);
     return true;

@@ -7,6 +7,7 @@ add_dependencies(zapata-engine-transport
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-lockfree
     zapata-net-transport
@@ -25,6 +26,7 @@ target_include_directories(zapata-engine-transport
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-lockfree
     zapata-net-transport
@@ -40,6 +42,7 @@ target_link_libraries(zapata-engine-transport
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-net-transport
     zapata-parser-json
@@ -60,6 +63,7 @@ add_dependencies(zapata-engine-transport-plugin
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-lockfree
     zapata-net-transport
@@ -77,6 +81,7 @@ target_include_directories(zapata-engine-transport-plugin
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-lockfree
     zapata-net-transport
@@ -91,6 +96,7 @@ target_link_libraries(zapata-engine-transport-plugin
     zapata-base
     zapata-events
     zapata-globals
+    zapata-io-socket
     zapata-io-stream
     zapata-net-transport
     zapata-parser-json
