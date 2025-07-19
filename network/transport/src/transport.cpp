@@ -143,6 +143,10 @@ auto zpt::json_message::version(std::string const& _version) -> zpt::basic_messa
     return (*this);
 }
 
+auto zpt::json_message::empty() const -> bool {
+    return !this->__underlying->ok() || this->__underlying->stringify().length() == 0;
+}
+
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
     if (this->is_synchronous()) {

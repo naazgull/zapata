@@ -68,10 +68,10 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                         .get(this->__stream->transport());
     try {
         auto _received = _transport->receive(this->__stream);
-        if (this->__polling->is_in_shutdown() || _dispatcher->is_in_shutdown()) {
+        if (_received->empty() || this->__polling->is_in_shutdown() ||
+            _dispatcher->is_in_shutdown()) {
             return zpt::events::abort;
         }
-        zlog(_received, zpt::debug);
 
         auto _events = this->__engine.resolve(_received, [this, _dispatcher](zpt::event _event) {
             zpt::events::transport_event_init _init;
@@ -95,8 +95,8 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, _dispatcher);
     }
-    catch (zpt::ClosedException const& _e) {
-        throw;
+    catch (zpt::failed_expectation const& _e) {
+        zlog(_e.what(), zpt::error);
     }
     catch (std::exception const& _e) {
         this->catch_error(_e, _dispatcher);
@@ -212,9 +212,6 @@ zpt::transports::engine::engine(zpt::json _config)
           }
           catch (std::bad_alloc const& _e) {
               ::report_error(_e, _stream, _poll, this->__dispatcher);
-          }
-          catch (zpt::ClosedException const& _e) {
-              throw;
           }
           catch (std::exception const& _e) {
               ::report_error(_e, _stream, _poll, this->__dispatcher);

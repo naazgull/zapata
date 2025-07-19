@@ -54,6 +54,7 @@ class basic_message {
     virtual auto version(std::string const& _version) -> basic_message& = 0;
     virtual auto to_stream(std::ostream& _out) const -> basic_message const& = 0;
     virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
+    virtual auto empty() const -> bool = 0;
 
     friend auto operator<<(std::ostream& _out, zpt::basic_message const& _in) -> std::ostream& {
         _in.to_stream(_out);
@@ -93,6 +94,7 @@ class json_message : public basic_message {
     auto status(zpt::status _status) -> zpt::basic_message& override;
     auto uri(std::string const& _uri) -> zpt::basic_message& override;
     auto version(std::string const& _version) -> zpt::basic_message& override;
+    auto empty() const -> bool override;
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 

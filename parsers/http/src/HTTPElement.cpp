@@ -74,10 +74,6 @@ auto zpt::http::basic_message::content_type() const -> std::string {
     return ct->ok() ? ct->string() : "text/plain";
 }
 
-auto zpt::http::basic_message::anchor() const -> std::string {
-    return this->__underlying("uri")("anchor")->string();
-}
-
 auto zpt::http::basic_message::performative(zpt::performative _performative)
   -> zpt::basic_message& {
     this->__underlying["performative"] = zpt::ontology::to_str(_performative);
@@ -97,6 +93,14 @@ auto zpt::http::basic_message::uri(std::string const& _uri) -> zpt::basic_messag
 auto zpt::http::basic_message::version(std::string const& _version) -> zpt::basic_message& {
     this->__underlying["headers"]["X-Version"] = _version;
     return (*this);
+}
+
+auto zpt::http::basic_message::empty() const -> bool {
+    return !this->__underlying->ok() || this->__underlying->stringify().length() == 0;
+}
+
+auto zpt::http::basic_message::anchor() const -> std::string {
+    return this->__underlying("uri")("anchor")->string();
 }
 
 auto zpt::http::basic_message::body(std::string const& _body) -> zpt::basic_message& {

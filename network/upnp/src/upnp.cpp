@@ -61,7 +61,7 @@ auto zpt::net::transport::upnp::process_incoming_request(zpt::stream _stream) co
     expect(_stream->transport() == "upnp", "Stream underlying transport isn't 'upnp'");
     auto _request = zpt::allocate_message<zpt::upnp::basic_request>();
     (*_stream) >> std::noskipws >> _request;
-    _request->uri()["domain"] = _request->headers()["Host"];
+    _request->uri()["domain"] = _request->headers()("Host");
     return _request;
 }
 

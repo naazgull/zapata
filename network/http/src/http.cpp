@@ -52,7 +52,7 @@ auto zpt::net::transport::http::process_incoming_request(zpt::stream _stream) co
     expect(_stream->transport() == "http", "Stream underlying transport isn't 'http'");
     auto _request = zpt::allocate_message<zpt::http::basic_request>();
     (*_stream) >> std::noskipws >> _request;
-    _request->uri()["domain"] = _request->headers()["Host"];
+    _request->uri()["domain"] = _request->headers()("Host");
     return _request;
 }
 

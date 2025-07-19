@@ -97,6 +97,7 @@ auto zpt::http::basic_request::from_stream(std::istream& _in) -> zpt::basic_mess
         throw;
     }
     catch (...) {
+        this->__underlying = zpt::undefined;
     }
 
     return (*this);

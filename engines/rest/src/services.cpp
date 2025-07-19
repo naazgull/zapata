@@ -68,7 +68,7 @@ auto zpt::rest::services::broadcast(zpt::json _config) -> void {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("upnp");
     auto _stream =
-      zpt::make_stream<zpt::socketstream>(_upnp_host, _upnp_port * 10, false, IPPROTO_UDP);
+      zpt::make_stream<zpt::socketstream>(zpt::UPNP_BROADCAST, _upnp_port * 10, false, IPPROTO_UDP);
     _stream->transport("upnp");
     zpt::stream_cast<zpt::socketstream>(_stream) //
       .set_peer(_upnp_port);

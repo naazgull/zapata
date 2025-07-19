@@ -648,6 +648,7 @@ class basic_message : public zpt::basic_message {
     virtual auto status(zpt::status _status) -> zpt::basic_message& override;
     virtual auto uri(std::string const& _uri) -> zpt::basic_message& override;
     virtual auto version(std::string const& _uri) -> zpt::basic_message& override;
+    virtual auto empty() const -> bool override;
 
     virtual auto anchor() const -> std::string;
     virtual auto body(std::string const& _body) -> zpt::basic_message&;
