@@ -114,7 +114,7 @@ auto zpt::json_message::keep_alive() const -> bool {
 auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
 
 auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
-    _out << this->__underlying << std::endl;
+    _out << this->__underlying;
     return (*this);
 }
 

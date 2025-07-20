@@ -38,6 +38,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
 
         _plugin.add_thread([&]() -> void {
+            zpt::set_thread_name("http@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started HTTP transport on port " << _config("port"), zpt::info);
 

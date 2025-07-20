@@ -470,7 +470,6 @@ template<typename Char>
 auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
     auto _num = __buf_type::pptr() - __buf_type::pbase();
     auto _actually_written = -1;
-    zlog("Sending UDP message", zpt::debug);
     if ((_actually_written = ::sendto(__sock,
                                       reinterpret_cast<char*>(obuf),
                                       _num * char_size,
@@ -482,10 +481,8 @@ auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
-        zlog(std::format("Error {}", this->__error_string), zpt::debug);
         throw zpt::ClosedException(this->__error_string);
     }
-    zlog(std::format("Sent {} bytes", _actually_written), zpt::debug);
     __buf_type::pbump(-_actually_written);
     return _actually_written;
 }
@@ -844,8 +841,8 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
     auto _broadcast_enable = 1;
     setsockopt(_sd, SOL_SOCKET, SO_BROADCAST, &_broadcast_enable, sizeof(_broadcast_enable));
 
-    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
     if (this->__buf.host() != zpt::UDP_BROADCAST) {
+        auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
         if (::bind(_sd, reinterpret_cast<zpt::sockaddr_t*>(&_in_address), sizeof(_in_address)) <
             0) {
             ::shutdown(_sd, SHUT_RDWR);
@@ -859,6 +856,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
         }
     }
     else {
+        auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.peer());
         _in_address.sin_family = AF_INET;
         _in_address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
         _in_address.sin_port = htons(this->__buf.port());

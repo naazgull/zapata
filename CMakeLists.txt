@@ -33,6 +33,8 @@ IF(WITH_TSAN)
   add_link_options(-fsanitize=thread)
 ENDIF()
 
+add_compile_definitions(PROPAGATE_EXCEPTION)
+
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
   ${CMAKE_INSTALL_PREFIX}/lib

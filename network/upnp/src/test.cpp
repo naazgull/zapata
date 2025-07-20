@@ -35,12 +35,12 @@ auto main(int _argc, char* _argv[]) -> int {
         zpt::json _config{ "bind", _argv[2], "port", _port };
         zlog(_config, zpt::debug);
         zpt::transport _transport{ new zpt::net::transport::upnp{} };
-        auto _stream = zpt::make_stream<zpt::socketstream>(
-          _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
-        _stream->transport("upnp");
-        zlog(_stream->uri(), zpt::debug);
 
         if (_role == "server") {
+            auto _stream = zpt::make_stream<zpt::socketstream>(
+              _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
+            _stream->transport("upnp");
+
             zpt::polling::ptr _polling = std::make_shared<zpt::polling>();
             _polling //
               ->register_delegate(
@@ -60,11 +60,9 @@ auto main(int _argc, char* _argv[]) -> int {
               .shutdown();
         }
         if (_role == "client") {
-            std::stringstream _iss2;
-            _iss2.str(std::string{ _argv[5] });
-            std::uint16_t _server_port{ 0 };
-            _iss2 >> _server_port;
-            zpt::stream_cast<zpt::socketstream>(_stream).set_peer("127.0.0.1", _server_port);
+            auto _stream = zpt::make_stream<zpt::socketstream>(
+              zpt::UDP_BROADCAST, _config("port")->integer(), false, IPPROTO_UDP);
+            _stream->transport("upnp");
 
             auto _message = _transport->make_request();
             auto& _upnp = zpt::message_cast<zpt::upnp::basic_request>(_message);

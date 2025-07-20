@@ -74,9 +74,12 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         std::this_thread::yield();
         return (*this);
     }
+    #ifndef PROPAGATE_EXCEPTION
     try {
+    #endif
         auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(_event); }
+    #ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {
         if (!_event->catch_error(_e, this->shared_from_this())) {
@@ -93,6 +96,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
+    #endif
     return (*this);
 }
 

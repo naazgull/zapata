@@ -16,6 +16,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
     auto _self_address =
       std::format("{}:{}", _config(_scheme)("bind")->string(), _config(_scheme)("port")->integer());
 
+    zlog(this->received(), zpt::debug);
     if (this->received()->performative() == zpt::Notify && _peer_address != _self_address) {
         auto _get_services = zpt::make_message<zpt::json_message>();
         _get_services //

@@ -18,11 +18,19 @@ auto report_error(T const& _e,
                   zpt::stream _stream,
                   zpt::polling::ptr _polling,
                   zpt::events::dispatcher::ptr _dispatcher) -> void {
-    if (_polling->is_in_shutdown() || _dispatcher->is_in_shutdown()) { return; }
-
-    _stream->state() = zpt::stream_state::ERRORING_OUT;
+#ifdef PROPAGATE_EXCEPTION
+    throw _e;
+#endif
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
+
+    if (!_transport->is_synchronous() || _polling->is_in_shutdown() ||
+        _dispatcher->is_in_shutdown()) {
+        zlog(_e.what(), zpt::error);
+        return;
+    }
+
+    _stream->state() = zpt::stream_state::ERRORING_OUT;
     auto _reply = _transport->make_reply(false);
     _reply->status(500);
     _reply->headers()["Content-Type"] = "application/json";
@@ -66,7 +74,9 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
   -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
+#ifndef PROPAGATE_EXCEPTION
     try {
+#endif
         auto _received = _transport->receive(this->__stream);
         if (_received->empty() || this->__polling->is_in_shutdown() ||
             _dispatcher->is_in_shutdown()) {
@@ -86,11 +96,15 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 _to_send->status(404);
                 _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _to_send);
             }
+            else {
+                this->__polling->unmute(this->__stream);
+            }
         }
         else {
             for (auto _event : _events) { _dispatcher->trigger(_event); }
         }
         return zpt::events::finish;
+#ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, _dispatcher);
@@ -101,6 +115,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     catch (std::exception const& _e) {
         this->catch_error(_e, _dispatcher);
     }
+#endif
     return zpt::events::abort;
 }
 
@@ -140,7 +155,9 @@ zpt::events::process::process(zpt::message _received)
   : __received{ _received } {}
 
 zpt::events::process::~process() {
+#ifndef PROPAGATE_EXCEPTION
     try {
+#endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
         if (!_transport->is_synchronous() &&
@@ -155,6 +172,7 @@ zpt::events::process::~process() {
         this->__dispatcher->trigger<zpt::events::send>(
           this->__polling, this->__stream, this->__to_send);
         return;
+#ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, this->__dispatcher);
@@ -162,6 +180,7 @@ zpt::events::process::~process() {
     catch (std::exception const& _e) {
         this->catch_error(_e, this->__dispatcher);
     }
+#endif
 }
 
 auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
@@ -206,9 +225,12 @@ zpt::transports::engine::engine(zpt::json _config)
         : 1) } {
     zpt::STREAM_POLLING() //
       ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
+#ifndef PROPAGATE_EXCEPTION
           try {
+#endif
               this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
+#ifndef PROPAGATE_EXCEPTION
           }
           catch (std::bad_alloc const& _e) {
               ::report_error(_e, _stream, _poll, this->__dispatcher);
@@ -216,6 +238,7 @@ zpt::transports::engine::engine(zpt::json _config)
           catch (std::exception const& _e) {
               ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
+#endif
           return true;
       });
     auto _event_init = std::make_shared<zpt::events::transport_event_init>();
