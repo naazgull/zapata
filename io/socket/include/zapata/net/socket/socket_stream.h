@@ -54,6 +54,8 @@ using sockaddr_t = struct sockaddr;
 using sockaddrin_t = struct sockaddr_in;
 using sockaddrun_t = struct sockaddr_un;
 
+inline constexpr char const* UDP_BROADCAST = "";
+
 auto ssl_error_print(SSL* _ssl, int _ret) -> std::string;
 auto ssl_error_print(unsigned long _error = 0) -> std::string;
 
@@ -152,7 +154,6 @@ class basic_socketstream : public std::basic_iostream<Char> {
     operator std::string();
 
     auto set_peer(std::string const& address, int port) -> void;
-    auto set_peer(int port) -> void;
 
     auto ssl() -> bool&;
     auto host() -> std::string&;
@@ -469,6 +470,7 @@ template<typename Char>
 auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
     auto _num = __buf_type::pptr() - __buf_type::pbase();
     auto _actually_written = -1;
+    zlog("Sending UDP message", zpt::debug);
     if ((_actually_written = ::sendto(__sock,
                                       reinterpret_cast<char*>(obuf),
                                       _num * char_size,
@@ -480,8 +482,10 @@ auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
         this->__sock = 0;
         this->__error_code = errno;
         this->__error_string = std::string(std::strerror(errno));
+        zlog(std::format("Error {}", this->__error_string), zpt::debug);
         throw zpt::ClosedException(this->__error_string);
     }
+    zlog(std::format("Sent {} bytes", _actually_written), zpt::debug);
     __buf_type::pbump(-_actually_written);
     return _actually_written;
 }
@@ -677,14 +681,6 @@ auto zpt::basic_socketstream<Char>::set_peer(std::string const& _address, int _p
 }
 
 template<typename Char>
-auto zpt::basic_socketstream<Char>::set_peer(int _port) -> void {
-    auto& _peer = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.peer());
-    _peer.sin_family = AF_INET;
-    _peer.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-    _peer.sin_port = htons(_port);
-}
-
-template<typename Char>
 auto zpt::basic_socketstream<Char>::ssl() -> bool& {
     return this->__buf.ssl();
 }
@@ -724,8 +720,6 @@ auto zpt::basic_socketstream<Char>::unassign() -> void {
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::close() -> void {
-    __stream_type::flush();
-    __stream_type::clear();
     if (this->__buf.get_socket() != 0) {
         ::shutdown(this->__buf.get_socket(), SHUT_RDWR);
         ::close(this->__buf.get_socket());
@@ -844,22 +838,30 @@ auto zpt::basic_socketstream<Char>::open_ip() -> bool {
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_udp() -> bool {
-    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
     auto _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     auto _reuse = 1;
     setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char*)&_reuse, sizeof _reuse);
     auto _broadcast_enable = 1;
     setsockopt(_sd, SOL_SOCKET, SO_BROADCAST, &_broadcast_enable, sizeof(_broadcast_enable));
 
-    if (::bind(_sd, reinterpret_cast<zpt::sockaddr_t*>(&_in_address), sizeof(_in_address)) < 0) {
-        ::shutdown(_sd, SHUT_RDWR);
-        ::close(_sd);
-        __stream_type::setstate(std::ios::failbit);
-        this->__buf.set_socket(0);
-        this->__is_error = true;
-        this->__buf.error_code() = errno;
-        this->__buf.error_string() = std::strerror(errno);
-        throw zpt::ClosedException(this->__buf.error_string());
+    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
+    if (this->__buf.host() != zpt::UDP_BROADCAST) {
+        if (::bind(_sd, reinterpret_cast<zpt::sockaddr_t*>(&_in_address), sizeof(_in_address)) <
+            0) {
+            ::shutdown(_sd, SHUT_RDWR);
+            ::close(_sd);
+            __stream_type::setstate(std::ios::failbit);
+            this->__buf.set_socket(0);
+            this->__is_error = true;
+            this->__buf.error_code() = errno;
+            this->__buf.error_string() = std::strerror(errno);
+            throw zpt::ClosedException(this->__buf.error_string());
+        }
+    }
+    else {
+        _in_address.sin_family = AF_INET;
+        _in_address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+        _in_address.sin_port = htons(this->__buf.port());
     }
 
     this->__buf.set_socket(_sd);

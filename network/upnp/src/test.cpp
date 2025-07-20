@@ -64,7 +64,7 @@ auto main(int _argc, char* _argv[]) -> int {
             _iss2.str(std::string{ _argv[5] });
             std::uint16_t _server_port{ 0 };
             _iss2 >> _server_port;
-            zpt::stream_cast<zpt::socketstream>(_stream).set_peer(_server_port);
+            zpt::stream_cast<zpt::socketstream>(_stream).set_peer("127.0.0.1", _server_port);
 
             auto _message = _transport->make_request();
             auto& _upnp = zpt::message_cast<zpt::upnp::basic_request>(_message);

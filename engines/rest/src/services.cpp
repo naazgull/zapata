@@ -7,8 +7,8 @@ zpt::rest::minion_boot::minion_boot(zpt::message _received)
 
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                        [[maybe_unused]]) -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
     auto _scheme = _peer("scheme")->string();
@@ -52,8 +52,8 @@ zpt::rest::services_list::services_list(zpt::message _received)
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
-auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                          [[maybe_unused]]) -> zpt::events::state {
 
     zlog(this->received(), zpt::debug);
 
@@ -61,17 +61,14 @@ auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatch
 }
 
 auto zpt::rest::services::broadcast(zpt::json _config) -> void {
-    auto _upnp_host = _config("upnp")("bind")->string();
     auto _upnp_port = _config("upnp")("port")->integer();
     auto _tcp_host = _config("tcp")("bind")->string();
     auto _tcp_port = _config("tcp")("port")->integer();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("upnp");
     auto _stream =
-      zpt::make_stream<zpt::socketstream>(zpt::UPNP_BROADCAST, _upnp_port * 10, false, IPPROTO_UDP);
+      zpt::make_stream<zpt::socketstream>(zpt::UDP_BROADCAST, _upnp_port, false, IPPROTO_UDP);
     _stream->transport("upnp");
-    zpt::stream_cast<zpt::socketstream>(_stream) //
-      .set_peer(_upnp_port);
 
     auto _message = _transport->make_request();
     _message //
