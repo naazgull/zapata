@@ -33,7 +33,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
     if (_config("port")->ok()) {
         auto _stream = zpt::make_stream<zpt::socketstream>(
-          _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
+          _config("bind")->string(), _config("port")->integer(), zpt::NO_SSL, IPPROTO_UDP);
         _stream->transport("upnp");
 
         auto _polling = zpt::STREAM_POLLING();

@@ -50,6 +50,10 @@ class basic_stream {
 
     auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
+    auto read(T& _out) -> basic_stream&;
+    template<typename T>
+    auto send(T _in) -> basic_stream&;
+    template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
     template<typename T>
     auto operator<<(T _in) -> basic_stream&;
@@ -58,6 +62,8 @@ class basic_stream {
 
     operator int();
 
+    template<typename IOStream>
+    auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
     auto close() -> basic_stream&;
     auto shutdown() -> basic_stream&;
     auto transport(const std::string& _rhs) -> basic_stream&;
@@ -120,7 +126,7 @@ auto stream_cast(zpt::stream& _rhs) -> T& {
 } // namespace zpt
 
 template<typename T>
-auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _out->from_stream(*this->__underlying.get());
     }
@@ -129,12 +135,29 @@ auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
 }
 
 template<typename T>
-auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+auto zpt::basic_stream::send(T _in) -> zpt::basic_stream& {
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _in->to_stream(*this->__underlying.get());
+        (*this->__underlying.get()) << std::flush;
     }
-    else { (*this->__underlying.get()) << _in; }
+    else { (*this->__underlying.get()) << _in << std::flush; }
 
+    return (*this);
+}
+
+template<typename T>
+auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+    return this->read<T>(_out);
+}
+
+template<typename T>
+auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+    return this->send<T>(_in);
+}
+
+template<typename IOStream>
+auto zpt::basic_stream::set_peer(std::string const& _address, unsigned int _port) -> basic_stream& {
+    static_cast<IOStream&>(**this).set_peer(_address, _port);
     return (*this);
 }
 

@@ -236,13 +236,15 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
     auto _scheme = _uri("scheme")->string();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
+    expect(_transport->is_synchronous(), "`call^ only makes sense for synchronous protocols");
+
     auto _stream = zpt::make_stream<zpt::socketstream>(
-      _uri("domain")->string(), _uri("port")->integer(), false, IPPROTO_TCP);
-
-    this->__to_send->headers()["Content-Type"] = "application/json";
+      _uri("domain")->string(), _uri("port")->integer(), zpt::NO_SSL, IPPROTO_TCP);
     _stream->transport(_scheme);
+    
+    this->__to_send->headers()["Content-Type"] = "application/json";
     _transport->send(_stream, this->__to_send);
-    this->__polling->listen_on(_stream);
 
+    this->__polling->listen_on(_stream);
     return zpt::events::finish;
 }

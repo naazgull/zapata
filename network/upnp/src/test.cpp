@@ -38,7 +38,7 @@ auto main(int _argc, char* _argv[]) -> int {
 
         if (_role == "server") {
             auto _stream = zpt::make_stream<zpt::socketstream>(
-              _config("bind")->string(), _config("port")->integer(), false, IPPROTO_UDP);
+              _config("bind")->string(), _config("port")->integer(), zpt::NO_SSL, IPPROTO_UDP);
             _stream->transport("upnp");
 
             zpt::polling::ptr _polling = std::make_shared<zpt::polling>();
@@ -46,8 +46,7 @@ auto main(int _argc, char* _argv[]) -> int {
               ->register_delegate(
                 [&_transport](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
                     try {
-                        auto _received = _transport->receive(_stream);
-                        zlog(_received, zpt::debug);
+                        _transport->receive(_stream);
                     }
                     catch (...) {
                         zlog("Nothing to receive", zpt::debug);
@@ -60,10 +59,6 @@ auto main(int _argc, char* _argv[]) -> int {
               .shutdown();
         }
         if (_role == "client") {
-            auto _stream = zpt::make_stream<zpt::socketstream>(
-              zpt::UDP_BROADCAST, _config("port")->integer(), false, IPPROTO_UDP);
-            _stream->transport("upnp");
-
             auto _message = _transport->make_request();
             auto& _upnp = zpt::message_cast<zpt::upnp::basic_request>(_message);
             _upnp //
@@ -71,7 +66,13 @@ auto main(int _argc, char* _argv[]) -> int {
               .uri("*");
             zlog(_upnp, zpt::debug);
 
-            (*_stream) << _message << std::flush;
+            auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
+            _stream //
+              ->transport("upnp")
+              .set_peer<zpt::socketstream>(_config("bind")->string(), _config("port")->integer());
+
+           _transport->send(_stream, _message);
+
             if (zpt::stream_cast<zpt::socketstream>(_stream).is_error()) {
                 zlog(zpt::stream_cast<zpt::socketstream>(_stream).error_string(), zpt::debug);
             }

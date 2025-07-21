@@ -181,7 +181,7 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                "Stream not in a valid state for sending");
     }
     zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
-    (*_stream) << _to_send << std::flush;
+    _stream->send(_to_send);
 
     if (this->is_synchronous()) {
         if (_stream->state() == zpt::stream_state::IDLE) {

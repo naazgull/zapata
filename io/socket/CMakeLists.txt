@@ -23,7 +23,7 @@ target_include_directories(zapata-io-socket
     ${IO_SOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata-io-socket
-  PRIVATE
+  PUBLIC
     ssl
     crypto
     zapata-base

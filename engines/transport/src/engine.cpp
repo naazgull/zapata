@@ -78,6 +78,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     try {
 #endif
         auto _received = _transport->receive(this->__stream);
+        zlog(_received, zpt::debug);
         if (_received->empty() || this->__polling->is_in_shutdown() ||
             _dispatcher->is_in_shutdown()) {
             return zpt::events::abort;
