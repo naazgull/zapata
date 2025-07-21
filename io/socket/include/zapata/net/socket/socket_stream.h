@@ -777,8 +777,8 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _host,
     this->__buf.ssl() = _ssl;
 
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    _in_address.sin_addr.s_addr = INADDR_ANY;
     _in_address.sin_family = AF_INET;
+    _in_address.sin_addr.s_addr = htonl(INADDR_ANY);
     _in_address.sin_port = htons(_port);
 
     if (!_ssl) {
@@ -834,10 +834,12 @@ auto zpt::basic_socketstream<Char>::open_ip() -> bool {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_udp() -> bool {
     auto _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    auto _reuse = 1;
-    setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char*)&_reuse, sizeof _reuse);
-    auto _broadcast_enable = 1;
+    int _reuse = 1;
+    setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, &_reuse, sizeof _reuse);
+    int _broadcast_enable = 1;
     setsockopt(_sd, SOL_SOCKET, SO_BROADCAST, &_broadcast_enable, sizeof(_broadcast_enable));
+    int _buffer_len = 1024 * 512;
+    setsockopt(_sd, SOL_SOCKET, SO_RCVBUF, &_buffer_len, sizeof(_buffer_len));
 
     if (this->__buf.host() != zpt::ADDR_ANONYMOUS) {
         auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
@@ -852,7 +854,8 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
         if (zpt::is_multicast_address(this->__buf.host())) {
             struct ip_mreq _mreq;
             _mreq.imr_multiaddr.s_addr = inet_addr(this->__buf.host().data());
-            _mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+            _mreq.imr_interface.s_addr = _in_address.sin_addr.s_addr;
+
             if (setsockopt(_sd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&_mreq, sizeof(_mreq)) < 0) {
                 ::shutdown(_sd, SHUT_RDWR);
                 ::close(_sd);
