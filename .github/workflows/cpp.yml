@@ -8,9 +8,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Update OS
-      run: sudo apt update && sudo apt dist-upgrade
+    - uses: actions/checkout@v4
     - name: Install dependencies (APT)
       run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev uuid-dev g++ cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
     - name: Install dependencies (Local binaries)
