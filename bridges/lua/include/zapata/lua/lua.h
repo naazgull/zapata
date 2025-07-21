@@ -23,13 +23,9 @@
 #pragma once
 
 #include <zapata/bridge.h>
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 
 namespace zpt {
-auto LUA_BRIDGE() -> ssize_t&;
-
 class lua_object {
   public:
     lua_object();
@@ -99,4 +95,6 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
     auto to_args(zpt::json _to_convert) -> zpt::lua::bridge&;
 };
 } // namespace lua
+
+auto LUA_BRIDGE() -> zpt::lua::bridge&;
 } // namespace zpt

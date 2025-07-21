@@ -45,12 +45,14 @@ auto zpt::HTTPTokenizerLexer::init(int _in_type) -> void {
     this->__root_type = _in_type;
     switch (_in_type) {
         case 0: {
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
             std::string _ms(this->matched());
             zpt::performative _m = zpt::ontology::from_str(_ms);
             this->__root_req->performative(_m);
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             break;
         }
     }
@@ -59,12 +61,15 @@ auto zpt::HTTPTokenizerLexer::init(int _in_type) -> void {
 auto zpt::HTTPTokenizerLexer::version() -> void {
     std::string _s(this->matched());
     zpt::replace(_s, "HTTP/", "");
+    zpt::replace(_s, "UPNP/", "");
     switch (this->__root_type) {
         case 0: {
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_req->version(_s);
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_rep->version(_s);
             break;
         }
@@ -74,10 +79,12 @@ auto zpt::HTTPTokenizerLexer::version() -> void {
 auto zpt::HTTPTokenizerLexer::body() -> void {
     switch (this->__root_type) {
         case 0: {
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_req->body(this->matched());
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_rep->body(this->matched());
             break;
         }
@@ -88,12 +95,12 @@ auto zpt::HTTPTokenizerLexer::body() -> void {
 auto zpt::HTTPTokenizerLexer::url() -> void {
     switch (this->__root_type) {
         case 0: {
-            this->__root_req->uri()["path"] = zpt::split(this->matched(), "/");
-            this->__root_req->uri()["raw_path"] = this->matched();
-            this->__root_req->uri()["scheme"] = "http";
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
+            this->__root_req->uri(this->matched());
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             break;
         }
     }
@@ -102,9 +109,11 @@ auto zpt::HTTPTokenizerLexer::url() -> void {
 auto zpt::HTTPTokenizerLexer::status() -> void {
     switch (this->__root_type) {
         case 0: {
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             int _status = 0;
             std::string _statusstr(this->matched());
             zpt::fromstr(_statusstr, &_status);
@@ -123,10 +132,12 @@ auto zpt::HTTPTokenizerLexer::add() -> void {
     }
     switch (this->__root_type) {
         case 0: {
+            expect(this->__root_req != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_req->header(this->__header_name, _s);
             break;
         }
         case 1: {
+            expect(this->__root_rep != nullptr, "Parsing error, infra-structure not initialized");
             this->__root_rep->header(this->__header_name, _s);
             break;
         }

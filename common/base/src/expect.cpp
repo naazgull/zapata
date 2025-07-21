@@ -45,3 +45,7 @@ auto zpt::get_time(time_t _t) -> zpt::tm_ptr {
     std::memcpy(_tm, localtime(&_t), sizeof(std::tm));
     return zpt::tm_ptr(_tm);
 }
+
+auto zpt::set_thread_name(std::string const& _name) -> void {
+    ::pthread_setname_np(::pthread_self(), _name.substr(0, 15).data());
+}

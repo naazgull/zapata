@@ -25,9 +25,9 @@
 #include <utility>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/net/socket/socket_stream.h>
 
 namespace zpt {
-auto TCP_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
 class tcp : public zpt::basic_transport {
@@ -35,12 +35,14 @@ class tcp : public zpt::basic_transport {
     tcp() = default;
     virtual ~tcp() = default;
 
+    auto is_synchronous() const -> bool override;
     auto make_request() const -> zpt::message override;
-    auto make_reply() const -> zpt::message override;
+    auto make_reply(bool _with_allocator = true) const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
-    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net
+auto TCP_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

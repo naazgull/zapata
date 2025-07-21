@@ -3,20 +3,26 @@
 #include <zapata/events.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
-#include <zapata/mem/ref_ptr.h>
+#include <zapata/net/socket.h>
 #include <list>
 
 namespace zpt {
-auto TRANSPORT_ENGINE() -> ssize_t&;
-
 namespace events {
-class process;
-using initializer_t = std::function<void(zpt::events::process& _event)>;
+using initializer_t = std::function<void(zpt::event _event)>;
+using resolver_callback = std::function<zpt::event(zpt::message, zpt::events::initializer_t)>;
 class resolver_t {
   public:
     resolver_t() = default;
     virtual ~resolver_t() = default;
 
+    virtual auto add(zpt::message _sent, zpt::events::resolver_callback callback)
+      -> resolver_t& = 0;
+    virtual auto add(zpt::performative _performtive,
+                     std::string _path,
+                     zpt::json _metadata,
+                     zpt::events::resolver_callback _callback) -> resolver_t& = 0;
+    virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
+    virtual auto remove(zpt::performative _performtive, std::string _path) -> resolver_t& = 0;
     virtual auto resolve(zpt::message _received, initializer_t _initializer) const
       -> std::list<zpt::event> = 0;
 };
@@ -29,21 +35,32 @@ class engine {
     engine(zpt::json _config);
     virtual ~engine() = default;
 
-    auto add_resolver(zpt::events::resolver _resolver) -> zpt::transports::engine&;
+    auto add_resolver(zpt::events::resolver _resolver) -> engine&;
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event>;
+    auto shutdown() -> engine&;
 
   private:
     zpt::json __configuration;
     std::vector<zpt::events::resolver> __resolvers;
-    zpt::events::dispatcher __dispatcher;
+    zpt::events::dispatcher::ptr __dispatcher;
 };
+
+template<typename T>
+auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer) -> zpt::event;
 } // namespace transports
 
 namespace events {
+class transport_event_init : public zpt::event_initialization {
+  public:
+    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::polling::ptr __polling;
+    zpt::stream __stream;
+};
+
 class receive {
   public:
-    receive(zpt::transports::engine& _engine, zpt::polling& _polling, zpt::basic_stream& _stream);
+    receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
     receive(zpt::events::receive const& _rhs) = delete;
     receive(zpt::events::receive&& _rhs) = delete;
     virtual ~receive();
@@ -51,21 +68,23 @@ class receive {
     auto operator=(zpt::events::receive const& _rhs) -> receive& = delete;
     auto operator=(zpt::events::receive&& _rhs) -> receive& = delete;
 
+    auto initialize(zpt::event_initialization& init) -> void;
     auto blocked() const -> bool;
-    auto catch_error(std::exception const& _e) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e) -> bool;
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+    auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
     zpt::transports::engine& __engine;
-    zpt::polling& __polling;
-    zpt::basic_stream& __stream;
-    bool __unmute{ false };
+    zpt::polling::ptr __polling;
+    zpt::stream __stream;
 };
 
 class send {
   public:
-    send(zpt::polling& _polling, zpt::basic_stream& _stream, zpt::message _to_send);
+    send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::message _to_send);
     send(zpt::events::send const& _rhs) = delete;
     send(zpt::events::send&& _rhs) = delete;
     virtual ~send();
@@ -73,19 +92,23 @@ class send {
     auto operator=(zpt::events::send const& _rhs) -> send& = delete;
     auto operator=(zpt::events::send&& _rhs) -> send& = delete;
 
+    auto initialize(zpt::event_initialization& init) -> void;
     auto blocked() const -> bool;
-    auto catch_error(std::exception const& _e) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e) -> bool;
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+    auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::polling& __polling;
-    zpt::basic_stream& __stream;
+    zpt::polling::ptr __polling;
+    zpt::stream __stream;
     zpt::message __to_send;
 };
 
 class process {
   public:
+    using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
     process(zpt::message _received);
@@ -96,23 +119,132 @@ class process {
     auto operator=(zpt::events::process const& _rhs) -> process& = delete;
     auto operator=(zpt::events::process&& _rhs) -> process& = delete;
 
-    virtual auto initialize(zpt::events::dispatcher& _dispatcher,
-                            zpt::polling& _polling,
-                            zpt::basic_stream& _stream) -> process& final;
     virtual auto received() const -> zpt::message const final;
     virtual auto to_send() -> zpt::message final;
 
+    virtual auto initialize(zpt::event_initialization& init) -> void final;
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool final;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool final;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+
     virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e) -> bool final;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool final;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
+    virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
   private:
-    zpt::ref_ptr<zpt::events::dispatcher> __dispatcher;
-    zpt::ref_ptr<zpt::polling> __polling;
-    zpt::ref_ptr<zpt::basic_stream> __stream;
+    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::polling::ptr __polling;
+    zpt::stream __stream;
     zpt::message __received;
     zpt::message __to_send;
 };
 } // namespace events
 } // namespace zpt
+
+template<typename T>
+concept ProcessOperation = std::is_base_of<zpt::events::process, T>::value;
+
+namespace zpt {
+namespace events {
+template<ProcessOperation T>
+class call {
+  public:
+    using ptr = std::shared_ptr<process>;
+    friend class zpt::events::receive;
+
+    call(zpt::events::resolver _resolver, zpt::message _send);
+    call(zpt::events::call<T> const& _rhs) = delete;
+    call(zpt::events::call<T>&& _rhs) = delete;
+    virtual ~call();
+
+    auto operator=(zpt::events::call<T> const& _rhs) -> call& = delete;
+    auto operator=(zpt::events::call<T>&& _rhs) -> call& = delete;
+
+    auto initialize(zpt::event_initialization& init) -> void;
+    auto blocked() const -> bool;
+    auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+
+  private:
+    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::polling::ptr __polling;
+    zpt::message __to_send;
+};
+} // namespace events
+
+auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
+} // namespace zpt
+
+template<typename T>
+auto zpt::transports::make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
+  -> zpt::event {
+    auto _event = zpt::make_event<T>(_received);
+    _initializer(_event);
+    return _event;
+}
+
+template<ProcessOperation T>
+zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
+  : __to_send{ _send } {
+    if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
+        this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
+    }
+    _resolver->add(_send, zpt::transports::make_callback<T>);
+}
+
+template<ProcessOperation T>
+zpt::events::call<T>::~call() {}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::initialize(zpt::event_initialization& _init) -> void {
+    auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
+    this->__dispatcher = _transport_init.__dispatcher;
+    this->__polling = _transport_init.__polling;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::blocked() const -> bool {
+    return false;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)
+  -> bool {
+    throw _e;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr)
+  -> bool {
+    throw _e;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::catch_error(zpt::failed_expectation const& _e,
+                                       zpt::events::dispatcher::ptr) -> bool {
+    throw _e;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    auto _uri = this->__to_send->uri();
+    auto _scheme = _uri("scheme")->string();
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(_scheme);
+    expect(_transport->is_synchronous(), "`call^ only makes sense for synchronous protocols");
+
+    auto _stream = zpt::make_stream<zpt::socketstream>(
+      _uri("domain")->string(), _uri("port")->integer(), zpt::NO_SSL, IPPROTO_TCP);
+    _stream->transport(_scheme);
+    
+    this->__to_send->headers()["Content-Type"] = "application/json";
+    _transport->send(_stream, this->__to_send);
+
+    this->__polling->listen_on(_stream);
+    return zpt::events::finish;
+}

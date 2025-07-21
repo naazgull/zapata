@@ -52,7 +52,7 @@ auto zpt::trim(std::string& _in_out) -> void {
     zpt::rtrim(_in_out);
 }
 
-auto zpt::replace(std::string& str, std::string find, std::string replace) -> void {
+auto zpt::replace(std::string& str, std::string const& find, std::string const& replace) -> void {
     if (str.length() == 0) { return; }
 
     size_t start{ 0 };
@@ -110,20 +110,16 @@ auto zpt::r_trim(std::string const& _in_out) -> std::string {
     return _return;
 }
 
-auto zpt::r_replace(std::string str, std::string find, std::string replace) -> std::string {
+auto zpt::r_replace(std::string const& str, std::string const& find, std::string const& replace)
+  -> std::string {
     std::string _return{ str.data() };
-    try {
-        if (_return.length() == 0) { return _return; }
+    if (_return.length() == 0) { return _return; }
 
-        size_t start{ 0 };
+    size_t start{ 0 };
 
-        while ((start = _return.find(find, start)) != std::string::npos) {
-            _return.replace(start, find.size(), replace);
-            start += replace.length();
-        }
-    }
-    catch (std::exception const& _e) {
-        std::cout << (_e.what()) << std::endl << std::flush;
+    while ((start = _return.find(find, start)) != std::string::npos) {
+        _return.replace(start, find.size(), replace);
+        start += replace.length();
     }
     return _return;
 }
@@ -139,7 +135,7 @@ auto zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) -> s
     return _return;
 }
 
-auto zpt::r_prettify_header_name(std::string name) -> std::string {
+auto zpt::r_prettify_header_name(std::string const& name) -> std::string {
     std::string _return{ name.data() };
     std::transform(_return.begin(), _return.begin() + 1, _return.begin(), ::toupper);
 

@@ -24,11 +24,11 @@
 
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/catalogue.h>
+#include <zapata/catalog.h>
+#include <zapata/rest/pending_messages.h>
 #include <zapata/transport/engine.h>
 
 namespace zpt {
-auto REST_RESOLVER() -> ssize_t&;
 namespace rest {
 class resolver_t : public zpt::events::resolver_t {
   public:
@@ -40,6 +40,14 @@ class resolver_t : public zpt::events::resolver_t {
     auto operator=(resolver_t const&) -> resolver_t& = delete;
     auto operator=(resolver_t&&) -> resolver_t& = delete;
 
+    auto add(zpt::message _sent, zpt::events::resolver_callback callback)
+      -> zpt::rest::resolver_t& override;
+    auto add(zpt::performative _performtive,
+             std::string _path,
+             zpt::json _metadata,
+             zpt::events::resolver_callback _callback) -> resolver_t& override;
+    auto remove(zpt::message _sent) -> resolver_t& override;
+    auto remove(zpt::performative _performtive, std::string _path) -> resolver_t& override;
     template<typename T>
     auto add(std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
@@ -49,20 +57,23 @@ class resolver_t : public zpt::events::resolver_t {
     template<typename T>
     auto add(zpt::performative _performtive, std::string _path, zpt::json _metadata)
       -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto remove(std::string _path) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto remove(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
+    auto clear() -> zpt::rest::resolver_t&;
     virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
-      -> std::list<zpt::event>;
+      -> std::list<zpt::event> override;
 
   private:
-    zpt::catalogue<std::string, zpt::json> __catalogue{ "rest_catalogue" };
-    std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
+    zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
+    std::vector<zpt::events::resolver_callback> __callbacks;
+    mutable zpt::rest::pending_messages __pending_requests;
     zpt::json __configuration;
-
-    template<typename T>
-    static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
-      -> zpt::event;
 };
 using resolver = std::shared_ptr<zpt::rest::resolver_t>;
 } // namespace rest
+auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;
 } // namespace zpt
 
 template<typename T>
@@ -85,21 +96,16 @@ template<typename T>
 auto zpt::rest::resolver_t::add(zpt::performative _performative,
                                 std::string _path,
                                 zpt::json _metadata) -> zpt::rest::resolver_t& {
-    auto hash_code = this->__callbacks.size();
-    this->__callbacks.push_back(zpt::rest::resolver_t::make_callback<T>);
-    _metadata << "callback" << hash_code;
-    auto _to_add = std::string{ "/" } +
-                   (_performative == zpt::Performative_end ? std::string{ "{}" }
-                                                           : zpt::ontology::to_str(_performative)) +
-                   _path;
-    this->__catalogue.add(_to_add, _metadata);
-    return (*this);
+    return this->add(_performative, _path, _metadata, zpt::transports::make_callback<T>);
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::make_callback(zpt::message _received,
-                                          zpt::events::initializer_t _initializer) -> zpt::event {
-    auto _event = zpt::make_event<T>(_received);
-    _initializer(static_cast<zpt::events::process&>(zpt::event_cast<T>(_event)));
-    return _event;
+auto zpt::rest::resolver_t::remove(std::string _path) -> zpt::rest::resolver_t& {
+    return this->remove<T>(zpt::Performative_end, _path);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string _path)
+  -> zpt::rest::resolver_t& {
+    return this->remove(_performative, _path);
 }

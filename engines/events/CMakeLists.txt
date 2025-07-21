@@ -20,27 +20,27 @@ target_sources(zpt
 )
 target_include_directories(zpt
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-engine-startup
     ${ENGINE_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zpt
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
+    zapata-base
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-engine-startup
 )
 set_target_properties(zpt
   PROPERTIES

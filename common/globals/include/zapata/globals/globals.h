@@ -23,24 +23,11 @@
 #pragma once
 
 #include <zapata/base.h>
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>
 #include <typeinfo>
+#include <shared_mutex>
 
 namespace zpt {
-class globals {
-  public:
-    static inline std::map<size_t, std::vector<void*>> __variables{};
-    static inline zpt::locks::spin_lock __variables_lock;
-
-    static auto to_string() -> std::string;
-};
-template<typename T, typename... Args>
-auto make_global(ssize_t& _variable, Args... _args) -> T&;
-template<typename T>
-auto release_global(ssize_t _variable) -> void;
-template<typename T>
-auto global_cast(ssize_t _variable) -> T&;
-
 class thread_local_table_entry {
   public:
     virtual ~thread_local_table_entry() = default;
@@ -78,50 +65,6 @@ class thread_local_table {
     static thread_local inline map_type __variables{};
 };
 } // namespace zpt
-
-template<typename T, typename... Args>
-auto zpt::make_global(ssize_t& _variable, Args... _args) -> T& {
-    expect(_variable == -1,
-           "variable already assigned with identifier " << _variable << "  for "
-                                                        << typeid(T).name());
-    zpt::globals::__variables_lock.acquire_exclusive();
-    auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
-    zpt::globals::__variables_lock.release_exclusive();
-
-    T* _new = new T(_args...);
-    zpt::globals::__variables_lock.acquire_exclusive();
-    _allocated.push_back(static_cast<void*>(_new));
-    _variable = _allocated.size() - 1;
-    zpt::globals::__variables_lock.release_exclusive();
-    return *_new;
-}
-
-template<typename T>
-auto zpt::global_cast(ssize_t _variable) -> T& {
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
-                                          zpt::locks::spin_lock::shared };
-    auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
-    expect(_found != zpt::globals::__variables.end(),
-           "no such global variable for " << typeid(T).name());
-    expect(static_cast<ssize_t>(_found->second.size()) > _variable,
-           "no such global variable for " << typeid(T).name());
-
-    return *static_cast<T*>(_found->second[_variable]);
-}
-
-template<typename T>
-auto zpt::release_global(ssize_t _variable) -> void {
-    zpt::globals::__variables_lock.acquire_exclusive();
-    auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
-    expect(_found != zpt::globals::__variables.end(),
-           "no such global variable for " << typeid(T).name());
-    expect(static_cast<ssize_t>(_found->second.size()) > _variable,
-           "no such global variable for " << typeid(T).name());
-    auto _ptr = static_cast<T*>(_found->second[_variable]);
-    _found->second.erase(_found->second.begin() + _variable);
-    zpt::globals::__variables_lock.release_exclusive();
-    delete _ptr;
-}
 
 template<typename T>
 template<typename... Args>

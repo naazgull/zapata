@@ -15,14 +15,14 @@ target_sources(zapata-regex-graph
 )
 target_include_directories(zapata-regex-graph
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${COMMON_GRAPH_INCLUDE_DIR}
   INTERFACE
     ${COMMON_GRAPH_INCLUDE_DIR}
 )
 target_link_libraries(zapata-regex-graph
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
 )  
 set_target_properties(zapata-regex-graph
   PROPERTIES

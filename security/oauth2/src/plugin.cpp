@@ -28,11 +28,10 @@
 std::atomic<bool> _shutdown{ false };
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _rest = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    auto& _rest = zpt::REST_RESOLVER();
     auto _config = _plugin->config();
-    auto& _token_provider =
-      zpt::global_cast<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
-    zpt::make_global<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER(), _token_provider, _config);
+    auto& _token_provider = zpt::OAUTH2_TOKEN_PROVIDER();
+    zpt::OAUTH2_SERVER(_token_provider, _config);
 
     size_t _step = _plugin->config()["add_to_step"]->integer();
 

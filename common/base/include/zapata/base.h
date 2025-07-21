@@ -32,4 +32,4 @@
 #include <zapata/crypto/sha256.h>
 #include <zapata/crypto/sha512.h>
 #include <zapata/atomics/padded_atomic.h>
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>

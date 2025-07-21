@@ -25,25 +25,62 @@
 #include <memory>
 #include <zapata/base.h>
 #include <zapata/lockfree.h>
+#include <zapata/allocator.h>
 
 namespace zpt {
-auto DISPATCHER() -> ssize_t&;
+class abstract_event;
+using event = std::shared_ptr<zpt::abstract_event>;
+
+class event_initialization {
+  public:
+    using ptr = std::shared_ptr<event_initialization>;
+};
 
 namespace events {
 enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
-class dispatcher;
+class dispatcher : public std::enable_shared_from_this<dispatcher> {
+  public:
+    using ptr = std::shared_ptr<dispatcher>;
+
+    dispatcher(std::string const& _name, long _max_consumers);
+    virtual ~dispatcher();
+
+    auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
+    auto start_consumers(long n_consumers = 0) -> dispatcher&;
+    auto stop_consumers() -> dispatcher&;
+    auto trigger(zpt::event _event) -> dispatcher&;
+    template<typename T, typename... Args>
+    auto trigger(Args&&... _args) -> dispatcher&;
+    auto trap() -> dispatcher&;
+    auto is_in_shutdown() -> bool;
+
+  public:
+    zpt::lf::queue<zpt::event> __queue;
+    std::vector<std::thread> __consumers;
+    zpt::padded_atomic<bool> __shutdown{ false };
+    zpt::padded_atomic<long> __running_consumers{ 0 };
+    long __max_consumers{ 2 };
+    std::string __name{ "" };
+    zpt::event_initialization::ptr __event_init{ nullptr };
+
+    auto loop(long _consumer_nr) -> void;
+};
 } // namespace events
 } // namespace zpt
 
 template<typename T>
 concept Operation = requires(T t,
-                             zpt::events::dispatcher& _d,
+                             zpt::event_initialization& _i,
+                             zpt::events::dispatcher::ptr _d,
                              std::exception const& _e,
+                             std::bad_alloc const& _bae,
                              zpt::failed_expectation const& _fe) {
-    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.initialize(_i) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
-    { t.catch_error(_e) } -> std::convertible_to<bool>;
-    { t.catch_error(_fe) } -> std::convertible_to<bool>;
+    { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
 };
 
 namespace zpt {
@@ -52,10 +89,15 @@ class abstract_event {
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
+    virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
     virtual auto blocked() const -> bool = 0;
-    virtual auto catch_error(std::exception const& _e) -> bool = 0;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool = 0;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool = 0;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
+    virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
 using event = std::shared_ptr<zpt::abstract_event>;
 
@@ -64,14 +106,19 @@ class event_t : public zpt::abstract_event {
   public:
     template<typename... Args>
     event_t(Args&&... _args);
-    virtual ~event_t() = default;
+    virtual ~event_t() override = default;
 
     auto operator*() -> T&;
     auto operator*() const -> T const&;
+    virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
     virtual auto blocked() const -> bool override final;
-    virtual auto catch_error(std::exception const& _e) -> bool override final;
-    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher)
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool override final;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool override final;
+    virtual auto catch_error(zpt::failed_expectation const& _e,
+                             zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
+    virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
       -> zpt::events::state override final;
 
   private:
@@ -83,30 +130,7 @@ auto make_event(T _operator) -> zpt::event;
 template<typename T, typename... Args>
 auto make_event(Args&&... _args) -> zpt::event;
 
-namespace events {
-class dispatcher {
-  public:
-    dispatcher(long _max_consumers);
-    virtual ~dispatcher();
-
-    auto start_consumers(long n_consumers = 0) -> dispatcher&;
-    auto stop_consumers() -> dispatcher&;
-    auto trigger(zpt::event _event) -> dispatcher&;
-    template<typename T, typename... Args>
-    auto trigger(Args&&... _args) -> dispatcher&;
-    auto trap() -> dispatcher&;
-    auto is_stopping_ongoing() -> bool;
-
-  public:
-    zpt::lf::queue<zpt::event> __queue;
-    std::vector<std::thread> __consumers;
-    zpt::padded_atomic<bool> __shutdown{ false };
-    zpt::padded_atomic<long> __running_consumers{ 0 };
-    long __max_consumers{ 2 };
-
-    auto loop(long _consumer_nr) -> void;
-};
-} // namespace events
+auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher::ptr;
 template<typename T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt
@@ -127,39 +151,55 @@ auto zpt::event_t<T>::operator*() const -> T const& {
 }
 
 template<Operation T>
+auto zpt::event_t<T>::initialize(zpt::event_initialization& init_data) -> void {
+    return this->__underlying.initialize(init_data);
+}
+
+template<Operation T>
 auto zpt::event_t<T>::blocked() const -> bool {
     return this->__underlying.blocked();
 }
 
 template<Operation T>
-auto zpt::event_t<T>::catch_error(std::exception const& _e) -> bool {
-    return this->__underlying.catch_error(_e);
+auto zpt::event_t<T>::catch_error(std::exception const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
 }
 
 template<Operation T>
-auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
-    return this->__underlying.catch_error(_e);
+auto zpt::event_t<T>::catch_error(std::bad_alloc const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
 }
 
 template<Operation T>
-auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e,
+                                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+    return this->__underlying.catch_error(_e, _dispatcher);
+}
+
+template<Operation T>
+auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
     return this->__underlying(_dispatcher);
 }
 
 template<typename T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::shared_ptr<zpt::abstract_event>{ new zpt::event_t<T>{ _operator } };
+    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
+                                                 _operator);
 }
 
 template<typename T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::shared_ptr<zpt::abstract_event>(
-      static_cast<zpt::abstract_event*>(new zpt::event_t<T>{ std::forward<Args>(_args)... }));
+    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
+                                                 std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>
 auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
-    this->trigger(zpt::make_event<T>(std::forward<Args>(_args)...));
+    auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
+    if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
+    this->trigger(_event);
     return (*this);
 }
 

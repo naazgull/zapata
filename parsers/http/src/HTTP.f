@@ -1,17 +1,3 @@
-/*
-    enum Tokens__
-    {
-        METHOD = 257,
-        HTTP_VERSION = 258,
-        URL = 259,
-        STATUS = 260,
-        CR_LF = 261,
-        COLON = 262,
-        STRING = 263,
-        SPACE = 264,
-        BODY = 265
-    };
-*/
 
 size_t	d_content_length;
 bool	d_chunked_body;
@@ -35,105 +21,122 @@ string	d_chunked;
 [\n\r\f\t ]
 "GET" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "PUT" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "POST" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "DELETE" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "HEAD" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "TRACE" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "OPTIONS" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "PATCH" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "CONNECT" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "M-SEARCH" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "NOTIFY" {
 	begin(StartCondition_::request);
-	return 257;
+	return zpt::http::lex::METHOD;
 }
 "HTTP/1.0" {
 	begin(StartCondition_::reply);
-	return 258;
+	return zpt::http::lex::PROTOCOL_VERSION;
 }
 "HTTP/1.1" {
 	begin(StartCondition_::reply);
-	return 258;
+	return zpt::http::lex::PROTOCOL_VERSION;
+}
+"UPNP/1.0" {
+	begin(StartCondition_::reply);
+	return zpt::http::lex::PROTOCOL_VERSION;
+}
+"UPNP/1.1" {
+	begin(StartCondition_::reply);
+	return zpt::http::lex::PROTOCOL_VERSION;
 }
 
 <request>{
 	"HTTP/1.0" {
-		return 258;
+		return zpt::http::lex::PROTOCOL_VERSION;
 	}
 	"HTTP/1.1" {
-		return 258;
+		return zpt::http::lex::PROTOCOL_VERSION;
+	}
+	"UPNP/1.0" {
+		return zpt::http::lex::PROTOCOL_VERSION;
+	}
+	"UPNP/1.1" {
+		return zpt::http::lex::PROTOCOL_VERSION;
 	}
 	"\r\n"   {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	[\n]   {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
-	([^\r\n ]+) {
-		return 259;
+	([^\r\n* ]+) {
+		return zpt::http::lex::URL;
+	}
+	[*] {
+		return zpt::http::lex::STAR;
 	}
 	[ ] {
-		return 264;
+		return zpt::http::lex::SPACE;
 	}
 }
 
 <reply>{
 	[0-9]{3} {
-		return 260;
+		return zpt::http::lex::STATUS;
 	}
 	"\r\n" {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	[\n] {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	[^\r\n ] {
 		more();
 		begin(StartCondition_::statustext);
 	}
         [ ] {
-		return 264;
+		return zpt::http::lex::SPACE;
 	}
 }
 
 <headers> {
 	":" {
 		begin(StartCondition_::headerval);
-		return 262;
+		return zpt::http::lex::COLON;
 	}
 	"\r\n"   {
 		char _c = get_();
@@ -154,7 +157,7 @@ string	d_chunked;
 		else {
 			push(_c);
 		}
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	"\n"  {
 		char _c = get_();
@@ -173,7 +176,7 @@ string	d_chunked;
 		else {
 			push(_c);
 		}
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	([^:\n\r]+) {
 		std::string _m(matched());
@@ -187,48 +190,48 @@ string	d_chunked;
 		else if (_m == std::string("trailer")) {
 			begin(StartCondition_::trailerval);
 		}
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 
 <headerval>{
 	([^\n\r]+) {
 		begin(StartCondition_::headers);
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 
 <contentlengthval>{
 	":" {
-		return 262;
+		return zpt::http::lex::COLON;
 	}
 	([^:\n\r]+) {
 		std::string _s(matched());
 		zpt::fromstr(_s, &d_content_length);
 		begin(StartCondition_::headers);
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 
 <transferencodingval>{
 	":" {
-		return 262;
+		return zpt::http::lex::COLON;
 	}
 	([^:\n\r]+) {
 		d_chunked_body = (matched() == std::string(" chunked"));
 		begin(StartCondition_::headers);
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 
 <trailerval>{
 	":" {
-		return 262;
+		return zpt::http::lex::COLON;
 	}
 	([^:\n\r]+) {
 		d_chunked_trailer = matched();
 		begin(StartCondition_::headers);
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 
@@ -246,14 +249,14 @@ string	d_chunked;
 <statustext>{
 	"\r\n" {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	"\n" {
 		begin(StartCondition_::headers);
-		return 261;
+		return zpt::http::lex::CR_LF;
 	}
 	([^\r\n]+) {
-		return 263;
+		return zpt::http::lex::STRING;
 	}
 }
 

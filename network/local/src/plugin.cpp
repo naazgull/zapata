@@ -28,26 +28,26 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
 
-    _layer.add("file", zpt::make_transport<zpt::net::transport::file>());
-    _layer.add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
+    zpt::TRANSPORT_LAYER() //
+      .add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
+
     if (_config("path")->ok()) {
-        expect(!zpt::file_exists(_config("path")->string()),
+        expect(!std::filesystem::exists(_config("path")->string()),
                "Unix socket '" << _config("path")
                                << "' already exists. Please, remove before reloading the plugin.");
-        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
-                                                                       _config("path")->string());
+        auto& _server_sock = zpt::UNIX_SERVER_SOCKET(_config("path")->string());
 
         _plugin.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+            zpt::set_thread_name("unix@listener");
+            auto _polling = zpt::STREAM_POLLING();
             zlog("Started UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
 
             try {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("unix");
-                    _polling.listen_on(std::move(_client));
+                    _polling->listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
@@ -66,8 +66,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
     if (_config("path")->ok()) {
-        zpt::global_cast<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
-        zpt::release_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
+        zpt::UNIX_SERVER_SOCKET()->close();
         unlink(_config("path")->string().data());
     }
 }

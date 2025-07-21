@@ -18,7 +18,7 @@ inline int FunctionalTokenizer::lex() { return d_scanner.lex(); }
 
 inline void FunctionalTokenizer::print() {}
 
-inline void FunctionalTokenizer::exceptionHandler(std::exception const& exc) {
+inline void FunctionalTokenizer::exceptionHandler(std::exception const&) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

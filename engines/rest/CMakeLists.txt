@@ -9,53 +9,63 @@ add_dependencies(zapata-engine-rest
   zapata-events
   zapata-globals
   zapata-io-stream
+  zapata-io-socket
   zapata-lockfree
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
+  zapata-parser-http
   zapata-engine-transport
-  zapata-common-catalogue
+  zapata-common-catalog
 )
 target_sources(zapata-engine-rest
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/services.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pending_messages.cpp
   INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest.h
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/rest.h
+    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/services.h
+    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/pending_messages.h
 )
 target_include_directories(zapata-engine-rest
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-engine-transport
+    zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
   INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-rest
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-engine-transport
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    zapata-storage-sqlite
+    zapata-common-catalog
 )
 set_target_properties(zapata-engine-rest
   PROPERTIES
@@ -75,11 +85,13 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-events
   zapata-globals
   zapata-io-stream
+  zapata-io-socket
   zapata-lockfree
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
-  zapata-common-catalogue
+  zapata-parser-http
+  zapata-common-catalog
 )
 target_sources(zapata-engine-rest-plugin
   PRIVATE
@@ -87,36 +99,40 @@ target_sources(zapata-engine-rest-plugin
 )
 target_include_directories(zapata-engine-rest-plugin
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-engine-transport
+    zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-rest-plugin
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-rest,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-engine-rest
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-engine-transport
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    zapata-storage-sqlite
+    zapata-common-catalog
 )
 set_target_properties(zapata-engine-rest-plugin
   PROPERTIES
@@ -135,11 +151,13 @@ add_dependencies(zapata-rest-example
   zapata-events
   zapata-globals
   zapata-io-stream
+  zapata-io-socket
   zapata-lockfree
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
-  zapata-common-catalogue
+  zapata-parser-http
+  zapata-common-catalog
 )
 target_sources(zapata-rest-example
   PRIVATE
@@ -147,38 +165,42 @@ target_sources(zapata-rest-example
 )
 target_include_directories(zapata-rest-example
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-engine-transport
+    zapata-storage-sqlite
+    zapata-storage-connector
+    zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-rest-example
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-rest,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-engine-startup
+    zapata-engine-rest
+    zapata-events
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-lockfree
+    zapata-net-transport
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-parser-http
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-transport,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+    zapata-storage-sqlite
+    zapata-engine-transport
+    zapata-common-catalog
 )
 set_target_properties(zapata-rest-example
   PROPERTIES

@@ -22,16 +22,18 @@
 
 #include <zapata/events/dispatcher.h>
 
-auto zpt::DISPATCHER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
-zpt::events::dispatcher::dispatcher(long _max_consumers)
+zpt::events::dispatcher::dispatcher(std::string const& _name, long _max_consumers)
   : __queue{ _max_consumers + 1 }
-  , __max_consumers{ _max_consumers } {}
+  , __max_consumers{ _max_consumers }
+  , __name{ _name } {}
 
 zpt::events::dispatcher::~dispatcher() { this->stop_consumers(); }
+
+auto zpt::events::dispatcher::set_event_initialization(zpt::event_initialization::ptr _event_init)
+  -> dispatcher& {
+    this->__event_init = _event_init;
+    return (*this);
+}
 
 auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
     if (_n_consumers == 0 ||
@@ -72,28 +74,39 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         std::this_thread::yield();
         return (*this);
     }
+    #ifndef PROPAGATE_EXCEPTION
     try {
-        auto state = (*_event)((*this));
+    #endif
+        auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(_event); }
+    #ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {
-        if (!_event->catch_error(_e)) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
+            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        }
+    }
+    catch (std::bad_alloc const& _e) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
     catch (std::exception const& _e) {
-        if (!_event->catch_error(_e)) {
+        if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
+    #endif
     return (*this);
 }
 
-auto zpt::events::dispatcher::is_stopping_ongoing() -> bool { return this->__shutdown->load(); }
+auto zpt::events::dispatcher::is_in_shutdown() -> bool { return this->__shutdown->load(); }
 
 auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::timer<float> _timer{ 0.005f };
-    zlog("Thread@" << _consumer_nr << " starting", zpt::trace);
+    auto _name = std::format("{}@{}", this->__name, _consumer_nr);
+    zpt::set_thread_name(_name);
+    zlog(_name << " starting", zpt::trace);
     do {
         try {
             this->trap();
@@ -105,5 +118,11 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();
     --(*this->__running_consumers);
-    zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
+    zlog(_name << " stopping", zpt::trace);
+}
+
+auto zpt::DISPATCHER(long int _consumers) -> zpt::events::dispatcher::ptr {
+    static zpt::events::dispatcher::ptr _global =
+      std::make_shared<zpt::events::dispatcher>("globald", _consumers);
+    return _global;
 }

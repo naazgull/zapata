@@ -23,7 +23,7 @@
 #pragma once
 
 #include <mutex>
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <zapata/couchdb/convert_couchdb.h>
 #include <zapata/events.h>
 #include <zapata/http.h>

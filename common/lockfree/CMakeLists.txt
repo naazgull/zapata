@@ -15,14 +15,14 @@ target_sources(zapata-lockfree
 )
 target_include_directories(zapata-lockfree
   INTERFACE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-globals
     ${COMMON_LOCKFREE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-lockfree
   INTERFACE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
+    zapata-base
+    zapata-globals
 )
 
 include(GNUInstallDirs)
@@ -47,14 +47,14 @@ target_sources(zapata_test_common_lockfree
 )
 target_include_directories(zapata_test_common_lockfree
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-globals
     ${COMMON_LOCKFREE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_lockfree
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
+    zapata-base
+    zapata-globals
 )
 set_target_properties(zapata_test_common_lockfree
   PROPERTIES

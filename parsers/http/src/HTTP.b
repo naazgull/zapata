@@ -13,8 +13,8 @@
 //%debug
 %no-lines
 
-%left METHOD HTTP_VERSION
-%left URL STATUS
+%left METHOD PROTOCOL_VERSION
+%left URL STAR STATUS
 %left CR_LF
 %left COLON
 %left STRING SPACE
@@ -28,11 +28,11 @@ exp :
 		d_scanner.d_content_length = 0;
 		d_scanner.init(0);
 	}
-	SPACE URL
+	SPACE resource
 	{
 		d_scanner.url();
 	}
-	SPACE HTTP_VERSION
+	SPACE PROTOCOL_VERSION
     {
 		d_scanner.version();
     }
@@ -50,7 +50,7 @@ exp :
         d_scanner.justLeave();
 	}
 |
-	HTTP_VERSION
+	PROTOCOL_VERSION
 	{
 		d_scanner.d_content_length = 0;
 		d_scanner.init(1);
@@ -74,6 +74,12 @@ exp :
 		}
         d_scanner.justLeave();
 	}
+;
+
+resource:
+    URL
+|
+    STAR
 ;
 
 status_description : | SPACE STRING;

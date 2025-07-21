@@ -24,11 +24,6 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/uri/uri.h>
 
-auto zpt::TRANSPORT_LAYER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-
 zpt::json_message::json_message() {
     auto _rawtime = time(nullptr);
     struct tm _ptm;
@@ -41,7 +36,7 @@ zpt::json_message::json_message() {
                         "Cache-Control",
                         "no-store",
                         "X-Conversation-ID",
-                        "0",
+                        zpt::generate::r_uuid(),
                         "X-Version",
                         "1.1",
                         "Date",
@@ -60,7 +55,7 @@ zpt::json_message::json_message(basic_message const& _request, bool) {
 
     auto _headers =
       zpt::json{ "Content-Type",
-                 _request.content_type(),
+                 "application/json",
                  "Cache-Control",
                  _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
                  "X-Conversation-ID",
@@ -116,71 +111,91 @@ auto zpt::json_message::keep_alive() const -> bool {
     return this->__underlying("headers")("Connection") == "keep-alive" ? true : false;
 }
 
-auto zpt::json_message::content_type() const -> std::string {
-    return this->__underlying("headers")("Content-Type")->string();
+auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
+
+auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
+    _out << this->__underlying;
+    return (*this);
 }
 
-auto zpt::json_message::to_stream(std::ostream& _out) const -> void { _out << this->__underlying; }
-
-auto zpt::json_message::from_stream(std::istream& _in) -> void {
+auto zpt::json_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     _in >> std::noskipws >> this->__underlying;
+    return (*this);
 }
 
-auto zpt::json_message::performative(zpt::performative _performative) -> void {
+auto zpt::json_message::performative(zpt::performative _performative) -> zpt::basic_message& {
     this->__underlying["performative"] = zpt::ontology::to_str(_performative);
+    return (*this);
 }
 
-auto zpt::json_message::status(zpt::status _status) -> void {
+auto zpt::json_message::status(zpt::status _status) -> zpt::basic_message& {
     this->__underlying["satus"] = _status;
+    return (*this);
 }
 
-auto zpt::json_message::uri(std::string const& _uri) -> void {
+auto zpt::json_message::uri(std::string const& _uri) -> zpt::basic_message& {
     this->__underlying["uri"] = zpt::uri::parse(_uri);
+    return (*this);
 }
 
-auto zpt::json_message::version(std::string const& _version) -> void {
+auto zpt::json_message::version(std::string const& _version) -> zpt::basic_message& {
     this->__underlying["headers"]["X-Version"] = _version;
+    return (*this);
 }
 
-auto zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::message {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::WAITING,
-           "Stream not in a valid state for receiving");
+auto zpt::json_message::empty() const -> bool {
+    return !this->__underlying->ok() || this->__underlying->stringify().length() == 0;
+}
 
+auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::PROCESSING;
-        _to_return = this->process_incoming_request(_stream);
+    if (this->is_synchronous()) {
+        assert(_stream->state() == zpt::stream_state::IDLE ||
+               _stream->state() == zpt::stream_state::WAITING);
+        expect(_stream->state() == zpt::stream_state::IDLE ||
+                 _stream->state() == zpt::stream_state::WAITING,
+               "Stream not in a valid state for receiving");
+
+        if (_stream->state() == zpt::stream_state::IDLE) {
+            _stream->state() = zpt::stream_state::PROCESSING;
+            _to_return = this->process_incoming_request(_stream);
+        }
+        else if (_stream->state() == zpt::stream_state::WAITING) {
+            _stream->state() = zpt::stream_state::IDLE;
+            _to_return = this->process_incoming_reply(_stream);
+        }
     }
-    else if (_stream.state() == zpt::stream_state::WAITING) {
-        _stream.state() = zpt::stream_state::IDLE;
-        _to_return = this->process_incoming_reply(_stream);
-    }
-    zlog("Received '" << _stream.transport()
-                      << "' message: " << zpt::ontology::to_str(_to_return->performative()) << " "
-                      << _to_return->resource()->string(),
-         zpt::trace);
+    else { _to_return = this->process_incoming_request(_stream); }
+    zlog("Received '" << _stream->transport() << "' message: \n" << _to_return, zpt::trace);
     return _to_return;
 }
 
-auto zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::PROCESSING,
-           "Stream not in a valid state for sending");
-
-    zlog("Sending '" << _stream.transport() << "' message: " << _to_send->status() << " "
-                     << _to_send->content_type(),
-         zpt::trace);
-    _stream << _to_send << std::flush;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::WAITING;
+auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) const -> void {
+    if (this->is_synchronous()) {
+        assert(_stream->state() == zpt::stream_state::IDLE ||
+               _stream->state() == zpt::stream_state::PROCESSING ||
+               _stream->state() == zpt::stream_state::ERRORING_OUT);
+        expect(_stream->state() == zpt::stream_state::IDLE ||
+                 _stream->state() == zpt::stream_state::PROCESSING ||
+                 _stream->state() == zpt::stream_state::ERRORING_OUT,
+               "Stream not in a valid state for sending");
     }
-    else if (_stream.state() == zpt::stream_state::PROCESSING) {
-        _stream.state() = zpt::stream_state::IDLE;
+    zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
+    _stream->send(_to_send);
+
+    if (this->is_synchronous()) {
+        if (_stream->state() == zpt::stream_state::IDLE) {
+            _stream->state() = zpt::stream_state::WAITING;
+        }
+        else if (_stream->state() == zpt::stream_state::PROCESSING ||
+                 _stream->state() == zpt::stream_state::ERRORING_OUT) {
+            _stream->state() = zpt::stream_state::IDLE;
+        }
     }
 }
 
-zpt::network::layer::layer() {
+zpt::network::layer::layer(zpt::json _global_config)
+  : __configuration{ _global_config } {
     this->add_content_provider("*/*",
                                zpt::network::layer::translate_from_default,
                                zpt::network::layer::translate_to_default);
@@ -202,6 +217,38 @@ zpt::network::layer::layer() {
 
 auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
   -> zpt::network::layer& {
+    expect(this->__configuration("transport")("bind")->ok(),
+           "Configuration value 'transport.bind' is mandatory");
+    expect(this->__configuration(_scheme)->ok(),
+           std::format("Configuration value '{}' is mandatory", _scheme));
+
+    if (!this->__configuration("transport")("addresses")->ok()) {
+        this->__configuration["transport"]["addresses"] = zpt::json::array();
+    }
+    if (this->__configuration(_scheme)->ok()) {
+        std::string _host;
+        std::string _port;
+
+        if (this->__configuration(_scheme)("bind")->ok()) {
+            _host.assign(std::format("//{}", this->__configuration(_scheme)("bind")->string()));
+        }
+        else if (!this->__configuration(_scheme)("path")->ok()) {
+            _host.assign(std::format("//{}", this->__configuration("transport")("bind")->string()));
+        }
+
+        if (this->__configuration(_scheme)("port")->ok()) {
+            _port.assign(std::format(":{}", this->__configuration(_scheme)("port")->integer()));
+        }
+        else if (this->__configuration(_scheme)("path")->ok()) {
+            _port.assign(this->__configuration(_scheme)("path")->string());
+        }
+        expect(_port.length() != 0,
+               std::format("Transport {} must have defined listening port or path", _scheme));
+
+        this->__configuration["transport"]["addresses"]
+          << std::format("{}:{}{}", _scheme, _host, _port);
+    }
+
     this->__underlying.insert(std::make_pair(_scheme, _transport));
     return (*this);
 }
@@ -209,9 +256,15 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
 auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::transport {
     auto _found = this->__underlying.find(_scheme);
     if (_found == this->__underlying.end()) {
-        throw zpt::NoMoreElementsException("there is no such transport");
+        throw zpt::NoMoreElementsException(std::string{ "there is no such transport '" } + _scheme +
+                                           std::string{ "'" });
     }
     return _found->second;
+}
+
+auto zpt::network::layer::clear() -> zpt::network::layer& {
+    this->__underlying.clear();
+    return (*this);
 }
 
 auto zpt::network::layer::translate(std::istream& _io, std::string _mime) const -> zpt::json {
@@ -304,7 +357,7 @@ auto zpt::network::layer::translate_from_xml(std::istream& _io) -> zpt::json {
     return { _content };
 }
 
-auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string {
+auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json) -> std::string {
     _io << "" << std::flush;
     return "text/xml";
 }
@@ -345,4 +398,9 @@ auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream& {
 auto operator>>(std::istream& _in, zpt::message _out) -> std::istream& {
     _out->from_stream(_in);
     return _in;
+}
+
+auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {
+    static zpt::network::layer _global{ _config };
+    return _global;
 }

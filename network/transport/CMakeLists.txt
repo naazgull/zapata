@@ -5,6 +5,7 @@ set(NETWORK_TRANSPORT_INCLUDE_DIR
 add_library(zapata-net-transport SHARED)
 add_dependencies(zapata-net-transport
   zapata-base
+  zapata-globals
   zapata-io-stream
   zapata-io-socket
   zapata-parser-json
@@ -19,22 +20,24 @@ target_sources(zapata-net-transport
 )
 target_include_directories(zapata-net-transport
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-socket,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
   INTERFACE
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-transport
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-socket,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    zapata-base
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
 )
 set_target_properties(zapata-net-transport
   PROPERTIES
@@ -58,6 +61,7 @@ install(DIRECTORY ${NETWORK_TRANSPORT_INCLUDE_DIR}/zapata
 add_executable(zapata_test_network_transport)
 add_dependencies(zapata_test_network_transport
   zapata-base
+  zapata-globals
   zapata-io-stream
   zapata-io-socket
   zapata-parser-json
@@ -70,22 +74,25 @@ target_sources(zapata_test_network_transport
 )
 target_include_directories(zapata_test_network_transport
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-io-socket,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-net-transport
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_network_transport
   PRIVATE
     ssl
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-socket,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
+    zapata-base
+    zapata-globals
+    zapata-io-stream
+    zapata-io-socket
+    zapata-parser-json
+    zapata-parser-uri
+    zapata-net-transport
 )
 set_target_properties(zapata_test_network_transport
   PROPERTIES

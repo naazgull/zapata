@@ -55,7 +55,7 @@ using item_type = int;
 #endif
 zpt::lf::queue<item_type> _queue{ MAX_THREADS_QUEUE };
 
-auto pause(int _signal) -> void {
+auto pause(int) -> void {
     std::cout << _queue << std::endl << std::flush;
     std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
     std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
@@ -167,7 +167,7 @@ auto test_aligned() -> void {
     (*_atomic) = false;
 }
 
-auto main(int _argc, char* _argv[]) -> int {
+auto main(int, char**) -> int {
     test_queue();
     test_hazard_ptr();
     test_aligned();

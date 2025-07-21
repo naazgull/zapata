@@ -17,18 +17,18 @@ target_sources(zapata-storage-connector
 )
 target_include_directories(zapata-storage-connector
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
   INTERFACE
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-connector
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
 )
 
 set_target_properties(zapata-storage-connector
@@ -63,17 +63,17 @@ target_sources(zapata_test_storage_connector
 )
 target_include_directories(zapata_test_storage_connector
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_connector
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
 )
 
 set_target_properties(zapata_test_storage_connector

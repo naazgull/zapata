@@ -25,6 +25,7 @@
 #include <strings.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <filesystem>
 #include <zapata/text/convert.h>
 
 namespace zpt {
@@ -47,9 +48,9 @@ auto zpt::log(std::string const& _text,
     if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
-        _oss << zpt::log_lvl_names[_level] << " " << _text;
-        if (_level > 6) { _oss << " " << _file << ":" << _line; }
-        _oss << std::endl << std::flush;
+        _oss << "[" << zpt::log_lvl_names[_level] << "] " << _text << " ("
+             << std::filesystem::path(_file).filename().string() << ":" << _line << ")" << std::endl
+             << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
         return 0;
     }
@@ -60,9 +61,10 @@ auto zpt::log(std::string const& _text,
     if (zpt::log_format == 1) {
         std::ostringstream _oss;
         _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-             << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
-             << _text;
-        _oss << std::endl << std::flush;
+             << *zpt::log_pname << "[" << zpt::log_pid << "]: [" << zpt::log_lvl_names[_level]
+             << "] " << _text << " (" << std::filesystem::path(_file).filename().string() << ":"
+             << _line << ")" << std::endl
+             << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
     }
     else {

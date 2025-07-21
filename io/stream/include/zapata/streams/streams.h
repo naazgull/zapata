@@ -28,12 +28,10 @@
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/text/convert.h>
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
-auto STREAM_POLLING() -> ssize_t&;
-
-enum class stream_state { IDLE, WAITING, PROCESSING };
+enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };
 using epoll_event_t = struct epoll_event;
 
 class basic_stream {
@@ -52,16 +50,22 @@ class basic_stream {
 
     auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
+    auto read(T& _out) -> basic_stream&;
+    template<typename T>
+    auto send(T _in) -> basic_stream&;
+    template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
     template<typename T>
     auto operator<<(T _in) -> basic_stream&;
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
-    auto operator->() -> std::iostream*;
     auto operator*() -> std::iostream&;
 
     operator int();
 
+    template<typename IOStream>
+    auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
     auto close() -> basic_stream&;
+    auto shutdown() -> basic_stream&;
     auto transport(const std::string& _rhs) -> basic_stream&;
     auto transport() -> std::string&;
     auto uri(const std::string& _rhs) -> basic_stream&;
@@ -76,48 +80,53 @@ class basic_stream {
     zpt::stream_state __state{ zpt::stream_state::IDLE };
 };
 
-using stream = std::unique_ptr<zpt::basic_stream>;
+using stream = std::shared_ptr<zpt::basic_stream>;
 
-class polling {
+class polling : public std::enable_shared_from_this<polling> {
   public:
-    using delegate_fn_type = std::function<bool(zpt::polling& _poll, zpt::basic_stream& _stream)>;
+    using ptr = std::shared_ptr<polling>;
+    using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
     polling();
     virtual ~polling();
 
+    auto close() -> zpt::polling&;
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
-    auto mute(zpt::basic_stream& _stream) -> zpt::polling&;
-    auto unmute(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto mute(zpt::stream _stream) -> zpt::polling&;
+    auto unmute(zpt::stream _stream) -> zpt::polling&;
 
-    auto poll() -> void;
-    auto shutdown() -> void;
+    auto poll() -> zpt::polling&;
+    auto shutdown() -> zpt::polling&;
+    auto is_in_shutdown() const -> bool;
 
   private:
     int __epoll_fd{ -1 };
-    zpt::locks::spin_lock __poll_lock{};
+    zpt::locks::spin_mutex __poll_lock{};
     std::map<int, zpt::stream> __polled_streams;
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
 
-    auto erase(zpt::basic_stream& _stream) -> zpt::polling&;
-    auto delegate(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto erase(zpt::stream _stream) -> zpt::polling&;
+    auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
+
+auto STREAM_POLLING() -> zpt::polling::ptr;
 
 template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
-} // namespace zpt
 
 template<typename T>
 auto stream_cast(zpt::stream& _rhs) -> T& {
     return static_cast<T&>(**_rhs);
 }
+} // namespace zpt
 
 template<typename T>
-auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _out->from_stream(*this->__underlying.get());
     }
@@ -126,11 +135,29 @@ auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
 }
 
 template<typename T>
-auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+auto zpt::basic_stream::send(T _in) -> zpt::basic_stream& {
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _in->to_stream(*this->__underlying.get());
+        (*this->__underlying.get()) << std::flush;
     }
-    else { (*this->__underlying.get()) << _in; }
+    else { (*this->__underlying.get()) << _in << std::flush; }
+
+    return (*this);
+}
+
+template<typename T>
+auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+    return this->read<T>(_out);
+}
+
+template<typename T>
+auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+    return this->send<T>(_in);
+}
+
+template<typename IOStream>
+auto zpt::basic_stream::set_peer(std::string const& _address, unsigned int _port) -> basic_stream& {
+    static_cast<IOStream&>(**this).set_peer(_address, _port);
     return (*this);
 }
 

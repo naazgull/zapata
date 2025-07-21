@@ -13,7 +13,7 @@
 //%debug
 %no-lines
 
-%left STRING DOUBLE_DOT SLASH AT QMARK EQ E CARDINAL DOT DOT_DOT
+%left STAR STRING DOUBLE_DOT SLASH AT QMARK EQ E CARDINAL DOT DOT_DOT
 
 %%
 
@@ -21,6 +21,11 @@ exp :
 	scheme object params anchor
 |
 	object params anchor
+|
+    STAR
+    {
+        (*d_scanner) << "is_wildcard" << true << "is_relative" << false << "is_absolute" << false;
+    }
 ;
 
 scheme :

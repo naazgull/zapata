@@ -58,7 +58,6 @@ auto zpt::JSONArrT::pop(std::string const& _idx) -> JSONArrT& {
 }
 
 auto zpt::JSONArrT::pop(size_t _idx) -> JSONArrT& {
-    expect(_idx >= 0, "the index of the element you want to remove must be higher then 0");
     expect(_idx < this->__underlying.size(),
            "the index of the element you want to remove "
            "must be lower than the array size");
@@ -286,15 +285,27 @@ auto zpt::JSONArrT::stringify(std::string& _out) const -> zpt::JSONArrT const& {
 }
 
 auto zpt::JSONArrT::stringify(std::ostream& _out) const -> zpt::JSONArrT const& {
-    _out << "[" << std::flush;
+    _out << "[";
     auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out << ","; }
         _first = false;
         _i->stringify(_out);
     }
-    _out << "]" << std::flush;
+    _out << "]";
     return (*this);
+}
+
+auto zpt::JSONArrT::string_length() const -> size_t {
+    size_t _count{ 1 };
+    auto _first = true;
+    for (auto _i : this->__underlying) {
+        if (!_first) { ++_count; }
+        _first = false;
+        _count += _i->string_length();
+    }
+    ++_count;
+    return _count;
 }
 
 auto zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) -> JSONArrT& {
@@ -326,17 +337,17 @@ auto zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) const -> JSONArrT 
 }
 
 auto zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONArrT const& {
-    _out << "[" << std::flush;
+    _out << "[";
     auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out << ","; }
         _out << "\n ";
         _first = false;
-        _out << std::string(_n_tabs + 1, '\t') << std::flush;
+        _out << std::string(_n_tabs + 1, '\t');
         _i->prettify(_out, _n_tabs + 1);
     }
     if (!_first) { _out << "\n" << std::string(_n_tabs, '\t'); }
-    _out << "]" << std::flush;
+    _out << "]";
     return (*this);
 }
 

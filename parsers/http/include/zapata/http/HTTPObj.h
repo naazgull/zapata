@@ -644,14 +644,15 @@ class basic_message : public zpt::basic_message {
     virtual auto body() const -> zpt::json const override;
     virtual auto keep_alive() const -> bool override;
     virtual auto content_type() const -> std::string override;
-    virtual auto performative(zpt::performative _performative) -> void override;
-    virtual auto status(zpt::status _status) -> void override;
-    virtual auto uri(std::string const& _uri) -> void override;
-    virtual auto version(std::string const& _uri) -> void override;
+    virtual auto performative(zpt::performative _performative) -> zpt::basic_message& override;
+    virtual auto status(zpt::status _status) -> zpt::basic_message& override;
+    virtual auto uri(std::string const& _uri) -> zpt::basic_message& override;
+    virtual auto version(std::string const& _uri) -> zpt::basic_message& override;
+    virtual auto empty() const -> bool override;
 
     virtual auto anchor() const -> std::string;
-    virtual auto body(std::string const& _body) -> void;
-    virtual auto header(std::string const& _name, std::string const& _value) -> void;
+    virtual auto body(std::string const& _body) -> zpt::basic_message&;
+    virtual auto header(std::string const& _name, std::string const& _value) -> zpt::basic_message&;
 
   protected:
     zpt::json __underlying;
@@ -663,8 +664,8 @@ class basic_request : public zpt::http::basic_message {
     basic_request(zpt::basic_message const& _request, bool);
     virtual ~basic_request() = default;
 
-    auto to_stream(std::ostream& _out) const -> void override;
-    auto from_stream(std::istream& _in) -> void override;
+    virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 using request = std::shared_ptr<basic_request>;
 
@@ -674,8 +675,8 @@ class basic_reply : public zpt::http::basic_message {
     basic_reply(zpt::basic_message const& _request, bool);
     virtual ~basic_reply() = default;
 
-    auto to_stream(std::ostream& _out) const -> void override;
-    auto from_stream(std::istream& _in) -> void override;
+    virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 using reply = std::shared_ptr<basic_reply>;
 } // namespace http

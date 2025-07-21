@@ -215,8 +215,7 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::session::sql(std::string const& _statement)
-  -> zpt::storage::session::type* {
+auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::session::type* {
     expect(false, "Session `sql` method not implemented for SQLite, use database's");
     return this;
 }
@@ -352,62 +351,58 @@ auto zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage:
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::action_add::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::sqlite::action_add::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't set from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::unset(std::string const&) -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::patch(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't patch from an 'add' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::limit(size_t _number) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::sqlite::action_add::limit(size_t) -> zpt::storage::action::type* { return this; }
 
-auto zpt::storage::sqlite::action_add::bind(zpt::json _map) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -460,28 +455,28 @@ zpt::storage::sqlite::action_modify::action_modify(zpt::storage::sqlite::collect
   , __set{ zpt::json::object() }
   , __unset{ zpt::json::object() } {}
 
-auto zpt::storage::sqlite::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::action_modify::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'modify' action");
     return this;
 }
@@ -504,20 +499,19 @@ auto zpt::storage::sqlite::action_modify::patch(zpt::json _document)
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -588,12 +582,12 @@ zpt::storage::sqlite::action_remove::action_remove(zpt::storage::sqlite::collect
   : zpt::storage::sqlite::action::action{ _collection }
   , __search{ _search } {}
 
-auto zpt::storage::sqlite::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'remove' action");
     return this;
 }
@@ -603,46 +597,43 @@ auto zpt::storage::sqlite::action_remove::remove(zpt::json _search) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::action_remove::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::sqlite::action_remove::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::patch(zpt::json _document)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -699,68 +690,63 @@ zpt::storage::sqlite::action_replace::action_replace(zpt::storage::sqlite::colle
     this->__set << "_id" << _id;
 }
 
-auto zpt::storage::sqlite::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::modify(zpt::json _search)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::remove(zpt::json _search)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::action_replace::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::sqlite::action_replace::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::unset(std::string const& _attribute)
+auto zpt::storage::sqlite::action_replace::unset(std::string const&)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::patch(zpt::json _document)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::fields(zpt::json _fields)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::bind(zpt::json _map) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -822,43 +808,42 @@ zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection&
   , __sort{ zpt::json::array() }
   , __fields{ zpt::json::array() } {}
 
-auto zpt::storage::sqlite::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'find' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'find' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'find' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::action_find::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'find' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'find' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::sqlite::action_find::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 

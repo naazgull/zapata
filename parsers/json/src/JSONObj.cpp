@@ -315,17 +315,30 @@ auto zpt::JSONObjT::stringify(std::string& _out) const -> zpt::JSONObjT const& {
 }
 
 auto zpt::JSONObjT::stringify(std::ostream& _out) const -> zpt::JSONObjT const& {
-    _out << "{" << std::flush;
+    _out << "{";
     auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out << ","; }
         _first = false;
-        _out << "\"" << _element.first << "\":" << std::flush;
+        _out << "\"" << _element.first << "\":";
         _element.second->stringify(_out);
     }
-    _out << "}" << std::flush;
+    _out << "}";
     return (*this);
 }
+
+auto zpt::JSONObjT::string_length() const -> size_t {
+    size_t _count{ 1 };
+    auto _first = true;
+    for (auto _element : this->__underlying) {
+        if (!_first) { ++_count; }
+        _first = false;
+        _count += 3 + _element.first.length() + _element.second->string_length();
+    }
+    ++_count;
+    return _count;
+}
+
 auto zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONObjT& {
     static_cast<zpt::JSONObjT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
@@ -358,17 +371,17 @@ auto zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSON
 }
 
 auto zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
-    _out << "{" << std::flush;
+    _out << "{";
     auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out << ","; }
         _out << "\n ";
         _first = false;
-        _out << std::string(_n_tabs + 1, '\t') << "\"" << _element.first << "\" : " << std::flush;
+        _out << std::string(_n_tabs + 1, '\t') << "\"" << _element.first << "\" : ";
         _element.second->prettify(_out, _n_tabs + 1);
     }
-    if (!_first) { _out << "\n" << std::string(_n_tabs, '\t') << std::flush; }
-    _out << "}" << std::flush;
+    if (!_first) { _out << "\n" << std::string(_n_tabs, '\t'); }
+    _out << "}";
     return (*this);
 }
 

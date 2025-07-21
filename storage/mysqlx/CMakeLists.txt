@@ -20,21 +20,21 @@ target_sources(zapata-storage-mysqlx
 )
 target_include_directories(zapata-storage-mysqlx
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_MYSQLX_INCLUDE_DIR}
   INTERFACE
     ${STORAGE_MYSQLX_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-mysqlx
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
-    mysqlcppconn8
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    mysqlcppconnx
 )
 set_target_properties(zapata-storage-mysqlx
   PROPERTIES
@@ -69,20 +69,20 @@ target_sources(zapata_test_storage_mysqlx
 )
 target_include_directories(zapata_test_storage_mysqlx
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_MYSQLX_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_mysqlx
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
-    mysqlcppconn8
-    $<TARGET_PROPERTY:zapata-storage-mysqlx,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    mysqlcppconnx
+    zapata-storage-mysqlx
 )
 set_target_properties(zapata_test_storage_mysqlx
   PROPERTIES

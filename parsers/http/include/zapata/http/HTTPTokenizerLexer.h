@@ -45,8 +45,8 @@ class HTTPTokenizerLexer : public HTTPLexer {
     auto add() -> void;
 
     std::string __header_name;
-    zpt::http::basic_request* __root_req;
-    zpt::http::basic_reply* __root_rep;
+    zpt::http::basic_request* __root_req{ nullptr };
+    zpt::http::basic_reply* __root_rep{ nullptr };
     int __root_type;
 };
 } // namespace zpt

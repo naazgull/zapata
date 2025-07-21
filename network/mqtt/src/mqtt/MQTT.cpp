@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <ossp/uuid++.hh>
+#include <uuid/uuid.h>
 #include <zapata/mqtt/MQTT.h>
 #include <zapata/mqtt/utils.h>
 

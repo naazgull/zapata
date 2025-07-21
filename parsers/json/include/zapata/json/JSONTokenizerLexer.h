@@ -28,6 +28,10 @@
 namespace zpt {
 class JSONTokenizerLexer : public JSONLexer {
   public:
+    zpt::JSONElementT* __root{ nullptr };
+    zpt::JSONType __root_type;
+    zpt::JSONElementT* __parent{ nullptr };
+
     JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~JSONTokenizerLexer();
 
@@ -48,9 +52,5 @@ class JSONTokenizerLexer : public JSONLexer {
     auto init() -> void;
 
     auto add() -> void;
-
-    zpt::JSONElementT* __root{ nullptr };
-    zpt::JSONType __root_type;
-    zpt::JSONElementT* __parent{ nullptr };
 };
 } // namespace zpt

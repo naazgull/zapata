@@ -32,8 +32,9 @@
 
 namespace zpt {
 
-auto BOOT() -> ssize_t&;
-auto GLOBAL_CONFIG() -> ssize_t&;
+inline constexpr std::uint64_t PLUGIN_STATE_UNLOADED{ 0 };
+inline constexpr std::uint64_t PLUGIN_STATE_IN_SHUTDOWN{ 1 };
+inline constexpr std::uint64_t PLUGIN_STATE_LOADED{ 2 };
 
 class plugin {
   public:
@@ -51,6 +52,8 @@ class plugin {
     auto source() -> std::string&;
     auto config() -> zpt::json&;
     auto is_shutdown_ongoing() -> bool;
+    auto is_loaded() -> bool;
+    auto is_unloaded() -> bool;
 
     auto add_thread(std::function<void()> _callback) -> plugin&;
 
@@ -61,7 +64,7 @@ class plugin {
     bool __running{ false };
     zpt::json __config;
     std::vector<std::thread> __threads;
-    zpt::padded_atomic<bool> __shutdown{ false };
+    zpt::padded_atomic<std::uint16_t> __state{ PLUGIN_STATE_UNLOADED };
 };
 
 namespace startup {
@@ -79,6 +82,7 @@ class boot {
     auto operator=(boot&& _rhs) -> boot& = delete;
 
     auto load() -> zpt::startup::boot&;
+    auto unload() -> zpt::startup::boot&;
     auto to_string() -> std::string;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::boot& _in) {
@@ -89,11 +93,15 @@ class boot {
   private:
     zpt::json __configuration;
     std::map<std::string, plugin_map_element_type> __plugins;
-    std::atomic<bool> __unloaded{ false };
+    std::vector<std::string> __load_order;
 
+    auto resolve_builtin_dependencies() -> void;
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto hash(zpt::json& _event) -> std::string;
 };
 
 } // namespace startup
+
+auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
+auto GLOBAL_CONFIG() -> zpt::json;
 } // namespace zpt

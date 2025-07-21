@@ -133,7 +133,7 @@ class queue {
     auto clear_thread_context() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
-    std::string to_string() const __attribute__((noinline));
+    __attribute__((noinline)) auto to_string() const -> std::string;
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
@@ -248,8 +248,7 @@ auto zpt::lf::queue<T>::pop() -> T {
         if (_next == nullptr) { break; }
 
         if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
-            while (_head->__is_null)
-                ;
+            while (_head->__is_null);
             --(*this->__size);
             _head->__is_null = true;
             _head_sentry.retire();

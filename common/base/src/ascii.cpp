@@ -25,8 +25,9 @@
 #include <iomanip>
 #include <sys/time.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
-auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
+auto zpt::ascii::encode(std::string& _out, bool) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
     std::wstring ws{ wc };
 
@@ -45,7 +46,7 @@ auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
 
 auto zpt::generate::key(std::string& _out, size_t _size) -> void {
     static std::string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-    timeval _tv = { 0 };
+    timeval _tv = { 0, 0 };
 
     for (size_t _idx = 0; _idx != _size; _idx++) {
         gettimeofday(&_tv, nullptr);
@@ -90,12 +91,12 @@ auto zpt::generate::r_hash() -> std::string {
 auto zpt::generate::uuid(std::string& _out) -> void { _out.append(zpt::generate::r_uuid()); }
 
 auto zpt::generate::r_uuid() -> std::string {
-    static thread_local ::uuid uuid_gen;
-    uuid_gen.make(UUID_MAKE_V1);
-    auto _generated = uuid_gen.string();
-    std::string _return{ _generated };
-    delete _generated;
-    return _return;
+    uuid_t _uuid;
+    uuid_generate(_uuid);
+    std::string _generated;
+    _generated.resize(37);
+    uuid_unparse(_uuid, _generated.data());
+    return _generated;
 }
 
 auto zpt::test::uuid(std::string const& _uuid) -> bool {
@@ -107,14 +108,14 @@ auto zpt::test::uuid(std::string const& _uuid) -> bool {
     return std::regex_match(_uuid, _uuid_rgx);
 }
 
-auto zpt::test::utf8(std::string const& _uri) -> bool { return true; }
+auto zpt::test::utf8(std::string const&) -> bool { return true; }
 
 auto zpt::test::ascii(std::string const& _ascii) -> bool {
     static const std::regex _ascii_rgx("^([a-zA-Z0-9_@:;./+*|-]+)$");
     return std::regex_match(_ascii, _ascii_rgx);
 }
 
-auto zpt::test::token(std::string const& _token) -> bool { return true; }
+auto zpt::test::token(std::string const&) -> bool { return true; }
 
 auto zpt::test::uri(std::string _uri) -> bool {
     if (_uri.find(":") >= _uri.find("/")) { _uri = std::string("zpt:") + _uri; }

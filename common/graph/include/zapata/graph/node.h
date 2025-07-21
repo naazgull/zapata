@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <zapata/locks/spin_lock.h>
+#include <zapata/locks/spin_mutex.h>
 #include <zapata/log/log.h>
 
 #include <memory>

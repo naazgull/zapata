@@ -31,23 +31,18 @@ namespace zpt {
 
 class exception : public std::exception {
   public:
-    exception(std::string const& _what, bool _with_stack = false);
+    exception(std::string const& _what);
     virtual ~exception() throw();
 
     virtual auto what() const noexcept -> const char* override;
-    virtual auto backtrace() const -> const char*;
 
     friend auto operator<<(std::ostream& _out, zpt::exception const& _in) -> std::ostream& {
         _out << _in.what() << std::flush;
-        if (zpt::log_lvl >= zpt::debug && _in.backtrace() != nullptr) {
-            _out << std::endl << _in.backtrace() << std::flush;
-        }
         return _out;
     }
 
   private:
     std::string __what;
-    std::string __backtrace;
 };
 
 } // namespace zpt

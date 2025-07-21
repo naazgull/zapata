@@ -15,7 +15,7 @@ target_sources(zapata-io-stream
 )
 target_include_directories(zapata-io-stream
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${IO_STREAM_INCLUDE_DIR}
   INTERFACE
     ${IO_STREAM_INCLUDE_DIR}
@@ -23,7 +23,7 @@ target_include_directories(zapata-io-stream
 target_link_libraries(zapata-io-stream
   PRIVATE
     systemd
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
 )
 set_target_properties(zapata-io-stream
   PROPERTIES
@@ -55,14 +55,14 @@ target_sources(zapata_test_io_stream
 )
 target_include_directories(zapata_test_io_stream
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${IO_STREAM_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_io_stream
   PRIVATE
     systemd
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
+    zapata-base
+    zapata-io-stream
 )
 set_target_properties(zapata_test_io_stream
   PROPERTIES

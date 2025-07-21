@@ -129,6 +129,8 @@ class json {
     auto stringify(std::string& _out) -> zpt::json&;
     auto stringify(std::ostream& _out) const -> zpt::json const&;
     auto stringify(std::string& _out) const -> zpt::json const&;
+    auto stringify() const -> std::string;
+    auto string_length() const -> size_t;
 
     auto begin() -> zpt::json::iterator;
     auto end() -> zpt::json::iterator;
@@ -195,39 +197,44 @@ class json {
     operator zpt::regex&();
     operator std::regex&();
 
-    operator const std::string() const;
-    operator const bool() const;
-    operator const int() const;
-    operator const long() const;
-    operator const long long() const;
-    operator const size_t() const;
-    operator const double() const;
+    operator std::string() const;
+    operator bool() const;
+    operator int() const;
+    operator long() const;
+    operator long long() const;
+    operator size_t() const;
+    operator double() const;
 #ifdef __LP64__
-    operator const unsigned int() const;
+    operator unsigned int() const;
 #endif
-    operator const zpt::timestamp_t() const;
-    operator const zpt::JSONObj() const;
-    operator const zpt::JSONArr() const;
-    operator const zpt::JSONObj&() const;
-    operator const zpt::JSONArr&() const;
-    operator const zpt::lambda() const;
-    operator const zpt::regex() const;
-    operator const zpt::regex&() const;
-    operator const std::regex&() const;
+    operator zpt::timestamp_t() const;
+    operator zpt::JSONObj() const;
+    operator zpt::JSONArr() const;
+    operator zpt::JSONObj&() const;
+    operator zpt::JSONArr&() const;
+    operator zpt::lambda() const;
+    operator zpt::regex() const;
+    operator zpt::regex&() const;
+    operator std::regex&() const;
 
-    auto operator+(std::initializer_list<zpt::json> _in) -> json;
+    auto operator+(std::initializer_list<zpt::json> _in) const -> json;
     auto operator+=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator-(std::initializer_list<zpt::json> _in) -> json;
+    auto operator-(std::initializer_list<zpt::json> _in) const -> json;
     auto operator-=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator/(std::initializer_list<zpt::json> _in) -> json;
-    auto operator|(std::initializer_list<zpt::json> _in) -> json;
-    auto operator+(zpt::json _rhs) -> json;
+    auto operator/(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator&(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator&=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator+(zpt::json _rhs) const -> json;
     auto operator+=(zpt::json _rhs) -> json&;
-    auto operator-(zpt::json _rhs) -> json;
+    auto operator-(zpt::json _rhs) const -> json;
     auto operator-=(zpt::json _rhs) -> json&;
-    auto operator/(zpt::json _rhs) -> json;
-    auto operator|(zpt::json _rhs) -> json;
+    auto operator/(zpt::json _rhs) const -> json;
+    auto operator|(zpt::json _rhs) const -> json;
     auto operator|=(zpt::json _rhs) -> json&;
+    auto operator&(zpt::json _rhs) const -> json;
+    auto operator&=(zpt::json _rhs) -> json&;
 
     friend auto operator>>(std::istream& _in, zpt::json& _out) -> std::istream& {
         _out.load_from(_in);
@@ -294,18 +301,33 @@ class json {
     static auto flatten(zpt::json _document) -> zpt::json;
     static auto find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
       -> zpt::json::iterator;
+    static auto find(zpt::JSONElementT const& _to_search, zpt::json _to_find)
+      -> zpt::json::iterator;
+    static auto contains(zpt::JSONElementT const& _to_search, zpt::json _to_find) -> bool;
 
   private:
     std::shared_ptr<zpt::JSONElementT> __underlying{ nullptr };
 
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
     auto strict_union(zpt::json _rhs) -> void;
+    auto strict_intersection(zpt::json _rhs) -> void;
 
     static auto traverse(zpt::json _document,
                          zpt::json::traverse_callback _callback,
                          std::string _path) -> void;
 };
 } // namespace zpt
+
+template<>
+struct std::formatter<zpt::json> {
+    constexpr auto parse(std::format_parse_context& _context) { return _context.begin(); }
+
+    auto format(zpt::json const& _in, std::format_context& _context) const {
+        std::ostringstream _out;
+        _in.stringify(_out);
+        return std::format_to(_context.out(), "{}", _out.str());
+    }
+};
 
 namespace zpt {
 class JSONIterator {
@@ -331,8 +353,8 @@ class JSONIterator {
     // INPUT ITERATOR METHODS //
     auto operator++(int) -> JSONIterator;
     auto operator->() -> pointer;
-    auto operator==(JSONIterator _rhs) const -> bool;
-    auto operator!=(JSONIterator _rhs) const -> bool;
+    auto operator==(JSONIterator const& _rhs) const -> bool;
+    auto operator!=(JSONIterator const& _rhs) const -> bool;
     // END / INPUT ITERATOR METHODS //
 
     // OUTPUT ITERATOR METHODS //
@@ -376,6 +398,7 @@ class JSONObjT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONObjT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONObjT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONObjT const&;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
@@ -460,6 +483,7 @@ class JSONArrT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONArrT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONArrT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONArrT const&;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
@@ -815,6 +839,9 @@ class JSONElementT {
     virtual auto size() const -> size_t;
     virtual auto hash() const -> size_t;
 
+    auto find(zpt::json _to_find) const -> zpt::json::iterator;
+    auto contains(zpt::json _to_find) const -> bool;
+
     auto parent() -> JSONElementT*;
     auto parent(JSONElementT* _parent) -> JSONElementT&;
 
@@ -852,7 +879,7 @@ class JSONElementT {
     virtual auto date() const -> zpt::timestamp_t const&;
     virtual auto lambda() const -> zpt::lambda const&;
     virtual auto regex() const -> zpt::regex const&;
-    virtual auto number() const -> double const;
+    virtual auto number() const -> double;
 
     auto operator=(const JSONElementT& _rhs) -> JSONElementT&;
     auto operator=(JSONElementT&& _rhs) -> JSONElementT&;
@@ -945,6 +972,7 @@ class JSONElementT {
     virtual auto stringify(std::string& _out) const -> JSONElementT const&;
     virtual auto stringify(std::ostream& _out) const -> JSONElementT const&;
     virtual auto stringify() const -> std::string;
+    virtual auto string_length() const -> size_t;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> JSONElementT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> JSONElementT&;
@@ -978,8 +1006,6 @@ auto get(std::string const& _path, zpt::json _source) -> zpt::json;
 
 template<typename T>
 auto set(std::string const& _path, T _value, zpt::json _target = zpt::undefined) -> zpt::json;
-
-auto timestamp(zpt::json _json_date) -> zpt::timestamp_t;
 
 auto timestamp(zpt::timestamp_t _timestamp) -> std::string;
 } // namespace zpt
@@ -1263,7 +1289,7 @@ auto zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
             break;
         }
         default: {
-            (*this) << zpt::json{ _in };
+            this->__underlying = _in;
             break;
         }
     }

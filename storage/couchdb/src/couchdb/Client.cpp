@@ -35,10 +35,7 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string const& _conf_path)
   , __round_robin(0) {
     try {
         zpt::json _uri = zpt::uri::parse((std::string)_options->get_path(_conf_path)["bind"]);
-        if (_uri["scheme"] == zpt::json::string("zpt")) {
-            _uri << "scheme"
-                 << "http";
-        }
+        if (_uri["scheme"] == zpt::json::string("zpt")) { _uri << "scheme" << "http"; }
         this->connection(_options->get_path(_conf_path) + zpt::json{ "uri", _uri });
     }
     catch (std::exception const& _e) {

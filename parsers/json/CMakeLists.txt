@@ -35,14 +35,14 @@ target_sources(zapata-parser-json
 )
 target_include_directories(zapata-parser-json
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${PARSERS_JSON_INCLUDE_DIR}
   INTERFACE
     ${PARSERS_JSON_INCLUDE_DIR}
 )
 target_link_libraries(zapata-parser-json
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    zapata-base
 )
 set_target_properties(zapata-parser-json
   PROPERTIES
@@ -74,13 +74,13 @@ target_sources(zapata_test_parser_json
 )
 target_include_directories(zapata_test_parser_json
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
     ${PARSERS_JSON_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_parser_json
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    zapata-base
+    zapata-parser-json
 )
 set_target_properties(zapata_test_parser_json
   PROPERTIES

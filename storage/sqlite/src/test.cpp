@@ -1,6 +1,6 @@
 #include <zapata/sqlite.h>
 
-auto main(int _argc, char* _argv[]) -> int {
+auto main(int, char**) -> int {
     zpt::json _config{ "storage", { "sqlite", { "memory", true } } };
     auto _connection = zpt::make_connection<zpt::storage::sqlite::connection>(_config);
     auto _session = _connection->session();

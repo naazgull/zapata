@@ -52,6 +52,14 @@ auto zpt::ssl_error_print(unsigned long _error) -> std::string {
            std::string(ERR_error_string(_error, nullptr));
 }
 
+auto zpt::is_multicast_address(std::string const& _ip) -> bool {
+    std::istringstream _iss;
+    _iss.str(_ip.substr(0, 3));
+    unsigned int _ip_range{ 0 };
+    _iss >> _ip_range;
+    return _ip_range >= 224 && _ip_range <= 239;
+}
+
 zpt::serversocketstream::serversocketstream()
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>() } {}
 

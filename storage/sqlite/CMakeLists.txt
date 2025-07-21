@@ -18,20 +18,20 @@ target_sources(zapata-storage-sqlite
 )
 target_include_directories(zapata-storage-sqlite
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_SQLITE_INCLUDE_DIR}
   INTERFACE
     ${STORAGE_SQLITE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-sqlite
   PUBLIC
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-storage-sqlite
@@ -67,19 +67,19 @@ target_sources(zapata_test_storage_sqlite
 )
 target_include_directories(zapata_test_storage_sqlite
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
     ${STORAGE_SQLITE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_sqlite
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata_test_storage_sqlite

@@ -52,4 +52,5 @@ using tm_ptr = std::shared_ptr<std::tm>;
 
 auto get_time(time_t _t) -> zpt::tm_ptr;
 
+auto set_thread_name(std::string const& _name) -> void;
 } // namespace zpt

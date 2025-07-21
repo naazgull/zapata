@@ -29,16 +29,16 @@ target_sources(zapata-parser-uri
 )
 target_include_directories(zapata-parser-uri
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
     ${PARSERS_URI_INCLUDE_DIR}
   INTERFACE
     ${PARSERS_URI_INCLUDE_DIR}
 )
 target_link_libraries(zapata-parser-uri
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    zapata-base
+    zapata-parser-json
 )
 set_target_properties(zapata-parser-uri
   PROPERTIES
@@ -71,15 +71,15 @@ target_sources(zapata_test_parser_uri
 )
 target_include_directories(zapata_test_parser_uri
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    zapata-base
+    zapata-parser-json
     ${PARSERS_URI_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_parser_uri
   PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    zapata-base
+    zapata-parser-json
+    zapata-parser-uri
 )
 set_target_properties(zapata_test_parser_uri
   PROPERTIES

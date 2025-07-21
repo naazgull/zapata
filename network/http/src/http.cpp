@@ -25,43 +25,45 @@
 #include <zapata/uri/uri.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
+auto zpt::net::transport::http::is_synchronous() const -> bool { return true; }
 
 auto zpt::net::transport::http::make_request() const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::http::basic_request>();
-    zpt::init(message_cast<zpt::http::basic_request>(_to_return));
+    auto _to_return = zpt::allocate_message<zpt::http::basic_request>();
+    zpt::init(zpt::message_cast<zpt::http::basic_request>(_to_return));
     return _to_return;
 }
 
-auto zpt::net::transport::http::make_reply() const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::http::basic_reply>();
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+auto zpt::net::transport::http::make_reply(bool _with_allocator) const -> zpt::message {
+    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::http::basic_reply>()
+                                      : zpt::make_message<zpt::http::basic_reply>();
+    zpt::init(zpt::message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 
 auto zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::http::basic_reply>(
-      message_cast<zpt::http::basic_request>(_request), true);
-    zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
+    auto _to_return = zpt::allocate_message<zpt::http::basic_reply>(
+      zpt::message_cast<zpt::http::basic_request>(_request), true);
+    zpt::init(zpt::message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 
-auto zpt::net::transport::http::process_incoming_request(zpt::basic_stream& _stream) const
+auto zpt::net::transport::http::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
-    auto _request = zpt::make_message<zpt::http::basic_request>();
-    _stream >> std::noskipws >> _request;
-    _request->uri()["domain"] = _request->headers()["Host"];
+    expect(_stream->transport() == "http", "Stream underlying transport isn't 'http'");
+    auto _request = zpt::allocate_message<zpt::http::basic_request>();
+    (*_stream) >> std::noskipws >> _request;
+    _request->uri()["domain"] = _request->headers()("Host");
     return _request;
 }
 
-auto zpt::net::transport::http::process_incoming_reply(zpt::basic_stream& _stream) const
-  -> zpt::message {
-    expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
-    auto _reply = zpt::make_message<zpt::http::basic_reply>();
-    _stream >> std::noskipws >> _reply;
+auto zpt::net::transport::http::process_incoming_reply(zpt::stream _stream) const -> zpt::message {
+    expect(_stream->transport() == "http", "Stream underlying transport isn't 'http'");
+    auto _reply = zpt::allocate_message<zpt::http::basic_reply>();
+    (*_stream) >> std::noskipws >> _reply;
     return _reply;
+}
+
+auto zpt::HTTP_SERVER_SOCKET(std::uint16_t _port) -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ _port };
+    return _global;
 }

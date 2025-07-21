@@ -221,7 +221,7 @@ void FunctionalLexerBase::switchOstream(std::ostream& out) {
 }
 
 // $insert debugFunctions
-void FunctionalLexerBase::setDebug(bool onOff) {}
+void FunctionalLexerBase::setDebug(bool) {}
 
 bool FunctionalLexerBase::debug() const { return false; }
 

@@ -36,12 +36,12 @@ auto main(int argc, char* argv[]) -> int {
                 auto _stream = _ssock->accept();
                 _stream->transport("unix");
                 auto _t1 = std::chrono::high_resolution_clock::now();
-                auto _received = _transport->receive(*_stream);
+                auto _received = _transport->receive(_stream);
                 auto _t2 = std::chrono::high_resolution_clock::now();
                 auto _duration1 =
                   std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
                 auto _t3 = std::chrono::high_resolution_clock::now();
-                _transport->send(*_stream, _received);
+                _transport->send(_stream, _received);
                 auto _t4 = std::chrono::high_resolution_clock::now();
                 auto _duration2 =
                   std::chrono::duration_cast<std::chrono::microseconds>(_t4 - _t3).count();
@@ -59,12 +59,12 @@ auto main(int argc, char* argv[]) -> int {
             _in->transport("file");
             _out->transport("file");
             auto _t1 = std::chrono::high_resolution_clock::now();
-            auto _received = _transport->receive(*_in);
+            auto _received = _transport->receive(_in);
             auto _t2 = std::chrono::high_resolution_clock::now();
             auto _duration1 =
               std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
             auto _t3 = std::chrono::high_resolution_clock::now();
-            _transport->send(*_out, _received);
+            _transport->send(_out, _received);
             auto _t4 = std::chrono::high_resolution_clock::now();
             auto _duration2 =
               std::chrono::duration_cast<std::chrono::microseconds>(_t4 - _t3).count();

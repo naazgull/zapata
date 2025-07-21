@@ -23,16 +23,30 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/rest.h>
+#include <zapata/rest/services.h>
 #include <zapata/transport.h>
 
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
-      .add_resolver(zpt::make_global<zpt::rest::resolver>(
-        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    auto _config = zpt::GLOBAL_CONFIG();
+    zpt::TRANSPORT_ENGINE() //
+      .add_resolver(zpt::REST_RESOLVER(_config));
+
+    if (_config("rest")("prefix")->ok()) {
+        _config["rest"]["prefix_path_len"] =
+          zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
+    }
+    else { _config["rest"]["prefix_path_len"] = 0; }
+
+    zpt::REST_RESOLVER() //
+      ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
+      .add<zpt::rest::services_collection>(zpt::Get, "/services");
+
+    if (_config("tcp")->ok() && _config("upnp")->ok()) { zpt::rest::services::broadcast(_config); }
+
     zlog("Added REST event resolver", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Disposing REST event resolver", zpt::info);
-    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    zpt::REST_RESOLVER()->clear();
 }

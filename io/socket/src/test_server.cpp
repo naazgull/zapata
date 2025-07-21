@@ -23,7 +23,7 @@ auto main(int argc, char* argv[]) -> int {
                 char _content{ '\0' };
                 (*_csock) >> std::noskipws >> _content;
                 std::cout << _content << std::flush;
-            } while ((*_csock)->good());
+            } while ((**_csock).good());
         } while (true);
     }
     return 0;

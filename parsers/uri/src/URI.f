@@ -12,7 +12,7 @@
 %x scheme server_path server path params placeholder function anchor
 %%
 
-([^{:/?#.]+) {
+([^{:/?#.*]+) {
     begin(StartCondition_::scheme);
     d_part_is_placeholder = false;
     return zpt::uri::lex::STRING;
@@ -41,6 +41,9 @@
 "#" {
     begin(StartCondition_::anchor);
     return zpt::uri::lex::CARDINAL;
+}
+"*" {
+    return zpt::uri::lex::STAR;
 }
 
 <scheme> {

@@ -54,11 +54,11 @@ class basic_pipebuf : public std::basic_streambuf<Char> {
     friend class basic_pipestream<char_type>;
 
     basic_pipebuf(bool initialize = true);
-    basic_pipebuf(const basic_pipebuf<char_type>&);
+    basic_pipebuf(basic_pipebuf<char_type> const&);
     basic_pipebuf(basic_pipebuf<char_type>&&) = delete;
     virtual ~basic_pipebuf() override;
 
-    auto operator=(const basic_pipebuf<char_type>&) -> basic_pipebuf<char_type>&;
+    auto operator=(basic_pipebuf<char_type> const&) -> basic_pipebuf<char_type>&;
     auto operator=(basic_pipebuf<char_type>&&) -> basic_pipebuf<char_type>& = delete;
 
     virtual auto open() -> void;
@@ -90,11 +90,11 @@ class basic_pipestream : public std::basic_iostream<Char> {
 
     basic_pipestream();
     basic_pipestream(std::string const& _pipe_name);
-    basic_pipestream(const basic_pipestream<char_type>&);
+    basic_pipestream(basic_pipestream<char_type> const&);
     basic_pipestream(basic_pipestream<char_type>&&) = delete;
     virtual ~basic_pipestream() override;
 
-    auto operator=(const basic_pipestream<char_type>&) -> basic_pipestream<char_type>&;
+    auto operator=(basic_pipestream<char_type> const&) -> basic_pipestream<char_type>&;
     auto operator=(basic_pipestream<char_type>&&) -> basic_pipestream<char_type>& = delete;
 
     operator int();
@@ -121,7 +121,7 @@ zpt::basic_pipebuf<Char>::basic_pipebuf(bool initialize) {
 }
 
 template<typename Char>
-zpt::basic_pipebuf<Char>::basic_pipebuf(const basic_pipebuf<char_type>& _rhs)
+zpt::basic_pipebuf<Char>::basic_pipebuf(basic_pipebuf<char_type> const& _rhs)
   : basic_pipebuf{ false } {
     this->__fds[0] = _rhs.__fds[0];
     this->__fds[1] = _rhs.__fds[1];
@@ -131,7 +131,7 @@ template<typename Char>
 zpt::basic_pipebuf<Char>::~basic_pipebuf() {}
 
 template<typename Char>
-auto zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs)
+auto zpt::basic_pipebuf<Char>::operator=(basic_pipebuf<char_type> const& _rhs)
   -> basic_pipebuf<char_type>& {
     this->__fds[0] = _rhs.__fds[0];
     this->__fds[1] = _rhs.__fds[1];
@@ -141,7 +141,6 @@ auto zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs)
 template<typename Char>
 auto zpt::basic_pipebuf<Char>::open() -> void {
     expect(::pipe(this->__fds) != -1, "unable to create the pipe");
-    fcntl(this->__fds[0], F_SETFL, O_NONBLOCK);
 }
 
 template<typename Char>
@@ -215,14 +214,14 @@ zpt::basic_pipestream<Char>::basic_pipestream(std::string const& _pipe_name)
 }
 
 template<typename Char>
-zpt::basic_pipestream<Char>::basic_pipestream(const basic_pipestream<char_type>& _rhs)
+zpt::basic_pipestream<Char>::basic_pipestream(basic_pipestream<char_type> const& _rhs)
   : stream_type{ &__buf }
   , __uuid{ _rhs.__uuid } {
     this->__buf = _rhs.__buf;
 }
 
 template<typename Char>
-auto zpt::basic_pipestream<Char>::operator=(const basic_pipestream<char_type>& _rhs)
+auto zpt::basic_pipestream<Char>::operator=(basic_pipestream<char_type> const& _rhs)
   -> basic_pipestream<char_type>& {
     this->__uuid = _rhs.__uuid;
     this->__buf = _rhs.__buf;

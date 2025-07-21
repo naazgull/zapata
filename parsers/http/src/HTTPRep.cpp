@@ -49,7 +49,7 @@ zpt::http::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
       << "headers" << _headers;
 }
 
-auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
+auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
                             ? static_cast<int>(this->__underlying("status"))
                             : 100;
@@ -60,23 +60,26 @@ auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
     if (_version == "1.0") { _out << " " << zpt::http::status_names[_status]; }
     _out << CRLF;
 
-    std::string _body{ "" };
-    if (this->__underlying("body")->ok()) {
-        if (this->__underlying("headers")("Content-Type") == "application/json") {
-            _body.assign(static_cast<std::string>(this->__underlying("body")));
-        }
-        else { _body.assign(this->__underlying("body")->string()); }
-    }
-
     for (auto const& [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
-    _out << "Content-Length: " << _body.length() << CRLF;
 
-    _out << CRLF << _body << std::flush;
+    if (this->__underlying("body")->ok()) {
+        if (this->__underlying("headers")("Content-Type") == "application/json") {
+            _out << "Content-Length: " << this->__underlying("body")->string_length() << CRLF
+                 << CRLF << this->__underlying("body");
+        }
+        else {
+            _out << "Content-Length: " << this->__underlying("body")->string().length() << CRLF
+                 << CRLF << this->__underlying("body")->string();
+        }
+    }
+    else { _out << "Content-Length: 0" << CRLF << CRLF; }
+
+    return (*this);
 }
 
-auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
+auto zpt::http::basic_reply::from_stream(std::istream& _in) -> zpt::basic_message& {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
@@ -87,12 +90,15 @@ auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
         throw;
     }
     catch (...) {
+        this->__underlying = zpt::undefined;
     }
+
+    return (*this);
 }
 
 auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message {
     std::istringstream _oss;
-    auto _to_return = zpt::make_message<zpt::http::basic_reply>();
+    auto _to_return = zpt::allocate_message<zpt::http::basic_reply>();
     _oss.str(std::string{ _string, _length });
     _oss >> _to_return;
     return _to_return;
