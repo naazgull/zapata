@@ -81,6 +81,7 @@ void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation const& _e) {
+                std::cout << *this->__parent << std::endl;
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                           << std::flush;
                 // this->__parent->type(_in_type);

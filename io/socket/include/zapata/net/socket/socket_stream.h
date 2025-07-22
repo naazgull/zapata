@@ -843,6 +843,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
 
     if (this->__buf.host() != zpt::ADDR_ANONYMOUS) {
         auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
+        auto _is_multicast = zpt::is_multicast_address(this->__buf.host());
 
         if (::bind(_sd, reinterpret_cast<zpt::sockaddr_t*>(&_in_address), sizeof(_in_address)) <
             0) {
@@ -851,7 +852,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
             this->report_error();
         }
 
-        if (zpt::is_multicast_address(this->__buf.host())) {
+        if (_is_multicast) {
             struct ip_mreq _mreq;
             _mreq.imr_multiaddr.s_addr = inet_addr(this->__buf.host().data());
             _mreq.imr_interface.s_addr = _in_address.sin_addr.s_addr;

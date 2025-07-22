@@ -24,7 +24,8 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/uri/uri.h>
 
-zpt::json_message::json_message() {
+zpt::json_message::json_message()
+  : __underlying{ zpt::json::object() } {
     auto _rawtime = time(nullptr);
     struct tm _ptm;
     char _buffer_date[80];
@@ -45,7 +46,8 @@ zpt::json_message::json_message() {
     this->__underlying << "headers" << _headers;
 }
 
-zpt::json_message::json_message(basic_message const& _request, bool) {
+zpt::json_message::json_message(basic_message const& _request, bool)
+  : __underlying{ zpt::json::object() } {
     auto _req_headers = _request.headers();
     auto _rawtime = time(nullptr);
     struct tm _ptm;
@@ -129,12 +131,16 @@ auto zpt::json_message::performative(zpt::performative _performative) -> zpt::ba
 }
 
 auto zpt::json_message::status(zpt::status _status) -> zpt::basic_message& {
-    this->__underlying["satus"] = _status;
+    this->__underlying["status"] = _status;
     return (*this);
 }
 
-auto zpt::json_message::uri(std::string const& _uri) -> zpt::basic_message& {
-    this->__underlying["uri"] = zpt::uri::parse(_uri);
+auto zpt::json_message::uri(std::string const& _s_uri) -> zpt::basic_message& {
+    auto _uri = zpt::uri::parse(_s_uri);
+    if (_uri("domain")->ok()) {
+        this->__underlying["headers"]["Host"] = zpt::uri::address::to_string(_uri);
+    }
+    this->__underlying["uri"] = _uri;
     return (*this);
 }
 
@@ -181,7 +187,8 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                "Stream not in a valid state for sending");
     }
     zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
-    _stream->send(_to_send);
+
+    _stream->write<zpt::message>(_to_send);
 
     if (this->is_synchronous()) {
         if (_stream->state() == zpt::stream_state::IDLE) {

@@ -85,8 +85,12 @@ auto zpt::http::basic_message::status(zpt::status _status) -> zpt::basic_message
     return (*this);
 }
 
-auto zpt::http::basic_message::uri(std::string const& _uri) -> zpt::basic_message& {
-    this->__underlying["uri"] = zpt::uri::parse(_uri);
+auto zpt::http::basic_message::uri(std::string const& _s_uri) -> zpt::basic_message& {
+    auto _uri = zpt::uri::parse(_s_uri);
+    if (_uri("domain")->ok()) {
+        this->__underlying["headers"]["Host"] = zpt::uri::address::to_string(_uri);
+    }
+    this->__underlying["uri"] = _uri;
     return (*this);
 }
 

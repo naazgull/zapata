@@ -939,7 +939,7 @@ auto zpt::json::load_from(std::istream& _in) -> zpt::json& {
     try {
         _thread_local_parser.parse();
     }
-    catch (zpt::SyntaxErrorException const& _e) {
+    catch (std::exception const& _e) {
         throw;
     }
     catch (...) {

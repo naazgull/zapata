@@ -137,8 +137,8 @@ class process {
     zpt::events::dispatcher::ptr __dispatcher;
     zpt::polling::ptr __polling;
     zpt::stream __stream;
-    zpt::message __received;
-    zpt::message __to_send;
+    zpt::message __received{nullptr};
+    zpt::message __to_send{nullptr};
 };
 } // namespace events
 } // namespace zpt

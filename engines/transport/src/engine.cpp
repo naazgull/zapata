@@ -26,7 +26,7 @@ auto report_error(T const& _e,
 
     if (!_transport->is_synchronous() || _polling->is_in_shutdown() ||
         _dispatcher->is_in_shutdown()) {
-        zlog(_e.what(), zpt::error);
+        _polling->unmute(_stream);
         return;
     }
 
@@ -78,40 +78,38 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     try {
 #endif
         auto _received = _transport->receive(this->__stream);
-        zlog(_received, zpt::debug);
-        if (_received->empty() || this->__polling->is_in_shutdown() ||
-            _dispatcher->is_in_shutdown()) {
-            return zpt::events::abort;
-        }
 
-        auto _events = this->__engine.resolve(_received, [this, _dispatcher](zpt::event _event) {
-            zpt::events::transport_event_init _init;
-            _init.__dispatcher = _dispatcher;
-            _init.__polling = this->__polling;
-            _init.__stream = this->__stream;
-            _event->initialize(_init);
-        });
-        if (_events.size() == 0) {
-            if (_transport->is_synchronous()) {
-                auto _to_send = _transport->make_reply(_received);
-                _to_send->status(404);
-                _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _to_send);
+        if (!_received->empty() && !this->__polling->is_in_shutdown() &&
+            !_dispatcher->is_in_shutdown()) {
+
+            auto _events =
+              this->__engine.resolve(_received, [this, _dispatcher](zpt::event _event) {
+                  zpt::events::transport_event_init _init;
+                  _init.__dispatcher = _dispatcher;
+                  _init.__polling = this->__polling;
+                  _init.__stream = this->__stream;
+                  _event->initialize(_init);
+              });
+
+            if (_events.size() == 0) {
+                if (_transport->is_synchronous() && _received->performative() != zpt::Reply) {
+                    auto _to_send = _transport->make_reply(_received);
+                    _to_send->status(404);
+                    _dispatcher->trigger<zpt::events::send>(
+                      this->__polling, this->__stream, _to_send);
+                }
+                else { this->__polling->unmute(this->__stream); }
             }
             else {
-                this->__polling->unmute(this->__stream);
+                for (auto _event : _events) { _dispatcher->trigger(_event); }
             }
+            return zpt::events::finish;
         }
-        else {
-            for (auto _event : _events) { _dispatcher->trigger(_event); }
-        }
-        return zpt::events::finish;
+        this->__polling->unmute(this->__stream);
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, _dispatcher);
-    }
-    catch (zpt::failed_expectation const& _e) {
-        zlog(_e.what(), zpt::error);
     }
     catch (std::exception const& _e) {
         this->catch_error(_e, _dispatcher);
@@ -161,18 +159,18 @@ zpt::events::process::~process() {
 #endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
-        if (!_transport->is_synchronous() &&
-            (this->__to_send == nullptr || this->__to_send->status() == 0)) {
+        if ((_transport->is_synchronous() && this->__received->performative() != zpt::Reply) ||
+            (this->__to_send != nullptr && this->__to_send->status() != 0)) {
+            if (this->__to_send == nullptr) {
+                this->__to_send = _transport->make_reply(this->__received);
+            }
+            if (this->__to_send->status() == 0) { this->__to_send->status(204); }
+
+            this->__dispatcher->trigger<zpt::events::send>(
+              this->__polling, this->__stream, this->__to_send);
             return;
         }
-        if (this->__to_send == nullptr) {
-            this->__to_send = _transport->make_reply(this->__received);
-        }
-        if (this->__to_send->status() == 0) { this->__to_send->status(204); }
-
-        this->__dispatcher->trigger<zpt::events::send>(
-          this->__polling, this->__stream, this->__to_send);
-        return;
+        this->__polling->unmute(this->__stream);
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {

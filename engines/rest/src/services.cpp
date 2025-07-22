@@ -17,17 +17,18 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
       std::format("{}:{}", _config(_scheme)("bind")->string(), _config(_scheme)("port")->integer());
 
     if (this->received()->performative() == zpt::Notify && _peer_address != _self_address) {
-        auto _get_services = zpt::make_message<zpt::json_message>();
+        auto _peer_scheme = _peer("scheme")->string();
+        auto _transport = zpt::TRANSPORT_LAYER() //
+                            .get(_peer_scheme);
+        auto _get_services = _transport->make_request();
         _get_services //
           ->performative(zpt::Get)
           .uri(std::format("{}://{}:{}/services",
-                           _peer("scheme")->string(),
+                           _peer_scheme,
                            _peer("domain")->string(),
                            _peer("port")->integer()));
         _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
                                                                           _get_services);
-        zlog(_get_services, zpt::debug);
-        zpt::rest::services::broadcast(_config);
     }
 
     return zpt::events::finish;
@@ -41,6 +42,7 @@ auto zpt::rest::services_collection::blocked() const -> bool { return false; }
 auto zpt::rest::services_collection::operator()(zpt::events::dispatcher::ptr _dispatcher
                                                 [[maybe_unused]]) -> zpt::events::state {
 
+    zlog(this->received(), zpt::debug);
     if (this->received()->performative() == zpt::Get) { return zpt::events::finish; }
 
     this->to_send()->status(405);
@@ -62,18 +64,19 @@ auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatch
 }
 
 auto zpt::rest::services::broadcast(zpt::json _config) -> void {
+    auto _scheme = _config("transport")("default")->string();
     auto _upnp_host = _config("upnp")("bind")->string();
     auto _upnp_port = _config("upnp")("port")->integer();
-    auto _tcp_host = _config("tcp")("bind")->string();
-    auto _tcp_port = _config("tcp")("port")->integer();
+    auto _tcp_host = _config(_scheme)("bind")->string();
+    auto _tcp_port = _config(_scheme)("port")->integer();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("upnp");
 
     auto _message = _transport->make_request();
     _message //
       ->performative(zpt::Notify)
-      .uri("/minions/boot")
-      .headers()["X-My-Location"] = std::format("tcp://{}:{}", _tcp_host, _tcp_port);
+      .uri(std::format("upnp://{}:{}/minions/boot", _upnp_host, _upnp_port))
+      .headers()["X-My-Location"] = std::format("{}://{}:{}", _scheme, _tcp_host, _tcp_port);
 
     auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
     _stream //
