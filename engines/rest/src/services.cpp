@@ -42,7 +42,6 @@ auto zpt::rest::services_collection::blocked() const -> bool { return false; }
 auto zpt::rest::services_collection::operator()(zpt::events::dispatcher::ptr _dispatcher
                                                 [[maybe_unused]]) -> zpt::events::state {
 
-    zlog(this->received(), zpt::debug);
     if (this->received()->performative() == zpt::Get) { return zpt::events::finish; }
 
     this->to_send()->status(405);

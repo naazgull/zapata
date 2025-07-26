@@ -78,6 +78,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     try {
 #endif
         auto _received = _transport->receive(this->__stream);
+        // zlog(_received, zpt::debug);
 
         if (!_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
@@ -227,6 +228,7 @@ zpt::transports::engine::engine(zpt::json _config)
 #ifndef PROPAGATE_EXCEPTION
           try {
 #endif
+              zlog("message received on " << _stream->uri(), zpt::debug);
               this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
 #ifndef PROPAGATE_EXCEPTION
