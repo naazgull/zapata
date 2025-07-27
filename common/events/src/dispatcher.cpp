@@ -74,12 +74,12 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         std::this_thread::yield();
         return (*this);
     }
-    #ifndef PROPAGATE_EXCEPTION
+#ifndef PROPAGATE_EXCEPTION
     try {
-    #endif
+#endif
         auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(_event); }
-    #ifndef PROPAGATE_EXCEPTION
+#ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {
         if (!_event->catch_error(_e, this->shared_from_this())) {
@@ -96,7 +96,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
     }
-    #endif
+#endif
     return (*this);
 }
 
@@ -114,6 +114,9 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
         }
         catch (zpt::NoMoreElementsException const& e) {
             _timer.sleep_for(0.1f);
+        }
+        catch (zpt::exception const& _e) {
+            zlog(_e, zpt::error);
         }
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();

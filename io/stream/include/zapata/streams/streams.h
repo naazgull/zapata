@@ -81,6 +81,8 @@ class basic_stream {
     std::string __uri{ "" };
     zpt::stream_state __state{ zpt::stream_state::IDLE };
     bool __muted{ true };
+
+    auto extract_uri() -> void;
 };
 
 using stream = std::shared_ptr<zpt::basic_stream>;

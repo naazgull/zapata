@@ -228,7 +228,6 @@ zpt::transports::engine::engine(zpt::json _config)
 #ifndef PROPAGATE_EXCEPTION
           try {
 #endif
-              zlog("message received on " << _stream->uri(), zpt::debug);
               this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
               return true;
 #ifndef PROPAGATE_EXCEPTION

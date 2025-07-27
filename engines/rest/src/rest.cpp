@@ -86,11 +86,6 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
   -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
-    if (_received->resource()->ok() && _received->resource()->string() == "/services") {
-        zlog("THROWING", zpt::debug);
-        throw std::exception();
-    }
-
     if (_received->performative() != zpt::Reply) {
         auto _to_search = std::format("/{}{}",
                                       zpt::ontology::to_str(_received->performative()),
