@@ -33,8 +33,8 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
-auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::message _sent,
+                                zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
     this->__pending_requests.push(_sent, callback);
     return (*this);
 }
@@ -57,6 +57,7 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
 
 auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t& {
     try {
+        zlog("removing " << _sent->headers()("X-Conversation-ID"), zpt::debug);
         this->__pending_requests.pop(_sent);
     }
     catch (...) {
@@ -64,8 +65,8 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
     return (*this);
 }
 
-auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string _path)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative,
+                                   std::string _path) -> zpt::rest::resolver_t& {
     auto _to_search =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
@@ -81,9 +82,10 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string 
     return (*this);
 }
 
-auto zpt::rest::resolver_t::resolve(zpt::message _received,
-                                    zpt::events::initializer_t _initializer) const
-  -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::list() const -> zpt::json const { return this->__catalog.list(); }
+
+auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
+  const -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
     if (_received->performative() != zpt::Reply) {

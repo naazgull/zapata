@@ -7,8 +7,8 @@ zpt::rest::minion_boot::minion_boot(zpt::message _received)
 
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                        [[maybe_unused]]) -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
     auto _scheme = _peer("scheme")->string();
@@ -42,10 +42,18 @@ auto zpt::rest::services_collection::blocked() const -> bool { return false; }
 auto zpt::rest::services_collection::operator()(zpt::events::dispatcher::ptr _dispatcher
                                                 [[maybe_unused]]) -> zpt::events::state {
 
-    if (this->received()->performative() == zpt::Get) { return zpt::events::finish; }
+    if (this->received()->performative() == zpt::Get) {
+        this //
+          ->to_send()
+          ->status(200)
+          .body() = zpt::REST_RESOLVER()->list();
+        return zpt::events::finish;
+    }
 
-    this->to_send()->status(405);
-    this->to_send()->body() = { "message", "Only GET allowed to use with `/services`" };
+    this //
+      ->to_send()
+      ->status(405)
+      .body() = { "message", "Only GET allowed to use with `/services`" };
     return zpt::events::abort;
 }
 
@@ -54,8 +62,8 @@ zpt::rest::services_list::services_list(zpt::message _received)
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
-auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                          [[maybe_unused]]) -> zpt::events::state {
 
     zlog(this->received(), zpt::debug);
 

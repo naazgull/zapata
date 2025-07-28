@@ -40,8 +40,8 @@ class resolver_t : public zpt::events::resolver_t {
     auto operator=(resolver_t const&) -> resolver_t& = delete;
     auto operator=(resolver_t&&) -> resolver_t& = delete;
 
-    auto add(zpt::message _sent, zpt::events::resolver_callback callback)
-      -> zpt::rest::resolver_t& override;
+    auto add(zpt::message _sent,
+             zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& override;
     auto add(zpt::performative _performtive,
              std::string _path,
              zpt::json _metadata,
@@ -55,13 +55,15 @@ class resolver_t : public zpt::events::resolver_t {
     template<typename T>
     auto add(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
-    auto add(zpt::performative _performtive, std::string _path, zpt::json _metadata)
-      -> zpt::rest::resolver_t&;
+    auto add(zpt::performative _performtive,
+             std::string _path,
+             zpt::json _metadata) -> zpt::rest::resolver_t&;
     template<typename T>
     auto remove(std::string _path) -> zpt::rest::resolver_t&;
     template<typename T>
     auto remove(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
     auto clear() -> zpt::rest::resolver_t&;
+    auto list() const -> zpt::json const;
     virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
 
@@ -87,8 +89,8 @@ auto zpt::rest::resolver_t::add(std::string _path, zpt::json _metadata) -> zpt::
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::add(zpt::performative _performative, std::string _path)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::performative _performative,
+                                std::string _path) -> zpt::rest::resolver_t& {
     return this->add<T>(_performative, _path, { "host", "localhost" });
 }
 
@@ -105,7 +107,7 @@ auto zpt::rest::resolver_t::remove(std::string _path) -> zpt::rest::resolver_t& 
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string _path)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative,
+                                   std::string _path) -> zpt::rest::resolver_t& {
     return this->remove(_performative, _path);
 }

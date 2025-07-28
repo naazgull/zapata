@@ -45,6 +45,7 @@ class catalog {
     auto add(K _key, zpt::json const provider, std::uint64_t hash, M _metadata) -> catalog&;
     auto remove(K _key) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
+    auto list() const -> zpt::json const;
 
   private:
     mutable zpt::storage::connection __connection;
@@ -172,6 +173,15 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
     }
 
     return _result;
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::list() const -> zpt::json const {
+    return this
+      ->__catalog //
+      ->find({})
+      ->execute()
+      ->fetch();
 }
 
 template<typename K, typename M>
