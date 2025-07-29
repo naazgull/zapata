@@ -20,6 +20,17 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
         auto _peer_scheme = _peer("scheme")->string();
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(_peer_scheme);
+
+        auto _hello = _transport->make_request();
+        _hello //
+          ->performative(zpt::Post)
+          .uri(std::format("{}://{}:{}/minions/hello",
+                           _peer_scheme,
+                           _peer("domain")->string(),
+                           _peer("port")->integer()))
+          .body() = zpt::REST_RESOLVER()->list();
+        _dispatcher->trigger<zpt::events::call<>>(zpt::REST_RESOLVER(), _hello);
+
         auto _get_services = _transport->make_request();
         _get_services //
           ->performative(zpt::Get)
@@ -32,6 +43,28 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
     }
 
     return zpt::events::finish;
+}
+
+zpt::rest::minion_hello::minion_hello(zpt::message _received)
+  : zpt::events::process{ _received } {}
+
+auto zpt::rest::minion_hello::blocked() const -> bool { return false; }
+
+auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                         [[maybe_unused]]) -> zpt::events::state {
+    if (this->received()->performative() == zpt::Post) {
+        zlog(this->received(), zpt::debug);
+        this //
+          ->to_send()
+          ->status(200);
+        return zpt::events::finish;
+    }
+
+    this //
+      ->to_send()
+      ->status(405)
+      .body() = { "message", "Only GET allowed to use with `/services`" };
+    return zpt::events::abort;
 }
 
 zpt::rest::services_collection::services_collection(zpt::message _received)

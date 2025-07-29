@@ -25,7 +25,7 @@
 #include <zapata/startup/startup.h>
 
 namespace {
-zpt::json const __builtins = R"({
+zpt::json __builtins = R"({
         "builtin:lua": { "name": "builtin:lua", "source": "libzapata-bridge-lua-plugin.so",
           "requires" : [] },
         "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",
@@ -35,17 +35,17 @@ zpt::json const __builtins = R"({
         "builtin:transport": { "name": "builtin:transport",
           "source": "libzapata-engine-transport-plugin.so", "requires" : [] },
         "builtin:http": { "name": "builtin:http", "source": "libzapata-net-http-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
         "builtin:local": { "name": "builtin:local", "source": "libzapata-net-local-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
         "builtin:pipe": { "name": "builtin:pipe", "source": "libzapata-net-pipe-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
         "builtin:tcp": { "name": "builtin:tcp", "source": "libzapata-net-tcp-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
         "builtin:upnp": { "name": "builtin:upnp", "source": "libzapata-net-upnp-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
         "builtin:ws": { "name": "builtin:ws", "source": "libzapata-net-websocket-plugin.so",
-          "requires" : [ "builtin:transport" ] }
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] }
     })"_JSON;
 }
 
@@ -180,6 +180,11 @@ auto zpt::startup::boot::resolve_builtin_dependencies() -> void {
         if (::__builtins(_name)->ok()) {
             _lib << "source" << ::__builtins(_name)("source") << "requires"
                  << ::__builtins(_name)("requires");
+            if (::__builtins(_name)("needed_for")->ok()) {
+                for (auto const& [_, __, _needing] : ::__builtins(_name)("needed_for")) {
+                    ::__builtins[_needing->string()]["requires"] << _name;
+                }
+            }
         }
         for (auto const& [_, __, _dependency] : _lib("requires")) {
             if (!_already_added(_dependency->string())->ok()) {

@@ -138,8 +138,8 @@ auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
-  -> bool {
+auto zpt::events::send::catch_error(zpt::failed_expectation const&,
+                                    zpt::events::dispatcher::ptr) -> bool {
     return false;
 }
 
@@ -274,6 +274,15 @@ auto zpt::transports::engine::resolve(zpt::message _received,
 auto zpt::transports::engine::shutdown() -> zpt::transports::engine& {
     this->__dispatcher->stop_consumers();
     return (*this);
+}
+
+zpt::events::discard::discard(zpt::message _received)
+  : zpt::events::process{ _received } {}
+
+auto zpt::events::discard::blocked() const -> bool { return false; }
+
+auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    return zpt::events::finish;
 }
 
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {

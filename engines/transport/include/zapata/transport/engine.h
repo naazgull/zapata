@@ -148,7 +148,15 @@ concept ProcessOperation = std::is_base_of<zpt::events::process, T>::value;
 
 namespace zpt {
 namespace events {
-template<ProcessOperation T>
+class discard : public zpt::events::process {
+  public:
+    discard(zpt::message _received);
+    ~discard() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
+template<ProcessOperation T = zpt::events::discard>
 class call {
   public:
     using ptr = std::shared_ptr<process>;
