@@ -93,10 +93,10 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     virtual auto __good() -> bool;
 
   protected:
-    static const int char_size = sizeof(__char_type);
-    static const int SIZE = 4096;
-    __char_type obuf[SIZE];
-    __char_type ibuf[SIZE];
+    static constexpr int char_size = sizeof(__char_type);
+    static constexpr int SIZE = 4096;
+    __char_type obuf[SIZE] = {0};
+    __char_type ibuf[SIZE] = {0};
 
     int __sock{ -1 };
     bool __ssl{ false };
@@ -513,6 +513,8 @@ auto zpt::basic_socketbuf<Char>::underflow_ip() -> __int_type {
         this->report_error();
     }
     if (_actually_read == 0) { return __traits_type::eof(); }
+    std::cout << ">>>>>>>>>>>>>>> " << std::string{ ibuf, static_cast<size_t>(_actually_read) }
+              << std::endl;
     __buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
     return *__buf_type::gptr();
 }

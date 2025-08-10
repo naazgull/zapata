@@ -637,11 +637,13 @@ void JSONTokenizer::executeAction_(int production) try {
 
         case 1: {
             d_scanner.result(zpt::JSObject);
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>> OBJECT END" << std::endl;
             d_scanner.justLeave();
         } break;
 
         case 2: {
             d_scanner.result(zpt::JSArray);
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>> ARRAY END" << std::endl;
             d_scanner.justLeave();
         } break;
 
