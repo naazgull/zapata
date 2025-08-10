@@ -513,8 +513,6 @@ auto zpt::basic_socketbuf<Char>::underflow_ip() -> __int_type {
         this->report_error();
     }
     if (_actually_read == 0) { return __traits_type::eof(); }
-    std::cout << ">>>>>>>>>>>>>>> " << std::string{ ibuf, static_cast<size_t>(_actually_read) }
-              << std::endl;
     __buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
     return *__buf_type::gptr();
 }

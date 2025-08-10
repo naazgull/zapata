@@ -78,6 +78,15 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
                  nullptr,
                  nullptr,
                  nullptr);
+    sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
+                 "CREATE TABLE IF NOT EXISTS provider ("
+                 "    _id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                 "    location TEXT NOT NULL,"
+                 "    protocols TEXT NOT NULL"
+                 ")",
+                 nullptr,
+                 nullptr,
+                 nullptr);
 
     this->__catalog = _database->collection("catalog");
 }

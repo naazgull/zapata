@@ -116,7 +116,7 @@ auto zpt::json_message::keep_alive() const -> bool {
 auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
 
 auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
-    _out << this->__underlying;
+    _out << this->__underlying << std::endl;
     return (*this);
 }
 
@@ -222,8 +222,8 @@ zpt::network::layer::layer(zpt::json _global_config)
       "text/xml", zpt::network::layer::translate_from_xml, zpt::network::layer::translate_to_xml);
 }
 
-auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
-  -> zpt::network::layer& {
+auto zpt::network::layer::add(std::string const& _scheme,
+                              zpt::transport _transport) -> zpt::network::layer& {
     expect(this->__configuration("transport")("bind")->ok(),
            "Configuration value 'transport.bind' is mandatory");
     expect(this->__configuration(_scheme)->ok(),
@@ -281,8 +281,9 @@ auto zpt::network::layer::translate(std::istream& _io, std::string _mime) const 
     return zpt::undefined;
 }
 
-auto zpt::network::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const
-  -> std::string {
+auto zpt::network::layer::translate(std::ostream& _io,
+                                    std::string _mime,
+                                    zpt::json _content) const -> std::string {
     auto _found = this->__content_providers.find(_mime);
     if (_found != this->__content_providers.end()) {
         return std::get<1>(_found->second)(_io, _content);
@@ -320,8 +321,8 @@ auto zpt::network::layer::translate_from_default(std::istream& _io) -> zpt::json
     return zpt::network::layer::translate_from_raw(_io);
 }
 
-auto zpt::network::layer::translate_to_default(std::ostream& _io, zpt::json _content)
-  -> std::string {
+auto zpt::network::layer::translate_to_default(std::ostream& _io,
+                                               zpt::json _content) -> std::string {
     try {
         return zpt::network::layer::translate_to_json(_io, _content);
     }
