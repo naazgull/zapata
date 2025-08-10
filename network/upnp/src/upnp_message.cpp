@@ -73,9 +73,6 @@ auto zpt::upnp::basic_request::to_stream(std::ostream& _out) const -> zpt::basic
     for (auto [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
-    // if (!this->__underlying("headers")("Host")->ok()) {
-    //     _out << "Host: " << zpt::uri::address::to_string(_uri) << CRLF;
-    // }
     _out << "Content-Length: " << _body.length() << CRLF;
 
     _out << CRLF << _body;
