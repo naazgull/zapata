@@ -66,8 +66,10 @@ auto zpt::rest::services_list::blocked() const -> bool { return false; }
 auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
                                           [[maybe_unused]]) -> zpt::events::state {
 
-    zlog(this->received(), zpt::debug);
-
+    for (auto const& [_, __, _service] : this->received()->body()) {
+        
+    }
+    
     return zpt::events::finish;
 }
 

@@ -25,7 +25,9 @@
 #include <zapata/net/socket/socket_stream.h>
 
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
-  : __configuration{ _global_config } {}
+  : __configuration{ _global_config } {
+    this->__catalog.add_provider();
+}
 
 auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     this->__callbacks.clear();
@@ -51,7 +53,7 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
                   _path == "*" ? "/*" : _path);
-    this->__catalog.add(_to_add, "<self>", hash_code, _metadata);
+    this->__catalog.add(_to_add, hash_code, _metadata);
     return (*this);
 }
 

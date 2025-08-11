@@ -42,10 +42,19 @@ class catalog {
     virtual ~catalog() = default;
 
     auto clear() -> catalog&;
-    auto add(K _key, zpt::json const &provider, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, std::string const& provider, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, unsigned int _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
     auto remove(K _key) -> catalog&;
     auto search(K const& _pattern) const -> zpt::json const;
     auto list() const -> zpt::json const;
+
+    auto add_provider(std::string const& _address,
+                      unsigned int _port,
+                      zpt::json const& _protocols) -> catalog&;
+    auto search_provider(std::string const& _address,
+                         unsigned int _port,
+                         zpt::json const& _protocols) -> unsigned int;
 
   private:
     mutable zpt::storage::connection __connection;
@@ -71,9 +80,10 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS catalog ("
                  "    _id TEXT PRIMARY KEY,"
-                 "    provider TEXT,"
-                 "    hash INTEGER,"
-                 "    metadata TEXT NOT NULL"
+                 "    provider_id INTEGER NOT NULL,"
+                 "    hash INTEGER NOT NULL,"
+                 "    metadata TEXT NOT NULL,"
+                 "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
                  ")",
                  nullptr,
                  nullptr,
@@ -101,14 +111,36 @@ auto zpt::catalog<K, M>::clear() -> catalog& {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::add(K _key, zpt::json const& provider, std::uint64_t hash, M _metadata)
+auto zpt::catalog<K, M>::add(K _key, std::uint64_t _hash, M _metadata) -> catalog& {
+    return this->add(_key, 1, _hash, _metadata);
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::add(K _key,
+                             std::string const& _provider_addr,
+                             std::uint64_t _hash,
+                             M _metadata) -> catalog& {
+    auto _result =
+      this
+        ->__catalog //
+        ->query(std::format("SELECT _id FROM provider WHERE location = '{}'", _provider_addr));
+
+    if (_result->size() != 0) {
+        return this->add(_key, _result[0]["_id"]->integer(), _hash, _metadata);
+    }
+
+    return (*this);
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::add(K _key, unsigned int _provider_id, std::uint64_t _hash, M _metadata)
   -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
     _oss.str("");
     _oss << _metadata << std::flush;
-    zpt::json _body{ "provider", provider, "hash", hash, "metadata", _oss.str() };
+    zpt::json _body{ "provider_id", _provider_id, "hash", _hash, "metadata", _oss.str() };
 
     zlog("Registered " << _t_key, zpt::trace);
     this
@@ -191,6 +223,25 @@ auto zpt::catalog<K, M>::list() const -> zpt::json const {
       ->find({ "provider", "<self>" })
       ->execute()
       ->fetch();
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::add_provider(std::string const& _address,
+                                      unsigned int _port,
+                                      zpt::json const& _protocols) -> catalog& {
+    this
+      ->__catalog //
+      ->add({ "location", std::format("{}:{}", _address, _port), "protocols", _protocols })
+      ->execute();
+    return (*this);
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::search_provider(std::string const& _address,
+                                         unsigned int _port) -> zpt::json {
+    return this
+      ->__catalog //
+      ->query(std::format("SELECT _id FROM provider WHERE location = '{}:{}'", _address, _port));
 }
 
 template<typename K, typename M>
