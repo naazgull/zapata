@@ -40,35 +40,36 @@ class resolver_t : public zpt::events::resolver_t {
     auto operator=(resolver_t const&) -> resolver_t& = delete;
     auto operator=(resolver_t&&) -> resolver_t& = delete;
 
-    auto add(zpt::message _sent,
-             zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& override;
-    auto add(zpt::performative _performtive,
-             std::string _path,
-             zpt::json _metadata,
+    auto add(zpt::message _sent, zpt::events::resolver_callback callback)
+      -> zpt::rest::resolver_t& override;
+    auto add(zpt::performative _performative,
+             std::string const& _path,
+             zpt::json const& _metadata,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
+    auto add(zpt::json const& _service_description) -> resolver_t& override;
     auto remove(zpt::message _sent) -> resolver_t& override;
-    auto remove(zpt::performative _performtive, std::string _path) -> resolver_t& override;
-    template<typename T>
-    auto add(std::string _path) -> zpt::rest::resolver_t&;
-    template<typename T>
-    auto add(std::string _path, zpt::json _metadata) -> zpt::rest::resolver_t&;
-    template<typename T>
-    auto add(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
-    template<typename T>
-    auto add(zpt::performative _performtive,
-             std::string _path,
-             zpt::json _metadata) -> zpt::rest::resolver_t&;
-    template<typename T>
-    auto remove(std::string _path) -> zpt::rest::resolver_t&;
-    template<typename T>
-    auto remove(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
-    auto clear() -> zpt::rest::resolver_t&;
-    auto list() const -> zpt::json const;
-    virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+    auto remove(zpt::performative _performative, std::string const& _path) -> resolver_t& override;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
+    auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
+    auto search_providers(std::string const& _path) const -> zpt::json override;
+    auto clear() -> zpt::rest::resolver_t&;
+    auto list(std::string const& _provider_id = "") const -> zpt::json const;
+    template<typename T>
+    auto add(std::string const& _path, zpt::json const& _metadata = zpt::undefined)
+      -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto add(zpt::performative _performative,
+             std::string const& _path,
+             zpt::json const& _metadata = zpt::undefined) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto remove(std::string const& _path) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto remove(zpt::performative _performative, std::string const& _path)
+      -> zpt::rest::resolver_t&;
 
   private:
-    zpt::catalog<std::string, zpt::json> __catalog{ "rest_catalog" };
+    zpt::catalog<std::string, zpt::json> __catalog;
     std::vector<zpt::events::resolver_callback> __callbacks;
     mutable zpt::rest::pending_messages __pending_requests;
     zpt::json __configuration;
@@ -79,35 +80,25 @@ auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;
 } // namespace zpt
 
 template<typename T>
-auto zpt::rest::resolver_t::add(std::string _path) -> zpt::rest::resolver_t& {
-    return this->add<T>(zpt::Performative_end, _path, { "host", "localhost" });
-}
-
-template<typename T>
-auto zpt::rest::resolver_t::add(std::string _path, zpt::json _metadata) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(std::string const& _path, zpt::json const& _metadata)
+  -> zpt::rest::resolver_t& {
     return this->add<T>(zpt::Performative_end, _path, _metadata);
 }
 
 template<typename T>
 auto zpt::rest::resolver_t::add(zpt::performative _performative,
-                                std::string _path) -> zpt::rest::resolver_t& {
-    return this->add<T>(_performative, _path, { "host", "localhost" });
-}
-
-template<typename T>
-auto zpt::rest::resolver_t::add(zpt::performative _performative,
-                                std::string _path,
-                                zpt::json _metadata) -> zpt::rest::resolver_t& {
+                                std::string const& _path,
+                                zpt::json const& _metadata) -> zpt::rest::resolver_t& {
     return this->add(_performative, _path, _metadata, zpt::transports::make_callback<T>);
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::remove(std::string _path) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(std::string const& _path) -> zpt::rest::resolver_t& {
     return this->remove<T>(zpt::Performative_end, _path);
 }
 
 template<typename T>
-auto zpt::rest::resolver_t::remove(zpt::performative _performative,
-                                   std::string _path) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string const& _path)
+  -> zpt::rest::resolver_t& {
     return this->remove(_performative, _path);
 }

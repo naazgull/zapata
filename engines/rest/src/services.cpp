@@ -2,13 +2,17 @@
 #include <zapata/connector.h>
 #include <zapata/uri.h>
 
+namespace {
+auto add_minion(zpt::json const& _minion) -> void;
+}
+
 zpt::rest::minion_boot::minion_boot(zpt::message _received)
   : zpt::events::process{ _received } {}
 
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                        [[maybe_unused]]) -> zpt::events::state {
+auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
     auto _scheme = _peer("scheme")->string();
@@ -17,20 +21,26 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
       std::format("{}:{}", _config(_scheme)("bind")->string(), _config(_scheme)("port")->integer());
 
     if (this->received()->performative() == zpt::Notify && _peer_address != _self_address) {
-        auto _peer_scheme = _peer("scheme")->string();
-        auto _transport = zpt::TRANSPORT_LAYER() //
-                            .get(_peer_scheme);
+        try {
+            auto _peer_scheme = _peer("scheme")->string();
+            auto _transport = zpt::TRANSPORT_LAYER() //
+                                .get(_peer_scheme);
 
-        auto _hello = _transport->make_request();
-        _hello //
-          ->performative(zpt::Post)
-          .uri(std::format("{}://{}:{}/minions/hello",
-                           _peer_scheme,
-                           _peer("domain")->string(),
-                           _peer("port")->integer()))
-          .body() = zpt::REST_RESOLVER()->list();
-        _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
-                                                                          _hello);
+            auto _hello = _transport->make_request();
+            _hello //
+              ->performative(zpt::Post)
+              .uri(std::format("{}://{}:{}/minions/hello",
+                               _peer_scheme,
+                               _peer("domain")->string(),
+                               _peer("port")->integer()))
+              .body() = { "provider", zpt::SELF(), "services", zpt::REST_RESOLVER()->list() };
+
+            _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
+                                                                              _hello);
+        }
+        catch (std::exception const& _e) {
+            zlog(_e.what(), zpt::debug)
+        }
     }
 
     return zpt::events::finish;
@@ -41,13 +51,17 @@ zpt::rest::minion_hello::minion_hello(zpt::message _received)
 
 auto zpt::rest::minion_hello::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                         [[maybe_unused]]) -> zpt::events::state {
+auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
     if (this->received()->performative() == zpt::Post) {
+        auto _minion = this->received()->body();
+        if (_minion("provider")->ok()) { ::add_minion(_minion); }
+        else { zlog("Malformed service list: " << _minion, zpt::error); }
+
         this //
           ->to_send()
           ->status(200)
-          .body() = zpt::REST_RESOLVER()->list();
+          .body() = { "provider", zpt::SELF(), "services", zpt::REST_RESOLVER()->list() };
         return zpt::events::finish;
     }
 
@@ -63,30 +77,30 @@ zpt::rest::services_list::services_list(zpt::message _received)
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
-auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                          [[maybe_unused]]) -> zpt::events::state {
-
-    for (auto const& [_, __, _service] : this->received()->body()) {
-        
+auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
+    auto _minion = this->received()->body();
+    if (_minion("provider")->ok()) {
+        ::add_minion(_minion);
+        return zpt::events::finish;
     }
-    
-    return zpt::events::finish;
+    zlog("Malformed service list: " << _minion, zpt::error);
+    return zpt::events::abort;
 }
 
-auto zpt::rest::services::broadcast(zpt::json _config) -> void {
-    auto _scheme = _config("transport")("default")->string();
+auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _config) -> void {
     auto _upnp_host = _config("upnp")("bind")->string();
     auto _upnp_port = _config("upnp")("port")->integer();
-    auto _tcp_host = _config(_scheme)("bind")->string();
-    auto _tcp_port = _config(_scheme)("port")->integer();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("upnp");
 
     auto _message = _transport->make_request();
     _message //
       ->performative(zpt::Notify)
-      .uri(std::format("upnp://{}:{}/minions/boot", _upnp_host, _upnp_port))
-      .headers()["X-My-Location"] = std::format("{}://{}:{}", _scheme, _tcp_host, _tcp_port);
+      .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path));
+
+    _message.headers()["X-My-Location"] = zpt::get_default_uri();
+    _message.headers()["X-My-ID"] = zpt::SELF()("_id");
 
     auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
     _stream //
@@ -95,3 +109,26 @@ auto zpt::rest::services::broadcast(zpt::json _config) -> void {
 
     _transport->send(_stream, _message);
 }
+
+namespace {
+auto add_minion(zpt::json const& _minion) -> void {
+    try {
+        auto _resolver = zpt::REST_RESOLVER();
+        _resolver->register_provider(_minion("provider"));
+
+        for (auto const& [_, __, _service] : _minion("services")) {
+            if (_service("_id")->string().find("/minions") == std::string::npos) {
+                _resolver->add(_service);
+            }
+        }
+
+        zlog(zpt::pretty{ zpt::REST_RESOLVER()->list(_minion("provider")("_id")->string()) },
+             zpt::debug);
+
+        return;
+    }
+    catch (std::exception const& _e) {
+        zlog("Error caught while processing service list: " << _e.what(), zpt::error)
+    }
+}
+} // namespace

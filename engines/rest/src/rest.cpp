@@ -25,25 +25,20 @@
 #include <zapata/net/socket/socket_stream.h>
 
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
-  : __configuration{ _global_config } {
-    this->__catalog.add_provider();
+  : __catalog{ "rest_server", zpt::SELF()("_id")->string() }
+  , __configuration{ _global_config } {
+    this->__catalog.add_provider(zpt::SELF()("_id")->string(), zpt::SELF());
 }
 
-auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
-    this->__callbacks.clear();
-    this->__pending_requests.clear();
-    return (*this);
-}
-
-auto zpt::rest::resolver_t::add(zpt::message _sent,
-                                zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
+  -> zpt::rest::resolver_t& {
     this->__pending_requests.push(_sent, callback);
     return (*this);
 }
 
 auto zpt::rest::resolver_t::add(zpt::performative _performative,
-                                std::string _path,
-                                zpt::json _metadata,
+                                std::string const& _path,
+                                zpt::json const& _metadata,
                                 zpt::events::resolver_callback _callback)
   -> zpt::rest::resolver_t& {
     auto hash_code = this->__callbacks.size();
@@ -57,6 +52,18 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
     return (*this);
 }
 
+auto zpt::rest::resolver_t::add(zpt::json const& _service_description) -> zpt::rest::resolver_t& {
+    expect(_service_description("_id")->ok(),
+           "Member `_id` must be a part of the service description");
+    expect(_service_description("provider_id")->ok(),
+           "Member `provider_id` must be a part of the service description");
+    this->__catalog.add(_service_description("_id")->string(),
+                        _service_description("provider_id")->string(),
+                        -1,
+                        _service_description("metadata"));
+    return (*this);
+}
+
 auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t& {
     try {
         zlog("removing " << _sent->headers()("X-Conversation-ID"), zpt::debug);
@@ -67,8 +74,8 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
     return (*this);
 }
 
-auto zpt::rest::resolver_t::remove(zpt::performative _performative,
-                                   std::string _path) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string const& _path)
+  -> zpt::rest::resolver_t& {
     auto _to_search =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
@@ -84,10 +91,9 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative,
     return (*this);
 }
 
-auto zpt::rest::resolver_t::list() const -> zpt::json const { return this->__catalog.list(); }
-
-auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
-  const -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::resolve(zpt::message _received,
+                                    zpt::events::initializer_t _initializer) const
+  -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
     if (_received->performative() != zpt::Reply) {
@@ -109,6 +115,26 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initial
     expect(_return.size() != 0,
            "Couldn't find callback for (" << _received->resource()->string() << ")");
     return _return;
+}
+
+auto zpt::rest::resolver_t::register_provider(zpt::json const& _provider)
+  -> zpt::rest::resolver_t& {
+    this->__catalog.add_provider(_provider("_id")->string(), _provider);
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::search_providers(std::string const& _path) const -> zpt::json {
+    return zpt::undefined;
+}
+
+auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
+    this->__callbacks.clear();
+    this->__pending_requests.clear();
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::list(std::string const& _provider_id) const -> zpt::json const {
+    return this->__catalog.list(_provider_id);
 }
 
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::rest::resolver {

@@ -28,7 +28,7 @@ class services_list : public zpt::events::process {
 };
 
 namespace services {
-auto broadcast(zpt::json _config) -> void;
+auto broadcast(std::string const& _path, zpt::json const& _config) -> void;
 }
 } // namespace rest
 } // namespace zpt

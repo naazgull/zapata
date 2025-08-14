@@ -28,8 +28,9 @@
 #include <zapata/json.h>
 
 namespace {
-static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
-static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
+static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%') and (provider_id = '{}')";
+static constexpr char const* EXACT_SEARCH_STMT =
+  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
 } // namespace
 
 namespace zpt {
@@ -38,28 +39,24 @@ auto CATALOG() -> ssize_t&;
 template<typename K, typename M>
 class catalog {
   public:
-    catalog(std::string const& _catalog_name);
+    catalog(std::string const& _catalog_name, std::string const& _self_id);
     virtual ~catalog() = default;
 
     auto clear() -> catalog&;
     auto add(K _key, std::uint64_t hash, M _metadata) -> catalog&;
-    auto add(K _key, std::string const& provider, std::uint64_t hash, M _metadata) -> catalog&;
-    auto add(K _key, unsigned int _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, std::string const& _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
     auto remove(K _key) -> catalog&;
-    auto search(K const& _pattern) const -> zpt::json const;
-    auto list() const -> zpt::json const;
+    auto search(K const& _pattern, std::string const& _provider_id = "") const -> zpt::json const;
+    auto list(std::string const& _provider_id = "") const -> zpt::json const;
 
-    auto add_provider(std::string const& _address,
-                      unsigned int _port,
-                      zpt::json const& _protocols) -> catalog&;
-    auto search_provider(std::string const& _address,
-                         unsigned int _port,
-                         zpt::json const& _protocols) -> unsigned int;
+    auto add_provider(std::string const& _id, zpt::json const& _info) -> catalog&;
+    auto search_provider(std::string const& _address, unsigned int _port) const -> zpt::json;
 
   private:
+    std::string __self_id;
     mutable zpt::storage::connection __connection;
     mutable zpt::storage::collection __catalog;
-    mutable zpt::storage::collection __pending;
+    mutable zpt::storage::collection __provider;
 
     auto query(std::string const& _query) const -> zpt::json const;
 };
@@ -72,7 +69,8 @@ auto split(std::string const& _pattern) -> zpt::json;
 } // namespace zpt
 
 template<typename K, typename M>
-zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
+zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const& _self_id)
+  : __self_id{ _self_id } {
     this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(zpt::undefined);
     auto _session = this->__connection->session();
     auto _database = _session->database(_catalog_name);
@@ -80,9 +78,9 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS catalog ("
                  "    _id TEXT PRIMARY KEY,"
-                 "    provider_id INTEGER NOT NULL,"
+                 "    provider_id TEXT NOT NULL,"
                  "    hash INTEGER NOT NULL,"
-                 "    metadata TEXT NOT NULL,"
+                 "    metadata TEXT,"
                  "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
                  ")",
                  nullptr,
@@ -90,8 +88,8 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
                  nullptr);
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS provider ("
-                 "    _id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                 "    location TEXT NOT NULL,"
+                 "    _id TEXT PRIMARY KEY,"
+                 "    name TEXT NOT NULL,"
                  "    protocols TEXT NOT NULL"
                  ")",
                  nullptr,
@@ -99,6 +97,7 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name) {
                  nullptr);
 
     this->__catalog = _database->collection("catalog");
+    this->__provider = _database->collection("provider");
 }
 
 template<typename K, typename M>
@@ -107,34 +106,23 @@ auto zpt::catalog<K, M>::clear() -> catalog& {
       ->__catalog //
       ->remove({})
       ->execute();
+    this
+      ->__provider //
+      ->remove({})
+      ->execute();
     return (*this);
 }
 
 template<typename K, typename M>
 auto zpt::catalog<K, M>::add(K _key, std::uint64_t _hash, M _metadata) -> catalog& {
-    return this->add(_key, 1, _hash, _metadata);
+    return this->add(_key, this->__self_id, _hash, _metadata);
 }
 
 template<typename K, typename M>
 auto zpt::catalog<K, M>::add(K _key,
-                             std::string const& _provider_addr,
+                             std::string const& _provider_id,
                              std::uint64_t _hash,
                              M _metadata) -> catalog& {
-    auto _result =
-      this
-        ->__catalog //
-        ->query(std::format("SELECT _id FROM provider WHERE location = '{}'", _provider_addr));
-
-    if (_result->size() != 0) {
-        return this->add(_key, _result[0]["_id"]->integer(), _hash, _metadata);
-    }
-
-    return (*this);
-}
-
-template<typename K, typename M>
-auto zpt::catalog<K, M>::add(K _key, unsigned int _provider_id, std::uint64_t _hash, M _metadata)
-  -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -167,11 +155,13 @@ auto zpt::catalog<K, M>::remove(K _key) -> catalog& {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
+auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider) const
+  -> zpt::json const {
     auto _separator = zpt::catalog_id::separator<K>();
     auto _parts = zpt::catalog_id::split(_pattern);
     zpt::json _result = zpt::json::array();
     zpt::json _prefixes{ zpt::array, "" };
+    auto _provider_id = _provider.empty() ? this->__self_id : _provider;
 
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
@@ -182,7 +172,8 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                                                    _part->string(),
                                                    _prefix->string(),
                                                    _separator,
-                                                   "{}"));
+                                                   "{}",
+                                                   _provider_id));
             }
             expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");
         }
@@ -194,7 +185,8 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                       ->query(std::format(SEARCH_STMT, //
                                           _prefix->string(),
                                           _separator,
-                                          _part->string()))
+                                          _part->string(),
+                                          _provider_id))
                       ->size() != 0) {
                     _matching << (_prefix->string() + _separator + static_cast<std::string>(_part));
                 }
@@ -202,7 +194,8 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
                       ->query(std::format(SEARCH_STMT, //
                                           _prefix->string(),
                                           _separator,
-                                          "{}"))
+                                          "{}",
+                                          _provider_id))
                       ->size() != 0) {
                     _matching << (_prefix->string() + _separator + std::string{ "{}" });
                 }
@@ -217,31 +210,50 @@ auto zpt::catalog<K, M>::search(K const& _pattern) const -> zpt::json const {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::list() const -> zpt::json const {
-    return this
-      ->__catalog //
-      ->find({ "provider", "<self>" })
-      ->execute()
-      ->fetch();
+auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::json const {
+    auto _result =
+      this
+        ->__catalog //
+        ->find({ "provider_id", _provider_id.empty() ? this->__self_id : _provider_id })
+        ->execute()
+        ->fetch();
+
+    std::istringstream _iss;
+    for (auto [_, __, _service] : _result) {
+        if (_service("metadata")->ok()) {
+            M _metadata;
+            _iss.str(_service("metadata")->string());
+            _iss >> _metadata;
+            _service["metadata"] = _metadata;
+        }
+        _service->object()->pop("hash");
+    }
+
+    return _result;
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::add_provider(std::string const& _address,
-                                      unsigned int _port,
-                                      zpt::json const& _protocols) -> catalog& {
+auto zpt::catalog<K, M>::add_provider(std::string const& _id, zpt::json const& _info) -> catalog& {
+    auto _provider = _info->clone();
+
+    _provider["_id"] = _id;
+    if (!_provider("name")->ok()) { _provider["name"] = _id; }
+
     this
-      ->__catalog //
-      ->add({ "location", std::format("{}:{}", _address, _port), "protocols", _protocols })
+      ->__provider //
+      ->add(_provider)
       ->execute();
     return (*this);
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::search_provider(std::string const& _address,
-                                         unsigned int _port) -> zpt::json {
+auto zpt::catalog<K, M>::search_provider(std::string const& _address, unsigned int _port) const
+  -> zpt::json {
     return this
-      ->__catalog //
-      ->query(std::format("SELECT _id FROM provider WHERE location = '{}:{}'", _address, _port));
+      ->__provider //
+      ->find(std::format("SELECT _id FROM provider WHERE location = '{}:{}'", _address, _port))
+      ->execute()
+      ->fetch();
 }
 
 template<typename K, typename M>

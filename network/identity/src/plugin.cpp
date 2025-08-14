@@ -22,40 +22,22 @@
 
 #include <iostream>
 #include <zapata/startup.h>
-#include <zapata/rest.h>
-#include <zapata/rest/services.h>
 #include <zapata/transport.h>
 
-extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    auto _config = zpt::GLOBAL_CONFIG();
-    zpt::TRANSPORT_ENGINE() //
-      .add_resolver(zpt::REST_RESOLVER(_config));
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto _global_config = zpt::GLOBAL_CONFIG();
+    auto& _config = _plugin.config();
+    expect(_config->type() == zpt::JSObject, "Configuration 'self' must be defined");
 
-    if (_config("rest")("prefix")->ok()) {
-        _config["rest"]["prefix_path_len"] =
-          zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
+    std::string _id = _config("id")->ok() ? _config("id")->string() : zpt::generate::r_uuid();
+    _config["_id"] = _id;
+    _config["name"] = _config("name")->ok() ? _config("name") : _config["_id"];
+    _config->object()->pop("id");
+    
+    for (auto const& [_protocol, _] : zpt::TRANSPORT_LAYER()) {
+        _config["protocols"]["registered"][_protocol] = _global_config(_protocol);
     }
-    else { _config["rest"]["prefix_path_len"] = 0; }
-
-    zpt::REST_RESOLVER() //
-      ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
-      .add<zpt::rest::minion_hello>(zpt::Post, "/minions/hello")
-      .add<zpt::rest::minion_shutdown>(zpt::Notify, "/minions/shutdown");
-
-    if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
-        zpt::rest::services::broadcast("/minions/boot", _config);
-    }
-
-    zlog("Added REST event resolver", zpt::info);
+    _config["protocols"]["default"] = _global_config("transport")("default");
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    auto _config = zpt::GLOBAL_CONFIG();
-    zlog("Disposing REST event resolver", zpt::info);
-
-    if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
-        zpt::rest::services::broadcast("/minions/shutdown", _config);
-    }
-
-    zpt::REST_RESOLVER()->clear();
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) {}

@@ -31,22 +31,24 @@ zpt::json __builtins = R"({
         "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",
           "requires" : [] },
         "builtin:rest": { "name": "builtin:rest", "source": "libzapata-engine-rest-plugin.so",
-          "requires" : [ "builtin:transport" ] },
+          "requires" : [ "builtin:transport", "builtin:self" ] },
         "builtin:transport": { "name": "builtin:transport",
           "source": "libzapata-engine-transport-plugin.so", "requires" : [] },
         "builtin:http": { "name": "builtin:http", "source": "libzapata-net-http-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
         "builtin:local": { "name": "builtin:local", "source": "libzapata-net-local-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
         "builtin:pipe": { "name": "builtin:pipe", "source": "libzapata-net-pipe-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
         "builtin:tcp": { "name": "builtin:tcp", "source": "libzapata-net-tcp-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
         "builtin:upnp": { "name": "builtin:upnp", "source": "libzapata-net-upnp-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] },
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
         "builtin:ws": { "name": "builtin:ws", "source": "libzapata-net-websocket-plugin.so",
-          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest" ] }
-    })"_JSON;
+          "requires" : [ "builtin:transport" ], "needed_for" : [ "builtin:rest", "builtin:self" ] },
+        "builtin:self": { "name": "builtin:self", "source": "libzapata-net-identity-plugin.so",
+          "requires" : [ "builtin:transport" ] }
+   })"_JSON;
 }
 
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
@@ -110,7 +112,9 @@ auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin&
 }
 
 zpt::startup::boot::boot(zpt::json _config)
-  : __configuration{ _config } {}
+  : __configuration{ _config } {
+    this->__configuration["load"] << __builtins("builtin:self");
+}
 
 zpt::startup::boot::~boot() {}
 
@@ -212,6 +216,13 @@ auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
            std::to_string(static_cast<int>(_event("step")));
 }
 
+auto zpt::get_default_uri() -> std::string {
+    auto _scheme = zpt::SELF()("protocols")("default")->string();
+    auto _my_host = zpt::SELF()("protocols")(_scheme)("bind")->string();
+    auto _my_port = zpt::SELF()("protocols")(_scheme)("port")->integer();
+    return std::format("{}://{}:{}", _scheme, _my_host, _my_port);
+}
+
 auto zpt::BOOT(zpt::json _config) -> zpt::startup::boot& {
     static zpt::startup::boot _global{ _config };
     return _global;
@@ -220,4 +231,9 @@ auto zpt::BOOT(zpt::json _config) -> zpt::startup::boot& {
 auto zpt::GLOBAL_CONFIG() -> zpt::json {
     static zpt::json _global = zpt::json::object();
     return _global;
+}
+
+auto zpt::SELF() -> zpt::json const& {
+    static zpt::json _self = zpt::GLOBAL_CONFIG()("self");
+    return _self;
 }
