@@ -100,7 +100,7 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
         auto _to_search = std::format("/{}{}",
                                       zpt::ontology::to_str(_received->performative()),
                                       _received->resource()->string());
-        for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
+        for (auto [_, __, _record] : this->__catalog.resolve(_to_search)) {
             auto _hash_code = _record("hash")->integer();
             expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
                    "Couldn't find callback for [" << _hash_code << "]("
@@ -117,24 +117,34 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
     return _return;
 }
 
+auto zpt::rest::resolver_t::search(std::string const& _path, std::string const& _provider_id) const
+  -> zpt::json {
+    return this->__catalog.search(_path, _provider_id);
+}
+
+auto zpt::rest::resolver_t::list(std::string const& _provider_id) const -> zpt::json {
+    return this->__catalog.list(_provider_id);
+}
+
 auto zpt::rest::resolver_t::register_provider(zpt::json const& _provider)
   -> zpt::rest::resolver_t& {
     this->__catalog.add_provider(_provider("_id")->string(), _provider);
     return (*this);
 }
 
-auto zpt::rest::resolver_t::search_providers(std::string const& _path) const -> zpt::json {
-    return zpt::undefined;
+auto zpt::rest::resolver_t::unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& {
+    this->__catalog.remove_provider(_id);
+    return (*this);
+}
+
+auto zpt::rest::resolver_t::get_provider(std::string const& _provider_id) const -> zpt::json {
+    return this->__catalog.get_provider(_provider_id);
 }
 
 auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     this->__callbacks.clear();
     this->__pending_requests.clear();
     return (*this);
-}
-
-auto zpt::rest::resolver_t::list(std::string const& _provider_id) const -> zpt::json const {
-    return this->__catalog.list(_provider_id);
 }
 
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::rest::resolver {

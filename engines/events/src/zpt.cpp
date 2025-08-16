@@ -28,8 +28,6 @@
 
 namespace {
 auto deallocate(int) -> void;
-auto nostop(int) -> void;
-auto instantiate_self() -> void;
 } // namespace
 
 auto main(int _argc, char* _argv[]) -> int {
@@ -119,12 +117,12 @@ auto main(int _argc, char* _argv[]) -> int {
           ->stop_consumers();
         zlog("Stopped global event dispatcher", zpt::info);
     }
-    zpt::TRANSPORT_LAYER() //
-      .clear();
-    zlog("Unloaded transport layer", zpt::info);
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);
+    zpt::TRANSPORT_LAYER() //
+      .clear();
+    zlog("Unloaded transport layer", zpt::info);
 
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
@@ -133,11 +131,4 @@ auto main(int _argc, char* _argv[]) -> int {
 
 namespace {
 auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
-
-auto nostop(int) -> void {
-    zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
-}
-
-auto instantiate_self() -> void {
-}
 } // namespace

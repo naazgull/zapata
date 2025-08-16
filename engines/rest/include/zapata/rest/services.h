@@ -11,6 +11,14 @@ class minion_boot : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
+class minion_shutdown : public zpt::events::process {
+  public:
+    minion_shutdown(zpt::message _received);
+    ~minion_shutdown() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
 class minion_hello : public zpt::events::process {
   public:
     minion_hello(zpt::message _received);

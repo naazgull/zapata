@@ -218,8 +218,8 @@ auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
 
 auto zpt::get_default_uri() -> std::string {
     auto _scheme = zpt::SELF()("protocols")("default")->string();
-    auto _my_host = zpt::SELF()("protocols")(_scheme)("bind")->string();
-    auto _my_port = zpt::SELF()("protocols")(_scheme)("port")->integer();
+    auto _my_host = zpt::SELF()("protocols")("registered")(_scheme)("bind")->string();
+    auto _my_port = zpt::SELF()("protocols")("registered")(_scheme)("port")->integer();
     return std::format("{}://{}:{}", _scheme, _my_host, _my_port);
 }
 

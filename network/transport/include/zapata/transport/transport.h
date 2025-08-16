@@ -129,6 +129,7 @@ class layer {
 
     auto add(std::string const& _scheme, zpt::transport _transport) -> layer&;
     auto get(std::string const& _scheme) const -> const zpt::transport;
+    auto remove(std::string const& _scheme) -> layer&;
     auto clear() -> layer&;
 
     auto translate(std::istream& _io, std::string _mime = "*/*") const -> zpt::json;

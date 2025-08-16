@@ -27,6 +27,7 @@ auto report_error(T const& _e,
     if (!_transport->is_synchronous() || _polling->is_in_shutdown() ||
         _dispatcher->is_in_shutdown()) {
         _polling->unmute(_stream);
+        zlog(_e.what(), zpt::error);
         return;
     }
 
@@ -78,8 +79,6 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     try {
 #endif
         auto _received = _transport->receive(this->__stream);
-        // zlog(_received, zpt::debug);
-
         if (!_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
 
@@ -99,7 +98,10 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                     _dispatcher->trigger<zpt::events::send>(
                       this->__polling, this->__stream, _to_send);
                 }
-                else { this->__polling->unmute(this->__stream); }
+                else {
+                    zlog("Couldn't find a callback for '" << _received->uri() << "'", zpt::error);
+                    this->__polling->unmute(this->__stream);
+                }
             }
             else {
                 for (auto _event : _events) { _dispatcher->trigger(_event); }
@@ -138,8 +140,8 @@ auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&,
-                                    zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 

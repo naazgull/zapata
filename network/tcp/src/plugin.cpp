@@ -63,5 +63,6 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
+    zpt::TRANSPORT_LAYER().remove("tcp");
     if (_config("port")->ok()) { zpt::TCP_SERVER_SOCKET()->close(); }
 }

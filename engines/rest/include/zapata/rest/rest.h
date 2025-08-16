@@ -51,10 +51,13 @@ class resolver_t : public zpt::events::resolver_t {
     auto remove(zpt::performative _performative, std::string const& _path) -> resolver_t& override;
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
+    auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json override;
+    auto list(std::string const& _provider_id = "") const -> zpt::json override;
     auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
-    auto search_providers(std::string const& _path) const -> zpt::json override;
+    auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;
+    auto get_provider(std::string const& _id) const -> zpt::json override;
     auto clear() -> zpt::rest::resolver_t&;
-    auto list(std::string const& _provider_id = "") const -> zpt::json const;
     template<typename T>
     auto add(std::string const& _path, zpt::json const& _metadata = zpt::undefined)
       -> zpt::rest::resolver_t&;

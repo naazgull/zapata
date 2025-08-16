@@ -14,14 +14,12 @@ auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
   -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
-    auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
-    auto _scheme = _peer("scheme")->string();
-    auto _peer_address = std::format("{}:{}", _peer("domain")->string(), _peer("port")->integer());
-    auto _self_address =
-      std::format("{}:{}", _config(_scheme)("bind")->string(), _config(_scheme)("port")->integer());
+    auto _peer_id = this->received()->headers()("X-My-ID")->string();
 
-    if (this->received()->performative() == zpt::Notify && _peer_address != _self_address) {
+    if (this->received()->performative() == zpt::Notify &&
+        _peer_id != zpt::SELF()("_id")->string()) {
         try {
+            auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
             auto _peer_scheme = _peer("scheme")->string();
             auto _transport = zpt::TRANSPORT_LAYER() //
                                 .get(_peer_scheme);
@@ -37,6 +35,28 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
 
             _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
                                                                               _hello);
+        }
+        catch (std::exception const& _e) {
+            zlog(_e.what(), zpt::debug)
+        }
+    }
+
+    return zpt::events::finish;
+}
+
+zpt::rest::minion_shutdown::minion_shutdown(zpt::message _received)
+  : zpt::events::process{ _received } {}
+
+auto zpt::rest::minion_shutdown::blocked() const -> bool { return false; }
+
+auto zpt::rest::minion_shutdown::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                            [[maybe_unused]]) -> zpt::events::state {
+    auto _peer_id = this->received()->headers()("X-My-ID")->string();
+
+    if (this->received()->performative() == zpt::Notify &&
+        _peer_id != zpt::SELF()("_id")->string()) {
+        try {
+            zpt::REST_RESOLVER()->unregister_provider(_peer_id);
         }
         catch (std::exception const& _e) {
             zlog(_e.what(), zpt::debug)
@@ -99,8 +119,8 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
       ->performative(zpt::Notify)
       .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path));
 
-    _message.headers()["X-My-Location"] = zpt::get_default_uri();
-    _message.headers()["X-My-ID"] = zpt::SELF()("_id");
+    _message->headers()["X-My-Location"] = zpt::get_default_uri();
+    _message->headers()["X-My-ID"] = zpt::SELF()("_id");
 
     auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
     _stream //
@@ -112,6 +132,7 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
 
 namespace {
 auto add_minion(zpt::json const& _minion) -> void {
+    zlog(_minion, zpt::debug);
     try {
         auto _resolver = zpt::REST_RESOLVER();
         _resolver->register_provider(_minion("provider"));
@@ -121,9 +142,6 @@ auto add_minion(zpt::json const& _minion) -> void {
                 _resolver->add(_service);
             }
         }
-
-        zlog(zpt::pretty{ zpt::REST_RESOLVER()->list(_minion("provider")("_id")->string()) },
-             zpt::debug);
 
         return;
     }

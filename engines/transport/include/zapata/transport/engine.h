@@ -27,8 +27,12 @@ class resolver_t {
       -> resolver_t& = 0;
     virtual auto resolve(zpt::message _received, initializer_t _initializer) const
       -> std::list<zpt::event> = 0;
+    virtual auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json = 0;
+    virtual auto list(std::string const& _provider_id = "") const -> zpt::json = 0;
     virtual auto register_provider(zpt::json const& _service_description) -> resolver_t& = 0;
-    virtual auto search_providers(std::string const& _path) const -> zpt::json = 0;
+    virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
+    virtual auto get_provider(std::string const& _id) const -> zpt::json = 0;
 };
 using resolver = std::shared_ptr<resolver_t>;
 } // namespace events
@@ -184,6 +188,7 @@ class call {
 
   private:
     zpt::events::dispatcher::ptr __dispatcher;
+    zpt::events::resolver __resolver;
     zpt::polling::ptr __polling;
     zpt::message __to_send;
 };
@@ -202,11 +207,12 @@ auto zpt::transports::make_callback(zpt::message _received, zpt::events::initial
 
 template<ProcessOperation T>
 zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
-  : __to_send{ _send } {
+  : __resolver{ _resolver }
+  , __to_send{ _send } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
     }
-    _resolver->add(_send, zpt::transports::make_callback<T>);
+    this->__resolver->add(_send, zpt::transports::make_callback<T>);
 }
 
 template<ProcessOperation T>
@@ -245,13 +251,37 @@ auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::even
 template<ProcessOperation T>
 auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     auto _uri = this->__to_send->uri();
-    auto _scheme = _uri("scheme")->string();
+    expect(_uri("path")->ok(), "Can't send a message without a resource path");
+
+    std::string _scheme;
+    std::string _address;
+    unsigned int _port;
+    if (_uri("scheme")->ok() && _uri("domain")->ok() && _uri("port")->ok()) {
+        _scheme = _uri("scheme")->string();
+        _address = _uri("domain")->string();
+        _port = _uri("port")->integer();
+    }
+    else {
+        auto _found = this->__resolver->search(_uri("path")->string());
+        zlog(_found, zpt::debug);
+        expect(_found->ok() && _found->size() != 0,
+               "Couldn't find a provider of '" << _uri("path")->string());
+
+        for (auto const& [_, __, _service] : _found) {
+            auto _provider = this->__resolver->get_provider(_service("provider_id")->string());
+            _scheme = _provider("protocols")("default")->string();
+            _address = _provider("protocols")("registered")(_scheme)("bind")->string();
+            _port = _provider("protocols")("registered")(_schemes)("port")->integer();
+        }
+        
+        return zpt::events::abort;
+    }
+
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
-    expect(_transport->is_synchronous(), "`call^ only makes sense for synchronous protocols");
+    expect(_transport->is_synchronous(), "`call` only makes sense for synchronous protocols");
 
-    auto _stream = zpt::make_stream<zpt::socketstream>(
-      _uri("domain")->string(), _uri("port")->integer(), zpt::NO_SSL, IPPROTO_TCP);
+    auto _stream = zpt::make_stream<zpt::socketstream>(_address, _port, zpt::NO_SSL, IPPROTO_TCP);
     _stream->transport(_scheme);
 
     this->__to_send->headers()["Content-Type"] = "application/json";
