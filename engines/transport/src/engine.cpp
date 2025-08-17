@@ -140,8 +140,8 @@ auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
-  -> bool {
+auto zpt::events::send::catch_error(zpt::failed_expectation const&,
+                                    zpt::events::dispatcher::ptr) -> bool {
     return false;
 }
 
