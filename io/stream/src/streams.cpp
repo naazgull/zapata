@@ -191,9 +191,7 @@ auto zpt::polling::poll() -> zpt::polling& {
                 ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
                 this->erase(_stream);
             }
-            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) {
-                this->delegate(_stream);
-            }
+            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
             else {
                 expect(((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                          ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||

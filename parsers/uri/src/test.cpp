@@ -39,11 +39,8 @@ int main(int, char**) {
         std::cout << zpt::uri::to_string(zpt::uri::parse("/")) << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("localhost:8080") << std::endl
-                  << std::flush;
-        std::cout << zpt::uri::to_string(
-                       zpt::uri::parse("localhost:8080"))
-                  << std::endl
+        std::cout << zpt::uri::parse("localhost:8080") << std::endl << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("localhost:8080")) << std::endl
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse("file:./users.json") << std::endl << std::flush;

@@ -24,8 +24,8 @@ auto report_error(T const& _e,
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
 
-    if (!_transport->is_synchronous() || _polling->is_in_shutdown() ||
-        _dispatcher->is_in_shutdown()) {
+    if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+        _polling->is_in_shutdown() || _dispatcher->is_in_shutdown()) {
         _polling->unmute(_stream);
         zlog(_e.what(), zpt::error);
         return;
@@ -92,7 +92,8 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
               });
 
             if (_events.size() == 0) {
-                if (_transport->is_synchronous() && _received->performative() != zpt::Reply) {
+                if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+                    _received->performative() != zpt::Reply) {
                     auto _to_send = _transport->make_reply(_received);
                     _to_send->status(404);
                     _dispatcher->trigger<zpt::events::send>(
@@ -140,8 +141,8 @@ auto zpt::events::send::catch_error(std::bad_alloc const&, zpt::events::dispatch
     return false;
 }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const&,
-                                    zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 
@@ -162,7 +163,8 @@ zpt::events::process::~process() {
 #endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
-        if ((_transport->is_synchronous() && this->__received->performative() != zpt::Reply) ||
+        if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+             this->__received->performative() != zpt::Reply) ||
             (this->__to_send != nullptr && this->__to_send->status() != 0)) {
             if (this->__to_send == nullptr) {
                 this->__to_send = _transport->make_reply(this->__received);

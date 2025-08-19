@@ -28,6 +28,9 @@
 #include <zapata/json.h>
 
 namespace zpt {
+
+enum transport_capability { SYNCHRONOUS = 1, PERSISTENT = 2 };
+
 class basic_message {
   public:
     basic_message() = default;
@@ -107,7 +110,7 @@ class basic_transport {
     basic_transport() = default;
     virtual ~basic_transport() = default;
 
-    virtual auto is_synchronous() const -> bool = 0;
+    virtual auto has_capability(std::uint64_t _capability) const -> bool = 0;
     virtual auto make_request() const -> zpt::message = 0;
     virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
     virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;

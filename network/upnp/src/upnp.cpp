@@ -31,7 +31,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-auto zpt::net::transport::upnp::is_synchronous() const -> bool { return false; }
+auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = 0;
+    return (_capabilities & _capability) == _capability;
+}
 
 auto zpt::net::transport::upnp::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::upnp::basic_request>();

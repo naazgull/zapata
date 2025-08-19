@@ -299,11 +299,10 @@ class json {
 
     static auto traverse(zpt::json _document, zpt::json::traverse_callback _callback) -> void;
     static auto flatten(zpt::json _document) -> zpt::json;
-    static auto find(zpt::json::iterator _begin,
-                     zpt::json::iterator _end,
-                     zpt::json _to_find) -> zpt::json::iterator;
-    static auto find(zpt::JSONElementT const& _to_search,
-                     zpt::json _to_find) -> zpt::json::iterator;
+    static auto find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
+      -> zpt::json::iterator;
+    static auto find(zpt::JSONElementT const& _to_search, zpt::json _to_find)
+      -> zpt::json::iterator;
     static auto contains(zpt::JSONElementT const& _to_search, zpt::json _to_find) -> bool;
 
   private:
@@ -419,9 +418,8 @@ class JSONObjT {
     virtual auto has_pending_key() const -> bool;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path,
-                  zpt::json _value,
-                  std::string const& _separator = ".") -> zpt::JSONObjT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
+      -> zpt::JSONObjT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> JSONObjT&;
 
     auto clone() const -> zpt::json;
@@ -505,9 +503,8 @@ class JSONArrT {
     virtual auto sort(std::function<bool(zpt::json, zpt::json)> _comparator) -> zpt::JSONArrT&;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path,
-                  zpt::json _value,
-                  std::string const& _separator = ".") -> zpt::JSONArrT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
+      -> zpt::JSONArrT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> zpt::JSONArrT&;
 
     auto clone() const -> zpt::json;
@@ -967,9 +964,8 @@ class JSONElementT {
     }
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path,
-                  zpt::json _value,
-                  std::string const& _separator = ".") -> JSONElementT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
+      -> JSONElementT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> JSONElementT&;
 
     virtual auto stringify(std::string& _out) -> JSONElementT&;

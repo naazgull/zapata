@@ -15,20 +15,20 @@ class resolver_t {
     resolver_t() = default;
     virtual ~resolver_t() = default;
 
-    virtual auto add(zpt::message _sent,
-                     zpt::events::resolver_callback callback) -> resolver_t& = 0;
+    virtual auto add(zpt::message _sent, zpt::events::resolver_callback callback)
+      -> resolver_t& = 0;
     virtual auto add(zpt::performative _performtive,
                      std::string const& _path,
                      zpt::json const& _metadata,
                      zpt::events::resolver_callback _callback) -> resolver_t& = 0;
     virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
     virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
-    virtual auto remove(zpt::performative _performtive,
-                        std::string const& _path) -> resolver_t& = 0;
-    virtual auto resolve(zpt::message _received,
-                         initializer_t _initializer) const -> std::list<zpt::event> = 0;
-    virtual auto search(std::string const& _path,
-                        std::string const& _provider_id = "") const -> zpt::json = 0;
+    virtual auto remove(zpt::performative _performtive, std::string const& _path)
+      -> resolver_t& = 0;
+    virtual auto resolve(zpt::message _received, initializer_t _initializer) const
+      -> std::list<zpt::event> = 0;
+    virtual auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json = 0;
     virtual auto list(std::string const& _provider_id = "") const -> zpt::json = 0;
     virtual auto register_provider(zpt::json const& _service_description) -> resolver_t& = 0;
     virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
@@ -44,8 +44,8 @@ class engine {
     virtual ~engine() = default;
 
     auto add_resolver(zpt::events::resolver _resolver) -> engine&;
-    auto resolve(zpt::message _received,
-                 zpt::events::initializer_t _initializer) const -> std::list<zpt::event>;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event>;
     auto shutdown() -> engine&;
 
   private:
@@ -80,8 +80,8 @@ class receive {
     auto blocked() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e,
-                     zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -104,8 +104,8 @@ class send {
     auto blocked() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e,
-                     zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -131,10 +131,10 @@ class process {
     virtual auto to_send() -> zpt::message final;
 
     virtual auto initialize(zpt::event_initialization& init) -> void final;
-    virtual auto catch_error(std::exception const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
-    virtual auto catch_error(std::bad_alloc const& _e,
-                             zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+    virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool final;
+    virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool final;
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool final;
 
@@ -182,8 +182,8 @@ class call {
     auto blocked() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
-    auto catch_error(zpt::failed_expectation const& _e,
-                     zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
+      -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   private:
@@ -198,8 +198,8 @@ auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 } // namespace zpt
 
 template<typename T>
-auto zpt::transports::make_callback(zpt::message _received,
-                                    zpt::events::initializer_t _initializer) -> zpt::event {
+auto zpt::transports::make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
+  -> zpt::event {
     auto _event = zpt::make_event<T>(_received);
     _initializer(_event);
     return _event;
@@ -231,20 +231,20 @@ auto zpt::events::call<T>::blocked() const -> bool {
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(std::exception const&,
-                                       zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::call<T>::catch_error(std::exception const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(std::bad_alloc const&,
-                                       zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::call<T>::catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&,
-                                       zpt::events::dispatcher::ptr) -> bool {
+auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
+  -> bool {
     return false;
 }
 
@@ -262,7 +262,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         _port = _uri("port")->integer();
     }
     else {
-        auto _found = this->__resolver->search(_uri("path")->string());
+        auto _found = this->__resolver->search(_uri("raw_path")->string());
         zlog(_found, zpt::debug);
         expect(_found->ok() && _found->size() != 0,
                "Couldn't find a provider of '" << _uri("path")->string());
@@ -275,7 +275,8 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
-    expect(_transport->is_synchronous(), "`call` only makes sense for synchronous protocols");
+    expect(_transport->has_capability(zpt::transport_capability::SYNCHRONOUS),
+           "`call` only makes sense for synchronous protocols");
 
     auto _stream = zpt::make_stream<zpt::socketstream>(_address, _port, zpt::NO_SSL, IPPROTO_TCP);
     _stream->transport(_scheme);

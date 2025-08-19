@@ -31,7 +31,10 @@ auto zpt::INTERNAL_SERVER_STREAM() -> ssize_t& {
     return _global;
 }
 
-auto zpt::net::transport::pipe_stream::is_synchronous() const -> bool { return true; }
+auto zpt::net::transport::pipe_stream::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;
+    return (_capabilities & _capability) == _capability;
+}
 
 auto zpt::net::transport::pipe_stream::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();

@@ -25,7 +25,10 @@
 #include <zapata/uri/uri.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto zpt::net::transport::http::is_synchronous() const -> bool { return true; }
+auto zpt::net::transport::http::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;
+    return (_capabilities & _capability) == _capability;
+}
 
 auto zpt::net::transport::http::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::http::basic_request>();

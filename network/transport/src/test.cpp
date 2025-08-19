@@ -25,7 +25,7 @@
 
 class some_protocol : public zpt::basic_transport {
   public:
-    auto is_synchronous() const -> bool override { return true; }
+    auto has_capability(std::uint64_t _capability) const -> bool override { return true; }
 
     auto make_request() const -> zpt::message override { return nullptr; }
 

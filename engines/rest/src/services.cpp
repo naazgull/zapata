@@ -132,7 +132,6 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
 
 namespace {
 auto add_minion(zpt::json const& _minion) -> void {
-    zlog(_minion, zpt::debug);
     try {
         auto _resolver = zpt::REST_RESOLVER();
         _resolver->register_provider(_minion("provider"));

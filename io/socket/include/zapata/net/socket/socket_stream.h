@@ -95,8 +95,8 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
   protected:
     static constexpr int char_size = sizeof(__char_type);
     static constexpr int SIZE = 4096;
-    __char_type obuf[SIZE] = {0};
-    __char_type ibuf[SIZE] = {0};
+    __char_type obuf[SIZE] = { 0 };
+    __char_type ibuf[SIZE] = { 0 };
 
     int __sock{ -1 };
     bool __ssl{ false };
