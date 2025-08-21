@@ -69,7 +69,8 @@ class test_client_boot : public zpt::events::process {
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Sending request to 'test_plugin'", zpt::info);
-    zpt::REST_RESOLVER()->add<test_client_boot>(zpt::Notify, "/minions/boot");
+    // zpt::REST_RESOLVER()->add<test_client_boot>(zpt::Notify, "/minions/boot");
+    // TODO: Send the request only when the system has received the needed service description
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
