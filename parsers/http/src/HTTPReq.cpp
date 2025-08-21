@@ -52,15 +52,9 @@ zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool
 }
 
 auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
-    _out << this->__underlying("performative")->string() << " "
-         << zpt::uri::to_string(this->__underlying("uri"));
-
-    if (this->__underlying("uri")("params")->ok()) {
-        _out << "?";
-        for (auto const& [_, _name, _value] : this->__underlying("uri")("params")) {
-            _out << _name << "=" << static_cast<std::string>(_value);
-        }
-    }
+    auto _uri = this->__underlying("uri");
+    _out << this->__underlying("performative")->string() << " " << zpt::uri::path::to_string(_uri)
+         << zpt::uri::params::to_string(_uri);
 
     _out << " HTTP/"
          << (this->__underlying("headers")("X-Version")->ok()
@@ -79,6 +73,9 @@ auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic
     for (auto [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
+    if (!this->__underlying("headers")("Host")->ok()) {
+        _out << "Host: " << zpt::uri::address::to_string(_uri) << CRLF;
+    }
     _out << "Content-Length: " << _body.length() << CRLF;
 
     _out << CRLF << _body;
@@ -93,11 +90,10 @@ auto zpt::http::basic_request::from_stream(std::istream& _in) -> zpt::basic_mess
     try {
         _p.parse();
     }
-    catch (zpt::SyntaxErrorException const& _e) {
+    catch (std::exception const& _e) {
         throw;
     }
     catch (...) {
-        this->__underlying = zpt::undefined;
     }
 
     return (*this);

@@ -909,7 +909,15 @@ auto zpt::storage::sqlite::action_find::add_select() -> void {
         for (auto [_, __, _value] : this->__fields) {
             if (!_first) { _oss << ", "; }
             else { _first = false; }
-            _oss << _value;
+            if (_value->is_string()) { _oss << _value; }
+            else {
+                switch (_value->integer()) {
+                    case zpt::storage::sql_functions::COUNT: {
+                        _oss << "count(*)";
+                        break;
+                    }
+                }
+            }
         }
     }
     else { _oss << "*"; }

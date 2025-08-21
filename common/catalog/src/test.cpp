@@ -6,7 +6,8 @@ auto factory(zpt::json _argv, std::uint16_t, zpt::context) -> zpt::json {
 }
 
 auto main(int, char**) -> int {
-    zpt::catalog<std::string, zpt::json> _catalog{ "catalog" };
+    zpt::catalog<std::string, zpt::json> _catalog{ "catalog",
+                                                   "2bd7e390-76a7-11f0-af32-681def5202cf" };
     _catalog.clear();
 
     zpt::lambda::add("factory", 2, factory);

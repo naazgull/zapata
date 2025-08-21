@@ -71,7 +71,7 @@ auto main(int _argc, char* _argv[]) -> int {
               ->transport("upnp")
               .set_peer<zpt::socketstream>(_config("bind")->string(), _config("port")->integer());
 
-           _transport->send(_stream, _message);
+            _transport->send(_stream, _message);
 
             if (zpt::stream_cast<zpt::socketstream>(_stream).is_error()) {
                 zlog(zpt::stream_cast<zpt::socketstream>(_stream).error_string(), zpt::debug);

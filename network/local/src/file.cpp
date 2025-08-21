@@ -25,7 +25,10 @@
 #include <zapata/uri.h>
 #include <zapata/globals/globals.h>
 
-auto zpt::net::transport::file::is_synchronous() const -> bool { return false; }
+auto zpt::net::transport::file::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;
+    return (_capabilities & _capability) == _capability;
+}
 
 auto zpt::net::transport::file::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();

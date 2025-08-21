@@ -31,7 +31,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-auto zpt::net::transport::upnp::is_synchronous() const -> bool { return false; }
+auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = 0;
+    return (_capabilities & _capability) == _capability;
+}
 
 auto zpt::net::transport::upnp::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::upnp::basic_request>();
@@ -61,7 +64,12 @@ auto zpt::net::transport::upnp::process_incoming_request(zpt::stream _stream) co
     expect(_stream->transport() == "upnp", "Stream underlying transport isn't 'upnp'");
     auto _request = zpt::allocate_message<zpt::upnp::basic_request>();
     (*_stream) >> std::noskipws >> _request;
-    _request->uri()["domain"] = _request->headers()("Host");
+
+    if (_request->headers()("Host")->ok()) {
+        auto _host = zpt::uri::parse(std::format("http://{}", _request->headers()("Host")));
+        _request->uri()["domain"] = _host("domain");
+        _request->uri()["port"] = _host("port")->ok() ? _host("port")->integer() : 80;
+    }
     return _request;
 }
 

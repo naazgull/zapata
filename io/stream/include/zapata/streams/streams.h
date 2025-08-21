@@ -33,10 +33,12 @@
 namespace zpt {
 enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };
 using epoll_event_t = struct epoll_event;
+class polling;
 
 class basic_stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
+    friend class polling;
 
     basic_stream() = default;
     basic_stream(std::ios& _rhs);
@@ -52,7 +54,7 @@ class basic_stream {
     template<typename T>
     auto read(T& _out) -> basic_stream&;
     template<typename T>
-    auto send(T _in) -> basic_stream&;
+    auto write(T _in) -> basic_stream&;
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
     template<typename T>
@@ -78,6 +80,9 @@ class basic_stream {
     std::string __transport{ "" };
     std::string __uri{ "" };
     zpt::stream_state __state{ zpt::stream_state::IDLE };
+    bool __muted{ true };
+
+    auto extract_uri() -> void;
 };
 
 using stream = std::shared_ptr<zpt::basic_stream>;
@@ -127,21 +132,22 @@ auto stream_cast(zpt::stream& _rhs) -> T& {
 
 template<typename T>
 auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
+    auto& _underlying = *this->__underlying.get();
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
-        _out->from_stream(*this->__underlying.get());
+        _out->from_stream(_underlying);
     }
-    else { (*this->__underlying.get()) >> _out; }
+    else { _underlying >> _out; }
     return (*this);
 }
 
 template<typename T>
-auto zpt::basic_stream::send(T _in) -> zpt::basic_stream& {
+auto zpt::basic_stream::write(T _in) -> zpt::basic_stream& {
+    auto& _underlying = *this->__underlying.get();
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
-        _in->to_stream(*this->__underlying.get());
-        (*this->__underlying.get()) << std::flush;
+        _in->to_stream(_underlying);
+        _underlying << std::flush;
     }
-    else { (*this->__underlying.get()) << _in << std::flush; }
-
+    else { _underlying << _in << std::flush; }
     return (*this);
 }
 
@@ -152,7 +158,7 @@ auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
 
 template<typename T>
 auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
-    return this->send<T>(_in);
+    return this->write<T>(_in);
 }
 
 template<typename IOStream>

@@ -93,10 +93,10 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     virtual auto __good() -> bool;
 
   protected:
-    static const int char_size = sizeof(__char_type);
-    static const int SIZE = 4096;
-    __char_type obuf[SIZE];
-    __char_type ibuf[SIZE];
+    static constexpr int char_size = sizeof(__char_type);
+    static constexpr int SIZE = 4096;
+    __char_type obuf[SIZE] = { 0 };
+    __char_type ibuf[SIZE] = { 0 };
 
     int __sock{ -1 };
     bool __ssl{ false };
@@ -189,6 +189,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
     auto open_ssl() -> bool;
     auto report_error() -> void;
     auto report_ssl_error() -> void;
+    auto extract_ip() -> void;
 };
 
 using socketstream = zpt::basic_socketstream<char>;
@@ -593,6 +594,7 @@ zpt::basic_socketstream<Char>::basic_socketstream(int s,
     _in_addr.sin_family = _address.sin_family;
     _in_addr.sin_port = _address.sin_port;
     _in_addr.sin_addr.s_addr = _address.sin_addr.s_addr;
+    this->extract_ip();
 }
 
 template<typename Char>
@@ -823,11 +825,15 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ip() -> bool {
+    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
+    _in_address.sin_addr.s_addr = inet_addr(this->__buf.host().data());
+
     auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd, &this->__buf.address(), sizeof this->__buf.address()) < 0) {
         this->report_error();
+        return false;
     }
-    else { this->__buf.set_socket(_sd); }
+    this->__buf.set_socket(_sd);
     return true;
 }
 
@@ -843,6 +849,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
 
     if (this->__buf.host() != zpt::ADDR_ANONYMOUS) {
         auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
+        auto _is_multicast = zpt::is_multicast_address(this->__buf.host());
 
         if (::bind(_sd, reinterpret_cast<zpt::sockaddr_t*>(&_in_address), sizeof(_in_address)) <
             0) {
@@ -851,7 +858,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
             this->report_error();
         }
 
-        if (zpt::is_multicast_address(this->__buf.host())) {
+        if (_is_multicast) {
             struct ip_mreq _mreq;
             _mreq.imr_multiaddr.s_addr = inet_addr(this->__buf.host().data());
             _mreq.imr_interface.s_addr = _in_address.sin_addr.s_addr;
@@ -893,8 +900,8 @@ auto zpt::basic_socketstream<Char>::report_error() -> void {
     this->__buf.set_socket(0);
     this->__is_error = true;
     this->__buf.error_code() = errno;
-    this->__buf.error_string() = std::strerror(errno);
-    zlog(this->__buf.error_string(), zpt::error);
+    this->__buf.error_string() =
+      std::format("{}: {}", std::strerror(errno), static_cast<std::string>(*this));
     throw zpt::ClosedException(this->__buf.error_string());
 }
 
@@ -906,6 +913,21 @@ auto zpt::basic_socketstream<Char>::report_ssl_error() -> void {
     this->__buf.error_code() = ERR_get_error();
     this->__buf.error_string() = zpt::ssl_error_print(this->__buf.error_code());
     throw zpt::ClosedException(this->__buf.error_string());
+}
+
+template<typename Char>
+auto zpt::basic_socketstream<Char>::extract_ip() -> void {
+    struct sockaddr_in _my_addr;
+    bzero(&_my_addr, sizeof(_my_addr));
+    socklen_t _len = sizeof(_my_addr);
+    ::getsockname(this->__buf.get_socket(), (struct sockaddr*)&_my_addr, &_len);
+
+    char _my_ip[16];
+    ::inet_ntop(AF_INET, &_my_addr.sin_addr, _my_ip, sizeof(_my_ip));
+    auto _my_port = ntohs(_my_addr.sin_port);
+
+    this->__buf.host() = _my_ip;
+    this->__buf.port() = _my_port;
 }
 
 template<typename Char>

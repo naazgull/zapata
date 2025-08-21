@@ -166,9 +166,9 @@ class HTTPLexerBase {
 
     size_t length() const;
     size_t lineNr() const;
-    size_t d_content_length;
-    long int d_chunked_length;
-    bool d_chunked_body;
+    size_t d_content_length{ 0 };
+    long int d_chunked_length{ 0 };
+    bool d_chunked_body{ false };
     std::string d_chunked_trailer;
     std::string d_chunked;
 

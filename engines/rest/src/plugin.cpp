@@ -39,14 +39,23 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 
     zpt::REST_RESOLVER() //
       ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
-      .add<zpt::rest::services_collection>(zpt::Get, "/services");
+      .add<zpt::rest::minion_hello>(zpt::Post, "/minions/hello")
+      .add<zpt::rest::minion_shutdown>(zpt::Notify, "/minions/shutdown");
 
-    if (_config("tcp")->ok() && _config("upnp")->ok()) { zpt::rest::services::broadcast(_config); }
+    if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
+        zpt::rest::services::broadcast("/minions/boot", _config);
+    }
 
     zlog("Added REST event resolver", zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    auto _config = zpt::GLOBAL_CONFIG();
     zlog("Disposing REST event resolver", zpt::info);
+
+    if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
+        zpt::rest::services::broadcast("/minions/shutdown", _config);
+    }
+
     zpt::REST_RESOLVER()->clear();
 }

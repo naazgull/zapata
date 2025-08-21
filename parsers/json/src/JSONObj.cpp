@@ -91,6 +91,8 @@ auto zpt::JSONObjT::key_for(size_t _idx) const -> std::string {
     return _name;
 }
 
+auto zpt::JSONObjT::has_pending_key() const -> bool { return this->__name.length() != 0; }
+
 auto zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     std::istringstream _iss;
     std::string _part;

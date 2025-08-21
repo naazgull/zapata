@@ -26,16 +26,14 @@
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
-
-auto nostop(int) -> void {
-    zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
-}
+namespace {
+auto deallocate(int) -> void;
+} // namespace
 
 auto main(int _argc, char* _argv[]) -> int {
-    std::signal(SIGUSR1, deallocate);
-    std::signal(SIGINT, deallocate);
-    std::signal(SIGTERM, deallocate);
+    std::signal(SIGUSR1, ::deallocate);
+    std::signal(SIGINT, ::deallocate);
+    std::signal(SIGTERM, ::deallocate);
     zpt::json _parameter_setup{
         "--conf-file",
         { "options",
@@ -119,14 +117,18 @@ auto main(int _argc, char* _argv[]) -> int {
           ->stop_consumers();
         zlog("Stopped global event dispatcher", zpt::info);
     }
-    zpt::TRANSPORT_LAYER() //
-      .clear();
-    zlog("Unloaded transport layer", zpt::info);
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);
+    zpt::TRANSPORT_LAYER() //
+      .clear();
+    zlog("Unloaded transport layer", zpt::info);
 
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
     return 0;
 }
+
+namespace {
+auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
+} // namespace

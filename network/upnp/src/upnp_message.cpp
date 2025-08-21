@@ -52,15 +52,9 @@ zpt::upnp::basic_request::basic_request(zpt::basic_message const& _request, bool
 }
 
 auto zpt::upnp::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
-    _out << this->__underlying("performative")->string() << " "
-         << zpt::uri::to_string(this->__underlying("uri"));
-
-    if (this->__underlying("uri")("params")->ok()) {
-        _out << "?";
-        for (auto const& [_, _name, _value] : this->__underlying("uri")("params")) {
-            _out << _name << "=" << static_cast<std::string>(_value);
-        }
-    }
+    auto _uri = this->__underlying("uri");
+    _out << this->__underlying("performative")->string() << " " << zpt::uri::path::to_string(_uri)
+         << zpt::uri::params::to_string(_uri);
 
     _out << " UPNP/"
          << (this->__underlying("headers")("X-Version")->ok()

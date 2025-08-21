@@ -11,10 +11,18 @@ class minion_boot : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
-class services_collection : public zpt::events::process {
+class minion_shutdown : public zpt::events::process {
   public:
-    services_collection(zpt::message _received);
-    ~services_collection() = default;
+    minion_shutdown(zpt::message _received);
+    ~minion_shutdown() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
+class minion_hello : public zpt::events::process {
+  public:
+    minion_hello(zpt::message _received);
+    ~minion_hello() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
@@ -28,7 +36,7 @@ class services_list : public zpt::events::process {
 };
 
 namespace services {
-auto broadcast(zpt::json _config) -> void;
+auto broadcast(std::string const& _path, zpt::json const& _config) -> void;
 }
 } // namespace rest
 } // namespace zpt

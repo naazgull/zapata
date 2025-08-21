@@ -46,6 +46,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
+    zpt::TRANSPORT_LAYER().remove("upnp");
     zlog("Stopped UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
          zpt::info);
 }

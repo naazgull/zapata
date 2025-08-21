@@ -94,7 +94,7 @@ auto zpt::generate::r_uuid() -> std::string {
     uuid_t _uuid;
     uuid_generate(_uuid);
     std::string _generated;
-    _generated.resize(37);
+    _generated.resize(36);
     uuid_unparse(_uuid, _generated.data());
     return _generated;
 }

@@ -24,7 +24,8 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/uri/uri.h>
 
-zpt::json_message::json_message() {
+zpt::json_message::json_message()
+  : __underlying{ zpt::json::object() } {
     auto _rawtime = time(nullptr);
     struct tm _ptm;
     char _buffer_date[80];
@@ -45,7 +46,8 @@ zpt::json_message::json_message() {
     this->__underlying << "headers" << _headers;
 }
 
-zpt::json_message::json_message(basic_message const& _request, bool) {
+zpt::json_message::json_message(basic_message const& _request, bool)
+  : __underlying{ zpt::json::object() } {
     auto _req_headers = _request.headers();
     auto _rawtime = time(nullptr);
     struct tm _ptm;
@@ -114,7 +116,7 @@ auto zpt::json_message::keep_alive() const -> bool {
 auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
 
 auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
-    _out << this->__underlying;
+    _out << this->__underlying << std::endl;
     return (*this);
 }
 
@@ -129,12 +131,16 @@ auto zpt::json_message::performative(zpt::performative _performative) -> zpt::ba
 }
 
 auto zpt::json_message::status(zpt::status _status) -> zpt::basic_message& {
-    this->__underlying["satus"] = _status;
+    this->__underlying["status"] = _status;
     return (*this);
 }
 
-auto zpt::json_message::uri(std::string const& _uri) -> zpt::basic_message& {
-    this->__underlying["uri"] = zpt::uri::parse(_uri);
+auto zpt::json_message::uri(std::string const& _s_uri) -> zpt::basic_message& {
+    auto _uri = zpt::uri::parse(_s_uri);
+    if (_uri("domain")->ok()) {
+        this->__underlying["headers"]["Host"] = zpt::uri::address::to_string(_uri);
+    }
+    this->__underlying["uri"] = _uri;
     return (*this);
 }
 
@@ -149,7 +155,7 @@ auto zpt::json_message::empty() const -> bool {
 
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
-    if (this->is_synchronous()) {
+    if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         assert(_stream->state() == zpt::stream_state::IDLE ||
                _stream->state() == zpt::stream_state::WAITING);
         expect(_stream->state() == zpt::stream_state::IDLE ||
@@ -171,7 +177,7 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
 }
 
 auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) const -> void {
-    if (this->is_synchronous()) {
+    if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         assert(_stream->state() == zpt::stream_state::IDLE ||
                _stream->state() == zpt::stream_state::PROCESSING ||
                _stream->state() == zpt::stream_state::ERRORING_OUT);
@@ -181,9 +187,10 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                "Stream not in a valid state for sending");
     }
     zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
-    _stream->send(_to_send);
 
-    if (this->is_synchronous()) {
+    _stream->write<zpt::message>(_to_send);
+
+    if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         if (_stream->state() == zpt::stream_state::IDLE) {
             _stream->state() = zpt::stream_state::WAITING;
         }
@@ -260,6 +267,11 @@ auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::tr
                                            std::string{ "'" });
     }
     return _found->second;
+}
+
+auto zpt::network::layer::remove(std::string const& _scheme) -> zpt::network::layer& {
+    this->__underlying.erase(_scheme);
+    return (*this);
 }
 
 auto zpt::network::layer::clear() -> zpt::network::layer& {

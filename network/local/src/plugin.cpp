@@ -69,4 +69,5 @@ extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
         zpt::UNIX_SERVER_SOCKET()->close();
         unlink(_config("path")->string().data());
     }
+    zpt::TRANSPORT_LAYER().remove("unix");
 }

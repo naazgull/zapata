@@ -415,6 +415,7 @@ class JSONObjT {
     virtual auto pop(std::string const& _idx) -> zpt::JSONObjT&;
 
     virtual auto key_for(size_t _idx) const -> std::string;
+    virtual auto has_pending_key() const -> bool;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
     auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")

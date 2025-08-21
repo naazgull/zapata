@@ -26,36 +26,54 @@
 #include <zapata/rest/services.h>
 #include <zapata/transport.h>
 
-class test_plugin_collection : public zpt::events::process {
+class test_client_service : public zpt::events::process {
   public:
-    test_plugin_collection(zpt::message _received)
+    test_client_service(zpt::message _received)
       : zpt::events::process{ _received } {}
-    ~test_plugin_collection() = default;
+    ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
-        this
-          ->to_send() //
-          ->status(200)
-          .body() = { "something", "something" };
+        zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
+        return zpt::events::finish;
+    }
+};
+
+class test_client_boot : public zpt::events::process {
+  public:
+    test_client_boot(zpt::message _received)
+      : zpt::events::process{ _received } {}
+    ~test_client_boot() = default;
+
+    auto blocked() const -> bool { return false; }
+
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+        auto _test_message = zpt::TRANSPORT_LAYER() //
+                               .get("tcp")
+                               ->make_request();
+        _test_message //
+          ->performative(zpt::Post)
+          .uri(std::format("{}/test_plugin", _prefix))
+          .body() = { "test", "something" };
+
+        _dispatcher->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(),
+                                                                     _test_message);
+
         return zpt::events::finish;
     }
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zlog("Registering listeners for module 'test_plugin'", zpt::info);
-    auto _config = zpt::GLOBAL_CONFIG();
-    auto _resolver = zpt::REST_RESOLVER();
-    auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-    _resolver->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
+    zlog("Sending request to 'test_plugin'", zpt::info);
+    // zpt::REST_RESOLVER()->add<test_client_boot>(zpt::Notify, "/minions/boot");
+    // TODO: Send the request only when the system has received the needed service description
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Unloading module 'test_plugin'", zpt::info);
-    auto _config = zpt::GLOBAL_CONFIG();
-    auto _resolver = zpt::REST_RESOLVER();
-    auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-    _resolver->remove<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
+    zlog("Unloading module 'test_plugin_client'", zpt::info);
+    zpt::REST_RESOLVER()->remove<test_client_boot>(zpt::Notify, "/minions/boot");
 }

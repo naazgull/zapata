@@ -36,6 +36,8 @@ class result;
 using functor = std::function<void(zpt::json, std::ostream&)>;
 using string_output = std::function<void(zpt::json, std::ostream&)>;
 
+enum sql_functions { COUNT = 0 };
+
 class connection {
   public:
     class type {

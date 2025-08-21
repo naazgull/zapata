@@ -36,7 +36,8 @@ struct stream_ptr {
 } // namespace zpt
 
 zpt::basic_stream::basic_stream(std::ios& _rhs)
-  : __underlying{ std::make_unique<std::stringstream>() } {
+  : __underlying{ std::make_unique<std::stringstream>() }
+  , __fd{ -1 } {
     this->__underlying->rdbuf(_rhs.rdbuf());
     this->__underlying->exceptions(std::ios_base::failbit);
 }
@@ -135,12 +136,17 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
+    if (_stream->__muted) { return (*this); }
+
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
+    _stream->__muted = true;
     return (*this);
 }
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
+    if (!_stream->__muted) { return (*this); }
+
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = new zpt::stream_ptr{ _stream };
@@ -148,6 +154,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
 
+    _stream->__muted = false;
     return (*this);
 }
 
@@ -174,7 +181,8 @@ auto zpt::polling::poll() -> zpt::polling& {
         if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
 
         for (auto _k = 0; _k != _n_alive; ++_k) {
-            auto _stream = static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream;
+            auto _stream =
+              std::move(static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream);
             delete static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr);
 
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||

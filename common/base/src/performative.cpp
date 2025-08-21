@@ -24,9 +24,10 @@
 #include <algorithm>
 
 namespace {
-inline constexpr char const* STATUS_NAMES[] = { "GET",      "PUT",     "POST",  "DELETE",
-                                                "HEAD",     "OPTIONS", "PATCH", "REPLY",
-                                                "M-SEARCH", "NOTIFY",  "TRACE", "CONNECT" };
+inline constexpr char const* STATUS_NAMES[] = { "GET",       "PUT",     "POST",  "DELETE",
+                                                "HEAD",      "OPTIONS", "PATCH", "REPLY",
+                                                "M-SEARCH",  "NOTIFY",  "TRACE", "CONNECT",
+                                                "SUBSCRIBE", "INFORM" };
 }
 
 auto zpt::ontology::to_str(zpt::performative _performative) -> std::string {

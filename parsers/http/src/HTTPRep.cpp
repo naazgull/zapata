@@ -86,11 +86,10 @@ auto zpt::http::basic_reply::from_stream(std::istream& _in) -> zpt::basic_messag
     try {
         _p.parse();
     }
-    catch (zpt::SyntaxErrorException const& _e) {
+    catch (std::exception const& _e) {
         throw;
     }
     catch (...) {
-        this->__underlying = zpt::undefined;
     }
 
     return (*this);

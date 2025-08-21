@@ -34,9 +34,7 @@ void zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
     this->begin(zpt::JSONLexerBase::StartCondition_::INITIAL);
 }
 
-auto zpt::JSONTokenizerLexer::justLeave() -> void {
-    this->leave(-1);
-}
+auto zpt::JSONTokenizerLexer::justLeave() -> void { this->leave(-1); }
 
 void zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     try {
@@ -72,6 +70,10 @@ void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
         this->__parent->type(_in_type);
         return;
     }
+    if (_in_type == zpt::JSObject && this->__parent->type() == zpt::JSObject &&
+        !this->__parent->object()->has_pending_key()) {
+        return;
+    }
     switch (_in_type) {
         case zpt::JSObject: {
             zpt::json _ref = zpt::json::object();
@@ -81,10 +83,7 @@ void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation const& _e) {
-                std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
-                          << std::flush;
-                // this->__parent->type(_in_type);
-                throw _e;
+                throw;
             }
             break;
         }
@@ -96,9 +95,7 @@ void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation const& _e) {
-                // delete _ptr;
-                // this->__parent->type(_in_type);
-                throw _e;
+                throw;
             }
             break;
         }

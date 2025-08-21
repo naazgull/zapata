@@ -18,13 +18,21 @@ class resolver_t {
     virtual auto add(zpt::message _sent, zpt::events::resolver_callback callback)
       -> resolver_t& = 0;
     virtual auto add(zpt::performative _performtive,
-                     std::string _path,
-                     zpt::json _metadata,
+                     std::string const& _path,
+                     zpt::json const& _metadata,
                      zpt::events::resolver_callback _callback) -> resolver_t& = 0;
+    virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
     virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
-    virtual auto remove(zpt::performative _performtive, std::string _path) -> resolver_t& = 0;
+    virtual auto remove(zpt::performative _performtive, std::string const& _path)
+      -> resolver_t& = 0;
     virtual auto resolve(zpt::message _received, initializer_t _initializer) const
       -> std::list<zpt::event> = 0;
+    virtual auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json = 0;
+    virtual auto list(std::string const& _provider_id = "") const -> zpt::json = 0;
+    virtual auto register_provider(zpt::json const& _service_description) -> resolver_t& = 0;
+    virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
+    virtual auto get_provider(std::string const& _id) const -> zpt::json = 0;
 };
 using resolver = std::shared_ptr<resolver_t>;
 } // namespace events
@@ -137,8 +145,8 @@ class process {
     zpt::events::dispatcher::ptr __dispatcher;
     zpt::polling::ptr __polling;
     zpt::stream __stream;
-    zpt::message __received;
-    zpt::message __to_send;
+    zpt::message __received{ nullptr };
+    zpt::message __to_send{ nullptr };
 };
 } // namespace events
 } // namespace zpt
@@ -148,7 +156,15 @@ concept ProcessOperation = std::is_base_of<zpt::events::process, T>::value;
 
 namespace zpt {
 namespace events {
-template<ProcessOperation T>
+class discard : public zpt::events::process {
+  public:
+    discard(zpt::message _received);
+    ~discard() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
+template<ProcessOperation T = zpt::events::discard>
 class call {
   public:
     using ptr = std::shared_ptr<process>;
@@ -172,6 +188,7 @@ class call {
 
   private:
     zpt::events::dispatcher::ptr __dispatcher;
+    zpt::events::resolver __resolver;
     zpt::polling::ptr __polling;
     zpt::message __to_send;
 };
@@ -190,11 +207,12 @@ auto zpt::transports::make_callback(zpt::message _received, zpt::events::initial
 
 template<ProcessOperation T>
 zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
-  : __to_send{ _send } {
+  : __resolver{ _resolver }
+  , __to_send{ _send } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
     }
-    _resolver->add(_send, zpt::transports::make_callback<T>);
+    this->__resolver->add(_send, zpt::transports::make_callback<T>);
 }
 
 template<ProcessOperation T>
@@ -213,35 +231,56 @@ auto zpt::events::call<T>::blocked() const -> bool {
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)
+auto zpt::events::call<T>::catch_error(std::exception const&, zpt::events::dispatcher::ptr)
   -> bool {
-    throw _e;
+    return false;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr)
+auto zpt::events::call<T>::catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr)
   -> bool {
-    throw _e;
+    return false;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::catch_error(zpt::failed_expectation const& _e,
-                                       zpt::events::dispatcher::ptr) -> bool {
-    throw _e;
+auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr)
+  -> bool {
+    return false;
 }
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     auto _uri = this->__to_send->uri();
-    auto _scheme = _uri("scheme")->string();
+    expect(_uri("path")->ok(), "Can't send a message without a resource path");
+
+    std::string _scheme;
+    std::string _address;
+    unsigned int _port;
+    if (_uri("scheme")->ok() && _uri("domain")->ok() && _uri("port")->ok()) {
+        _scheme = _uri("scheme")->string();
+        _address = _uri("domain")->string();
+        _port = _uri("port")->integer();
+    }
+    else {
+        auto _found = this->__resolver->search(_uri("raw_path")->string());
+        zlog(_found, zpt::debug);
+        expect(_found->ok() && _found->size() != 0,
+               "Couldn't find a provider of '" << _uri("path")->string());
+
+        auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
+        _scheme = _provider("protocols")("default")->string();
+        _address = _provider("protocols")("registered")(_scheme)("bind")->string();
+        _port = _provider("protocols")("registered")(_scheme)("port")->integer();
+    }
+
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
-    expect(_transport->is_synchronous(), "`call^ only makes sense for synchronous protocols");
+    expect(_transport->has_capability(zpt::transport_capability::SYNCHRONOUS),
+           "`call` only makes sense for synchronous protocols");
 
-    auto _stream = zpt::make_stream<zpt::socketstream>(
-      _uri("domain")->string(), _uri("port")->integer(), zpt::NO_SSL, IPPROTO_TCP);
+    auto _stream = zpt::make_stream<zpt::socketstream>(_address, _port, zpt::NO_SSL, IPPROTO_TCP);
     _stream->transport(_scheme);
-    
+
     this->__to_send->headers()["Content-Type"] = "application/json";
     _transport->send(_stream, this->__to_send);
 

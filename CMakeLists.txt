@@ -33,7 +33,7 @@ IF(WITH_TSAN)
   add_link_options(-fsanitize=thread)
 ENDIF()
 
-add_compile_definitions(PROPAGATE_EXCEPTION)
+# add_compile_definitions(PROPAGATE_EXCEPTION)
 
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
@@ -98,6 +98,7 @@ add_subdirectory(network/pipe)
 add_subdirectory(network/tcp)
 add_subdirectory(network/upnp)
 add_subdirectory(network/websocket)
+add_subdirectory(network/identity)
 add_subdirectory(parsers/functional)
 add_subdirectory(parsers/http)
 add_subdirectory(parsers/json)

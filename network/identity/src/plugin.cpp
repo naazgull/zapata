@@ -20,34 +20,24 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
-#include <string>
-#include <utility>
-#include <zapata/streams.h>
+#include <iostream>
+#include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/net/socket/socket_stream.h>
 
-namespace zpt {
-namespace net {
-namespace ws {
-auto handshake(zpt::stream& _stream) -> void;
-auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-auto write(zpt::stream& _stream, std::string const& _in) -> void;
-} // namespace ws
-namespace transport {
-class websocket : public zpt::basic_transport {
-  public:
-    websocket() = default;
-    virtual ~websocket() = default;
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto _global_config = zpt::GLOBAL_CONFIG();
+    auto& _config = _plugin.config();
+    expect(_config->type() == zpt::JSObject, "Configuration 'self' must be defined");
 
-    auto has_capability(std::uint64_t _capability) const -> bool override;
-    auto make_request() const -> zpt::message override;
-    auto make_reply(bool _with_allocator = true) const -> zpt::message override;
-    auto make_reply(zpt::message _request) const -> zpt::message override;
-    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
-    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
-};
-} // namespace transport
-} // namespace net
-auto WEBSOCKET_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
-} // namespace zpt
+    std::string _id = _config("id")->ok() ? _config("id")->string() : zpt::generate::r_uuid();
+    _config["_id"] = _id;
+    _config["name"] = _config("name")->ok() ? _config("name") : _config["_id"];
+    _config->object()->pop("id");
+
+    for (auto const& [_protocol, _] : zpt::TRANSPORT_LAYER()) {
+        _config["protocols"]["registered"][_protocol] = _global_config(_protocol);
+    }
+    _config["protocols"]["default"] = _global_config("transport")("default");
+}
+
+extern "C" auto _zpt_unload_(zpt::plugin&) {}

@@ -65,4 +65,5 @@ extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
         zpt::HTTP_SERVER_SOCKET()->close();
         while (!_has_exited->load()) { std::this_thread::yield(); }
     }
+    zpt::TRANSPORT_LAYER().remove("http");
 }
