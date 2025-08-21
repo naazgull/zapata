@@ -32,8 +32,8 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/send.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp    
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp    
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
@@ -76,7 +76,7 @@ target_link_libraries(zapata-base
   PUBLIC
     magic
     uuid
-)  
+)
 set_target_properties(zapata-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}

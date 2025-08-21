@@ -86,43 +86,45 @@ auto main(int _argc, char* _argv[]) -> int {
     if (_config("log")("target")->ok()) {
         zpt::log_fd = new std::ofstream{ _config("log")("target")->string() };
     }
-    auto _consumers = _config("dispatcher")("limits")("max_consumer_threads")->ok()
-                        ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
-                        : 0;
+    auto _consumers =
+      std::max(1LL,
+               _config("dispatcher")("limits")("max_consumer_threads")->ok()
+                 ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
+                 : 1);
 
     zpt::MEM_POOL(_config("dispatcher")("limits")("max_memory")->ok()
                     ? _config("dispatcher")("limits")("max_memory")->integer()
                     : 0);
 
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
+    zpt::DISPATCHER(_consumers) //
+      ->start_consumers(_consumers);
+    zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
     zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
     zpt::TRANSPORT_LAYER(_config);
     zlog("Initialized transport layer", zpt::info);
-    if (_consumers != 0) {
-        zpt::DISPATCHER(_consumers) //
-          ->start_consumers(_consumers);
-        zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
-    }
     zpt::BOOT(_config) //
       .load();
     zlog("All plugins loaded", zpt::notice);
+
+    zpt::DISPATCHER() //
+      ->trigger<zpt::events::finished_boot>();
+
     zpt::STREAM_POLLING() //
       ->poll()
       .shutdown();
     zlog("Unloaded stream polling service", zpt::info);
 
-    if (_consumers != 0) {
-        zpt::DISPATCHER() //
-          ->stop_consumers();
-        zlog("Stopped global event dispatcher", zpt::info);
-    }
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);
     zpt::TRANSPORT_LAYER() //
       .clear();
     zlog("Unloaded transport layer", zpt::info);
+    zpt::DISPATCHER() //
+      ->stop_consumers();
+    zlog("Stopped global event dispatcher", zpt::info);
 
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }

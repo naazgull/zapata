@@ -16,6 +16,6 @@ export default {
     },
     template: `
     <label :id="id + '_label'" :for="id">{{ config.label }}</label>
-    
+
   `
 }
