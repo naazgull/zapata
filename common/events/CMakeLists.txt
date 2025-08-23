@@ -10,8 +10,12 @@ add_dependencies(zapata-events
 target_sources(zapata-events
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/resolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/system_events.cpp
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/dispatcher.h
+    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/resolver.h
+    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/system_events.h
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events.h
 )
 target_include_directories(zapata-events
