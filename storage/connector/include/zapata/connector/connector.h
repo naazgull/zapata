@@ -23,6 +23,7 @@
 #pragma once
 
 #include <zapata/json.h>
+#include <zapata/ontology.h>
 
 namespace zpt {
 namespace storage {

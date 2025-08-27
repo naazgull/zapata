@@ -22,10 +22,12 @@
 
 #pragma once
 
-#include <zapata/startup.h>
-#include <zapata/transport.h>
 #include <zapata/catalog.h>
+#include <zapata/events.h>
+#include <zapata/ontology.h>
+#include <zapata/startup.h>
 #include <zapata/rest/pending_messages.h>
+#include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
 namespace zpt {
@@ -40,26 +42,25 @@ class resolver_t : public zpt::events::resolver_t {
     auto operator=(resolver_t const&) -> resolver_t& = delete;
     auto operator=(resolver_t&&) -> resolver_t& = delete;
 
-    auto search(std::string const& _path,
-                std::string const& _provider_id = "") const -> zpt::json override;
-    auto list(std::string const& _provider_id = "") const -> zpt::json override;
-    auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
-    auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;
-    auto get_provider(std::string const& _id) const -> zpt::json override;
-    auto clear() -> zpt::rest::resolver_t&;
-
-  protected:
-    auto add(zpt::message _sent,
-             zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& override;
+    using zpt::events::resolver_t::add;
+    using zpt::events::resolver_t::remove;
+    auto add(zpt::json const& _service_description) -> resolver_t& override;
+    auto add(zpt::message _sent, zpt::events::resolver_callback callback) -> resolver_t& override;
     auto add(zpt::performative _performative,
              std::string const& _path,
              zpt::json const& _metadata,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
-    auto add(zpt::json const& _service_description) -> resolver_t& override;
     auto remove(zpt::message _sent) -> resolver_t& override;
     auto remove(zpt::performative _performative, std::string const& _path) -> resolver_t& override;
-    auto resolve(zpt::message _received,
-                 zpt::events::initializer_t _initializer) const -> std::list<zpt::event> override;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event> override;
+    auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json override;
+    auto list(std::string const& _provider_id = "") const -> zpt::json override;
+    auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
+    auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;
+    auto get_provider(std::string const& _id) const -> zpt::json override;
+    auto clear() -> resolver_t& override;
 
   private:
     zpt::catalog<std::string, zpt::json> __catalog;
@@ -67,7 +68,6 @@ class resolver_t : public zpt::events::resolver_t {
     mutable zpt::rest::pending_messages __pending_requests;
     zpt::json __configuration;
 };
-using resolver = std::shared_ptr<zpt::rest::resolver_t>;
 } // namespace rest
-auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::rest::resolver;
+auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::events::resolver;
 } // namespace zpt

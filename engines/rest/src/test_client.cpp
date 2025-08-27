@@ -21,9 +21,10 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
+#include <zapata/ontology.h>
 #include <zapata/rest.h>
 #include <zapata/rest/services.h>
+#include <zapata/startup.h>
 #include <zapata/transport.h>
 
 class test_client_service : public zpt::events::process {

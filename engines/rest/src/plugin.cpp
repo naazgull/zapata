@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
 #include <zapata/rest.h>
 #include <zapata/rest/services.h>
+#include <zapata/startup.h>
 #include <zapata/transport.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {

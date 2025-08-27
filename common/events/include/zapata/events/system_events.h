@@ -35,9 +35,40 @@ class system_event {
     zpt::json __data;
 };
 
-template<zpt::events::Operation T>
-auto register_system_listener(zpt::system_event_type _type) -> void;
-template<zpt::events::Operation T>
-auto unregister_system_listener(zpt::system_event_type _type) -> void;
+namespace system_events {
+class resolver_t : public zpt::events::resolver_t {
+  public:
+    resolver_t();
+    resolver_t(resolver_t const&) = delete;
+    resolver_t(resolver_t&&) = delete;
+    virtual ~resolver_t() = default;
 
+    auto operator=(resolver_t const&) -> resolver_t& = delete;
+    auto operator=(resolver_t&&) -> resolver_t& = delete;
+
+    using zpt::events::resolver_t::add;
+    using zpt::events::resolver_t::remove;
+    auto add(zpt::json const& _service_description) -> resolver_t& override;
+    auto add(zpt::message _sent, zpt::events::resolver_callback callback) -> resolver_t& override;
+    auto add(zpt::performative _performative,
+             std::string const& _path,
+             zpt::json const& _metadata,
+             zpt::events::resolver_callback _callback) -> resolver_t& override;
+    auto remove(zpt::message _sent) -> resolver_t& override;
+    auto remove(zpt::performative _performative, std::string const& _path) -> resolver_t& override;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event> override;
+    auto search(std::string const& _path, std::string const& _provider_id = "") const
+      -> zpt::json override;
+    auto list(std::string const& _provider_id = "") const -> zpt::json override;
+    auto register_provider(zpt::json const& _provider) -> resolver_t& override;
+    auto unregister_provider(std::string const& _id) -> resolver_t& override;
+    auto get_provider(std::string const& _id) const -> zpt::json override;
+    auto clear() -> resolver_t& override;
+
+  private:
+    std::map<std::string, std::vector<zpt::events::resolver_callback>> __callbacks;
+};
+} // namespace system_events
+auto SYSTEM_EVENTS_RESOLVER() -> zpt::events::resolver;
 } // namespace zpt

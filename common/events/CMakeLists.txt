@@ -6,6 +6,8 @@ add_library(zapata-events SHARED)
 add_dependencies(zapata-events
   zapata-base
   zapata-lockfree
+  zapata-ontology
+  zapata-parser-json
 )
 target_sources(zapata-events
   PRIVATE
@@ -22,6 +24,8 @@ target_include_directories(zapata-events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
     ${COMMON_EVENTS_INCLUDE_DIR}
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}
@@ -30,6 +34,8 @@ target_link_libraries(zapata-events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
 )
 set_target_properties(zapata-events
   PROPERTIES
@@ -54,6 +60,8 @@ add_executable(zapata_test_common_events)
 add_dependencies(zapata_test_common_events
   zapata-base
   zapata-lockfree
+  zapata-ontology
+  zapata-parser-json
   zapata-events
 )
 target_sources(zapata_test_common_events
@@ -64,12 +72,15 @@ target_include_directories(zapata_test_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
     zapata-events
 )
 set_target_properties(zapata_test_common_events

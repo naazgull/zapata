@@ -5,6 +5,8 @@ set(STORAGE_CONNECTOR_INCLUDE_DIR
 add_library(zapata-storage-connector SHARED)
 add_dependencies(zapata-storage-connector
   zapata-base
+  zapata-globals
+  zapata-ontology
   zapata-parser-json
   zapata-parser-functional
 )
@@ -18,6 +20,8 @@ target_sources(zapata-storage-connector
 target_include_directories(zapata-storage-connector
   PRIVATE
     zapata-base
+    zapata-globals
+    zapata-ontology
     zapata-parser-json
     zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
@@ -27,6 +31,8 @@ target_include_directories(zapata-storage-connector
 target_link_libraries(zapata-storage-connector
   PUBLIC
     zapata-base
+    zapata-globals
+    zapata-ontology
     zapata-parser-json
     zapata-parser-functional
 )
@@ -53,6 +59,8 @@ install(DIRECTORY ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata
 add_executable(zapata_test_storage_connector)
 add_dependencies(zapata_test_storage_connector
   zapata-base
+  zapata-globals
+  zapata-ontology
   zapata-parser-json
   zapata-parser-functional
   zapata-storage-connector
@@ -64,6 +72,8 @@ target_sources(zapata_test_storage_connector
 target_include_directories(zapata_test_storage_connector
   PRIVATE
     zapata-base
+    zapata-globals
+    zapata-ontology
     zapata-parser-json
     zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
@@ -71,6 +81,8 @@ target_include_directories(zapata_test_storage_connector
 target_link_libraries(zapata_test_storage_connector
   PRIVATE
     zapata-base
+    zapata-globals
+    zapata-ontology
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector

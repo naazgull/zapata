@@ -23,9 +23,6 @@ class engine {
     std::vector<zpt::events::resolver> __resolvers;
     zpt::events::dispatcher::ptr __dispatcher;
 };
-
-template<typename T>
-auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer) -> zpt::event;
 } // namespace transports
 
 namespace events {
@@ -167,14 +164,6 @@ class call {
 auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 } // namespace zpt
 
-template<typename T>
-auto zpt::transports::make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
-  -> zpt::event {
-    auto _event = zpt::make_event<T>(_received);
-    _initializer(_event);
-    return _event;
-}
-
 template<ProcessOperation T>
 zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
   : __resolver{ _resolver }
@@ -182,7 +171,7 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
     }
-    this->__resolver->add(_send, zpt::transports::make_callback<T>);
+    this->__resolver->add(_send, zpt::events::make_callback<T>);
 }
 
 template<ProcessOperation T>

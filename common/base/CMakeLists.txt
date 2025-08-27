@@ -21,7 +21,6 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/manip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/convert.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/performative.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/base64.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/InterruptedException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ParserEOF.cpp
@@ -49,7 +48,6 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/CastException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoHeaderNameException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/sentry.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/performative.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/expect.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h

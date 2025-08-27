@@ -402,16 +402,6 @@ auto zpt::network::resolve_content_type(zpt::basic_message const& _message) -> s
                                                     : "*/*";
 }
 
-auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream& {
-    _in->to_stream(_out);
-    return _out;
-}
-
-auto operator>>(std::istream& _in, zpt::message _out) -> std::istream& {
-    _out->from_stream(_in);
-    return _in;
-}
-
 auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {
     static zpt::network::layer _global{ _config };
     return _global;

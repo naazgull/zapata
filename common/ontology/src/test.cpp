@@ -20,36 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <zapata/ontology.h>
 
-#include <cstring>
-#include <ctime>
-#include <memory>
-#include <iostream>
-#include <sstream>
-#include <zapata/exceptions/ExpectationException.h>
-
-/**
- * Compact form for throwing exceptions when validating logical requirements and
- * input/output
- * validation
- * @param x a boolean expression to be validated
- * @param y the error message
- * @param z the HTTP status code to be replied to the invoking HTTP client
- */
-#define expect(x, y)                                                                               \
-    if (!(x)) {                                                                                    \
-        std::ostringstream __OSS__;                                                                \
-        __OSS__ << y << std::flush;                                                                \
-        throw zpt::ExpectationException(__OSS__.str(), #x, __LINE__, __FILE__);                    \
-    }
-
-namespace zpt {
-auto get_tz() -> std::string const&;
-
-using tm_ptr = std::shared_ptr<std::tm>;
-
-auto get_time(time_t _t) -> zpt::tm_ptr;
-
-auto set_thread_name(std::string const& _name) -> void;
-} // namespace zpt
+auto main(int, char**) -> int {
+}
