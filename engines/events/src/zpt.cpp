@@ -108,8 +108,8 @@ auto main(int _argc, char* _argv[]) -> int {
       .load();
     zlog("All plugins loaded", zpt::notice);
 
-    // zpt::DISPATCHER() //
-    //   ->trigger<zpt::events::finished_boot>();
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::FINISHED_BOOT);
 
     zpt::STREAM_POLLING() //
       ->poll()

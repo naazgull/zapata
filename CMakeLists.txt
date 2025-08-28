@@ -48,6 +48,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
 
 add_compile_options(
+  -fconcepts-diagnostics-depth=2
   -fno-omit-frame-pointer
   -Wall
   -Wextra

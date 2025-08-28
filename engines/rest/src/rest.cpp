@@ -30,17 +30,18 @@ zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
     this->__catalog.add_provider(zpt::SELF()("_id")->string(), zpt::SELF());
 }
 
-auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::message _sent,
+                                zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
     this->__pending_requests.push(_sent, callback);
     return (*this);
 }
 
 auto zpt::rest::resolver_t::add(zpt::performative _performative,
-                                std::string const& _path,
+                                zpt::json const& _id,
                                 zpt::json const& _metadata,
                                 zpt::events::resolver_callback _callback)
   -> zpt::rest::resolver_t& {
+    auto _path = _id->string();
     auto hash_code = this->__callbacks.size();
     this->__callbacks.push_back(_callback);
     auto _to_add =
@@ -74,8 +75,9 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
     return (*this);
 }
 
-auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string const& _path)
-  -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative,
+                                   zpt::json const& _id) -> zpt::rest::resolver_t& {
+    auto _path = _id->string();
     auto _to_search =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
@@ -91,9 +93,8 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative, std::string 
     return (*this);
 }
 
-auto zpt::rest::resolver_t::resolve(zpt::message _received,
-                                    zpt::events::initializer_t _initializer) const
-  -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
+  const -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
     if (_received->performative() != zpt::Reply) {
@@ -117,8 +118,9 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
     return _return;
 }
 
-auto zpt::rest::resolver_t::search(std::string const& _path, std::string const& _provider_id) const
-  -> zpt::json {
+auto zpt::rest::resolver_t::search(zpt::json const& _id,
+                                   std::string const& _provider_id) const -> zpt::json {
+    auto _path = _id->string();
     return this->__catalog.search(_path, _provider_id);
 }
 
