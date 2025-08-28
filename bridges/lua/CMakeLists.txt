@@ -21,7 +21,7 @@ target_include_directories(zapata-bridge-lua
     zapata-parser-json
     zapata-bridge-base
     ${BRIDGE_LUA_INCLUDE_DIR}
-  INTERFACE    
+  INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua

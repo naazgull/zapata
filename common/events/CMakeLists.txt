@@ -6,18 +6,26 @@ add_library(zapata-events SHARED)
 add_dependencies(zapata-events
   zapata-base
   zapata-lockfree
+  zapata-ontology
+  zapata-parser-json
 )
 target_sources(zapata-events
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/resolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/system_events.cpp
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/dispatcher.h
+    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/resolver.h
+    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/system_events.h
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events.h
 )
 target_include_directories(zapata-events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
     ${COMMON_EVENTS_INCLUDE_DIR}
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}
@@ -26,6 +34,8 @@ target_link_libraries(zapata-events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
 )
 set_target_properties(zapata-events
   PROPERTIES
@@ -50,6 +60,8 @@ add_executable(zapata_test_common_events)
 add_dependencies(zapata_test_common_events
   zapata-base
   zapata-lockfree
+  zapata-ontology
+  zapata-parser-json
   zapata-events
 )
 target_sources(zapata_test_common_events
@@ -60,12 +72,15 @@ target_include_directories(zapata_test_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
+    zapata-ontology
+    zapata-parser-json
     zapata-events
 )
 set_target_properties(zapata_test_common_events

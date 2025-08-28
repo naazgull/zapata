@@ -33,7 +33,7 @@ IF(WITH_TSAN)
   add_link_options(-fsanitize=thread)
 ENDIF()
 
-# add_compile_definitions(PROPAGATE_EXCEPTION)
+add_compile_definitions(PROPAGATE_EXCEPTION)
 
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
@@ -48,6 +48,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
 
 add_compile_options(
+  -fconcepts-diagnostics-depth=2
   -fno-omit-frame-pointer
   -Wall
   -Wextra
@@ -82,6 +83,7 @@ add_subdirectory(common/events)
 add_subdirectory(common/globals)
 add_subdirectory(common/graph)
 add_subdirectory(common/lockfree)
+add_subdirectory(common/ontology)
 add_subdirectory(engines/startup)
 add_subdirectory(engines/events)
 add_subdirectory(engines/transport)

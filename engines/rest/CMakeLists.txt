@@ -12,6 +12,7 @@ add_dependencies(zapata-engine-rest
   zapata-io-socket
   zapata-lockfree
   zapata-net-transport
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
   zapata-parser-http
@@ -39,6 +40,7 @@ target_include_directories(zapata-engine-rest
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -58,6 +60,7 @@ target_link_libraries(zapata-engine-rest
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -88,6 +91,7 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-io-socket
   zapata-lockfree
   zapata-net-transport
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
   zapata-parser-http
@@ -107,6 +111,7 @@ target_include_directories(zapata-engine-rest-plugin
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -125,6 +130,7 @@ target_link_libraries(zapata-engine-rest-plugin
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -154,6 +160,7 @@ add_dependencies(zapata-rest-example
   zapata-io-socket
   zapata-lockfree
   zapata-net-transport
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
   zapata-parser-http
@@ -173,6 +180,7 @@ target_include_directories(zapata-rest-example
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -193,6 +201,7 @@ target_link_libraries(zapata-rest-example
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -222,6 +231,7 @@ add_dependencies(zapata-rest-client-example
   zapata-io-socket
   zapata-lockfree
   zapata-net-transport
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
   zapata-parser-http
@@ -241,6 +251,7 @@ target_include_directories(zapata-rest-client-example
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
@@ -261,6 +272,7 @@ target_link_libraries(zapata-rest-client-example
     zapata-io-socket
     zapata-lockfree
     zapata-net-transport
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http

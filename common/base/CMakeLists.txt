@@ -21,7 +21,6 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/manip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/convert.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/performative.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/base64.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/InterruptedException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ParserEOF.cpp
@@ -32,8 +31,8 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/send.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp    
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp    
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
@@ -49,7 +48,6 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/CastException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoHeaderNameException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/sentry.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/performative.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/expect.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h
@@ -76,7 +74,7 @@ target_link_libraries(zapata-base
   PUBLIC
     magic
     uuid
-)  
+)
 set_target_properties(zapata-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}

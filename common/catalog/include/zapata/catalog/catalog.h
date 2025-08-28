@@ -261,7 +261,6 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
                                                                        _separator,
                                                                        "{}",
                                                                        _provider)))
-                             ->fields({ zpt::array, "hash" })
                              ->execute()
                              ->fetch();
             }
@@ -360,11 +359,19 @@ auto zpt::catalog<K, M>::remove_provider(std::string const& _id) -> catalog& {
 
 template<typename K, typename M>
 auto zpt::catalog<K, M>::get_provider(std::string const& _id) const -> zpt::json {
-    return this
-      ->__provider //
-      ->find({ "_id", _id })
-      ->execute()
-      ->fetch();
+    auto _providers = this
+                        ->__provider //
+                        ->find({ "_id", _id })
+                        ->execute()
+                        ->fetch();
+
+    for (auto [_, __, _provider] : _providers) {
+        if (_provider("protocols")->ok()) {
+            _provider["protocols"] = zpt::json::parse_json_str(_provider("protocols")->string());
+        }
+    }
+
+    return _providers;
 }
 
 template<typename K, typename M>

@@ -23,7 +23,7 @@ target_include_directories(zapata-regex-graph
 target_link_libraries(zapata-regex-graph
   PRIVATE
     zapata-base
-)  
+)
 set_target_properties(zapata-regex-graph
   PROPERTIES
     VERSION ${PROJECT_VERSION}

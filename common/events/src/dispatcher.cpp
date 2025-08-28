@@ -22,8 +22,10 @@
 
 #include <zapata/events/dispatcher.h>
 
-zpt::events::dispatcher::dispatcher(std::string const& _name, long _max_consumers)
-  : __queue{ _max_consumers + 1 }
+zpt::events::dispatcher::dispatcher(std::string const& _name,
+                                    long _max_consumers,
+                                    long _max_producers)
+  : __queue{ _max_consumers + _max_producers }
   , __max_consumers{ _max_consumers }
   , __name{ _name } {}
 
@@ -115,17 +117,19 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
         catch (zpt::NoMoreElementsException const& e) {
             _timer.sleep_for(0.1f);
         }
+#ifndef PROPAGATE_EXCEPTION
         catch (zpt::exception const& _e) {
             zlog(_e, zpt::error);
         }
+#endif
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();
     --(*this->__running_consumers);
     zlog(_name << " stopping", zpt::trace);
 }
 
-auto zpt::DISPATCHER(long int _consumers) -> zpt::events::dispatcher::ptr {
+auto zpt::DISPATCHER(long int _consumers, long int _producers) -> zpt::events::dispatcher::ptr {
     static zpt::events::dispatcher::ptr _global =
-      std::make_shared<zpt::events::dispatcher>("globald", _consumers);
+      std::make_shared<zpt::events::dispatcher>("globald", _consumers, _producers);
     return _global;
 }

@@ -8,6 +8,7 @@ add_dependencies(zapata-net-transport
   zapata-globals
   zapata-io-stream
   zapata-io-socket
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
 )
@@ -24,6 +25,7 @@ target_include_directories(zapata-net-transport
     zapata-globals
     zapata-io-stream
     zapata-io-socket
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
@@ -36,6 +38,7 @@ target_link_libraries(zapata-net-transport
     zapata-globals
     zapata-io-stream
     zapata-io-socket
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
 )
@@ -64,6 +67,7 @@ add_dependencies(zapata_test_network_transport
   zapata-globals
   zapata-io-stream
   zapata-io-socket
+  zapata-ontology
   zapata-parser-json
   zapata-parser-uri
   zapata-net-transport
@@ -78,6 +82,7 @@ target_include_directories(zapata_test_network_transport
     zapata-globals
     zapata-io-stream
     zapata-io-socket
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-net-transport
@@ -90,6 +95,7 @@ target_link_libraries(zapata_test_network_transport
     zapata-globals
     zapata-io-stream
     zapata-io-socket
+    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-net-transport

@@ -42,7 +42,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
     using ptr = std::shared_ptr<dispatcher>;
 
-    dispatcher(std::string const& _name, long _max_consumers);
+    dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
     virtual ~dispatcher();
 
     auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
@@ -65,8 +65,6 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
 
     auto loop(long _consumer_nr) -> void;
 };
-} // namespace events
-} // namespace zpt
 
 template<typename T>
 concept Operation = requires(T t,
@@ -82,8 +80,8 @@ concept Operation = requires(T t,
     { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
     { t(_d) } -> std::convertible_to<zpt::events::state>;
 };
+} // namespace events
 
-namespace zpt {
 class abstract_event {
   public:
     abstract_event() = default;
@@ -101,7 +99,7 @@ class abstract_event {
 };
 using event = std::shared_ptr<zpt::abstract_event>;
 
-template<Operation T>
+template<zpt::events::Operation T>
 class event_t : public zpt::abstract_event {
   public:
     template<typename... Args>
@@ -125,71 +123,71 @@ class event_t : public zpt::abstract_event {
     T __underlying;
 };
 
-template<typename T>
+template<zpt::events::Operation T>
 auto make_event(T _operator) -> zpt::event;
-template<typename T, typename... Args>
+template<zpt::events::Operation T, typename... Args>
 auto make_event(Args&&... _args) -> zpt::event;
 
-auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher::ptr;
-template<typename T>
+auto DISPATCHER(long int _consumers = 0, long int _producers = 0) -> zpt::events::dispatcher::ptr;
+template<zpt::events::Operation T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt
 
-template<Operation T>
+template<zpt::events::Operation T>
 template<typename... Args>
 zpt::event_t<T>::event_t(Args&&... _args)
   : __underlying{ std::forward<Args>(_args)... } {}
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::operator*() -> T& {
     return this->__underlying;
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::operator*() const -> T const& {
     return this->__underlying;
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::initialize(zpt::event_initialization& init_data) -> void {
     return this->__underlying.initialize(init_data);
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::blocked() const -> bool {
     return this->__underlying.blocked();
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::catch_error(std::exception const& _e,
                                   zpt::events::dispatcher::ptr _dispatcher) -> bool {
     return this->__underlying.catch_error(_e, _dispatcher);
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::catch_error(std::bad_alloc const& _e,
                                   zpt::events::dispatcher::ptr _dispatcher) -> bool {
     return this->__underlying.catch_error(_e, _dispatcher);
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e,
                                   zpt::events::dispatcher::ptr _dispatcher) -> bool {
     return this->__underlying.catch_error(_e, _dispatcher);
 }
 
-template<Operation T>
+template<zpt::events::Operation T>
 auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
     return this->__underlying(_dispatcher);
 }
 
-template<typename T>
+template<zpt::events::Operation T>
 auto zpt::make_event(T _operator) -> zpt::event {
     return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
                                                  _operator);
 }
 
-template<typename T, typename... Args>
+template<zpt::events::Operation T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
     return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
                                                  std::forward<Args>(_args)...);
@@ -203,7 +201,7 @@ auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     return (*this);
 }
 
-template<typename T>
+template<zpt::events::Operation T>
 auto zpt::event_cast(zpt::event& _event) -> T& {
     return *static_cast<zpt::event_t<T>&>(*_event.get());
 }

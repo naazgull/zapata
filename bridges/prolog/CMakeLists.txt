@@ -21,7 +21,7 @@ target_include_directories(zapata-bridge-prolog
     zapata-parser-json
     zapata-bridge-base
     ${BRIDGE_PROLOG_INCLUDE_DIR}
-  INTERFACE    
+  INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-prolog

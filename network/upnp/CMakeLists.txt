@@ -102,7 +102,7 @@ target_link_libraries(zapata-net-upnp-plugin
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
-) 
+)
 set_target_properties(zapata-net-upnp-plugin
   PROPERTIES
     VERSION ${PROJECT_VERSION}
