@@ -31,40 +31,6 @@ namespace zpt {
 
 enum transport_capability { SYNCHRONOUS = 1, PERSISTENT = 2 };
 
-class json_message : public basic_message {
-  public:
-    json_message();
-    json_message(basic_message const& _req, bool);
-    virtual ~json_message() = default;
-
-    auto performative() const -> zpt::performative override;
-    auto status() const -> zpt::status override;
-    auto uri() -> zpt::json& override;
-    auto uri() const -> zpt::json const override;
-    auto version() const -> std::string override;
-    auto scheme() const -> std::string override;
-    auto resource() const -> zpt::json const override;
-    auto parameters() const -> zpt::json const override;
-    auto headers() -> zpt::json& override;
-    auto headers() const -> zpt::json const override;
-    auto body() -> zpt::json& override;
-    auto body() const -> zpt::json const override;
-    auto keep_alive() const -> bool override;
-    auto content_type() const -> std::string override;
-    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
-    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
-    auto performative(zpt::performative _performative) -> zpt::basic_message& override;
-    auto status(zpt::status _status) -> zpt::basic_message& override;
-    auto uri(std::string const& _uri) -> zpt::basic_message& override;
-    auto version(std::string const& _version) -> zpt::basic_message& override;
-    auto empty() const -> bool override;
-    template<typename T>
-    auto operator<<(T _to_add) -> zpt::json_message&;
-
-  private:
-    zpt::json __underlying;
-};
-
 class basic_transport {
   public:
     basic_transport() = default;

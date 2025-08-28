@@ -21,6 +21,7 @@
 */
 
 #include <iostream>
+#include <zapata/events.h>
 #include <zapata/ontology.h>
 #include <zapata/rest.h>
 #include <zapata/rest/services.h>
@@ -35,46 +36,51 @@ class test_client_service : public zpt::events::process {
 
     auto blocked() const -> bool { return false; }
 
-    auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-      -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
         return zpt::events::finish;
     }
 };
 
-class test_client_boot : public zpt::events::process {
+class test_client_boot : public zpt::system_event {
   public:
     test_client_boot(zpt::message _received)
-      : zpt::events::process{ _received } {}
+      : zpt::system_event{ _received } {}
     ~test_client_boot() = default;
 
-    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
+        if (this->__received->body()("_id")->ok() &&
+            this->__received->body()("_id")->string().find("/test_plugin") != std::string::npos) {
 
-    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
-        auto _config = zpt::GLOBAL_CONFIG();
-        auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-        auto _test_message = zpt::TRANSPORT_LAYER() //
-                               .get("tcp")
-                               ->make_request();
-        _test_message //
-          ->performative(zpt::Post)
-          .uri(std::format("{}/test_plugin", _prefix))
-          .body() = { "test", "something" };
+            auto _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->string();
+            auto _test_message = zpt::TRANSPORT_LAYER() //
+                                   .get("tcp")
+                                   ->make_request();
+            _test_message //
+              ->performative(zpt::Post)
+              .uri(std::format("{}/test_plugin", _prefix))
+              .body() = { "test", "something" };
 
-        _dispatcher->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(),
-                                                                     _test_message);
+            zpt::TRANSPORT_ENGINE() //
+              .dispatcher()
+              ->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(),
+                                                                _test_message);
 
+            zpt::SYSTEM_EVENTS_RESOLVER() //
+              ->remove<test_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+        }
         return zpt::events::finish;
     }
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Sending request to 'test_plugin'", zpt::info);
-    // zpt::REST_RESOLVER()->add<test_client_boot>(zpt::Notify, "/minions/boot");
-    // TODO: Send the request only when the system has received the needed service description
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_boot>(
+      zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading module 'test_plugin_client'", zpt::info);
-    zpt::REST_RESOLVER()->remove<test_client_boot>(zpt::Notify, "/minions/boot");
+    zpt::SYSTEM_EVENTS_RESOLVER()->remove<test_client_boot>(
+      zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
 }

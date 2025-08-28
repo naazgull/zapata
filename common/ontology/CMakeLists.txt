@@ -8,6 +8,7 @@ add_dependencies(zapata-ontology
   zapata-globals
   zapata-lockfree
   zapata-parser-json
+  zapata-parser-uri
 )
 target_sources(zapata-ontology
   PRIVATE
@@ -24,6 +25,7 @@ target_include_directories(zapata-ontology
     zapata-globals
     zapata-lockfree
     zapata-parser-json
+    zapata-parser-uri
     ${COMMON_ONTOLOGY_INCLUDE_DIR}
   INTERFACE
     ${COMMON_ONTOLOGY_INCLUDE_DIR}
@@ -34,6 +36,7 @@ target_link_libraries(zapata-ontology
     zapata-globals
     zapata-lockfree
     zapata-parser-json
+    zapata-parser-uri
 )
 set_target_properties(zapata-ontology
   PROPERTIES
@@ -60,6 +63,7 @@ add_dependencies(zapata_test_common_ontology
   zapata-globals
   zapata-lockfree
   zapata-parser-json
+  zapata-parser-uri
   zapata-ontology
 )
 target_sources(zapata_test_common_ontology
@@ -72,6 +76,7 @@ target_include_directories(zapata_test_common_ontology
     zapata-globals
     zapata-lockfree
     zapata-parser-json
+    zapata-parser-uri
     ${COMMON_ONTOLOGY_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_ontology
@@ -80,6 +85,7 @@ target_link_libraries(zapata_test_common_ontology
     zapata-globals
     zapata-lockfree
     zapata-parser-json
+    zapata-parser-uri
     zapata-ontology
 )
 set_target_properties(zapata_test_common_ontology

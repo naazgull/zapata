@@ -42,7 +42,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
     using ptr = std::shared_ptr<dispatcher>;
 
-    dispatcher(std::string const& _name, long _max_consumers);
+    dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
     virtual ~dispatcher();
 
     auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
@@ -128,7 +128,7 @@ auto make_event(T _operator) -> zpt::event;
 template<zpt::events::Operation T, typename... Args>
 auto make_event(Args&&... _args) -> zpt::event;
 
-auto DISPATCHER(long int _consumers = 0) -> zpt::events::dispatcher::ptr;
+auto DISPATCHER(long int _consumers = 0, long int _producers = 0) -> zpt::events::dispatcher::ptr;
 template<zpt::events::Operation T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt

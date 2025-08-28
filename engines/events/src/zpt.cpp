@@ -90,16 +90,23 @@ auto main(int _argc, char* _argv[]) -> int {
       std::max(1LL,
                _config("dispatcher")("limits")("max_consumer_threads")->ok()
                  ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
-                 : 1);
+                 : 1LL);
+    auto _producers = std::max(1LL,
+                               _config("transport")("limits")("max_consumer_threads")->ok()
+                                 ? _config("transport")("limits")("max_consumer_threads")->integer()
+                                 : 1LL);
 
     zpt::MEM_POOL(_config("dispatcher")("limits")("max_memory")->ok()
                     ? _config("dispatcher")("limits")("max_memory")->integer()
                     : 0);
 
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
-    zpt::DISPATCHER(_consumers) //
+    zpt::DISPATCHER(_consumers, _producers) //
       ->start_consumers(_consumers);
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::BOOTING);
     zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
+
     zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
     zpt::TRANSPORT_LAYER(_config);
@@ -112,10 +119,13 @@ auto main(int _argc, char* _argv[]) -> int {
       ->trigger<zpt::system_event>(zpt::system_event_type::FINISHED_BOOT);
 
     zpt::STREAM_POLLING() //
-      ->poll()
-      .shutdown();
-    zlog("Unloaded stream polling service", zpt::info);
+      ->poll();
 
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::SHUTTING_DOWN);
+    zpt::STREAM_POLLING() //
+      ->shutdown();
+    zlog("Unloaded stream polling service", zpt::info);
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);
@@ -126,8 +136,11 @@ auto main(int _argc, char* _argv[]) -> int {
       ->stop_consumers();
     zlog("Stopped global event dispatcher", zpt::info);
 
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
+
     return 0;
 }
 

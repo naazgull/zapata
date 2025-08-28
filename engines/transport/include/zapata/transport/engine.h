@@ -16,6 +16,7 @@ class engine {
     auto add_resolver(zpt::events::resolver _resolver) -> engine&;
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event>;
+    auto dispatcher() -> zpt::events::dispatcher::ptr;
     auto shutdown() -> engine&;
 
   private:
@@ -221,15 +222,19 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         _port = _uri("port")->integer();
     }
     else {
-        auto _found = this->__resolver->search(_uri("raw_path")->string());
-        zlog(_found, zpt::debug);
+        auto _found = this->__resolver->search(
+          std::format("/{}{}",
+                      zpt::ontology::to_str(this->__to_send->performative()),
+                      _uri("raw_path")->string()));
         expect(_found->ok() && _found->size() != 0,
                "Couldn't find a provider of '" << _uri("path")->string());
 
         auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
-        _scheme = _provider("protocols")("default")->string();
-        _address = _provider("protocols")("registered")(_scheme)("bind")->string();
-        _port = _provider("protocols")("registered")(_scheme)("port")->integer();
+        expect(_provider->ok() && _provider->size() != 0,
+               "Couldn't find a provider of '" << _uri("path")->string());
+        _scheme = _provider(0)("protocols")("default")->string();
+        _address = _provider(0)("protocols")("registered")(_scheme)("bind")->string();
+        _port = _provider(0)("protocols")("registered")(_scheme)("port")->integer();
     }
 
     auto _transport = zpt::TRANSPORT_LAYER() //

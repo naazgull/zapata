@@ -18,7 +18,13 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
 
     if (this->received()->performative() == zpt::Notify &&
         _peer_id != zpt::SELF()("_id")->string()) {
+        zpt::DISPATCHER() //
+          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_BOOT_RECEIVED,
+                                       this->received()->headers());
+
+#ifndef PROPAGATE_EXCEPTION
         try {
+#endif
             auto _peer = zpt::uri::parse(this->received()->headers()("X-My-Location")->string());
             auto _peer_scheme = _peer("scheme")->string();
             auto _transport = zpt::TRANSPORT_LAYER() //
@@ -35,10 +41,12 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
 
             _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
                                                                               _hello);
+#ifndef PROPAGATE_EXCEPTION
         }
         catch (std::exception const& _e) {
             zlog(_e.what(), zpt::debug)
         }
+#endif
     }
 
     return zpt::events::finish;
@@ -55,6 +63,10 @@ auto zpt::rest::minion_shutdown::operator()(zpt::events::dispatcher::ptr _dispat
 
     if (this->received()->performative() == zpt::Notify &&
         _peer_id != zpt::SELF()("_id")->string()) {
+        zpt::DISPATCHER() //
+          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_SHUTDOWN_RECEIVED,
+                                       this->received()->headers());
+
         try {
             zpt::REST_RESOLVER()->unregister_provider(_peer_id);
         }
@@ -75,6 +87,10 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
   -> zpt::events::state {
     if (this->received()->performative() == zpt::Post) {
         auto _minion = this->received()->body();
+
+        zpt::DISPATCHER() //
+          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_HELLO_RECEIVED, _minion);
+
         if (_minion("provider")->ok()) { ::add_minion(_minion); }
         else { zlog("Malformed service list: " << _minion, zpt::error); }
 
@@ -139,6 +155,10 @@ auto add_minion(zpt::json const& _minion) -> void {
         for (auto const& [_, __, _service] : _minion("services")) {
             if (_service("_id")->string().find("/minions") == std::string::npos) {
                 _resolver->add(_service);
+
+                zpt::DISPATCHER() //
+                  ->trigger<zpt::system_event>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE,
+                                               _service);
             }
         }
 
