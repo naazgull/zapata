@@ -9,8 +9,10 @@ add_dependencies(zapata-io-stream
 target_sources(zapata-io-stream
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/streams.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/event_stream.cpp
   INTERFACE
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams/streams.h
+    ${IO_STREAM_INCLUDE_DIR}/zapata/streams/event_stream.h
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams.h
 )
 target_include_directories(zapata-io-stream

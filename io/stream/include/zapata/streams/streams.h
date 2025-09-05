@@ -50,7 +50,7 @@ class basic_stream {
     auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
     auto operator=(basic_stream&& _rhs) -> basic_stream& = delete;
 
-    auto operator=(int _rhs) -> basic_stream&;
+    virtual auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
     auto read(T& _out) -> basic_stream&;
     template<typename T>
@@ -62,19 +62,19 @@ class basic_stream {
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
     auto operator*() -> std::iostream&;
 
-    operator int();
+    virtual operator int();
 
     template<typename IOStream>
     auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
-    auto close() -> basic_stream&;
-    auto shutdown() -> basic_stream&;
-    auto transport(const std::string& _rhs) -> basic_stream&;
-    auto transport() -> std::string&;
-    auto uri(const std::string& _rhs) -> basic_stream&;
-    auto uri() -> std::string&;
-    auto state() -> stream_state&;
+    virtual auto close() -> basic_stream&;
+    virtual auto shutdown() -> basic_stream&;
+    virtual auto transport(const std::string& _rhs) -> basic_stream&;
+    virtual auto transport() -> std::string&;
+    virtual auto uri(const std::string& _rhs) -> basic_stream&;
+    virtual auto uri() -> std::string&;
+    virtual auto state() -> stream_state&;
 
-  private:
+  protected:
     std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
