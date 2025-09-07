@@ -20,8 +20,8 @@ class resolver_t {
              zpt::json const& _id,
              zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
     virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
-    virtual auto add(zpt::message _sent,
-                     zpt::events::resolver_callback callback) -> resolver_t& = 0;
+    virtual auto add(zpt::message _sent, zpt::events::resolver_callback callback)
+      -> resolver_t& = 0;
     virtual auto add(zpt::performative _performtive,
                      zpt::json const& _id,
                      zpt::json const& _metadata,
@@ -32,10 +32,10 @@ class resolver_t {
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t&;
     virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
     virtual auto remove(zpt::performative _performtive, zpt::json const& _id) -> resolver_t& = 0;
-    virtual auto resolve(zpt::message _received,
-                         initializer_t _initializer) const -> std::list<zpt::event> = 0;
-    virtual auto search(zpt::json const& _id,
-                        std::string const& _provider_id = "") const -> zpt::json = 0;
+    virtual auto resolve(zpt::message _received, initializer_t _initializer) const
+      -> std::list<zpt::event> = 0;
+    virtual auto search(zpt::json const& _id, std::string const& _provider_id = "") const
+      -> zpt::json = 0;
     virtual auto list(std::string const& _provider_id = "") const -> zpt::json = 0;
     virtual auto register_provider(zpt::json const& _service_description) -> resolver_t& = 0;
     virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
@@ -50,8 +50,8 @@ auto make_callback(zpt::message _received, zpt::events::initializer_t _initializ
 } // namespace zpt
 
 template<zpt::events::Operation T>
-auto zpt::events::make_callback(zpt::message _received,
-                                zpt::events::initializer_t _initializer) -> zpt::event {
+auto zpt::events::make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
+  -> zpt::event {
     auto _event = zpt::make_event<T>(_received);
     _initializer(_event);
     return _event;
@@ -75,7 +75,7 @@ auto zpt::events::resolver_t::remove(zpt::json const& _id) -> resolver_t& {
 }
 
 template<zpt::events::Operation T>
-auto zpt::events::resolver_t::remove(zpt::performative _performative,
-                                     zpt::json const& _id) -> resolver_t& {
+auto zpt::events::resolver_t::remove(zpt::performative _performative, zpt::json const& _id)
+  -> resolver_t& {
     return this->remove(_performative, _id);
 }

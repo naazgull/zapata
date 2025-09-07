@@ -23,17 +23,11 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/net/socket.h>
-#include <zapata/net/transport/tcp.h>
+#include <zapata/net/transport/self.h>
 
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _config = _plugin.config();
-
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
       .add("self", zpt::make_transport<zpt::net::transport::self>());
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin.config();
-    zpt::TRANSPORT_LAYER().remove("self");
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("self"); }

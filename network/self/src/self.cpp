@@ -46,7 +46,8 @@ auto zpt::net::transport::self::make_reply(zpt::message _request) const -> zpt::
     return _to_return;
 }
 
-auto zpt::net::transport::self::process_incoming_request(zpt::stream _stream) const -> zpt::message {
+auto zpt::net::transport::self::process_incoming_request(zpt::stream _stream) const
+  -> zpt::message {
     expect(_stream->transport() == "self", "Stream underlying transport isn't 'self'");
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;

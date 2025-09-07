@@ -106,5 +106,5 @@ auto get_default_uri() -> std::string;
 
 auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
 auto GLOBAL_CONFIG() -> zpt::json;
-auto SELF() -> zpt::json const&;
+auto IDENTITY() -> zpt::json const&;
 } // namespace zpt

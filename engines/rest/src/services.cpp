@@ -17,7 +17,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
     auto _peer_id = this->received()->headers()("X-My-ID")->string();
 
     if (this->received()->performative() == zpt::Notify &&
-        _peer_id != zpt::SELF()("_id")->string()) {
+        _peer_id != zpt::IDENTITY()("_id")->string()) {
         zpt::DISPATCHER() //
           ->trigger<zpt::system_event>(zpt::system_event_type::MINION_BOOT_RECEIVED,
                                        this->received()->headers());
@@ -37,7 +37,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
                                _peer_scheme,
                                _peer("domain")->string(),
                                _peer("port")->integer()))
-              .body() = { "provider", zpt::SELF(), "services", zpt::REST_RESOLVER()->list() };
+              .body() = { "provider", zpt::IDENTITY(), "services", zpt::REST_RESOLVER()->list() };
 
             _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
                                                                               _hello);
@@ -62,7 +62,7 @@ auto zpt::rest::minion_shutdown::operator()(zpt::events::dispatcher::ptr _dispat
     auto _peer_id = this->received()->headers()("X-My-ID")->string();
 
     if (this->received()->performative() == zpt::Notify &&
-        _peer_id != zpt::SELF()("_id")->string()) {
+        _peer_id != zpt::IDENTITY()("_id")->string()) {
         zpt::DISPATCHER() //
           ->trigger<zpt::system_event>(zpt::system_event_type::MINION_SHUTDOWN_RECEIVED,
                                        this->received()->headers());
@@ -97,7 +97,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
         this //
           ->to_send()
           ->status(200)
-          .body() = { "provider", zpt::SELF(), "services", zpt::REST_RESOLVER()->list() };
+          .body() = { "provider", zpt::IDENTITY(), "services", zpt::REST_RESOLVER()->list() };
         return zpt::events::finish;
     }
 
@@ -136,7 +136,7 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
       .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path));
 
     _message->headers()["X-My-Location"] = zpt::get_default_uri();
-    _message->headers()["X-My-ID"] = zpt::SELF()("_id");
+    _message->headers()["X-My-ID"] = zpt::IDENTITY()("_id");
 
     auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
     _stream //

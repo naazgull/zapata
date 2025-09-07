@@ -22,10 +22,8 @@
 
 #pragma once
 
-#include <iostream>
-#include <memory>
-#include <atomic>
 #include <any>
+#include <sys/eventfd.h>
 #include <zapata/streams/streams.h>
 
 namespace zpt {
@@ -40,39 +38,11 @@ class event_stream : public basic_stream {
     auto operator=(event_stream&& _rhs) -> event_stream& = delete;
 
     auto operator=(int _rhs) -> event_stream&;
-    template<typename T>
-    auto read(T& _out) -> event_stream&;
-    template<typename T>
-    auto write(T _in) -> event_stream&;
-    template<typename T>
-    auto operator>>(T& _out) -> event_stream&;
-    template<typename T>
-    auto operator<<(T _in) -> event_stream&;
     auto operator<<(ostream_manipulator _in) -> event_stream&;
+    auto read_without_io(std::any& _out) -> event_stream& override;
+    auto write_without_io(std::any const& _in) -> event_stream& override;
 
   private:
     std::any __content;
 };
 } // namespace zpt
-
-template<typename T>
-auto zpt::event_stream::read(T& _out) -> zpt::event_stream& {
-    _out = std::any_cast<T>(this->__content);
-    return (*this);
-}
-
-template<typename T>
-auto zpt::event_stream::write(T _in) -> zpt::event_stream& {
-    this->__content = _in;
-    return (*this);
-}
-
-template<typename T>
-auto zpt::event_stream::operator>>(T& _out) -> zpt::event_stream& {
-    return this->read<T>(_out);
-}
-
-template<typename T>
-auto zpt::event_stream::operator<<(T _in) -> zpt::event_stream& {
-    return this->write<T>(_in);
-}

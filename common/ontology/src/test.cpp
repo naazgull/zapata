@@ -22,5 +22,4 @@
 
 #include <zapata/ontology.h>
 
-auto main(int, char**) -> int {
-}
+auto main(int, char**) -> int {}

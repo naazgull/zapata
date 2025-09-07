@@ -64,6 +64,16 @@ auto zpt::basic_stream::operator*() -> std::iostream& { return *this->__underlyi
 
 zpt::basic_stream::operator int() { return this->__fd; }
 
+auto zpt::basic_stream::read_without_io(std::any&) -> basic_stream& {
+    expect(false, "Not implemented for `basic_stream`");
+    return (*this);
+}
+
+auto zpt::basic_stream::write_without_io(std::any const&) -> basic_stream& {
+    expect(false, "Not implemented for `basic_stream`");
+    return (*this);
+}
+
 auto zpt::basic_stream::close() -> zpt::basic_stream& {
     zlog("Closing connection to " << this->uri(), zpt::trace);
     this->__underlying.reset(nullptr);

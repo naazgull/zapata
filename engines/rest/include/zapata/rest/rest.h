@@ -52,10 +52,10 @@ class resolver_t : public zpt::events::resolver_t {
              zpt::events::resolver_callback _callback) -> resolver_t& override;
     auto remove(zpt::message _sent) -> resolver_t& override;
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
-    auto resolve(zpt::message _received,
-                 zpt::events::initializer_t _initializer) const -> std::list<zpt::event> override;
-    auto search(zpt::json const& _id,
-                std::string const& _provider_id = "") const -> zpt::json override;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event> override;
+    auto search(zpt::json const& _id, std::string const& _provider_id = "") const
+      -> zpt::json override;
     auto list(std::string const& _provider_id = "") const -> zpt::json override;
     auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
     auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;

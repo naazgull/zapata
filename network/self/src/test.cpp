@@ -22,58 +22,6 @@
 
 #include <zapata/transport.h>
 #include <zapata/net/socket.h>
-#include <zapata/net/tcp.h>
+#include <zapata/net/self.h>
 
-auto main(int argc, char* argv[]) -> int {
-    if (argc > 2) {
-        std::string _type{ argv[1] };
-        zpt::transport _transport{ new zpt::net::transport::tcp{} };
-        std::istringstream _iss;
-        _iss.str(std::string{ argv[2] });
-        std::uint16_t _port{ 0 };
-        _iss >> _port;
-
-        if (_type == "server") {
-
-            zpt::serversocketstream _ssock{ _port };
-            do {
-                auto _stream = _ssock->accept();
-                _stream->transport("tcp");
-                auto _t1 = std::chrono::high_resolution_clock::now();
-                auto _received = _transport->receive(_stream);
-                auto _t2 = std::chrono::high_resolution_clock::now();
-                auto _duration1 =
-                  std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
-                auto _t3 = std::chrono::high_resolution_clock::now();
-                _transport->send(_stream, _received);
-                auto _t4 = std::chrono::high_resolution_clock::now();
-                auto _duration2 =
-                  std::chrono::duration_cast<std::chrono::microseconds>(_t4 - _t3).count();
-                std::cout << "# processing time" << std::endl
-                          << "\trequest: " << _duration1 << "µs" << std::endl
-                          << "\tresponse: " << _duration2 << "µs" << std::endl
-                          << std::flush;
-            } while (true);
-        }
-        else {
-            auto _message = _transport->make_request();
-            auto& _json = zpt::message_cast<zpt::json_message>(_message);
-            _json //
-              .performative(zpt::Post)
-              .uri("/test")
-              .body() =
-              R"({"body":[{"_id":"/NOTIFY/minions/boot","hash":0,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"},{"_id":"/POST/minions/hello","hash":1,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"}],"headers":{"Cache-Control":"no-store","Content-Type":"application/json","Date":"Sun, 10 Aug 2025 15:17:01 WEST","Host":"192.168.50.11:8083","X-Conversation-ID":"26a97074-a68d-4227-a6fd-fdfd2d6f6369","X-Version":"1.1"},"performative":"POST","uri":{"domain":"192.168.50.11","is_relative":false,"path":["minions","hello"],"port":8083,"raw_path":"/minions/hello","scheme":"tcp"}})"_JSON;
-
-            auto _stream =
-              zpt::make_stream<zpt::socketstream>("127.0.0.1", _port, zpt::NO_SSL, IPPROTO_TCP);
-            _stream //
-              ->transport("tcp");
-
-            _transport->send(_stream, _message);
-
-            if (zpt::stream_cast<zpt::socketstream>(_stream).is_error()) {
-                zlog(zpt::stream_cast<zpt::socketstream>(_stream).error_string(), zpt::debug);
-            }
-        }
-    }
-}
+auto main(int argc, char* argv[]) -> int {}
