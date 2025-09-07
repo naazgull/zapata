@@ -101,7 +101,7 @@ class json_message : public basic_message {
   private:
     zpt::json __underlying;
 };
-    
+
 template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
 template<typename T, typename... Args>

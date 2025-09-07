@@ -97,13 +97,13 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
   -> zpt::network::layer& {
     expect(this->__configuration("transport")("bind")->ok(),
            "Configuration value 'transport.bind' is mandatory");
-    expect(this->__configuration(_scheme)->ok(),
+    expect(_scheme == "self" || this->__configuration(_scheme)->ok(),
            std::format("Configuration value '{}' is mandatory", _scheme));
 
     if (!this->__configuration("transport")("addresses")->ok()) {
         this->__configuration["transport"]["addresses"] = zpt::json::array();
     }
-    if (this->__configuration(_scheme)->ok()) {
+    if (_scheme != "self" && this->__configuration(_scheme)->ok()) {
         std::string _host;
         std::string _port;
 

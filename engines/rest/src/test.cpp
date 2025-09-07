@@ -45,12 +45,38 @@ class test_plugin_collection : public zpt::events::process {
     }
 };
 
+class test_client_service : public zpt::events::process {
+  public:
+    test_client_service(zpt::message _received)
+      : zpt::events::process{ _received } {}
+    ~test_client_service() = default;
+
+    auto blocked() const -> bool { return false; }
+
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
+        return zpt::events::finish;
+    }
+};
+
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Registering listeners for module 'test_plugin'", zpt::info);
     auto _config = zpt::GLOBAL_CONFIG();
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
+
+    auto _test_message = zpt::TRANSPORT_LAYER() //
+                           .get("tcp")
+                           ->make_request();
+    _test_message //
+      ->performative(zpt::Post)
+      .uri(std::format("{}/test_plugin", _prefix))
+      .body() = { "test", "something" };
+
+    zpt::TRANSPORT_ENGINE() //
+      .dispatcher()
+      ->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(), _test_message);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {

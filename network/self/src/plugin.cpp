@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#include <iostream>
+#include <zapata/startup.h>
+#include <zapata/transport.h>
+#include <zapata/net/transport/self.h>
 
-auto main(int, char**) -> int {}
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zpt::TRANSPORT_LAYER() //
+      .add("self", zpt::make_transport<zpt::net::transport::self>());
+}
+
+extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("self"); }

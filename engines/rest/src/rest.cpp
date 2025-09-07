@@ -25,13 +25,13 @@
 #include <zapata/net/socket/socket_stream.h>
 
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
-  : __catalog{ "rest_server", zpt::SELF()("_id")->string() }
+  : __catalog{ "rest_server", zpt::IDENTITY()("_id")->string() }
   , __configuration{ _global_config } {
-    this->__catalog.add_provider(zpt::SELF()("_id")->string(), zpt::SELF());
+    this->__catalog.add_provider(zpt::IDENTITY()("_id")->string(), zpt::IDENTITY());
 }
 
-auto zpt::rest::resolver_t::add(zpt::message _sent,
-                                zpt::events::resolver_callback callback) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
+  -> zpt::rest::resolver_t& {
     this->__pending_requests.push(_sent, callback);
     return (*this);
 }
@@ -75,8 +75,8 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
     return (*this);
 }
 
-auto zpt::rest::resolver_t::remove(zpt::performative _performative,
-                                   zpt::json const& _id) -> zpt::rest::resolver_t& {
+auto zpt::rest::resolver_t::remove(zpt::performative _performative, zpt::json const& _id)
+  -> zpt::rest::resolver_t& {
     auto _path = _id->string();
     auto _to_search =
       std::format("/{}{}",
@@ -93,8 +93,9 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative,
     return (*this);
 }
 
-auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initializer_t _initializer)
-  const -> std::list<zpt::event> {
+auto zpt::rest::resolver_t::resolve(zpt::message _received,
+                                    zpt::events::initializer_t _initializer) const
+  -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
     if (_received->performative() != zpt::Reply) {
@@ -118,8 +119,8 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received, zpt::events::initial
     return _return;
 }
 
-auto zpt::rest::resolver_t::search(zpt::json const& _id,
-                                   std::string const& _provider_id) const -> zpt::json {
+auto zpt::rest::resolver_t::search(zpt::json const& _id, std::string const& _provider_id) const
+  -> zpt::json {
     auto _path = _id->string();
     return this->__catalog.search(_path, _provider_id);
 }

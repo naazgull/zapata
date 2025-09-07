@@ -20,6 +20,29 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#pragma once
 
-auto main(int, char**) -> int {}
+#include <any>
+#include <sys/eventfd.h>
+#include <zapata/streams/streams.h>
+
+namespace zpt {
+class event_stream : public basic_stream {
+  public:
+    event_stream();
+    event_stream(event_stream const& _rhs) = delete;
+    event_stream(event_stream&& _rhs) = delete;
+    virtual ~event_stream();
+
+    auto operator=(event_stream const& _rhs) -> event_stream& = delete;
+    auto operator=(event_stream&& _rhs) -> event_stream& = delete;
+
+    auto operator=(int _rhs) -> event_stream&;
+    auto operator<<(ostream_manipulator _in) -> event_stream&;
+    auto read_without_io(std::any& _out) -> event_stream& override;
+    auto write_without_io(std::any const& _in) -> event_stream& override;
+
+  private:
+    std::any __content;
+};
+} // namespace zpt

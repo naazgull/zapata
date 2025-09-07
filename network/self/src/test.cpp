@@ -20,6 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#include <zapata/transport.h>
+#include <zapata/net/socket.h>
+#include <zapata/net/self.h>
 
-auto main(int, char**) -> int {}
+auto main(int argc, char* argv[]) -> int {}

@@ -20,6 +20,27 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#pragma once
+#include <string>
+#include <utility>
+#include <zapata/streams.h>
+#include <zapata/transport.h>
 
-auto main(int, char**) -> int {}
+namespace zpt {
+namespace net {
+namespace transport {
+class self : public zpt::basic_transport {
+  public:
+    self() = default;
+    virtual ~self() = default;
+
+    auto has_capability(std::uint64_t _capability) const -> bool override;
+    auto make_request() const -> zpt::message override;
+    auto make_reply(bool _with_allocator = true) const -> zpt::message override;
+    auto make_reply(zpt::message _request) const -> zpt::message override;
+    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
+};
+} // namespace transport
+} // namespace net
+} // namespace zpt

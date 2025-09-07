@@ -20,6 +20,6 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#pragma once
 
-auto main(int, char**) -> int {}
+#include <zapata/net/transport/self.h>

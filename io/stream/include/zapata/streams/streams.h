@@ -25,6 +25,7 @@
 #include <iostream>
 #include <memory>
 #include <atomic>
+#include <any>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/text/convert.h>
@@ -50,11 +51,13 @@ class basic_stream {
     auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
     auto operator=(basic_stream&& _rhs) -> basic_stream& = delete;
 
-    auto operator=(int _rhs) -> basic_stream&;
+    virtual auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
     auto read(T& _out) -> basic_stream&;
     template<typename T>
     auto write(T _in) -> basic_stream&;
+    virtual auto read_without_io(std::any& _out) -> basic_stream&;
+    virtual auto write_without_io(std::any const& _in) -> basic_stream&;
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
     template<typename T>
@@ -62,19 +65,19 @@ class basic_stream {
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
     auto operator*() -> std::iostream&;
 
-    operator int();
+    virtual operator int();
 
     template<typename IOStream>
     auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
-    auto close() -> basic_stream&;
-    auto shutdown() -> basic_stream&;
-    auto transport(const std::string& _rhs) -> basic_stream&;
-    auto transport() -> std::string&;
-    auto uri(const std::string& _rhs) -> basic_stream&;
-    auto uri() -> std::string&;
-    auto state() -> stream_state&;
+    virtual auto close() -> basic_stream&;
+    virtual auto shutdown() -> basic_stream&;
+    virtual auto transport(const std::string& _rhs) -> basic_stream&;
+    virtual auto transport() -> std::string&;
+    virtual auto uri(const std::string& _rhs) -> basic_stream&;
+    virtual auto uri() -> std::string&;
+    virtual auto state() -> stream_state&;
 
-  private:
+  protected:
     std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
@@ -132,6 +135,15 @@ auto stream_cast(zpt::stream& _rhs) -> T& {
 
 template<typename T>
 auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
+    if (this->__underlying == nullptr) {
+        if constexpr (std::is_copy_assignable<T>::value) {
+            std::any _without_io;
+            this->read_without_io(_without_io);
+            _out = std::any_cast<T>(_without_io);
+        }
+        return (*this);
+    }
+
     auto& _underlying = *this->__underlying.get();
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _out->from_stream(_underlying);
@@ -142,6 +154,11 @@ auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
 
 template<typename T>
 auto zpt::basic_stream::write(T _in) -> zpt::basic_stream& {
+    if (this->__underlying == nullptr) {
+        this->write_without_io(std::make_any<T>(_in));
+        return (*this);
+    }
+
     auto& _underlying = *this->__underlying.get();
     if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
         _in->to_stream(_underlying);

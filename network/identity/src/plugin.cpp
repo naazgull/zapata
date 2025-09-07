@@ -27,7 +27,7 @@
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto _global_config = zpt::GLOBAL_CONFIG();
     auto& _config = _plugin.config();
-    expect(_config->type() == zpt::JSObject, "Configuration 'self' must be defined");
+    expect(_config->type() == zpt::JSObject, "Configuration 'identity' must be defined");
 
     std::string _id = _config("id")->ok() ? _config("id")->string() : zpt::generate::r_uuid();
     _config["_id"] = _id;
@@ -38,6 +38,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         _config["protocols"]["registered"][_protocol] = _global_config(_protocol);
     }
     _config["protocols"]["default"] = _global_config("transport")("default");
+    zlog("Minion identified by " << _config("_id")->string(), zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) {}

@@ -20,6 +20,30 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology.h>
+#include <zapata/streams/event_stream.h>
 
-auto main(int, char**) -> int {}
+zpt::event_stream::event_stream() {
+    this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
+}
+
+zpt::event_stream::~event_stream() {}
+
+auto zpt::event_stream::operator=(int _fd) -> zpt::event_stream& {
+    this->__fd = _fd;
+    return (*this);
+}
+
+auto zpt::event_stream::operator<<(ostream_manipulator) -> zpt::event_stream& { return (*this); }
+
+auto zpt::event_stream::read_without_io(std::any &_out) -> zpt::event_stream& {
+    _out = this->__content;
+    std::uint64_t _val;
+    eventfd_read(this->__fd, &_val);
+    return (*this);
+}
+
+auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stream& {
+    this->__content = _in;
+    eventfd_write(this->__fd, 1);
+    return (*this);
+}
