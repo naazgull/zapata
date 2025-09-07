@@ -42,8 +42,9 @@ zpt::upnp::basic_request::basic_request(zpt::basic_message const& _request, bool
     _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
     _headers["Cache-Control"] =
       _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-    _headers["X-Conversation-ID"] =
-      _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
+    _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
+                                      ? _req_headers("X-Conversation-ID")->string()
+                                      : zpt::generate::r_uuid();
     _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0";
 
     this->__underlying           //
@@ -109,8 +110,9 @@ zpt::upnp::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
     _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
     _headers["Cache-Control"] =
       _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-    _headers["X-Conversation-ID"] =
-      _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
+    _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
+                                      ? _req_headers("X-Conversation-ID")->string()
+                                      : zpt::generate::r_uuid();
     _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1";
 
     this->__underlying           //

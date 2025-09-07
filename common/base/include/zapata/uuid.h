@@ -20,8 +20,41 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/transport.h>
-#include <zapata/net/socket.h>
-#include <zapata/net/self.h>
+#pragma once
 
-auto main(int, char*[]) -> int { return 0; }
+#include <string>
+
+namespace zpt {
+class uuid {
+  public:
+    uuid();
+    uuid(std::string const& _str);
+    uuid(uuid const& _rhs);
+    uuid(uuid&& _rhs);
+    ~uuid() = default;
+
+    auto operator=(uuid const& _rhs) -> uuid&;
+    auto operator=(uuid&& _rhs) -> uuid&;
+
+    auto operator==(uuid const& _rhs) -> bool;
+    auto operator!=(uuid const& _rhs) -> bool;
+
+    auto to_string() const -> std::string;
+    auto from_string(std::string const& _str) -> uuid&;
+    auto to_stream(std::ostream& _out) const -> uuid const&;
+    auto from_stream(std::istream& _in) -> uuid&;
+
+    friend auto operator<<(std::ostream& _out, zpt::uuid const& _uuid) -> std::ostream& {
+        _uuid.to_stream(_out);
+        return _out;
+    }
+
+    friend auto operator>>(std::istream& _in, zpt::uuid& _uuid) -> std::istream& {
+        _uuid.from_stream(_in);
+        return _in;
+    }
+
+  private:
+    __uint128_t __base;
+};
+} // namespace zpt

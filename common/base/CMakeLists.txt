@@ -33,6 +33,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uuid.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
@@ -61,6 +62,7 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha1.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha256.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/atomics/padded_atomic.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/uuid.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator/allocator.h
 )

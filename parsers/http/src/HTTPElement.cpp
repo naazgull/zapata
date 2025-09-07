@@ -131,6 +131,9 @@ auto zpt::init(zpt::http::basic_request& _req) -> void {
     _req.performative(zpt::Get);
     _req.header("User-Agent", "zapata");
     _req.header("Date", std::string(_buffer_date));
+    _req.header("Content-Type", "application/json");
+    _req.header("Cache-Control", "no-store");
+    _req.header("X-Conversation-ID", zpt::generate::r_uuid());
 }
 
 auto zpt::init(zpt::http::basic_reply& _rep) -> void {
