@@ -20,16 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/upnp/UPNPObj.h>
-#include <zapata/net/transport/upnp.h>
-#include <zapata/base.h>
-#include <zapata/uri/uri.h>
-#include <zapata/net/socket/socket_stream.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <zapata/base.h>
+#include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/transport/upnp.h>
+#include <zapata/upnp/UPNPObj.h>
+#include <zapata/uri/uri.h>
 
 auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const -> bool {
     static constexpr std::uint64_t _capabilities = 0;

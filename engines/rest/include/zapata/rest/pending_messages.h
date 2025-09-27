@@ -23,9 +23,9 @@
 #pragma once
 
 #include <unordered_map>
+#include <zapata/locks/spin_mutex.h>
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
-#include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
 namespace rest {

@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <filesystem>
+#include <zapata/ast.h>
 #include <zapata/base.h>
 #include <zapata/json.h>
-#include <zapata/ast.h>
-#include <filesystem>
 
 namespace zpt {
 namespace gen {

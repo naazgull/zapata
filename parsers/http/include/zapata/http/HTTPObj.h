@@ -29,10 +29,10 @@
 #include <ostream>
 #include <vector>
 #include <zapata/base/expect.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 #include <zapata/transport.h>
-#include <zapata/json/JSONClass.h>
 
 #ifndef CRLF
 #define CRLF "\r\n"

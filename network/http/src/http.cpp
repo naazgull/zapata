@@ -20,10 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/net/transport/http.h>
 #include <zapata/base.h>
-#include <zapata/uri/uri.h>
 #include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/transport/http.h>
+#include <zapata/uri/uri.h>
 
 auto zpt::net::transport::http::has_capability(std::uint64_t _capability) const -> bool {
     static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;

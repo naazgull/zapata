@@ -20,9 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/mem/usage.h>
-
 #include <zapata/log/log.h>
+#include <zapata/mem/usage.h>
 #include <zapata/text/convert.h>
 
 void zpt::process_mem_usage(double& vm_usage, double& resident_set) {

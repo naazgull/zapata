@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <shared_mutex>
+#include <typeinfo>
 #include <zapata/base.h>
 #include <zapata/locks/spin_mutex.h>
-#include <typeinfo>
-#include <shared_mutex>
 
 namespace zpt {
 class thread_local_table_entry {

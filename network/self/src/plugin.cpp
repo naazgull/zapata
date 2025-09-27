@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
+#include <zapata/net/transport/self.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/net/transport/self.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //

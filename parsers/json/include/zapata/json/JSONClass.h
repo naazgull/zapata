@@ -31,10 +31,9 @@
 #include <string>
 #include <sys/time.h>
 #include <unordered_map>
-#include <vector>
 #include <variant>
+#include <vector>
 #include <zapata/base/expect.h>
-
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>

@@ -22,13 +22,12 @@
 
 #pragma once
 
+#include <typeinfo>
 #include <zapata/base.h>
+#include <zapata/events.h>
 #include <zapata/globals.h>
 #include <zapata/json.h>
-#include <zapata/events.h>
 #include <zapata/startup/configuration.h>
-
-#include <typeinfo>
 
 namespace zpt {
 

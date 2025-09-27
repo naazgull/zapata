@@ -23,9 +23,9 @@
 #pragma once
 
 #include <zapata/globals.h>
+#include <zapata/json.h>
 #include <zapata/ontology.h>
 #include <zapata/streams.h>
-#include <zapata/json.h>
 
 namespace zpt {
 

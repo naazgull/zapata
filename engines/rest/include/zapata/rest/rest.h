@@ -25,8 +25,8 @@
 #include <zapata/catalog.h>
 #include <zapata/events.h>
 #include <zapata/ontology.h>
-#include <zapata/startup.h>
 #include <zapata/rest/pending_messages.h>
+#include <zapata/startup.h>
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 

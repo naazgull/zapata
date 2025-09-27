@@ -22,14 +22,14 @@
 
 #pragma once
 
+#include <any>
+#include <atomic>
 #include <iostream>
 #include <memory>
-#include <atomic>
-#include <any>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
-#include <zapata/text/convert.h>
 #include <zapata/locks/spin_mutex.h>
+#include <zapata/text/convert.h>
 
 namespace zpt {
 enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };

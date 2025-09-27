@@ -22,5 +22,5 @@
 
 #pragma once
 
-#include <zapata/oauth2/oauth2.h>
 #include <zapata/oauth2/listeners.h>
+#include <zapata/oauth2/oauth2.h>

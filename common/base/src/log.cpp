@@ -20,12 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/log/log.h>
-
+#include <filesystem>
 #include <strings.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <filesystem>
+#include <zapata/log/log.h>
 #include <zapata/text/convert.h>
 
 namespace zpt {

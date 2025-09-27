@@ -5,8 +5,8 @@
 #define zptFunctionalTokenizerBase_h_included
 
 #include <exception>
-#include <vector>
 #include <iostream>
+#include <vector>
 // $insert preincludes
 #include "Functionalinc.h"
 

@@ -22,12 +22,12 @@
 
 #pragma once
 
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <variant>
 #include <vector>
-#include <iostream>
-#include <filesystem>
 
 inline std::uint16_t AST_INDENTATION_SPACES{ 4 };
 

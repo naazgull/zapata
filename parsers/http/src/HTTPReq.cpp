@@ -20,14 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/http/HTTPObj.h>
-
 #include <iostream>
-#include <zapata/log/log.h>
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
+#include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPParser.h>
 #include <zapata/json/json.h>
+#include <zapata/log/log.h>
 #include <zapata/uri.h>
 
 zpt::http::basic_request::basic_request() {

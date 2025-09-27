@@ -21,8 +21,8 @@
 */
 
 #include <dlfcn.h>
-#include <zapata/transport.h>
 #include <zapata/startup/startup.h>
+#include <zapata/transport.h>
 
 namespace {
 zpt::json __builtins = R"({

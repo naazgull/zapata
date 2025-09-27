@@ -23,9 +23,9 @@
 #pragma once
 #include <string>
 #include <utility>
+#include <zapata/http.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
-#include <zapata/http.h>
 
 #ifndef CRLF
 #define CRLF "\r\n"

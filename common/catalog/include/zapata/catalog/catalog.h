@@ -22,10 +22,10 @@
 
 #pragma once
 
-#include <string>
 #include <deque>
-#include <zapata/sqlite.h>
+#include <string>
 #include <zapata/json.h>
+#include <zapata/sqlite.h>
 
 namespace {
 static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";

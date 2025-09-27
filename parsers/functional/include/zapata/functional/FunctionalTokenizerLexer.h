@@ -1,7 +1,7 @@
 #pragma once
 
-#include <zapata/json.h>
 #include <zapata/functional/FunctionalLexer.h>
+#include <zapata/json.h>
 
 namespace zpt {
 

@@ -23,9 +23,9 @@
 #pragma once
 
 #include <memory>
+#include <zapata/allocator.h>
 #include <zapata/base.h>
 #include <zapata/lockfree.h>
-#include <zapata/allocator.h>
 
 namespace zpt {
 class abstract_event;

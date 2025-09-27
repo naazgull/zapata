@@ -20,17 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stddef.h>
-#include <zapata/text/convert.h>
-#include <zapata/text/manip.h>
-#include <zapata/log/log.h>
-#include <zlib.h>
 #include <algorithm>
 #include <cctype>
 #include <functional>
 #include <iterator>
 #include <sstream>
+#include <stddef.h>
 #include <string>
+#include <zapata/log/log.h>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
+#include <zlib.h>
 
 auto zpt::ltrim(std::string& _in_out) -> void {
     _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), [](char c) {

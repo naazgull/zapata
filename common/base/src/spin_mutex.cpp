@@ -1,10 +1,9 @@
 #include <atomic>
-#include <memory>
-#include <map>
-#include <thread>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <thread>
 #include <type_traits>
-
 #include <zapata/base/expect.h>
 #include <zapata/locks/spin_mutex.h>
 

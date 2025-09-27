@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/rest/rest.h>
 #include <zapata/http.h>
 #include <zapata/net/socket/socket_stream.h>
+#include <zapata/rest/rest.h>
 
 zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
   : __catalog{ "rest_server", zpt::IDENTITY()("_id")->string() }

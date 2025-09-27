@@ -1,5 +1,5 @@
-#include <zapata/ast/cpp.h>
 #include <sstream>
+#include <zapata/ast/cpp.h>
 
 zpt::ast::cpp_class::cpp_class(std::string const& _name, std::string const& _extends)
   : zpt::ast::basic_class{ _name, _extends } {}

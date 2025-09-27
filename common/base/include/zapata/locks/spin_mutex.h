@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>
 #include <map>
-#include <type_traits>
+#include <memory>
 #include <shared_mutex>
-
+#include <type_traits>
 #include <zapata/atomics/padded_atomic.h>
 
 namespace zpt {

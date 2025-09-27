@@ -20,11 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/net/transport/pipe.h>
 #include <zapata/base.h>
-#include <zapata/uri.h>
-#include <zapata/io/pipe.h>
 #include <zapata/globals/globals.h>
+#include <zapata/io/pipe.h>
+#include <zapata/net/transport/pipe.h>
+#include <zapata/uri.h>
 
 auto zpt::INTERNAL_SERVER_STREAM() -> ssize_t& {
     static ssize_t _global{ -1 };

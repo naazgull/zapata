@@ -21,10 +21,10 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
-#include <zapata/transport.h>
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/local.h>
+#include <zapata/startup.h>
+#include <zapata/transport.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();

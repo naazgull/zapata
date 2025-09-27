@@ -4,6 +4,7 @@
 
 // $insert class.h
 #include "URITokenizer.h"
+
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 // $insert namespace-open

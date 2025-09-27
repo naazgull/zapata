@@ -21,8 +21,8 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
 #include <zapata/lua.h>
+#include <zapata/startup.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::LUA_BRIDGE();

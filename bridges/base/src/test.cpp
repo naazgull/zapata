@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/bridge/bridge.h>
 #include <zapata/base.h>
+#include <zapata/bridge/bridge.h>
 
 class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
   public:

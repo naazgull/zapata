@@ -20,11 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/log/log.h>
-#include <zapata/text/convert.h>
-
 #include <iomanip>
 #include <unistd.h>
+#include <zapata/log/log.h>
+#include <zapata/text/convert.h>
 
 #define BOM8A 0xEF
 #define BOM8B 0xBB

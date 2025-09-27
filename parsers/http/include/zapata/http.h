@@ -23,7 +23,6 @@
 #pragma once
 
 #include <zapata/exceptions/NoHeaderNameException.h>
-
 #include <zapata/http/HTTPLexer.h>
 #include <zapata/http/HTTPLexerbase.h>
 #include <zapata/http/HTTPLexerimpl.h>

@@ -21,8 +21,8 @@
 */
 #pragma once
 
-#include <zapata/json.h>
 #include <mysqlx/xdevapi.h>
+#include <zapata/json.h>
 
 namespace zpt {
 namespace storage {

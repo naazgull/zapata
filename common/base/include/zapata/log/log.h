@@ -25,11 +25,11 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <unistd.h>
 #include <memory>
-#include <thread>
 #include <sstream>
+#include <string>
+#include <thread>
+#include <unistd.h>
 
 #define __HOST__ std::string(zpt::log_hostname())
 #define zlog(x, y)                                                                                 \

@@ -1,6 +1,6 @@
+#include <fstream>
 #include <zapata/ast/ast.h>
 #include <zapata/base.h>
-#include <fstream>
 
 auto zpt::ast::basic_element::get_indentation() const -> std::string {
     if (this->__newline) {

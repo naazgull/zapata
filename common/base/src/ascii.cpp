@@ -20,12 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/text/convert.h>
-
 #include <iomanip>
 #include <sys/time.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
+#include <zapata/text/convert.h>
 
 auto zpt::ascii::encode(std::string& _out, bool) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);

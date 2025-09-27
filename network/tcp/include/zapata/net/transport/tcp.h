@@ -23,9 +23,9 @@
 #pragma once
 #include <string>
 #include <utility>
+#include <zapata/net/socket/socket_stream.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
-#include <zapata/net/socket/socket_stream.h>
 
 namespace zpt {
 namespace net {

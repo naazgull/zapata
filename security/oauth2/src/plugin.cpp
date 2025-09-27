@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
-#include <zapata/rest.h>
-#include <zapata/oauth2/oauth2.h>
 #include <zapata/oauth2/listeners.h>
+#include <zapata/oauth2/oauth2.h>
+#include <zapata/rest.h>
 
 std::atomic<bool> _shutdown{ false };
 

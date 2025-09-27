@@ -20,14 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/upnp/UPNPObj.h>
-
 #include <iostream>
-#include <zapata/log/log.h>
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 #include <zapata/http/HTTPParser.h>
 #include <zapata/json/json.h>
+#include <zapata/log/log.h>
+#include <zapata/upnp/UPNPObj.h>
 #include <zapata/uri.h>
 
 zpt::upnp::basic_request::basic_request() {

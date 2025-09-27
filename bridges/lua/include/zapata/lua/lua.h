@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/bridge.h>
 #include <lua.hpp>
+#include <zapata/bridge.h>
 
 namespace zpt {
 class lua_object {

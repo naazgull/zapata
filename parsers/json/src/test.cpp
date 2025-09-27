@@ -20,14 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <semaphore.h>
 #include <signal.h>
 #include <string>
 #include <unistd.h>
-#include <chrono>
-
-#include <semaphore.h>
 #include <zapata/json.h>
 
 auto test_json_map() -> int {

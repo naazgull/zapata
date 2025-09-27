@@ -22,21 +22,21 @@
 
 // #define WITH_ATOMIC_SHARED_PTR
 
-#include <signal.h>
-#include <unistd.h>
 #include <csignal>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <signal.h>
 #include <string>
-#include <vector>
-#include <thread>
-#include <sys/types.h>
 #include <sys/ipc.h>
+#include <sys/types.h>
+#include <thread>
+#include <unistd.h>
+#include <vector>
 #include <zapata/atomics/padded_atomic.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
-#include <zapata/exceptions/NoMoreElementsException.h>
 
 constexpr int N_ELEMENTS_QUEUE = 100000;
 constexpr int MAX_THREADS_QUEUE = 16;

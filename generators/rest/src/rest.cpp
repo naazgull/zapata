@@ -1,6 +1,6 @@
+#include <set>
 #include <zapata/generator/rest/rest.h>
 #include <zapata/uri.h>
-#include <set>
 
 zpt::gen::rest::unit::unit(std::string const& _module_name,
                            std::filesystem::path const& _base_path_backend,

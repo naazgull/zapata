@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/base.h>
 #include <zapata/allocator.h>
+#include <zapata/base.h>
 
 class A {
   public:

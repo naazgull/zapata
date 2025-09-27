@@ -28,15 +28,15 @@
 #include <iostream>
 #include <istream>
 #include <ostream>
-#include <streambuf>
 #include <stdio.h>
+#include <streambuf>
 #include <unistd.h>
 #include <zapata/base/expect.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/log/log.h>
+#include <zapata/streams.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
-#include <zapata/streams.h>
 
 namespace zpt {
 

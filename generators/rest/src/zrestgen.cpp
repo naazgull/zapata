@@ -1,5 +1,5 @@
-#include <zapata/json.h>
 #include <zapata/generator/rest/rest.h>
+#include <zapata/json.h>
 
 auto main(int _argc, char* _argv[]) -> int {
     zpt::json _parameter_setup{ "--schema",

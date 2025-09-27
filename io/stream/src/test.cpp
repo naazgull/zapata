@@ -1,5 +1,5 @@
-#include <zapata/streams.h>
 #include <fstream>
+#include <zapata/streams.h>
 
 auto main(int argc, char* argv[]) -> int {
     if (argc > 1) {

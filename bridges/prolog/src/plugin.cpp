@@ -21,8 +21,8 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
 #include <zapata/prolog.h>
+#include <zapata/startup.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     // auto& _bridge = zpt::PROLOG_BRIDGE();

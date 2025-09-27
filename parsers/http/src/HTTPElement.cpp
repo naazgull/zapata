@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
-#include <zapata/uri/uri.h>
-#include <zapata/http/HTTPObj.h>
 #include <zapata/exceptions/CastException.h>
+#include <zapata/http/HTTPObj.h>
+#include <zapata/uri/uri.h>
 
 auto zpt::http::basic_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());

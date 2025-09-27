@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <vector>
 #include <string>
+#include <vector>
 #include <zapata/globals.h>
 
 auto main(int, char**) -> int {

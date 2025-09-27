@@ -20,9 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/exceptions/ExpectationException.h>
-
 #include <sstream>
+#include <zapata/exceptions/ExpectationException.h>
 #include <zapata/text/convert.h>
 
 zpt::ExpectationException::ExpectationException(std::string const& _what,

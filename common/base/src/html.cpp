@@ -20,10 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/text/html.h>
-
 #include <iomanip>
 #include <unistd.h>
+#include <zapata/text/html.h>
 #include <zapata/text/manip.h>
 
 auto zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) -> void {

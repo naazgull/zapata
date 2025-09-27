@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/transport/transport.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
+#include <zapata/transport/transport.h>
 #include <zapata/uri/uri.h>
 
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {

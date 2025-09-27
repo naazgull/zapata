@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <zapata/json.h>
-#include <zapata/connector.h>
 #include <sqlite3.h>
+#include <zapata/connector.h>
+#include <zapata/json.h>
 
 namespace zpt {
 namespace storage {

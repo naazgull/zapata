@@ -23,5 +23,4 @@
 #pragma once
 
 #include <zapata/mongodb/Client.h>
-
 #include <zapata/mongodb/convert_mongo.h>

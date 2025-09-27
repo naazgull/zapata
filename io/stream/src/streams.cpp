@@ -20,10 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/streams/streams.h>
-#include <systemd/sd-daemon.h>
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
+#include <systemd/sd-daemon.h>
+#include <zapata/streams/streams.h>
 
 namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };

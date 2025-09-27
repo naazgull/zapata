@@ -20,10 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/crypto/sha512.h>
-
 #include <cstring>
 #include <fstream>
+#include <zapata/crypto/sha512.h>
 
 const std::uint64_t zpt::crypto::SHA512::sha512_k[80] = // ULL = std::uint64_t
   { 0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,

@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/transport.h>
 #include <zapata/net/socket.h>
 #include <zapata/net/upnp.h>
+#include <zapata/transport.h>
 #include <zapata/upnp/UPNPObj.h>
 
 auto main(int _argc, char* _argv[]) -> int {

@@ -23,8 +23,8 @@
 #pragma once
 
 #include <atomic>
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 #include <new>
 #include <zapata/base/expect.h>
 

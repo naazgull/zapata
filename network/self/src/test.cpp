@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/transport.h>
-#include <zapata/net/socket.h>
 #include <zapata/net/self.h>
+#include <zapata/net/socket.h>
+#include <zapata/transport.h>
 
 auto main(int, char*[]) -> int { return 0; }

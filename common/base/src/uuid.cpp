@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/uuid.h>
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
+#include <zapata/uuid.h>
 
 zpt::uuid::uuid() { this->from_string(zpt::generate::r_uuid()); }
 

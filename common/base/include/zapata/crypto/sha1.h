@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <cinttypes>
+#include <cstdint>
 #include <iostream>
 #include <string>
-#include <cstdint>
-#include <cinttypes>
 
 namespace zpt::crypto {
 class SHA1 {

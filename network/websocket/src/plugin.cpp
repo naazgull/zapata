@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
 #include <zapata/net/socket.h>
 #include <zapata/net/websocket.h>
+#include <zapata/startup.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();

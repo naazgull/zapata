@@ -20,10 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/crypto/sha256.h>
-
 #include <cstring>
 #include <fstream>
+#include <zapata/crypto/sha256.h>
 
 const unsigned int zpt::crypto::SHA256::sha256_k[64] = // UL = std::uint32_t
   {

@@ -20,10 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/net/transport/websocket.h>
 #include <zapata/base.h>
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/transport/websocket.h>
 
 auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     std::string _key;

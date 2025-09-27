@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/functional/functional.h>
 #include <zapata/functional/FunctionalParser.h>
+#include <zapata/functional/functional.h>
 
 auto zpt::functional::parse(std::string const& _in) -> zpt::json {
     std::istringstream _iss;

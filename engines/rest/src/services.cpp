@@ -1,5 +1,5 @@
-#include <zapata/rest/services.h>
 #include <zapata/connector.h>
+#include <zapata/rest/services.h>
 #include <zapata/uri.h>
 
 namespace {

@@ -21,13 +21,12 @@
 */
 #pragma once
 
+#include <atomic>
+#include <cassert>
+#include <map>
+#include <memory>
 #include <stddef.h>
 #include <vector>
-#include <map>
-#include <atomic>
-#include <memory>
-#include <cassert>
-
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/expect.h>
 

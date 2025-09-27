@@ -20,11 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/startup.h>
-#include <zapata/transport.h>
+#include <csignal>
 #include <signal.h>
 #include <unistd.h>
-#include <csignal>
+#include <zapata/startup.h>
+#include <zapata/transport.h>
 
 namespace {
 auto deallocate(int) -> void;

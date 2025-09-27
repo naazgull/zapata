@@ -20,18 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <dirent.h>
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <sys/sendfile.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <zapata/base/expect.h>
 #include <zapata/file/manip.h>
-
-#include <iostream>
-#include <fcntl.h>
-#include <stdio.h>
-#include <fstream>
-#include <sstream>
-#include <unistd.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/sendfile.h>
 
 // auto zpt::ls(std::string dir, std::vector<std::string>& result, bool recursive) -> int {
 //     DIR* dp{ nullptr };

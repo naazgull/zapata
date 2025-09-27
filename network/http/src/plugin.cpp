@@ -21,9 +21,9 @@
 */
 
 #include <iostream>
-#include <zapata/startup.h>
-#include <zapata/net/socket.h>
 #include <zapata/net/http.h>
+#include <zapata/net/socket.h>
+#include <zapata/startup.h>
 
 static zpt::padded_atomic<bool> _has_exited{ false };
 

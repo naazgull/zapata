@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/net/socket.h>
-#include <zapata/json/JSONClass.h>
 #include <zapata/http.h>
+#include <zapata/json/JSONClass.h>
+#include <zapata/net/socket.h>
 
 auto main(int argc, char* argv[]) -> int {
     if (argc > 1) {

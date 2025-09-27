@@ -3,12 +3,12 @@
 #ifndef zptJSONLexerBASE_H_INCLUDED
 #define zptJSONLexerBASE_H_INCLUDED
 
-#include <limits>
-#include <iostream>
 #include <deque>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 // $insert namespace-open
 namespace zpt {

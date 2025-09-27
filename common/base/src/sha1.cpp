@@ -20,12 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/crypto/sha1.h>
-
-#include <sstream>
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 #include <memory>
+#include <sstream>
+#include <zapata/crypto/sha1.h>
 
 /* Help macros */
 #define SHA1_ROL(value, bits) (((value) << (bits)) | (((value) & 0xffffffff) >> (32 - (bits))))

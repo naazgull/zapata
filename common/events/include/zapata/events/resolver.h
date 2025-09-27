@@ -1,8 +1,8 @@
 #pragma once
 
 #include <list>
-#include <zapata/ontology.h>
 #include <zapata/events/dispatcher.h>
+#include <zapata/ontology.h>
 
 namespace zpt {
 namespace events {

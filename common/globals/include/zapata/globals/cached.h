@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/base.h>
 #include <typeinfo>
+#include <zapata/base.h>
 
 namespace zpt {
 template<typename T>

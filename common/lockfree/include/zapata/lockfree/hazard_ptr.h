@@ -23,8 +23,8 @@
 #pragma once
 
 #include <zapata/base/expect.h>
-#include <zapata/log/log.h>
 #include <zapata/globals/thread_local_variable.h>
+#include <zapata/log/log.h>
 
 namespace zpt {
 namespace lf {

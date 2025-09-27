@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/json/JSONLexer.h>
 #include <zapata/json/JSONClass.h>
+#include <zapata/json/JSONLexer.h>
 
 namespace zpt {
 class JSONTokenizerLexer : public JSONLexer {

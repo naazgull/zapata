@@ -21,8 +21,8 @@
 */
 
 #include <zapata/base.h>
-#include <zapata/json.h>
 #include <zapata/events.h>
+#include <zapata/json.h>
 
 namespace zpt {
 namespace startup {

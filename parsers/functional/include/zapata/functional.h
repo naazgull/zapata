@@ -22,13 +22,13 @@
 
 #pragma once
 
-#include <zapata/functional/FunctionalTokenizerimpl.h>
-#include <zapata/functional/FunctionalTokenizerLexer.h>
-#include <zapata/functional/FunctionalTokenizer.h>
-#include <zapata/functional/FunctionalParser.h>
-#include <zapata/functional/Functionalinc.h>
-#include <zapata/functional/FunctionalTokenizerbase.h>
-#include <zapata/functional/FunctionalLexerbase.h>
 #include <zapata/functional/FunctionalLexer.h>
+#include <zapata/functional/FunctionalLexerbase.h>
 #include <zapata/functional/FunctionalLexerimpl.h>
+#include <zapata/functional/FunctionalParser.h>
+#include <zapata/functional/FunctionalTokenizer.h>
+#include <zapata/functional/FunctionalTokenizerLexer.h>
+#include <zapata/functional/FunctionalTokenizerbase.h>
+#include <zapata/functional/FunctionalTokenizerimpl.h>
+#include <zapata/functional/Functionalinc.h>
 #include <zapata/functional/functional.h>

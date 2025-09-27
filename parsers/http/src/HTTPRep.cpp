@@ -20,11 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/http/HTTPObj.h>
-
 #include <iostream>
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
+#include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPParser.h>
 #include <zapata/uri/uri.h>
 

@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/http/HTTPObj.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
+#include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
 #define HTTPScanner                                                                                \

@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/ontology/performative.h>
 #include <algorithm>
+#include <zapata/ontology/performative.h>
 
 namespace {
 inline constexpr char const* STATUS_NAMES[] = { "GET",       "PUT",     "POST",  "DELETE",

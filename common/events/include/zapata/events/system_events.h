@@ -1,8 +1,8 @@
 #pragma once
 
-#include <zapata/json.h>
 #include <zapata/events/dispatcher.h>
 #include <zapata/events/resolver.h>
+#include <zapata/json.h>
 
 namespace zpt {
 enum system_event_type : long long {

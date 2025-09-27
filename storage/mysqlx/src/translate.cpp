@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/mysqlx/translate.h>
 #include <mysqlx/xdevapi.h>
+#include <zapata/mysqlx/translate.h>
 
 auto zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
     switch (_rhs.getType()) {

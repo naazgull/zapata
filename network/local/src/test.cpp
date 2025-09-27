@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/transport.h>
-#include <zapata/net/socket.h>
 #include <zapata/net/local.h>
+#include <zapata/net/socket.h>
+#include <zapata/transport.h>
 
 auto main(int argc, char* argv[]) -> int {
     if (argc > 2) {

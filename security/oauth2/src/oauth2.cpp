@@ -22,8 +22,8 @@
 
 #include <ctime>
 #include <memory>
-#include <zapata/rest.h>
 #include <zapata/oauth2/oauth2.h>
+#include <zapata/rest.h>
 
 auto zpt::OAUTH2_TOKEN_PROVIDER() -> ssize_t& {
     static ssize_t _global{ -1 };

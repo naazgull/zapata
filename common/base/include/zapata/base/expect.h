@@ -24,8 +24,8 @@
 
 #include <cstring>
 #include <ctime>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <zapata/exceptions/ExpectationException.h>
 

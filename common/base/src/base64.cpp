@@ -20,10 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/text/convert.h>
-
-#include <unistd.h>
 #include <iomanip>
+#include <unistd.h>
+#include <zapata/text/convert.h>
 
 auto zpt::base64::r_encode(std::string const& _in) -> std::string {
     std::string _out(_in.data());

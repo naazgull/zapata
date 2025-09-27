@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/sqlite/connector.h>
-#include <zapata/base/sentry.h>
 #include <algorithm>
+#include <zapata/base/sentry.h>
+#include <zapata/sqlite/connector.h>
 
 #define sqlite_expect(_error, _message)                                                            \
     {                                                                                              \

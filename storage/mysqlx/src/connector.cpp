@@ -20,9 +20,9 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <zapata/mysqlx/connector.h>
 #include <zapata/mysqlx/translate.h>
-#include <algorithm>
 
 auto zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value {
     switch (_value->type()) {

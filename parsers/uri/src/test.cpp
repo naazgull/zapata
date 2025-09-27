@@ -20,13 +20,12 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <signal.h>
 #include <string>
 #include <unistd.h>
-#include <chrono>
-
 #include <zapata/uri.h>
 
 int main(int, char**) {

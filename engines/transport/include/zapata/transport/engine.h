@@ -1,11 +1,11 @@
 #pragma once
 
+#include <list>
 #include <zapata/events.h>
-#include <zapata/streams.h>
-#include <zapata/transport.h>
 #include <zapata/net/socket.h>
 #include <zapata/startup.h>
-#include <list>
+#include <zapata/streams.h>
+#include <zapata/transport.h>
 
 namespace zpt {
 namespace transports {

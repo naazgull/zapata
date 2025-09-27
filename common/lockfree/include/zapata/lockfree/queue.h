@@ -22,10 +22,10 @@
 
 #pragma once
 
-#include <zapata/base/sentry.h>
 #include <zapata/atomics/padded_atomic.h>
-#include <zapata/lockfree/hazard_ptr.h>
+#include <zapata/base/sentry.h>
 #include <zapata/exceptions/exceptions.h>
+#include <zapata/lockfree/hazard_ptr.h>
 
 namespace zpt {
 namespace lf {
