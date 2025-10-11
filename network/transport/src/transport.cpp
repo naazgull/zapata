@@ -93,12 +93,13 @@ zpt::network::layer::layer(zpt::json _global_config)
       "text/xml", zpt::network::layer::translate_from_xml, zpt::network::layer::translate_to_xml);
 }
 
-auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
-  -> zpt::network::layer& {
-    expect(this->__configuration("transport")("bind")->ok(),
-           "Configuration value 'transport.bind' is mandatory");
+auto zpt::network::layer::add(std::string const& _scheme,
+                              zpt::transport _transport) -> zpt::network::layer& {
     expect(_scheme == "self" || this->__configuration(_scheme)->ok(),
-           std::format("Configuration value '{}' is mandatory", _scheme));
+           "Configuration value '" << _scheme << "' is mandatory");
+    expect(_scheme == "self" || this->__configuration(_scheme)("bind")->ok() ||
+             this->__configuration(_scheme)("path")->ok(),
+           "Configuration value '" << _scheme << ".(bind|path)' is mandatory");
 
     if (!this->__configuration("transport")("addresses")->ok()) {
         this->__configuration["transport"]["addresses"] = zpt::json::array();
@@ -110,9 +111,7 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
         if (this->__configuration(_scheme)("bind")->ok()) {
             _host.assign(std::format("//{}", this->__configuration(_scheme)("bind")->string()));
         }
-        else if (!this->__configuration(_scheme)("path")->ok()) {
-            _host.assign(std::format("//{}", this->__configuration("transport")("bind")->string()));
-        }
+        else if (!this->__configuration(_scheme)("path")->ok()) { _host.assign("//127.0.0.1"); }
 
         if (this->__configuration(_scheme)("port")->ok()) {
             _port.assign(std::format(":{}", this->__configuration(_scheme)("port")->integer()));
@@ -157,8 +156,9 @@ auto zpt::network::layer::translate(std::istream& _io, std::string _mime) const 
     return zpt::undefined;
 }
 
-auto zpt::network::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const
-  -> std::string {
+auto zpt::network::layer::translate(std::ostream& _io,
+                                    std::string _mime,
+                                    zpt::json _content) const -> std::string {
     auto _found = this->__content_providers.find(_mime);
     if (_found != this->__content_providers.end()) {
         return std::get<1>(_found->second)(_io, _content);
@@ -196,8 +196,8 @@ auto zpt::network::layer::translate_from_default(std::istream& _io) -> zpt::json
     return zpt::network::layer::translate_from_raw(_io);
 }
 
-auto zpt::network::layer::translate_to_default(std::ostream& _io, zpt::json _content)
-  -> std::string {
+auto zpt::network::layer::translate_to_default(std::ostream& _io,
+                                               zpt::json _content) -> std::string {
     try {
         return zpt::network::layer::translate_to_json(_io, _content);
     }
