@@ -11,8 +11,8 @@ zpt::rest::minion_boot::minion_boot(zpt::message _received)
 
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                        [[maybe_unused]]) -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _peer_id = this->received()->headers()("X-My-ID")->string();
 
@@ -83,17 +83,21 @@ zpt::rest::minion_hello::minion_hello(zpt::message _received)
 
 auto zpt::rest::minion_hello::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                         [[maybe_unused]]) -> zpt::events::state {
     if (this->received()->performative() == zpt::Post) {
         auto _minion = this->received()->body();
+        if (_minion->ok()) {
+            zpt::DISPATCHER() //
+              ->trigger<zpt::system_event>(zpt::system_event_type::MINION_HELLO_RECEIVED, _minion);
 
-        zpt::DISPATCHER() //
-          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_HELLO_RECEIVED, _minion);
+            if (_minion("provider")->ok()) { ::add_minion(_minion); }
+            else { zlog("Malformed service list: " << _minion, zpt::error); }
+        }
+    }
 
-        if (_minion("provider")->ok()) { ::add_minion(_minion); }
-        else { zlog("Malformed service list: " << _minion, zpt::error); }
-
+    if (this->received()->performative() == zpt::Post ||
+        this->received()->performative() == zpt::Get) {
         this //
           ->to_send()
           ->status(200)
@@ -113,8 +117,8 @@ zpt::rest::services_list::services_list(zpt::message _received)
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
-auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-  -> zpt::events::state {
+auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                          [[maybe_unused]]) -> zpt::events::state {
     auto _minion = this->received()->body();
     if (_minion("provider")->ok()) {
         ::add_minion(_minion);

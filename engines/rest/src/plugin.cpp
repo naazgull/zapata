@@ -39,8 +39,8 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 
     zpt::REST_RESOLVER() //
       ->add<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
-      .add<zpt::rest::minion_hello>(zpt::Post, "/minions/hello")
-      .add<zpt::rest::minion_shutdown>(zpt::Notify, "/minions/shutdown");
+      .add<zpt::rest::minion_shutdown>(zpt::Notify, "/minions/shutdown")
+      .add<zpt::rest::minion_hello>("/minions/hello");
 
     if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
         zpt::rest::services::broadcast("/minions/boot", _config);
