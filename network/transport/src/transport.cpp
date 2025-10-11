@@ -109,9 +109,9 @@ auto zpt::network::layer::add(std::string const& _scheme,
         std::string _port;
 
         if (this->__configuration(_scheme)("bind")->ok()) {
-            _host.assign(std::format("//{}", this->__configuration(_scheme)("bind")->string()));
+            _host.assign(this->__configuration(_scheme)("bind")->string());
         }
-        else if (!this->__configuration(_scheme)("path")->ok()) { _host.assign("//127.0.0.1"); }
+        else if (!this->__configuration(_scheme)("path")->ok()) { _host.assign("127.0.0.1"); }
 
         if (this->__configuration(_scheme)("port")->ok()) {
             _port.assign(std::format(":{}", this->__configuration(_scheme)("port")->integer()));
@@ -122,8 +122,16 @@ auto zpt::network::layer::add(std::string const& _scheme,
         expect(_port.length() != 0,
                std::format("Transport {} must have defined listening port or path", _scheme));
 
+        if (_host.find("${") == 0) {
+            _host.assign(_host.substr(2, _host.length() - 3));
+            if (_host == "any") { _host.assign(zpt::net::getip()); }
+            else { _host.assign(zpt::net::getip(_host)); }
+
+            this->__configuration[_scheme]["bind"] = _host;
+        }
+
         this->__configuration["transport"]["addresses"]
-          << std::format("{}:{}{}", _scheme, _host, _port);
+          << std::format("{}://{}{}", _scheme, _host, _port);
     }
 
     this->__underlying.insert(std::make_pair(_scheme, _transport));
