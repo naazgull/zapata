@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(WITH_ASAN "Enable address sanitizer" OFF)
 option(WITH_UBSAN "Enable undefined-behavior sanitizer" OFF)
 option(WITH_TSAN "Enable thread sanitizer" OFF)
+option(WITH_EXCEPTION_PROPAGATION
+  "Whether or not to catch exceptions (debugging)" OFF)
 
 if(WITH_ASAN AND WITH_TSAN)
   message(FATAL_ERROR "Can't use address-sanitizer along with thread-sanitizer")
@@ -32,8 +34,9 @@ IF(WITH_TSAN)
   add_compile_options(-fsanitize=thread)
   add_link_options(-fsanitize=thread)
 ENDIF()
-
-add_compile_definitions(PROPAGATE_EXCEPTION)
+IF(WITH_EXCEPTION_PROPAGATION)
+  add_compile_definitions(PROPAGATE_EXCEPTION)
+ENDIF()
 
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin

@@ -5,7 +5,7 @@ ExternalProject_Add(zapata
   GIT_REPOSITORY    https://github.com/naazgull/zapata.git
   GIT_TAG           develop
   CMAKE_ARGS
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
 )
 
