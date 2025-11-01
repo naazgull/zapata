@@ -35,7 +35,7 @@ auto main(int _argc, char* _argv[]) -> int {
     std::signal(SIGINT, ::deallocate);
     std::signal(SIGTERM, ::deallocate);
     zpt::json _parameter_setup{
-        "--conf-file",
+        "--config",
         { "options",
           { zpt::array, "optional", "multiple" },
           "type",
