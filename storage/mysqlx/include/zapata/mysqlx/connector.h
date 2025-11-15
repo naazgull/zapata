@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <mysqlx/xdevapi.h>
+#include <mysql/mysql.h>
 #include <zapata/connector.h>
 #include <zapata/json.h>
 
@@ -36,10 +36,18 @@ class collection;
 class action;
 class result;
 
-auto cast_to_db_value(zpt::json _value) -> ::mysqlx::Value;
+// auto cast_to_db_value(zpt::json _value) -> ::mysqlx::Value;
 
-auto to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
-auto from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
+// auto to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
+// auto from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
+
+class library {
+  public:
+    library();
+    virtual ~library();
+};
+
+auto init() -> library&;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -54,6 +62,7 @@ class connection : public zpt::storage::connection::type {
   private:
     zpt::json __options;
 };
+
 class session : public zpt::storage::session::type {
   public:
     session(zpt::storage::mysqlx::connection& _connection);
@@ -69,7 +78,7 @@ class session : public zpt::storage::session::type {
     virtual auto operator->() -> ::mysqlx::Session*;
 
   private:
-    ::mysqlx::Session __underlying;
+    // ::mysqlx::Session __underlying;
 };
 class database : public zpt::storage::database::type {
   public:
@@ -83,7 +92,7 @@ class database : public zpt::storage::database::type {
     virtual auto operator->() -> ::mysqlx::Schema*;
 
   private:
-    ::mysqlx::Schema __underlying;
+    // ::mysqlx::Schema __underlying;
 };
 class collection : public zpt::storage::collection::type {
   public:
@@ -100,7 +109,7 @@ class collection : public zpt::storage::collection::type {
     virtual auto operator->() -> ::mysqlx::Collection*;
 
   private:
-    ::mysqlx::Collection __underlying;
+    // ::mysqlx::Collection __underlying;
 };
 class action : public zpt::storage::action::type {
   public:
@@ -131,7 +140,7 @@ class action_add : public zpt::storage::mysqlx::action {
     virtual auto operator->() -> ::mysqlx::CollectionAdd*;
 
   private:
-    ::mysqlx::CollectionAdd __underlying;
+    // ::mysqlx::CollectionAdd __underlying;
 };
 class action_modify : public zpt::storage::mysqlx::action {
   public:
@@ -157,7 +166,7 @@ class action_modify : public zpt::storage::mysqlx::action {
     virtual auto operator->() -> ::mysqlx::CollectionModify*;
 
   private:
-    ::mysqlx::CollectionModify __underlying;
+    // ::mysqlx::CollectionModify __underlying;
 };
 class action_remove : public zpt::storage::mysqlx::action {
   public:
@@ -183,7 +192,7 @@ class action_remove : public zpt::storage::mysqlx::action {
     virtual auto operator->() -> ::mysqlx::CollectionRemove*;
 
   private:
-    ::mysqlx::CollectionRemove __underlying;
+    // ::mysqlx::CollectionRemove __underlying;
 };
 class action_replace : public zpt::storage::mysqlx::action {
   public:
@@ -214,7 +223,7 @@ class action_replace : public zpt::storage::mysqlx::action {
   private:
     std::string __id;
     zpt::json __document;
-    ::mysqlx::Collection* __underlying{ nullptr };
+    // ::mysqlx::Collection* __underlying{ nullptr };
 };
 class action_find : public zpt::storage::mysqlx::action {
   public:
@@ -242,7 +251,7 @@ class action_find : public zpt::storage::mysqlx::action {
 
   private:
     std::string __find_criteria;
-    ::mysqlx::CollectionFind __underlying;
+    // ::mysqlx::CollectionFind __underlying;
 };
 class result : public zpt::storage::result::type {
   public:
@@ -261,8 +270,8 @@ class result : public zpt::storage::result::type {
 
   private:
     bool __is_doc_result{ false };
-    ::mysqlx::Result __result;
-    ::mysqlx::DocResult __doc_result;
+    // ::mysqlx::Result __result;
+    // ::mysqlx::DocResult __doc_result;
 };
 } // namespace mysqlx
 } // namespace storage

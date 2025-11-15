@@ -21,16 +21,15 @@
 */
 #pragma once
 
-#include <mysqlx/xdevapi.h>
 #include <zapata/json.h>
 
 namespace zpt {
 namespace storage {
 namespace mysqlx {
-auto translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
-auto translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json;
-auto translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
-auto translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json;
+// auto translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
+// auto translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json;
+// auto translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
+// auto translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json;
 } // namespace mysqlx
 } // namespace storage
 } // namespace zpt

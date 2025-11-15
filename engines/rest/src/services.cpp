@@ -11,8 +11,8 @@ zpt::rest::minion_boot::minion_boot(zpt::message _received)
 
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                        [[maybe_unused]]) -> zpt::events::state {
+auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _peer_id = this->received()->headers()("X-My-ID")->string();
 
@@ -83,8 +83,8 @@ zpt::rest::minion_hello::minion_hello(zpt::message _received)
 
 auto zpt::rest::minion_hello::blocked() const -> bool { return false; }
 
-auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                         [[maybe_unused]]) -> zpt::events::state {
+auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
     if (this->received()->performative() == zpt::Post) {
         auto _minion = this->received()->body();
         if (_minion->ok()) {
@@ -117,8 +117,8 @@ zpt::rest::services_list::services_list(zpt::message _received)
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
-auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher
-                                          [[maybe_unused]]) -> zpt::events::state {
+auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
     auto _minion = this->received()->body();
     if (_minion("provider")->ok()) {
         ::add_minion(_minion);

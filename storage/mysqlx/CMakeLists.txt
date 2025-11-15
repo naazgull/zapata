@@ -34,7 +34,7 @@ target_link_libraries(zapata-storage-mysqlx
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    mysqlcppconnx
+    mysqlclient
 )
 set_target_properties(zapata-storage-mysqlx
   PROPERTIES
@@ -81,7 +81,7 @@ target_link_libraries(zapata_test_storage_mysqlx
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    mysqlcppconnx
+    mysqlclient
     zapata-storage-mysqlx
 )
 set_target_properties(zapata_test_storage_mysqlx
