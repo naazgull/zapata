@@ -71,6 +71,16 @@
 //     return zpt::undefined;
 // }
 
+auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
+    mysql_close(_to_dispose);
+}
+
+zpt::storage::mysqlx::mysql_thread_end::~mysql_thread_end() { mysql_thread_end(); }
+
+auto zpt::storage::mysqlx::mysql_stmt_close::operator()(MYSQL_STMT* _to_dispose) const -> void {
+    mysql_stmt_close(_to_dispose);
+}
+
 zpt::storage::mysqlx::library::library() {
     expect(!mysql_library_init(0, nullptr, nullptr), "Unable to initialize MySQL library");
 }
@@ -83,14 +93,45 @@ auto zpt::storage::mysqlx::init() -> zpt::storage::mysqlx::library& {
 }
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
-  : __options(_options("storage")("mysqlx")) {}
+  : __options{ _options("storage")("mysqlx") } {
+    zpt::storage::mysqlx::library::init();
+    this->open(_options("storage")("mysqlx"));
+}
 
 auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
+
+    this->__mysql.reset(mysql_init(nullptr), zpt::storage::mysqlx::mysql_deinit{});
+    thread_local std::unique_ptr<zpt::storage::mysql::mysql_thread_end> _thread_end =
+      std::make_unique<zpt::storage::mysql::mysql_thread_end>();
+
+    auto _host = this->__options("host")->string();
+    auto _user = this->__options("user")->string();
+    auto _pass = this->__options("password")->string();
+    auto _port = this->__options("port")->integer();
+    auto _ssl_mode = this->__options("ssl_mode")->ok() && this->__options("ssl_mode")->boolean();
+
+    expect(nullptr != mysql_real_connect(this->__mysql.get(), //
+                                         _host,
+                                         _user,
+                                         _pass,
+                                         nullptr,
+                                         _port,
+                                         nullptr,
+                                         _ssl_mode ? CLIENT_SSL : 0),
+           std::format("Unable to connect to 'mysqlx://{}@{}:{}?ssl_mode={}: {}",
+                       _user,
+                       _host,
+                       _port,
+                       _ssl_mode,
+                       mysql_error(this->__mysql.get())));
     return this;
 }
 
-auto zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type* { return this; }
+auto zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type* {
+    this->__mysql.reset();
+    return this;
+}
 
 auto zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
     return zpt::make_session<zpt::storage::mysqlx::session>(*this);
@@ -98,41 +139,19 @@ auto zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
 
 auto zpt::storage::mysqlx::connection::options() -> zpt::json& { return this->__options; }
 
-zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection)
-  : __underlying{ ::mysqlx::SessionOption::USER,
-                  _connection.options()("user")->string(),
-                  ::mysqlx::SessionOption::PWD,
-                  _connection.options()("password")->string(),
-                  ::mysqlx::SessionOption::HOST,
-                  _connection.options()("host")->string(),
-                  ::mysqlx::SessionOption::PORT,
-                  _connection.options()("port")->ok() ? _connection.options()("port")->integer()
-                                                      : 33060,
-                  ::mysqlx::SessionOption::SSL_MODE,
-                  ::mysqlx::SSLMode::REQUIRED } {}
+zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection) {}
 
-zpt::storage::mysqlx::session::~session() { this->__underlying.close(); }
+zpt::storage::mysqlx::session::~session() {}
 
 auto zpt::storage::mysqlx::session::is_open() -> bool { return true; }
 
-auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
-    this->__underlying.commit();
-    return this;
-}
+auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* { return this; }
 
-auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
-    this->__underlying.rollback();
-    return this;
-}
+auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* { return this; }
 
 auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
   -> zpt::storage::session::type* {
-    this->__underlying.sql(_statement).execute();
     return this;
-}
-
-auto zpt::storage::mysqlx::session::operator->() -> ::mysqlx::Session* {
-    return &this->__underlying;
 }
 
 auto zpt::storage::mysqlx::session::database(std::string const& _db) -> zpt::storage::database {
@@ -146,10 +165,6 @@ zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session
 auto zpt::storage::mysqlx::database::sql(std::string const&) -> zpt::storage::database::type* {
     expect(false, "Database `sql` method not implemented for MySQL XDevAPI, use session's");
     return this;
-}
-
-auto zpt::storage::mysqlx::database::operator->() -> ::mysqlx::Schema* {
-    return &this->__underlying;
 }
 
 auto zpt::storage::mysqlx::database::collection(std::string const& _collection)
