@@ -139,18 +139,36 @@ auto zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
 
 auto zpt::storage::mysqlx::connection::options() -> zpt::json& { return this->__options; }
 
-zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection) {}
+auto zpt::storage::mysqlx::connection::mysql() -> mysql_ptr { return this->__mysql; }
+
+zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection)
+  : __mysql{ _connection.mysql() } {
+    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
+           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
+    return this;
+}
 
 zpt::storage::mysqlx::session::~session() {}
 
-auto zpt::storage::mysqlx::session::is_open() -> bool { return true; }
+auto zpt::storage::mysqlx::session::is_open() -> bool { return this->__mysql != nullptr; }
 
-auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* { return this; }
+auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
+    expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
+           std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
+    return this;
+}
 
-auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* { return this; }
+auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
+    expect(0 == mysql_query(this->__mysql.get(), "ROLLBACK"),
+           std::format("Rollback failed: {}", mysql_error(this->__mysql.get())));
+    return this;
+}
 
 auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
   -> zpt::storage::session::type* {
+    expect(0 == mysql_query(this->__mysql.get(), _statement),
+           std::format(
+             "Failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
     return this;
 }
 
@@ -160,7 +178,12 @@ auto zpt::storage::mysqlx::session::database(std::string const& _db) -> zpt::sto
 
 zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session,
                                          std::string const& _db)
-  : __underlying{ _session->getSchema(_db) } {}
+  : __mysql{ _session.mysql() }
+  , __database{ _db } {
+    expect(0 == mysql_query(this->__mysql.get(), std::format("USE `{}`", this->__database)),
+           std::format(
+             "Failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+}
 
 auto zpt::storage::mysqlx::database::sql(std::string const&) -> zpt::storage::database::type* {
     expect(false, "Database `sql` method not implemented for MySQL XDevAPI, use session's");
@@ -174,7 +197,8 @@ auto zpt::storage::mysqlx::database::collection(std::string const& _collection)
 
 zpt::storage::mysqlx::collection::collection(zpt::storage::mysqlx::database& _database,
                                              std::string const& _collection)
-  : __underlying{ _database->getCollection(_collection) } {}
+  : __mysql{ _database.mysql() }
+  , __collection{ _collection } {}
 
 auto zpt::storage::mysqlx::collection::add(zpt::json _document) -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_add>(*this, _document);
@@ -197,11 +221,17 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) -> zpt::storage::
     return zpt::make_action<zpt::storage::mysqlx::action_find>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::count() -> size_t { return this->__underlying.count(); }
-
-auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
-    return &this->__underlying;
+auto zpt::storage::mysqlx::collection::count() -> size_t {
+    expect(0 == mysql_query(this->__mysql.get(),
+                            std::format("SELECT count(1) FROM `{}`", this->__collection)),
+           std::format(
+             "Failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    return;
 }
+
+// auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
+//     return &this->__underlying;
+// }
 
 zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection&) {}
 
@@ -275,9 +305,9 @@ auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_add::operator->() -> ::mysqlx::CollectionAdd* {
-    return &this->__underlying;
-}
+// auto zpt::storage::mysqlx::action_add::operator->() -> ::mysqlx::CollectionAdd* {
+//     return &this->__underlying;
+// }
 
 zpt::storage::mysqlx::action_modify::action_modify(zpt::storage::mysqlx::collection& _collection,
                                                    zpt::json _search)
@@ -359,9 +389,9 @@ auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_modify::operator->() -> ::mysqlx::CollectionModify* {
-    return &this->__underlying;
-}
+// auto zpt::storage::mysqlx::action_modify::operator->() -> ::mysqlx::CollectionModify* {
+//     return &this->__underlying;
+// }
 
 zpt::storage::mysqlx::action_remove::action_remove(zpt::storage::mysqlx::collection& _collection,
                                                    zpt::json _search)
@@ -437,9 +467,9 @@ auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_remove::operator->() -> ::mysqlx::CollectionRemove* {
-    return &this->__underlying;
-}
+// auto zpt::storage::mysqlx::action_remove::operator->() -> ::mysqlx::CollectionRemove* {
+//     return &this->__underlying;
+// }
 
 zpt::storage::mysqlx::action_replace::action_replace(zpt::storage::mysqlx::collection& _collection,
                                                      std::string _id,
@@ -615,9 +645,9 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_find::operator->() -> ::mysqlx::CollectionFind* {
-    return &this->__underlying;
-}
+// auto zpt::storage::mysqlx::action_find::operator->() -> ::mysqlx::CollectionFind* {
+//     return &this->__underlying;
+// }
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_add& _action)
   : __result{ _action->execute() } {}

@@ -74,9 +74,11 @@ class connection : public zpt::storage::connection::type {
     virtual auto session() -> zpt::storage::session override;
     virtual auto options() -> zpt::json&;
 
+    auto mysql() -> mysql_ptr;
+
   private:
     zpt::json __options;
-    mysql_ptr mysql{ nullptr };
+    mysql_ptr __mysql{ nullptr };
 };
 
 class session : public zpt::storage::session::type {
@@ -91,10 +93,10 @@ class session : public zpt::storage::session::type {
     virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
 
-    // virtual auto operator->() -> ::mysqlx::Session*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::Session __underlying;
+    mysql_ptr __mysql{ nullptr };
 };
 class database : public zpt::storage::database::type {
   public:
@@ -105,10 +107,11 @@ class database : public zpt::storage::database::type {
     virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
-    // virtual auto operator->() -> ::mysqlx::Schema*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::Schema __underlying;
+    mysql_ptr __mysql{ nullptr };
+    std::string __database;
 };
 class collection : public zpt::storage::collection::type {
   public:
@@ -122,10 +125,11 @@ class collection : public zpt::storage::collection::type {
     virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
-    // virtual auto operator->() -> ::mysqlx::Collection*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::Collection __underlying;
+    mysql_ptr __mysql{ nullptr };
+    std::string __collection;
 };
 class action : public zpt::storage::action::type {
   public:
@@ -153,10 +157,10 @@ class action_add : public zpt::storage::mysqlx::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    // virtual auto operator->() -> ::mysqlx::CollectionAdd*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::CollectionAdd __underlying;
+    mysql_ptr __mysql{ nullptr };
 };
 class action_modify : public zpt::storage::mysqlx::action {
   public:
@@ -179,10 +183,10 @@ class action_modify : public zpt::storage::mysqlx::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    // virtual auto operator->() -> ::mysqlx::CollectionModify*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::CollectionModify __underlying;
+    mysql_ptr __mysql{ nullptr };
 };
 class action_remove : public zpt::storage::mysqlx::action {
   public:
@@ -205,10 +209,10 @@ class action_remove : public zpt::storage::mysqlx::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    // virtual auto operator->() -> ::mysqlx::CollectionRemove*;
+    auto mysql() -> mysql_ptr;
 
   private:
-    // ::mysqlx::CollectionRemove __underlying;
+    mysql_ptr __mysql{ nullptr };
 };
 class action_replace : public zpt::storage::mysqlx::action {
   public:
@@ -234,12 +238,12 @@ class action_replace : public zpt::storage::mysqlx::action {
     virtual auto execute() -> zpt::storage::result override;
     virtual auto replace_one() -> ::mysqlx::Result;
 
-    // virtual auto operator->() -> ::mysqlx::Collection*;
+    auto mysql() -> mysql_ptr;
 
   private:
     std::string __id;
     zpt::json __document;
-    // ::mysqlx::Collection* __underlying{ nullptr };
+    mysql_ptr __mysql{ nullptr };
 };
 class action_find : public zpt::storage::mysqlx::action {
   public:
@@ -263,11 +267,11 @@ class action_find : public zpt::storage::mysqlx::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    // virtual auto operator->() -> ::mysqlx::CollectionFind*;
+    auto mysql() -> mysql_ptr;
 
   private:
     std::string __find_criteria;
-    // ::mysqlx::CollectionFind __underlying;
+    mysql_ptr __mysql{ nullptr };
 };
 class result : public zpt::storage::result::type {
   public:
@@ -284,10 +288,11 @@ class result : public zpt::storage::result::type {
     virtual auto message() -> std::string override;
     virtual auto to_json() -> zpt::json override;
 
+    auto mysql() -> mysql_ptr;
+
   private:
     bool __is_doc_result{ false };
-    // ::mysqlx::Result __result;
-    // ::mysqlx::DocResult __doc_result;
+    mysql_ptr __mysql{ nullptr };
 };
 } // namespace mysqlx
 } // namespace storage
