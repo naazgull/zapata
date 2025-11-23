@@ -236,7 +236,6 @@ class action_replace : public zpt::storage::mysqlx::action {
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
-    virtual auto replace_one() -> ::mysqlx::Result;
 
     auto mysql() -> mysql_ptr;
 

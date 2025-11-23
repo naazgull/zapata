@@ -166,7 +166,12 @@ auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
 
 auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
   -> zpt::storage::session::type* {
-    expect(0 == mysql_query(this->__mysql.get(), _statement),
+    mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
+                             zpt::storage::mysqlx::mysql_stmt_close{} };
+    expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
+           std::format(
+             "Failed to prepare statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    expect(0 == mysql_stmt_execute(_to_exec.get()),
            std::format(
              "Failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
     return this;
