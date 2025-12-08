@@ -148,7 +148,7 @@ zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connec
     return this;
 }
 
-zpt::storage::mysqlx::session::~session() {}
+zpt::storage::mysqlx::session::~session() { this->rollback(); }
 
 auto zpt::storage::mysqlx::session::is_open() -> bool { return this->__mysql != nullptr; }
 
@@ -234,16 +234,12 @@ auto zpt::storage::mysqlx::collection::count() -> size_t {
     return;
 }
 
-// auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
-//     return &this->__underlying;
-// }
-
 zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection&) {}
 
 zpt::storage::mysqlx::action_add::action_add(zpt::storage::mysqlx::collection& _collection,
                                              zpt::json _document)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __underlying{ _collection->add(zpt::storage::mysqlx::to_db_doc(_document)) } {}
+  , __underlying{ _document } {}
 
 auto zpt::storage::mysqlx::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
     this->__underlying.add(zpt::storage::mysqlx::to_db_doc(_document));

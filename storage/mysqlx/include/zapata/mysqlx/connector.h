@@ -161,6 +161,7 @@ class action_add : public zpt::storage::mysqlx::action {
 
   private:
     mysql_ptr __mysql{ nullptr };
+    zpt::json __underlying{ nullptr };
 };
 class action_modify : public zpt::storage::mysqlx::action {
   public:
