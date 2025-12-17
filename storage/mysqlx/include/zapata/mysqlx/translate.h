@@ -50,7 +50,14 @@ class column_bind {
   private:
     MYSQL_RES* __metadata{ nullptr };
 };
-auto convert(MYSQL_STMT* _statement, zpt::storage::mysqlx::column_bind const& _cols) -> zpt::json;
+auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::column_bind const& _cols) -> zpt::json;
+auto to_query(zpt::json _fields, zpt::json _filter, zpt::storage::mysqlx::column_bind const& _cols)
+  -> std::string;
+auto to_insert(zpt::json _to_insert, zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
+auto to_update(zpt::json _to_update,
+               zpt::json _pattern,
+               zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
+auto to_delete(zpt::json _pattern, zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
 // auto translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
 // auto translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json;
 // auto translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json;

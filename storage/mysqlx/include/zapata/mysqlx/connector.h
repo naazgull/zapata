@@ -52,7 +52,7 @@ struct mysql_thread_end {
     ~mysql_thread_end();
 };
 
-struct mysql_stmt_close {
+struct mysql_stmt_end {
     auto operator()(MYSQL_STMT* _to_dispose) const -> void;
 };
 

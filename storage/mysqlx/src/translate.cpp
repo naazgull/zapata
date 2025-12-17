@@ -164,13 +164,19 @@ auto zpt::storage::mysqlx::column_bind::charset(size_t _column) const -> unsigne
     return mysql_fetch_field_direct(this->__metadata, _column)->charsetnr;
 }
 
-auto zpt::storage::mysqlx::convert(MYSQL_STMT* _statement,
+auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
                                    zpt::storage::mysqlx::column_bind const& _cols) -> zpt::json {
     auto _record = zpt::json::object();
     for (size_t _col_idx = 0; _col_idx != _cols.__column_count; ++_col_idx) {
         auto _name = _cols.name(_col_idx);
         if (*_cols.__bind[_col_idx].is_null) {
             _record[_name] = zpt::undefined;
+            continue;
+        }
+
+        if (_name == "__rest__") {
+            _record[_name] =
+              zpt::json::parse_json_str(_cols.get<std::string>(_statement, _col_idx));
             continue;
         }
 
@@ -211,7 +217,7 @@ auto zpt::storage::mysqlx::convert(MYSQL_STMT* _statement,
                 if (_cols.__bind[_col_idx].is_unsigned) {
                     _record[_name] = _cols.get<std::uint64_t>(_statement, _col_idx);
                 }
-                else { _record[_name] = _cols.get<std::int64_t>(_statement, _col_idx); }
+                else { _record[_name] = _cols.get<long long>(_statement, _col_idx); }
                 break;
             }
             case MYSQL_TYPE_FLOAT: {
@@ -220,7 +226,7 @@ auto zpt::storage::mysqlx::convert(MYSQL_STMT* _statement,
             }
             case MYSQL_TYPE_DECIMAL:
             case MYSQL_TYPE_NEWDECIMAL: {
-                _record[_name] = _cols.get<std::string_view>(_statement, _col_idx);
+                _record[_name] = _cols.get<std::string>(_statement, _col_idx);
                 break;
             }
             case MYSQL_TYPE_DOUBLE: {
@@ -231,20 +237,19 @@ auto zpt::storage::mysqlx::convert(MYSQL_STMT* _statement,
             case MYSQL_TYPE_VARCHAR:
             case MYSQL_TYPE_VAR_STRING:
             case MYSQL_TYPE_STRING: {
-                _record[_name] = _cols.get<std::string_view>(_statement, _col_idx);
+                _record[_name] = _cols.get<std::string>(_statement, _col_idx);
                 break;
             }
             case MYSQL_TYPE_TINY_BLOB:
             case MYSQL_TYPE_MEDIUM_BLOB:
             case MYSQL_TYPE_LONG_BLOB:
             case MYSQL_TYPE_BLOB: {
-                _record[_name] = _cols.get<std::string_view>(_statement, _col_idx);
+                _record[_name] = _cols.get<std::string>(_statement, _col_idx);
                 break;
             }
             case MYSQL_TYPE_TYPED_ARRAY:
             case MYSQL_TYPE_GEOMETRY:
-            case MYSQL_TYPE_JSON: // JSON is always propagated in native binary format, we
-                                  // should never get actual JSON type here
+            case MYSQL_TYPE_JSON:
             case MYSQL_TYPE_SET: {
                 _record[_name] = nullptr;
                 break;
@@ -307,6 +312,24 @@ auto zpt::storage::mysqlx::convert(MYSQL_STMT* _statement,
 
     return _record;
 }
+
+auto zpt::storage::mysqlx::to_query(zpt::json _fields,
+                                    zpt::json _filter,
+                                    zpt::storage::mysqlx::column_bind const& _cols) -> std::string {
+}
+
+auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert,
+                                     zpt::storage::mysqlx::column_bind const& _cols)
+  -> std::string {}
+
+auto zpt::storage::mysqlx::to_update(zpt::json _to_update,
+                                     zpt::json _pattern,
+                                     zpt::storage::mysqlx::column_bind const& _cols)
+  -> std::string {}
+
+auto zpt::storage::mysqlx::to_delete(zpt::json _pattern,
+                                     zpt::storage::mysqlx::column_bind const& _cols)
+  -> std::string {}
 
 // auto zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
 //     switch (_rhs.getType()) {
