@@ -311,8 +311,8 @@ auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
 zpt::storage::mysqlx::action_modify::action_modify(zpt::storage::mysqlx::collection& _collection,
                                                    zpt::json _search)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __filter{ _search }
-  , __underlying{ zpt::json::object() } {}
+  , __underlying{ zpt::json::object() }
+  , __filter{ _search } {}
 
 auto zpt::storage::mysqlx::action_modify::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'modify' action");
@@ -378,13 +378,13 @@ auto zpt::storage::mysqlx::action_modify::limit(size_t _number) -> zpt::storage:
 }
 
 auto zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    for (auto [_, _key, _value] : _map) {
-        this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
-    }
+    for (auto [_, _key, _value] : _map) { this->__underlying << _key << _value; }
     return this;
 }
 
 auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
+    
+    
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }

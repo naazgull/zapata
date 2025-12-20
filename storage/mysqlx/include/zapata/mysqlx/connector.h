@@ -188,6 +188,8 @@ class action_modify : public zpt::storage::mysqlx::action {
 
   private:
     mysql_ptr __mysql{ nullptr };
+    zpt::json __underlying{ nullptr };
+    zpt::json __filter{ nullptr };
 };
 class action_remove : public zpt::storage::mysqlx::action {
   public:
@@ -214,6 +216,7 @@ class action_remove : public zpt::storage::mysqlx::action {
 
   private:
     mysql_ptr __mysql{ nullptr };
+    zpt::json __filter{ nullptr };
 };
 class action_replace : public zpt::storage::mysqlx::action {
   public:
@@ -241,9 +244,9 @@ class action_replace : public zpt::storage::mysqlx::action {
     auto mysql() -> mysql_ptr;
 
   private:
-    std::string __id;
-    zpt::json __document;
     mysql_ptr __mysql{ nullptr };
+    zpt::json __underlying{ nullptr };
+    std::string __id;
 };
 class action_find : public zpt::storage::mysqlx::action {
   public:
@@ -270,8 +273,9 @@ class action_find : public zpt::storage::mysqlx::action {
     auto mysql() -> mysql_ptr;
 
   private:
-    std::string __find_criteria;
     mysql_ptr __mysql{ nullptr };
+    zpt::json __underlying{ nullptr };
+    std::string __find_criteria;
 };
 class result : public zpt::storage::result::type {
   public:
@@ -291,8 +295,8 @@ class result : public zpt::storage::result::type {
     auto mysql() -> mysql_ptr;
 
   private:
-    bool __is_doc_result{ false };
     mysql_ptr __mysql{ nullptr };
+    zpt::json __underlying{ nullptr };
 };
 } // namespace mysqlx
 } // namespace storage

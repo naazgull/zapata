@@ -316,72 +316,36 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
 auto zpt::storage::mysqlx::to_query(zpt::json _fields,
                                     zpt::json _filter,
                                     zpt::storage::mysqlx::column_bind const& _cols) -> std::string {
+    std::ostringstream oss;
+
+    oss << std::flush;
+    return oss.str();
 }
 
 auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert,
                                      zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {}
+  -> std::string {
+    std::ostringstream oss;
+
+    oss << std::flush;
+    return oss.str();
+}
 
 auto zpt::storage::mysqlx::to_update(zpt::json _to_update,
                                      zpt::json _pattern,
                                      zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {}
+  -> std::string {
+    std::ostringstream oss;
+
+    oss << std::flush;
+    return oss.str();
+}
 
 auto zpt::storage::mysqlx::to_delete(zpt::json _pattern,
                                      zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {}
+  -> std::string {
+    std::ostringstream oss;
 
-// auto zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
-//     switch (_rhs.getType()) {
-//         case ::mysqlx::Value::Type::VNULL: {
-//             return zpt::undefined;
-//         }
-//         case ::mysqlx::Value::Type::UINT64: {
-//             return zpt::json{ static_cast<size_t>(static_cast<uint64_t>(_rhs)) };
-//         }
-//         case ::mysqlx::Value::Type::INT64: {
-//             return zpt::json{ static_cast<long long>(static_cast<int64_t>(_rhs)) };
-//         }
-//         case ::mysqlx::Value::Type::FLOAT: {
-//             return zpt::json{ static_cast<double>(static_cast<float>(_rhs)) };
-//         }
-//         case ::mysqlx::Value::Type::DOUBLE: {
-//             return zpt::json{ static_cast<double>(_rhs) };
-//         }
-//         case ::mysqlx::Value::Type::BOOL: {
-//             return zpt::json{ static_cast<bool>(_rhs) };
-//         }
-//         case ::mysqlx::Value::Type::STRING: {
-//             return zpt::json{ static_cast<std::string>(_rhs) };
-//         }
-//         case ::mysqlx::Value::Type::DOCUMENT: {
-//             auto _doc = static_cast<::mysqlx::DbDoc const&>(_rhs);
-//             return zpt::storage::mysqlx::translate_object_from_db(_doc);
-//         }
-//         case ::mysqlx::Value::Type::RAW: {
-//             return zpt::storage::mysqlx::translate_bytes_from_db(_rhs.getRawBytes());
-//         }
-//         case ::mysqlx::Value::Type::ARRAY: {
-//             return zpt::storage::mysqlx::translate_array_from_db(_rhs);
-//         }
-//     }
-//     return zpt::undefined;
-// }
-
-// auto zpt::storage::mysqlx::translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json {
-//     auto _to_return = zpt::json::object();
-//     for (auto _it = _rhs.begin(); _it != _rhs.end(); ++_it) {
-//         _to_return << *_it << zpt::storage::mysqlx::translate_from_db(_rhs[*_it]);
-//     }
-//     return _to_return;
-// }
-
-// auto zpt::storage::mysqlx::translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
-//     auto _to_return = zpt::json::array();
-//     for (auto _it : _rhs) { _to_return << zpt::storage::mysqlx::translate_from_db(_it); }
-//     return _to_return;
-// }
-
-// auto zpt::storage::mysqlx::translate_bytes_from_db(::mysqlx::bytes const&) -> zpt::json {
-//     return zpt::undefined;
-// }
+    oss << std::flush;
+    return oss.str();
+}

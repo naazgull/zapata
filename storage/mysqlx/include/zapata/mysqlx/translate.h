@@ -58,10 +58,6 @@ auto to_update(zpt::json _to_update,
                zpt::json _pattern,
                zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
 auto to_delete(zpt::json _pattern, zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
-// auto translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
-// auto translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json;
-// auto translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
-// auto translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json;
 } // namespace mysqlx
 } // namespace storage
 } // namespace zpt
