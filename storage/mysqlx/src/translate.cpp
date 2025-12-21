@@ -24,7 +24,7 @@
 #include <cassert>
 #include <zapata/mysqlx/translate.h>
 
-zpt::storage::mysqlx::column_bind::column_bind(MYSQL_STMT* _statement) {
+zpt::storage::mysqlx::result_set_metadata::result_set_metadata(MYSQL_STMT* _statement) {
     if (_statement != nullptr) {
         this->__metadata = mysql_stmt_result_metadata(_statement);
         if (this->__metadata != nullptr) {
@@ -99,6 +99,7 @@ zpt::storage::mysqlx::column_bind::column_bind(MYSQL_STMT* _statement) {
                     case MYSQL_TYPE_INVALID:
                     case MYSQL_TYPE_NULL:
                     case MYSQL_TYPE_TYPED_ARRAY:
+                    case MYSQL_TYPE_VECTOR:
                     case MYSQL_TYPE_SET: {
                         assert(false);
                         return;
@@ -123,12 +124,12 @@ zpt::storage::mysqlx::column_bind::column_bind(MYSQL_STMT* _statement) {
     }
 }
 
-zpt::storage::mysqlx::column_bind::column_bind(column_bind&& rhs)
+zpt::storage::mysqlx::result_set_metadata::result_set_metadata(result_set_metadata&& rhs)
   : __bind{ std::move(rhs.__bind) }
   , __column_count{ rhs.__column_count }
   , __metadata{ std::move(rhs.__metadata) } {}
 
-zpt::storage::mysqlx::column_bind::~column_bind() {
+zpt::storage::mysqlx::result_set_metadata::~result_set_metadata() {
     if (this->__column_count != 0) {
         for (size_t _idx = 0; _idx != this->__column_count; ++_idx) {
             std::free(this->__bind[_idx].buffer);
@@ -140,43 +141,39 @@ zpt::storage::mysqlx::column_bind::~column_bind() {
     }
 }
 
-auto zpt::storage::mysqlx::column_bind::operator=(column_bind&& rhs) -> column_bind& {
+auto zpt::storage::mysqlx::result_set_metadata::operator=(result_set_metadata&& rhs)
+  -> result_set_metadata& {
     this->__bind = std::move(rhs.__bind);
     this->__column_count = rhs.__column_count;
     this->__metadata = std::move(rhs.__metadata);
     return (*this);
 }
 
-auto zpt::storage::mysqlx::column_bind::name(size_t _column) const -> std::string {
+auto zpt::storage::mysqlx::result_set_metadata::name(size_t _column) const -> std::string {
     auto _info = mysql_fetch_field_direct(this->__metadata, _column);
     return std::string{ _info->name, _info->name_length };
 }
 
-auto zpt::storage::mysqlx::column_bind::type(size_t _column) const -> enum_field_types {
+auto zpt::storage::mysqlx::result_set_metadata::type(size_t _column) const -> enum_field_types {
     return mysql_fetch_field_direct(this->__metadata, _column)->type;
 }
 
-auto zpt::storage::mysqlx::column_bind::flags(size_t _column) const -> unsigned int {
+auto zpt::storage::mysqlx::result_set_metadata::flags(size_t _column) const -> unsigned int {
     return mysql_fetch_field_direct(this->__metadata, _column)->flags;
 }
 
-auto zpt::storage::mysqlx::column_bind::charset(size_t _column) const -> unsigned int {
+auto zpt::storage::mysqlx::result_set_metadata::charset(size_t _column) const -> unsigned int {
     return mysql_fetch_field_direct(this->__metadata, _column)->charsetnr;
 }
 
-auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
-                                   zpt::storage::mysqlx::column_bind const& _cols) -> zpt::json {
+auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement) -> zpt::json {
+    zpt::storage::mysqlx::result_set_metadata _cols{ _statement };
     auto _record = zpt::json::object();
+
     for (size_t _col_idx = 0; _col_idx != _cols.__column_count; ++_col_idx) {
         auto _name = _cols.name(_col_idx);
         if (*_cols.__bind[_col_idx].is_null) {
             _record[_name] = zpt::undefined;
-            continue;
-        }
-
-        if (_name == "__rest__") {
-            _record[_name] =
-              zpt::json::parse_json_str(_cols.get<std::string>(_statement, _col_idx));
             continue;
         }
 
@@ -250,6 +247,7 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
             case MYSQL_TYPE_TYPED_ARRAY:
             case MYSQL_TYPE_GEOMETRY:
             case MYSQL_TYPE_JSON:
+            case MYSQL_TYPE_VECTOR:
             case MYSQL_TYPE_SET: {
                 _record[_name] = nullptr;
                 break;
@@ -313,39 +311,75 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
     return _record;
 }
 
-auto zpt::storage::mysqlx::to_query(zpt::json _fields,
-                                    zpt::json _filter,
-                                    zpt::storage::mysqlx::column_bind const& _cols) -> std::string {
-    std::ostringstream oss;
+auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std::string {
+    std::ostringstream _oss;
 
-    oss << std::flush;
-    return oss.str();
+    _oss << "select ";
+    if (_fields->size() != 0) {
+        bool _first{ true };
+        for (auto const& [_, __, _field] : _fields) {
+            if (!_first) { _oss << ", "; }
+            _first = false;
+            _oss << "`" << _field << "`";
+        }
+    }
+    else { _oss << "*"; }
+    _oss << " from `{}`";
+
+    if (_filter->ok()) { _oss << " where " << _filter->string(); }
+
+    _oss << ";" << std::flush;
+    return _oss.str();
 }
 
-auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert,
-                                     zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {
-    std::ostringstream oss;
+auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert) -> std::string {
+    std::ostringstream _oss;
 
-    oss << std::flush;
-    return oss.str();
+    _oss << "insert into `{}` set ";
+    zpt::storage::mysqlx::to_assignment_list(_to_insert, _oss, ", ");
+    _oss << ";" << std::flush;
+
+    return _oss.str();
 }
 
-auto zpt::storage::mysqlx::to_update(zpt::json _to_update,
-                                     zpt::json _pattern,
-                                     zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {
-    std::ostringstream oss;
+auto zpt::storage::mysqlx::to_update(zpt::json _to_update, zpt::json _pattern) -> std::string {
+    std::ostringstream _oss;
 
-    oss << std::flush;
-    return oss.str();
+    _oss << "update `{}` set ";
+    zpt::storage::mysqlx::to_assignment_list(_to_update, _oss, ", ");
+    if (_pattern->ok()) { _oss << " where " << _pattern->string(); }
+    _oss << ";" << std::flush;
+
+    return _oss.str();
 }
 
-auto zpt::storage::mysqlx::to_delete(zpt::json _pattern,
-                                     zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string {
-    std::ostringstream oss;
+auto zpt::storage::mysqlx::to_replace(zpt::json _to_replace) -> std::string {
+    std::ostringstream _oss;
 
-    oss << std::flush;
-    return oss.str();
+    _oss << "replace into `{}` set ";
+    zpt::storage::mysqlx::to_assignment_list(_to_replace, _oss, ", ");
+    _oss << ";" << std::flush;
+
+    return _oss.str();
+}
+
+auto zpt::storage::mysqlx::to_delete(zpt::json _pattern) -> std::string {
+    std::ostringstream _oss;
+
+    _oss << "delete from `{}`";
+    if (_pattern->ok()) { _oss << " where " << _pattern->string(); }
+    _oss << ";" << std::flush;
+
+    return _oss.str();
+}
+
+auto zpt::storage::mysqlx::to_assignment_list(zpt::json _to_convert,
+                                              std::ostream& _out,
+                                              std::string_view _separator) -> void {
+    bool _first{ true };
+    for (auto const& [_, _key, _value] : _to_convert) {
+        if (!_first) { _out << _separator; }
+        _first = false;
+        _out << "`" << _key << "` = " << _value;
+    }
 }

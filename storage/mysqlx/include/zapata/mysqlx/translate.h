@@ -27,19 +27,19 @@
 namespace zpt {
 namespace storage {
 namespace mysqlx {
-class column_bind {
+class result_set_metadata {
   public:
     std::unique_ptr<MYSQL_BIND[]> __bind{ nullptr };
     size_t __column_count{ 0 };
 
-    column_bind(MYSQL_STMT* _statement);
-    column_bind(column_bind&& _rhs);
-    ~column_bind();
+    result_set_metadata(MYSQL_STMT* _statement);
+    result_set_metadata(result_set_metadata&& _rhs);
+    ~result_set_metadata();
 
-    column_bind(column_bind const&) = delete;
-    auto operator=(column_bind const&) -> column_bind& = delete;
+    result_set_metadata(result_set_metadata const&) = delete;
+    auto operator=(result_set_metadata const&) -> result_set_metadata& = delete;
 
-    auto operator=(column_bind&& _rhs) -> column_bind&;
+    auto operator=(result_set_metadata&& _rhs) -> result_set_metadata&;
     auto name(size_t _column) const -> std::string;
     auto type(size_t _column) const -> enum_field_types;
     auto flags(size_t _column) const -> unsigned int;
@@ -50,20 +50,21 @@ class column_bind {
   private:
     MYSQL_RES* __metadata{ nullptr };
 };
-auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::column_bind const& _cols) -> zpt::json;
-auto to_query(zpt::json _fields, zpt::json _filter, zpt::storage::mysqlx::column_bind const& _cols)
-  -> std::string;
-auto to_insert(zpt::json _to_insert, zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
-auto to_update(zpt::json _to_update,
-               zpt::json _pattern,
-               zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
-auto to_delete(zpt::json _pattern, zpt::storage::mysqlx::column_bind const& _cols) -> std::string;
+auto to_json(MYSQL_STMT* _statement) -> zpt::json;
+auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
+auto to_insert(zpt::json _to_insert) -> std::string;
+auto to_update(zpt::json _to_update, zpt::json _pattern) -> std::string;
+auto to_replace(zpt::json _to_replace) -> std::string;
+auto to_delete(zpt::json _pattern) -> std::string;
+auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
+  -> void;
 } // namespace mysqlx
 } // namespace storage
 } // namespace zpt
 
 template<typename T>
-auto zpt::storage::mysqlx::column_bind::get(MYSQL_STMT* _statement, size_t _column) const -> T {
+auto zpt::storage::mysqlx::result_set_metadata::get(MYSQL_STMT* _statement, size_t _column) const
+  -> T {
     if (*this->__bind[_column].length > this->__bind[_column].buffer_length) {
         std::free(this->__bind[_column].buffer);
         this->__bind[_column].buffer = std::malloc(*this->__bind[_column].length);

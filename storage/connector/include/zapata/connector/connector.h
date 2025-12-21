@@ -48,7 +48,7 @@ class connection {
 
         virtual auto open(zpt::json _options) -> zpt::storage::connection::type* = 0;
         virtual auto close() -> zpt::storage::connection::type* = 0;
-        virtual auto session() -> zpt::storage::session = 0;
+        virtual auto session() const -> zpt::storage::session = 0;
     };
 
     connection() = default;
@@ -73,11 +73,11 @@ class session {
         type() = default;
         virtual ~type() = default;
 
-        virtual auto is_open() -> bool = 0;
+        virtual auto is_open() const -> bool = 0;
         virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* = 0;
         virtual auto commit() -> zpt::storage::session::type* = 0;
         virtual auto rollback() -> zpt::storage::session::type* = 0;
-        virtual auto database(std::string const& _db) -> zpt::storage::database = 0;
+        virtual auto database(std::string const& _db) const -> zpt::storage::database = 0;
     };
 
     session() = default;
@@ -103,7 +103,7 @@ class database {
         virtual ~type() = default;
 
         virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* = 0;
-        virtual auto collection(std::string const& _name) -> zpt::storage::collection = 0;
+        virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
     };
 
     database() = default;
@@ -128,12 +128,12 @@ class collection {
         type() = default;
         virtual ~type() = default;
 
-        virtual auto add(zpt::json _document) -> zpt::storage::action = 0;
-        virtual auto modify(zpt::json _search) -> zpt::storage::action = 0;
-        virtual auto remove(zpt::json _search) -> zpt::storage::action = 0;
-        virtual auto replace(std::string const& _id, zpt::json _document)
+        virtual auto add(zpt::json _document) const -> zpt::storage::action = 0;
+        virtual auto modify(zpt::json _search) const -> zpt::storage::action = 0;
+        virtual auto remove(zpt::json _search) const -> zpt::storage::action = 0;
+        virtual auto replace(std::string const& _id, zpt::json _document) const
           -> zpt::storage::action = 0;
-        virtual auto find(zpt::json _search) -> zpt::storage::action = 0;
+        virtual auto find(zpt::json _search) const -> zpt::storage::action = 0;
         virtual auto count() -> size_t = 0;
     };
 
@@ -169,7 +169,7 @@ class action {
           -> zpt::storage::action::type* = 0;
         virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* = 0;
         virtual auto patch(zpt::json _document) -> zpt::storage::action::type* = 0;
-        virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* = 0;
+        virtual auto sort(std::string const& _attribute, bool asc = true) -> zpt::storage::action::type* = 0;
         virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* = 0;
         virtual auto offset(size_t _rows) -> zpt::storage::action::type* = 0;
         virtual auto limit(size_t _number) -> zpt::storage::action::type* = 0;
@@ -201,10 +201,10 @@ class result {
 
         virtual auto fetch(size_t _amount = 0) -> zpt::json = 0;
         virtual auto generated_id() -> zpt::json = 0;
-        virtual auto count() -> size_t = 0;
-        virtual auto status() -> zpt::status = 0;
-        virtual auto message() -> std::string = 0;
-        virtual auto to_json() -> zpt::json = 0;
+        virtual auto count() const -> size_t = 0;
+        virtual auto status() const -> zpt::status = 0;
+        virtual auto message() const -> std::string = 0;
+        virtual auto to_json() const -> zpt::json = 0;
     };
 
     result() = default;
