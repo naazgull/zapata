@@ -24,53 +24,6 @@
 #include <zapata/mysqlx/connector.h>
 #include <zapata/mysqlx/translate.h>
 
-// auto zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value {
-//     switch (_value->type()) {
-//         case zpt::JSObject:
-//         case zpt::JSArray: {
-//             return ::mysqlx::Value{ zpt::storage::mysqlx::to_db_doc(_value) };
-//         }
-//         case zpt::JSString: {
-//             return ::mysqlx::Value{ _value->string() };
-//         }
-//         case zpt::JSInteger: {
-//             return ::mysqlx::Value{ _value->integer() };
-//         }
-//         case zpt::JSDouble: {
-//             return ::mysqlx::Value{ _value->floating() };
-//         }
-//         case zpt::JSBoolean: {
-//             return ::mysqlx::Value{ _value->boolean() };
-//         }
-//         case zpt::JSDate: {
-//             return ::mysqlx::Value{ _value->date() };
-//         }
-//         case zpt::JSUndefined:
-//         case zpt::JSNil:
-//         case zpt::JSLambda:
-//         case zpt::JSRegex: {
-//             break;
-//         }
-//     }
-//     return ::mysqlx::Value{};
-// }
-
-// auto zpt::storage::mysqlx::to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc {
-//     return ::mysqlx::DbDoc{ static_cast<std::string>(_document) };
-// }
-
-// auto zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json {
-//     if (!_document.isNull()) {
-//         // std::stringstream _ss;
-//         // _document.print(_ss);
-//         // zpt::json _to_return;
-//         // _ss >> _to_return;
-//         // return _to_return;
-//         return zpt::storage::mysqlx::translate_object_from_db(_document);
-//     }
-//     return zpt::undefined;
-// }
-
 auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
     mysql_close(_to_dispose);
 }
