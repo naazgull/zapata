@@ -233,11 +233,15 @@ auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _databas
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
                                          std::string const& _db)
-  : __path{ _session.__options("path")->ok()
-              ? _session.__options("path")->string() + std::string{ "/" } + _db
-              : std::string{ "file:" } + _db + std::string{ "?mode=memory&cache=shared" } } {
+  : __path{ std::string{ "file:" } +
+            (_session.__options("path")->ok()
+               ? _session.__options("path")->string() + std::string{ "/" } + _db
+               : _db + std::string{ "?mode=memory&cache=shared" }) } {
     sqlite3* _underlying{ nullptr };
-    sqlite_expect(sqlite3_open(this->__path.data(), &_underlying),
+    sqlite_expect(sqlite3_open_v2(this->__path.data(),
+                                  &_underlying,
+                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
+                                  nullptr),
                   "couldn't open database at " << this->__path);
     this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
     const_cast<zpt::storage::sqlite::session&>(_session).add_database_connection(

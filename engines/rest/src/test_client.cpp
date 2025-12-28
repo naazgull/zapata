@@ -59,7 +59,9 @@ class test_client_boot : public zpt::system_event {
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
-              .body() = { "test", "something" };
+              .body() = {
+                "from", "client", "date", zpt::json::date(), "id", zpt::generate::r_uuid()
+            };
 
             zpt::TRANSPORT_ENGINE() //
               .dispatcher()

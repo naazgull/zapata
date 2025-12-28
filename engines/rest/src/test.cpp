@@ -37,10 +37,11 @@ class test_plugin_collection : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
+        zlog("Received plugin collection request: " << this->received()->body(), zpt::info);
         this
           ->to_send() //
           ->status(200)
-          .body() = { "something", "something" };
+          .body() = { "echo", this->received()->body() };
         return zpt::events::finish;
     }
 };
@@ -72,7 +73,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     _test_message //
       ->performative(zpt::Post)
       .uri(std::format("{}/test_plugin", _prefix))
-      .body() = { "test", "something" };
+      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::generate::r_uuid() };
 
     zpt::TRANSPORT_ENGINE() //
       .dispatcher()
