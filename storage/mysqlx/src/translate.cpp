@@ -103,6 +103,10 @@ zpt::storage::mysqlx::result_set_metadata::result_set_metadata(MYSQL_STMT* _stat
                         assert(false);
                         return;
                     }
+                    default: {
+                        assert(false);
+                        return;
+                    }
                 }
 
                 this->__bind[_idx].buffer = std::malloc(_buffer_length);
@@ -301,6 +305,10 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
                 break;
             }
             case MYSQL_TYPE_INVALID: {
+                break;
+            }
+            default: {
+                assert(false);
                 break;
             }
         }
