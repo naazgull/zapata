@@ -171,7 +171,7 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
                                                             "    zapata-storage-mysqlx\n"
                                                             "    zapata-engine-transport\n"
                                                             "    zapata-engine-rest\n"
-                                                            "    mysqlcppconnx\n"
+                                                            "    mysqlclient\n"
                                                             ")",
                                                             _lib));
         _file->add<zpt::ast::cmake_instruction>(
@@ -1090,7 +1090,11 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     auto _collection = _def("dbCollection")->string();
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
     auto _file_path = _directory / std::format("{}_mysql.sql", _collection);
-    if (std::filesystem::exists(_file_path)) { return nullptr; }
+    if (std::filesystem::exists(_file_path)) {
+        std::cout << "> Skipping generation of " << _file_path
+                  << ", file already exists, move it out of the way first." << std::endl;
+        return nullptr;
+    }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
 
@@ -1099,20 +1103,11 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    _oss << "\\c zpt:@localhost:3306" << std::endl
-         << "\\sql" << std::endl
-         << "create database if not exists " << this->__schema("info")("database")->string() << ";"
+    _oss << "create schema if not exists " << this->__schema("info")("database")->string() << ";"
          << std::endl
          << "use " << this->__schema("info")("database")->string() << ";" << std::endl
          << "drop table if exists " << _collection << ";" << std::endl
-         << "\\py" << std::endl
-         << "session = mysqlx.get_session('zpt:@localhost', '')" << std::endl
-         << "db = session.get_schema('" << this->__schema("info")("database")->string() << "')"
-         << std::endl
-         << "db.create_collection('" << _collection << "')" << std::endl
-         << "\\sql" << std::endl
-         << "\\c zpt:@localhost:3306" << std::endl
-         << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
+         << "create table " << _collection << " (\n_id varchar(36) not null," << std::endl;
 
     for (auto const& [_, __, _object] : _def("allOf")) {
         for (auto const& [_, _name, _field] : _object("properties")) {
@@ -1125,16 +1120,16 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
                                     (_field("maximum")->ok() ? _field("maximum")->integer() : 512));
             }
 
-            _oss << "alter table " << _collection << " add column " << _name << " " << _type
-                 << " generated always as (doc->>\"$." << _name << "\") stored"
-                 << (_object("required")->contains(_name) ? " not null" : "") << ";" << std::endl;
+            _oss << _name << " " << _type
+                 << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
             if (_field("sql:index")->ok()) {
-                _oss << "alter table " << _collection << " add " << _field("sql:index")->string()
-                     << " index " << _name << "_" << _field("sql:index")->string() << "_idx("
-                     << _name << ");" << std::endl;
+                auto _index_type = _field("sql:index")->string();
+                _oss << (_index_type == "unique" ? "unique " : "") << "key " << _name << "_"
+                     << _field("sql:index")->string() << "_idx(" << _name << ")," << std::endl;
             }
         }
     }
+    _oss << "primary key (_id)\n);" << std::endl;
     _oss << "show create table " << _collection;
 
     _file->add<zpt::ast::cpp_instruction>(_oss.str());

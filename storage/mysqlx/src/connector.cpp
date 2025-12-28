@@ -22,170 +22,197 @@
 
 #include <algorithm>
 #include <zapata/mysqlx/connector.h>
-#include <zapata/mysqlx/translate.h>
 
-auto zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value {
-    switch (_value->type()) {
-        case zpt::JSObject:
-        case zpt::JSArray: {
-            return ::mysqlx::Value{ zpt::storage::mysqlx::to_db_doc(_value) };
-        }
-        case zpt::JSString: {
-            return ::mysqlx::Value{ _value->string() };
-        }
-        case zpt::JSInteger: {
-            return ::mysqlx::Value{ _value->integer() };
-        }
-        case zpt::JSDouble: {
-            return ::mysqlx::Value{ _value->floating() };
-        }
-        case zpt::JSBoolean: {
-            return ::mysqlx::Value{ _value->boolean() };
-        }
-        case zpt::JSDate: {
-            return ::mysqlx::Value{ _value->date() };
-        }
-        case zpt::JSUndefined:
-        case zpt::JSNil:
-        case zpt::JSLambda:
-        case zpt::JSRegex: {
-            break;
-        }
-    }
-    return ::mysqlx::Value{};
+auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
+    mysql_close(_to_dispose);
 }
 
-auto zpt::storage::mysqlx::to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc {
-    return ::mysqlx::DbDoc{ static_cast<std::string>(_document) };
+zpt::storage::mysqlx::mysql_thread_deinit::~mysql_thread_deinit() { mysql_thread_end(); }
+
+auto zpt::storage::mysqlx::mysql_stmt_end::operator()(MYSQL_STMT* _to_dispose) const -> void {
+    mysql_stmt_close(_to_dispose);
 }
 
-auto zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json {
-    if (!_document.isNull()) {
-        // std::stringstream _ss;
-        // _document.print(_ss);
-        // zpt::json _to_return;
-        // _ss >> _to_return;
-        // return _to_return;
-        return zpt::storage::mysqlx::translate_object_from_db(_document);
-    }
-    return zpt::undefined;
+zpt::storage::mysqlx::library::library() {
+    expect(!mysql_library_init(0, nullptr, nullptr), "Unable to initialize MySQL library");
+}
+
+zpt::storage::mysqlx::library::~library() { mysql_library_end(); }
+
+auto zpt::storage::mysqlx::init() -> zpt::storage::mysqlx::library& {
+    static library _global;
+    return _global;
 }
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
-  : __options(_options("storage")("mysqlx")) {}
+  : __options{ _options("storage")("mysqlx") } {
+    zpt::storage::mysqlx::init();
+    this->open(_options("storage")("mysqlx"));
+}
 
 auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
+
+    this->__mysql.reset(mysql_init(nullptr), zpt::storage::mysqlx::mysql_deinit{});
+    thread_local std::unique_ptr<zpt::storage::mysqlx::mysql_thread_deinit> _thread_end =
+      std::make_unique<zpt::storage::mysqlx::mysql_thread_deinit>();
+
+    auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
+    auto _user = this->__options("user")->string();
+    auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
+    auto _port = this->__options("port")->ok() ? this->__options("port")->integer() : 3306;
+    auto _ssl_mode = this->__options("ssl_mode")->ok() && this->__options("ssl_mode")->boolean();
+
+    expect(nullptr != mysql_real_connect(this->__mysql.get(), //
+                                         _host.data(),
+                                         _user.data(),
+                                         _pass.empty() ? nullptr : _pass.data(),
+                                         nullptr,
+                                         _port,
+                                         nullptr,
+                                         _ssl_mode ? CLIENT_SSL : 0),
+           std::format("Unable to connect to 'mysqlx://{}@{}:{}?ssl_mode={}: {}",
+                       _user,
+                       _host,
+                       _port,
+                       _ssl_mode,
+                       mysql_error(this->__mysql.get())));
     return this;
 }
 
-auto zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type* { return this; }
+auto zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type* {
+    this->__mysql.reset();
+    return this;
+}
 
-auto zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
+auto zpt::storage::mysqlx::connection::session() const -> zpt::storage::session {
     return zpt::make_session<zpt::storage::mysqlx::session>(*this);
 }
 
-auto zpt::storage::mysqlx::connection::options() -> zpt::json& { return this->__options; }
+auto zpt::storage::mysqlx::connection::options() const -> zpt::json { return this->__options; }
 
-zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection)
-  : __underlying{ ::mysqlx::SessionOption::USER,
-                  _connection.options()("user")->string(),
-                  ::mysqlx::SessionOption::PWD,
-                  _connection.options()("password")->string(),
-                  ::mysqlx::SessionOption::HOST,
-                  _connection.options()("host")->string(),
-                  ::mysqlx::SessionOption::PORT,
-                  _connection.options()("port")->ok() ? _connection.options()("port")->integer()
-                                                      : 33060,
-                  ::mysqlx::SessionOption::SSL_MODE,
-                  ::mysqlx::SSLMode::REQUIRED } {}
+auto zpt::storage::mysqlx::connection::mysql() const -> mysql_ptr { return this->__mysql; }
 
-zpt::storage::mysqlx::session::~session() { this->__underlying.close(); }
+zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection const& _connection)
+  : __mysql{ _connection.mysql() } {
+    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
+           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
+}
 
-auto zpt::storage::mysqlx::session::is_open() -> bool { return true; }
+zpt::storage::mysqlx::session::~session() { this->rollback(); }
+
+auto zpt::storage::mysqlx::session::is_open() const -> bool { return this->__mysql != nullptr; }
 
 auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
-    this->__underlying.commit();
+    expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
+           std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
 auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
-    this->__underlying.rollback();
+    expect(0 == mysql_query(this->__mysql.get(), "ROLLBACK"),
+           std::format("Rollback failed: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
 auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
   -> zpt::storage::session::type* {
-    this->__underlying.sql(_statement).execute();
+    mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
+                             zpt::storage::mysqlx::mysql_stmt_end{} };
+    expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
+           std::format(
+             "failed to prepare statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    expect(0 == mysql_stmt_execute(_to_exec.get()),
+           std::format(
+             "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
     return this;
 }
 
-auto zpt::storage::mysqlx::session::operator->() -> ::mysqlx::Session* {
-    return &this->__underlying;
-}
-
-auto zpt::storage::mysqlx::session::database(std::string const& _db) -> zpt::storage::database {
+auto zpt::storage::mysqlx::session::database(std::string const& _db) const
+  -> zpt::storage::database {
     return zpt::make_database<zpt::storage::mysqlx::database>(*this, _db);
 }
 
-zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session,
+auto zpt::storage::mysqlx::session::mysql() const -> mysql_ptr { return this->__mysql; }
+
+zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session const& _session,
                                          std::string const& _db)
-  : __underlying{ _session->getSchema(_db) } {}
+  : __mysql{ _session.mysql() }
+  , __database{ _db } {
+    auto _statement = std::format("USE `{}`", this->__database);
+    expect(0 == mysql_query(this->__mysql.get(), _statement.data()),
+           std::format(
+             "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+}
 
 auto zpt::storage::mysqlx::database::sql(std::string const&) -> zpt::storage::database::type* {
-    expect(false, "Database `sql` method not implemented for MySQL XDevAPI, use session's");
+    expect(false, "database `sql` method not implemented for MySQL XDevAPI, use session's");
     return this;
 }
 
-auto zpt::storage::mysqlx::database::operator->() -> ::mysqlx::Schema* {
-    return &this->__underlying;
-}
-
-auto zpt::storage::mysqlx::database::collection(std::string const& _collection)
+auto zpt::storage::mysqlx::database::collection(std::string const& _collection) const
   -> zpt::storage::collection {
     return zpt::make_collection<zpt::storage::mysqlx::collection>(*this, _collection);
 }
 
-zpt::storage::mysqlx::collection::collection(zpt::storage::mysqlx::database& _database,
-                                             std::string const& _collection)
-  : __underlying{ _database->getCollection(_collection) } {}
+auto zpt::storage::mysqlx::database::mysql() const -> mysql_ptr { return this->__mysql; }
 
-auto zpt::storage::mysqlx::collection::add(zpt::json _document) -> zpt::storage::action {
+zpt::storage::mysqlx::collection::collection(zpt::storage::mysqlx::database const& _database,
+                                             std::string const& _collection)
+  : __mysql{ _database.mysql() }
+  , __table{ _collection } {}
+
+auto zpt::storage::mysqlx::collection::add(zpt::json _document) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_add>(*this, _document);
 }
 
-auto zpt::storage::mysqlx::collection::modify(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::mysqlx::collection::modify(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_modify>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::remove(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::mysqlx::collection::remove(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_remove>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::mysqlx::collection::replace(std::string const& _id, zpt::json _document) const
   -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_replace>(*this, _id, _document);
 }
 
-auto zpt::storage::mysqlx::collection::find(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::mysqlx::collection::find(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mysqlx::action_find>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::count() -> size_t { return this->__underlying.count(); }
-
-auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
-    return &this->__underlying;
+auto zpt::storage::mysqlx::collection::count() -> size_t {
+    auto _statement = std::format("select count(1) from `{}`", this->__table);
+    expect(0 == mysql_query(this->__mysql.get(), _statement.data()),
+           std::format(
+             "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    return 0;
 }
 
-zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection&) {}
+auto zpt::storage::mysqlx::collection::table() const -> std::string const& { return this->__table; }
 
-zpt::storage::mysqlx::action_add::action_add(zpt::storage::mysqlx::collection& _collection,
+auto zpt::storage::mysqlx::collection::mysql() const -> mysql_ptr { return this->__mysql; }
+
+zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection const& _collection)
+  : __mysql{ _collection.mysql() }
+  , __table{ _collection.table() } {}
+
+auto zpt::storage::mysqlx::action::statement() const -> mysql_stmt_ptr { return this->__statement; }
+
+auto zpt::storage::mysqlx::action::mysql() const -> mysql_ptr { return this->__mysql; }
+
+zpt::storage::mysqlx::action_add::action_add(zpt::storage::mysqlx::collection const& _collection,
                                              zpt::json _document)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __underlying{ _collection->add(zpt::storage::mysqlx::to_db_doc(_document)) } {}
+  , __underlying{ zpt::json::array() }
+  , __generated_ids{ zpt::json::array() } {
+    this->__underlying << _document;
+}
 
 auto zpt::storage::mysqlx::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
-    this->__underlying.add(zpt::storage::mysqlx::to_db_doc(_document));
+    this->__underlying << _document;
     return this;
 }
 
@@ -226,7 +253,8 @@ auto zpt::storage::mysqlx::action_add::patch(zpt::json) -> zpt::storage::action:
     return this;
 }
 
-auto zpt::storage::mysqlx::action_add::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_add::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -245,18 +273,41 @@ auto zpt::storage::mysqlx::action_add::bind(zpt::json) -> zpt::storage::action::
 }
 
 auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
+    std::ostringstream _oss;
+    for (auto [_, __, _record] : this->__underlying) {
+        auto _id = zpt::generate::r_uuid();
+        _record << "_id" << _id;
+        this->__generated_ids << _id;
+        _oss << std::vformat(zpt::storage::mysqlx::to_insert(_record),
+                             std::make_format_args(this->__table));
+    }
+    _oss << std::flush;
+    auto _sql = _oss.str();
+
+    this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
+                            zpt::storage::mysqlx::mysql_stmt_end{});
+    expect(
+      0 == mysql_stmt_prepare(this->__statement.get(), _sql.data(), _sql.length()),
+      std::format("failed to prepare statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+    expect(
+      0 == mysql_stmt_execute(this->__statement.get()),
+      std::format("failed to execute statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_add::operator->() -> ::mysqlx::CollectionAdd* {
-    return &this->__underlying;
+auto zpt::storage::mysqlx::action_add::get_generated_ids() const -> zpt::json {
+    return this->__generated_ids;
 }
 
-zpt::storage::mysqlx::action_modify::action_modify(zpt::storage::mysqlx::collection& _collection,
-                                                   zpt::json _search)
+zpt::storage::mysqlx::action_modify::action_modify(
+  zpt::storage::mysqlx::collection const& _collection,
+  zpt::json _search)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __underlying{ _collection->modify(zpt::storage::extract_find(_search)) } {}
+  , __underlying{ zpt::json::object() }
+  , __filter{ _search }
+  , __bind{ zpt::json::object() } {}
 
 auto zpt::storage::mysqlx::action_modify::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'modify' action");
@@ -286,25 +337,25 @@ auto zpt::storage::mysqlx::action_modify::find(zpt::json) -> zpt::storage::actio
 
 auto zpt::storage::mysqlx::action_modify::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
-    this->__underlying.set(_attribute, zpt::storage::mysqlx::to_db_doc(_value));
+    this->__underlying << _attribute << _value;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_modify::unset(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying.unset(_attribute);
+    this->__underlying << _attribute << zpt::undefined;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_modify::patch(zpt::json _document)
   -> zpt::storage::action::type* {
-    this->__underlying.patch(static_cast<std::string>(_document));
+    this->__underlying += _document;
     return this;
 }
 
-auto zpt::storage::mysqlx::action_modify::sort(std::string const& _attribute)
+auto zpt::storage::mysqlx::action_modify::sort(std::string const&, bool)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
+    expect(false, "can't sort from a 'modify' action");
     return this;
 }
 
@@ -316,31 +367,47 @@ auto zpt::storage::mysqlx::action_modify::offset(size_t) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::mysqlx::action_modify::limit(size_t _number) -> zpt::storage::action::type* {
-    this->__underlying.limit(_number);
+auto zpt::storage::mysqlx::action_modify::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    for (auto [_, _key, _value] : _map) {
-        this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
-    }
+    this->__bind += _map;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
+    if (this->__filter->ok()) {
+        for (auto const& [_, _key, _value] : this->__bind) {
+            zpt::replace(
+              this->__filter->string(), std::format(":{}", _key), static_cast<std::string>(_value));
+        }
+    }
+
+    std::ostringstream _oss;
+    _oss << std::vformat(zpt::storage::mysqlx::to_update(this->__underlying, this->__filter),
+                         std::make_format_args(this->__table));
+    _oss << std::flush;
+    auto _sql = _oss.str();
+
+    this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
+                            zpt::storage::mysqlx::mysql_stmt_end{});
+    expect(
+      0 == mysql_stmt_prepare(this->__statement.get(), _sql.data(), _sql.length()),
+      std::format("failed to prepare statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+    expect(
+      0 == mysql_stmt_execute(this->__statement.get()),
+      std::format("failed to execute statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_modify::operator->() -> ::mysqlx::CollectionModify* {
-    return &this->__underlying;
-}
-
-zpt::storage::mysqlx::action_remove::action_remove(zpt::storage::mysqlx::collection& _collection,
-                                                   zpt::json _search)
-  : zpt::storage::mysqlx::action::action(_collection)
-  , __underlying{ _collection->remove(zpt::storage::extract_find(_search)) } {}
+zpt::storage::mysqlx::action_remove::action_remove(
+  zpt::storage::mysqlx::collection const& _collection,
+  zpt::json _search)
+  : zpt::storage::mysqlx::action::action{ _collection }
+  , __filter{ _search } {}
 
 auto zpt::storage::mysqlx::action_remove::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'remove' action");
@@ -380,9 +447,8 @@ auto zpt::storage::mysqlx::action_remove::patch(zpt::json) -> zpt::storage::acti
     return this;
 }
 
-auto zpt::storage::mysqlx::action_remove::sort(std::string const& _attribute)
+auto zpt::storage::mysqlx::action_remove::sort(std::string const&, bool)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
     return this;
 }
 
@@ -394,33 +460,50 @@ auto zpt::storage::mysqlx::action_remove::offset(size_t) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::mysqlx::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
-    this->__underlying.limit(_number);
+auto zpt::storage::mysqlx::action_remove::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mysqlx::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    for (auto [_, _key, _value] : _map) {
-        this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
-    }
+    this->__bind += _map;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
+    if (this->__filter->ok()) {
+        for (auto const& [_, _key, _value] : this->__bind) {
+            zpt::replace(
+              this->__filter->string(), std::format(":{}", _key), static_cast<std::string>(_value));
+        }
+    }
+
+    std::ostringstream _oss;
+    _oss << std::vformat(zpt::storage::mysqlx::to_delete(this->__filter),
+                         std::make_format_args(this->__table));
+    _oss << std::flush;
+    auto _sql = _oss.str();
+
+    this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
+                            zpt::storage::mysqlx::mysql_stmt_end{});
+    expect(
+      0 == mysql_stmt_prepare(this->__statement.get(), _sql.data(), _sql.length()),
+      std::format("failed to prepare statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+    expect(
+      0 == mysql_stmt_execute(this->__statement.get()),
+      std::format("failed to execute statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_remove::operator->() -> ::mysqlx::CollectionRemove* {
-    return &this->__underlying;
+zpt::storage::mysqlx::action_replace::action_replace(
+  zpt::storage::mysqlx::collection const& _collection,
+  std::string _id,
+  zpt::json _document)
+  : zpt::storage::mysqlx::action::action{ _collection }
+  , __underlying{ _document } {
+    this->__underlying << "_id" << _id;
 }
-
-zpt::storage::mysqlx::action_replace::action_replace(zpt::storage::mysqlx::collection& _collection,
-                                                     std::string _id,
-                                                     zpt::json _document)
-  : zpt::storage::mysqlx::action::action(_collection)
-  , __id{ _id }
-  , __document{ _document } {}
 
 auto zpt::storage::mysqlx::action_replace::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'replace' action");
@@ -462,7 +545,8 @@ auto zpt::storage::mysqlx::action_replace::patch(zpt::json) -> zpt::storage::act
     return this;
 }
 
-auto zpt::storage::mysqlx::action_replace::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_replace::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -483,29 +567,35 @@ auto zpt::storage::mysqlx::action_replace::bind(zpt::json) -> zpt::storage::acti
 }
 
 auto zpt::storage::mysqlx::action_replace::execute() -> zpt::storage::result {
+    std::ostringstream _oss;
+    _oss << std::vformat(zpt::storage::mysqlx::to_replace(this->__underlying),
+                         std::make_format_args(this->__table));
+    _oss << std::flush;
+    auto _sql = _oss.str();
+
+    this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
+                            zpt::storage::mysqlx::mysql_stmt_end{});
+    expect(
+      0 == mysql_stmt_prepare(this->__statement.get(), _sql.data(), _sql.length()),
+      std::format("failed to prepare statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+    expect(
+      0 == mysql_stmt_execute(this->__statement.get()),
+      std::format("failed to execute statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_replace::replace_one() -> ::mysqlx::Result {
-    return this->__underlying->replaceOne(this->__id,
-                                          zpt::storage::mysqlx::to_db_doc(this->__document));
-}
+zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection const& _collection)
+  : zpt::storage::mysqlx::action::action{ _collection } {}
 
-auto zpt::storage::mysqlx::action_replace::operator->() -> ::mysqlx::Collection* {
-    return this->__underlying;
-}
-
-zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection& _collection)
-  : zpt::storage::mysqlx::action::action(_collection)
-  , __underlying{ _collection->find() } {}
-
-zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection& _collection,
+zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection const& _collection,
                                                zpt::json _search)
-  : zpt::storage::mysqlx::action::action(_collection)
-  , __find_criteria{ zpt::storage::extract_find(_search) }
-  , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
-                                                : _collection->find() } {}
+  : zpt::storage::mysqlx::action::action{ _collection }
+  , __underlying{ _search }
+  , __fields{ zpt::json::array() }
+  , __bind{ zpt::json::object() }
+  , __suffix{ zpt::json::object() } {}
 
 auto zpt::storage::mysqlx::action_find::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'find' action");
@@ -546,109 +636,129 @@ auto zpt::storage::mysqlx::action_find::patch(zpt::json) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::mysqlx::action_find::sort(std::string const& _attribute)
+auto zpt::storage::mysqlx::action_find::sort(std::string const& _attribute, bool asc)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
+    this->__suffix["order by"][_attribute] = (asc ? "asc" : "desc");
     return this;
 }
 
 auto zpt::storage::mysqlx::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
-    std::ostringstream _oss;
-    bool _first{ true };
-    _oss << "{";
-    for (auto [_, __, _value] : _fields) {
-        if (!_first) { _oss << ","; }
-        else
-            _first = false;
-        _oss << _value << ":$." << _value->string() << "";
-    }
-    _oss << "}" << std::flush;
-    this->__underlying.fields(::mysqlx::expr(_oss.str()));
+    this->__fields += _fields;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_find::offset(size_t _rows) -> zpt::storage::action::type* {
-    this->__underlying.offset(_rows);
+    this->__suffix["offset"] = _rows;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_find::limit(size_t _number) -> zpt::storage::action::type* {
-    this->__underlying.limit(_number);
+    this->__suffix["limit"] = _number;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    for (auto [_, _key, _value] : _map) {
-        this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
-    }
+    this->__bind += _map;
     return this;
 }
 
 auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
+    if (this->__underlying->ok()) {
+        for (auto const& [_, _key, _value] : this->__bind) {
+            zpt::replace(this->__underlying->string(),
+                         std::format(":{}", _key),
+                         static_cast<std::string>(_value));
+        }
+    }
+
+    std::ostringstream _oss;
+    _oss << std::vformat(zpt::storage::mysqlx::to_query(this->__fields, this->__underlying),
+                         std::make_format_args(this->__table));
+
+    if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
+    if (this->__suffix["offset"]->ok()) { _oss << " offset " << this->__suffix["offset"]; }
+    if (this->__suffix["order by"]->ok()) {
+        _oss << " order by ";
+        bool _first{ true };
+        for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
+            if (!_first) { _oss << ", "; }
+            _first = false;
+            _oss << _field << " " << _direction;
+        }
+    }
+
+    _oss << std::flush;
+    auto _sql = _oss.str();
+
+    this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
+                            zpt::storage::mysqlx::mysql_stmt_end{});
+    expect(
+      0 == mysql_stmt_prepare(this->__statement.get(), _sql.data(), _sql.length()),
+      std::format("failed to prepare statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+    expect(
+      0 == mysql_stmt_execute(this->__statement.get()),
+      std::format("failed to execute statement '{}': {}", _sql, mysql_error(this->__mysql.get())));
+
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_find::operator->() -> ::mysqlx::CollectionFind* {
-    return &this->__underlying;
+zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action& _action)
+  : __mysql{ _action.mysql() }
+  , __statement{ _action.statement() }
+  , __metadata{ _action.statement().get() } {
+    mysql_stmt_bind_result(this->__statement.get(), this->__metadata.__bind.get());
+    mysql_stmt_store_result(this->__statement.get());
 }
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_add& _action)
-  : __result{ _action->execute() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {
+    this->__generated_ids = _action.get_generated_ids();
+}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_modify& _action)
-  : __result{ _action->execute() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_remove& _action)
-  : __result{ _action->execute() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_replace& _action)
-  : __result{ _action.replace_one() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_find& _action)
-  : __is_doc_result{ true }
-  , __doc_result{ _action->execute() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {
+    this->__is_doc_result = true;
+}
+
+zpt::storage::mysqlx::result::~result() { mysql_stmt_free_result(this->__statement.get()); }
 
 auto zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
-    if (this->__is_doc_result) {
-        auto _to_return = zpt::json::array();
-        if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
-        for (size_t _idx = 0; _idx != _amount; ++_idx) {
-            ::mysqlx::DbDoc _doc = this->__doc_result.fetchOne();
-            if (_doc.isNull()) { break; }
-            auto _row = zpt::storage::mysqlx::from_db_doc(_doc);
-            if (_amount == 1) { return _row; }
-            _to_return << _row;
-        }
-        return (_to_return->size() != 0 ? _to_return : zpt::undefined);
-    }
-    return zpt::undefined;
+    zpt::json _result = zpt::json::array();
+    if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
+
+    int _status{ MYSQL_NO_DATA };
+    size_t _fetched{ 0 };
+    do {
+        _status = mysql_stmt_fetch(this->__statement.get());
+        if (_status == MYSQL_NO_DATA) { break; }
+
+        _result << zpt::storage::mysqlx::to_json(this->__statement.get(), this->__metadata);
+        ++_fetched;
+    } while (_fetched != _amount);
+
+    return _result;
 }
 
-auto zpt::storage::mysqlx::result::generated_id() -> zpt::json {
-    if (!this->__is_doc_result) {
-        zpt::json _to_return{ zpt::json::array() };
-        for (auto _id : this->__result.getGeneratedIds()) { _to_return << _id; }
-        return _to_return;
-    }
-    return zpt::undefined;
+auto zpt::storage::mysqlx::result::generated_id() -> zpt::json { return this->__generated_ids; }
+
+auto zpt::storage::mysqlx::result::count() const -> size_t {
+    return mysql_stmt_num_rows(this->__statement.get());
 }
 
-auto zpt::storage::mysqlx::result::count() -> size_t {
-    if (this->__is_doc_result) { return this->__doc_result.count(); }
-    return this->__result.getAffectedItemsCount();
-}
+auto zpt::storage::mysqlx::result::status() const -> zpt::status { return 0; }
 
-auto zpt::storage::mysqlx::result::status() -> zpt::status {
-    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getCode(); }
-    else { return this->__result.getWarning(0).getCode(); }
-}
+auto zpt::storage::mysqlx::result::message() const -> std::string { return {}; }
 
-auto zpt::storage::mysqlx::result::message() -> std::string {
-    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getMessage(); }
-    else { return this->__result.getWarning(0).getMessage(); }
-}
-
-auto zpt::storage::mysqlx::result::to_json() -> zpt::json {
+auto zpt::storage::mysqlx::result::to_json() const -> zpt::json {
     return { "state", { "code", this->status(), "message", this->message() } };
 }

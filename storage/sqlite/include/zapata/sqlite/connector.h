@@ -62,8 +62,8 @@ class connection : public zpt::storage::connection::type {
 
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
     virtual auto close() -> zpt::storage::connection::type* override;
-    virtual auto session() -> zpt::storage::session override;
-    virtual auto options() -> zpt::json&;
+    virtual auto session() const -> zpt::storage::session override;
+    virtual auto options() const -> zpt::json;
 
   private:
     zpt::json __options;
@@ -72,15 +72,15 @@ class session : public zpt::storage::session::type {
   public:
     friend class database;
 
-    session(zpt::storage::sqlite::connection& _connection);
-    session(const zpt::storage::sqlite::session& _rhs) = delete;
+    session(zpt::storage::sqlite::connection const& _connection);
+    session(zpt::storage::sqlite::session const& _rhs) = delete;
     session(zpt::storage::sqlite::session&& _rhs) = delete;
     virtual ~session() override = default;
-    virtual auto is_open() -> bool override;
+    virtual auto is_open() const -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
     virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
-    virtual auto database(std::string const& _db) -> zpt::storage::database override;
+    virtual auto database(std::string const& _db) const -> zpt::storage::database override;
     auto add_database_connection(sqlite3_ptr _database) -> void;
 
   private:
@@ -91,14 +91,14 @@ class database : public zpt::storage::database::type {
   public:
     friend class collection;
 
-    database(zpt::storage::sqlite::session& _session, std::string const& _db);
-    database(const zpt::storage::sqlite::database& _rhs) = delete;
+    database(zpt::storage::sqlite::session const& _session, std::string const& _db);
+    database(zpt::storage::sqlite::database const& _rhs) = delete;
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
     virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
-    virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
-    auto connection() -> sqlite3_ptr;
-    auto path() -> std::string&;
+    virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
+    auto connection() const -> sqlite3_ptr;
+    auto path() const -> std::string const&;
 
   private:
     std::string __path;
@@ -108,14 +108,14 @@ class collection : public zpt::storage::collection::type {
   public:
     friend class action;
 
-    collection(zpt::storage::sqlite::database& _database, std::string const& _collection);
+    collection(zpt::storage::sqlite::database const& _database, std::string const& _collection);
     virtual ~collection() override = default;
-    virtual auto add(zpt::json _document) -> zpt::storage::action override;
-    virtual auto modify(zpt::json _search) -> zpt::storage::action override;
-    virtual auto remove(zpt::json _search) -> zpt::storage::action override;
-    virtual auto replace(std::string const& _id, zpt::json _document)
+    virtual auto add(zpt::json _document) const -> zpt::storage::action override;
+    virtual auto modify(zpt::json _search) const -> zpt::storage::action override;
+    virtual auto remove(zpt::json _search) const -> zpt::storage::action override;
+    virtual auto replace(std::string const& _id, zpt::json _document) const
       -> zpt::storage::action override;
-    virtual auto find(zpt::json _search) -> zpt::storage::action override;
+    virtual auto find(zpt::json _search) const -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
   private:
@@ -124,14 +124,14 @@ class collection : public zpt::storage::collection::type {
 };
 class action : public zpt::storage::action::type {
   public:
-    action(zpt::storage::sqlite::collection& _collection);
+    action(zpt::storage::sqlite::collection const& _collection);
     virtual ~action() override = default;
 
     auto set_state(int _error) -> void;
-    auto get_state() -> zpt::json;
+    auto get_state() const -> zpt::json;
 
   protected:
-    std::string& __collection_name;
+    std::string __collection_name;
     sqlite3_ptr __underlying{ nullptr };
     std::vector<sqlite3_stmt_ptr> __prepared;
     zpt::json __state{ "code", 0, "message", "Success" };
@@ -140,7 +140,7 @@ class action : public zpt::storage::action::type {
 };
 class action_add : public zpt::storage::sqlite::action {
   public:
-    action_add(zpt::storage::sqlite::collection& _collection, zpt::json _document);
+    action_add(zpt::storage::sqlite::collection const& _collection, zpt::json _document);
     virtual ~action_add() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
@@ -152,7 +152,8 @@ class action_add : public zpt::storage::sqlite::action {
       -> zpt::storage::action::type* override;
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute, bool asc = true)
+      -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -166,7 +167,7 @@ class action_add : public zpt::storage::sqlite::action {
 };
 class action_modify : public zpt::storage::sqlite::action {
   public:
-    action_modify(zpt::storage::sqlite::collection& _collection, zpt::json _search);
+    action_modify(zpt::storage::sqlite::collection const& _collection, zpt::json _search);
     virtual ~action_modify() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
@@ -178,7 +179,8 @@ class action_modify : public zpt::storage::sqlite::action {
       -> zpt::storage::action::type* override;
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute, bool asc = true)
+      -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -194,7 +196,7 @@ class action_modify : public zpt::storage::sqlite::action {
 };
 class action_remove : public zpt::storage::sqlite::action {
   public:
-    action_remove(zpt::storage::sqlite::collection& _collection, zpt::json _search);
+    action_remove(zpt::storage::sqlite::collection const& _collection, zpt::json _search);
     virtual ~action_remove() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
@@ -206,7 +208,8 @@ class action_remove : public zpt::storage::sqlite::action {
       -> zpt::storage::action::type* override;
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute, bool asc = true)
+      -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -221,7 +224,7 @@ class action_remove : public zpt::storage::sqlite::action {
 };
 class action_replace : public zpt::storage::sqlite::action {
   public:
-    action_replace(zpt::storage::sqlite::collection& _collection,
+    action_replace(zpt::storage::sqlite::collection const& _collection,
                    std::string _id,
                    zpt::json _document);
     virtual ~action_replace() override = default;
@@ -235,7 +238,8 @@ class action_replace : public zpt::storage::sqlite::action {
       -> zpt::storage::action::type* override;
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute, bool asc = true)
+      -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -251,8 +255,8 @@ class action_replace : public zpt::storage::sqlite::action {
 };
 class action_find : public zpt::storage::sqlite::action {
   public:
-    action_find(zpt::storage::sqlite::collection& _collection);
-    action_find(zpt::storage::sqlite::collection& _collection, zpt::json _search);
+    action_find(zpt::storage::sqlite::collection const& _collection);
+    action_find(zpt::storage::sqlite::collection const& _collection, zpt::json _search);
     virtual ~action_find() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
@@ -264,7 +268,8 @@ class action_find : public zpt::storage::sqlite::action {
       -> zpt::storage::action::type* override;
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute, bool asc = true)
+      -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -288,10 +293,10 @@ class result : public zpt::storage::result::type {
     virtual ~result() override = default;
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
     virtual auto generated_id() -> zpt::json override;
-    virtual auto count() -> size_t override;
-    virtual auto status() -> zpt::status override;
-    virtual auto message() -> std::string override;
-    virtual auto to_json() -> zpt::json override;
+    virtual auto count() const -> size_t override;
+    virtual auto status() const -> zpt::status override;
+    virtual auto message() const -> std::string override;
+    virtual auto to_json() const -> zpt::json override;
 
   private:
     zpt::json __result;

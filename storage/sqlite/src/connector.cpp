@@ -173,17 +173,19 @@ auto zpt::storage::sqlite::connection::open(zpt::json _options) -> zpt::storage:
 
 auto zpt::storage::sqlite::connection::close() -> zpt::storage::connection::type* { return this; }
 
-auto zpt::storage::sqlite::connection::session() -> zpt::storage::session {
+auto zpt::storage::sqlite::connection::session() const -> zpt::storage::session {
     return zpt::make_session<zpt::storage::sqlite::session>(*this);
 }
 
-auto zpt::storage::sqlite::connection::options() -> zpt::json& { return this->__options; }
+auto zpt::storage::sqlite::connection::options() const -> zpt::json { return this->__options; }
 
-zpt::storage::sqlite::session::session(zpt::storage::sqlite::connection& _connection)
+zpt::storage::sqlite::session::session(zpt::storage::sqlite::connection const& _connection)
   : __underlying{ nullptr }
   , __options{ _connection.__options } {}
 
-auto zpt::storage::sqlite::session::is_open() -> bool { return this->__underlying.size() != 0; }
+auto zpt::storage::sqlite::session::is_open() const -> bool {
+    return this->__underlying.size() != 0;
+}
 
 auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
     std::string _to_execute{ "commit" };
@@ -220,7 +222,8 @@ auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::ses
     return this;
 }
 
-auto zpt::storage::sqlite::session::database(std::string const& _db) -> zpt::storage::database {
+auto zpt::storage::sqlite::session::database(std::string const& _db) const
+  -> zpt::storage::database {
     return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
 }
 
@@ -228,7 +231,7 @@ auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _databas
     this->__underlying.push_back(_database);
 }
 
-zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session,
+zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
                                          std::string const& _db)
   : __path{ _session.__options("path")->ok()
               ? _session.__options("path")->string() + std::string{ "/" } + _db
@@ -237,7 +240,8 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session
     sqlite_expect(sqlite3_open(this->__path.data(), &_underlying),
                   "couldn't open database at " << this->__path);
     this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
-    _session.add_database_connection(this->__underlying);
+    const_cast<zpt::storage::sqlite::session&>(_session).add_database_connection(
+      this->__underlying);
 }
 
 auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
@@ -255,38 +259,40 @@ auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
     return this;
 }
 
-auto zpt::storage::sqlite::database::connection() -> sqlite3_ptr { return this->__underlying; }
+auto zpt::storage::sqlite::database::connection() const -> sqlite3_ptr {
+    return this->__underlying;
+}
 
-auto zpt::storage::sqlite::database::path() -> std::string& { return this->__path; }
+auto zpt::storage::sqlite::database::path() const -> std::string const& { return this->__path; }
 
-auto zpt::storage::sqlite::database::collection(std::string const& _collection)
+auto zpt::storage::sqlite::database::collection(std::string const& _collection) const
   -> zpt::storage::collection {
     return zpt::make_collection<zpt::storage::sqlite::collection>(*this, _collection);
 }
 
-zpt::storage::sqlite::collection::collection(zpt::storage::sqlite::database& _database,
+zpt::storage::sqlite::collection::collection(zpt::storage::sqlite::database const& _database,
                                              std::string const& _collection)
   : __underlying{ _database.__underlying }
   , __collection_name{ _collection } {}
 
-auto zpt::storage::sqlite::collection::add(zpt::json _document) -> zpt::storage::action {
+auto zpt::storage::sqlite::collection::add(zpt::json _document) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::sqlite::action_add>(*this, _document);
 }
 
-auto zpt::storage::sqlite::collection::modify(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::sqlite::collection::modify(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::sqlite::action_modify>(*this, _search);
 }
 
-auto zpt::storage::sqlite::collection::remove(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::sqlite::collection::remove(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::sqlite::action_remove>(*this, _search);
 }
 
-auto zpt::storage::sqlite::collection::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::sqlite::collection::replace(std::string const& _id, zpt::json _document) const
   -> zpt::storage::action {
     return zpt::make_action<zpt::storage::sqlite::action_replace>(*this, _id, _document);
 }
 
-auto zpt::storage::sqlite::collection::find(zpt::json _search) -> zpt::storage::action {
+auto zpt::storage::sqlite::collection::find(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::sqlite::action_find>(*this, _search);
 }
 
@@ -308,7 +314,7 @@ auto zpt::storage::sqlite::collection::count() -> size_t {
     return _count("count(*)");
 }
 
-zpt::storage::sqlite::action::action(zpt::storage::sqlite::collection& _collection)
+zpt::storage::sqlite::action::action(zpt::storage::sqlite::collection const& _collection)
   : __collection_name{ _collection.__collection_name }
   , __underlying{ _collection.__underlying } {}
 
@@ -322,7 +328,7 @@ auto zpt::storage::sqlite::action::set_state(int _error) -> void {
     }
 }
 
-auto zpt::storage::sqlite::action::get_state() -> zpt::json { return this->__state; }
+auto zpt::storage::sqlite::action::get_state() const -> zpt::json { return this->__state; }
 
 auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> void {
     sqlite3_stmt* _stmt{ nullptr };
@@ -334,7 +340,7 @@ auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> voi
       sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
 }
 
-zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection& _collection,
+zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection const& _collection,
                                              zpt::json _document)
   : zpt::storage::sqlite::action::action{ _collection } {
     this->add(_document);
@@ -388,7 +394,8 @@ auto zpt::storage::sqlite::action_add::patch(zpt::json) -> zpt::storage::action:
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -448,8 +455,9 @@ auto zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
     this->prepare(_names.str());
 }
 
-zpt::storage::sqlite::action_modify::action_modify(zpt::storage::sqlite::collection& _collection,
-                                                   zpt::json _search)
+zpt::storage::sqlite::action_modify::action_modify(
+  zpt::storage::sqlite::collection const& _collection,
+  zpt::json _search)
   : zpt::storage::sqlite::action::action{ _collection }
   , __search{ _search }
   , __set{ zpt::json::object() }
@@ -499,7 +507,8 @@ auto zpt::storage::sqlite::action_modify::patch(zpt::json _document)
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -577,8 +586,9 @@ auto zpt::storage::sqlite::action_modify::add_update() -> void {
     this->prepare(_oss.str());
 }
 
-zpt::storage::sqlite::action_remove::action_remove(zpt::storage::sqlite::collection& _collection,
-                                                   zpt::json _search)
+zpt::storage::sqlite::action_remove::action_remove(
+  zpt::storage::sqlite::collection const& _collection,
+  zpt::json _search)
   : zpt::storage::sqlite::action::action{ _collection }
   , __search{ _search } {}
 
@@ -621,7 +631,8 @@ auto zpt::storage::sqlite::action_remove::patch(zpt::json) -> zpt::storage::acti
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -681,9 +692,10 @@ auto zpt::storage::sqlite::action_remove::add_delete() -> void {
     this->__added = true;
 }
 
-zpt::storage::sqlite::action_replace::action_replace(zpt::storage::sqlite::collection& _collection,
-                                                     std::string _id,
-                                                     zpt::json _document)
+zpt::storage::sqlite::action_replace::action_replace(
+  zpt::storage::sqlite::collection const& _collection,
+  std::string _id,
+  zpt::json _document)
   : zpt::storage::sqlite::action::action{ _collection }
   , __id{ _id }
   , __set{ _document } {
@@ -730,7 +742,8 @@ auto zpt::storage::sqlite::action_replace::patch(zpt::json) -> zpt::storage::act
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::sort(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::sort(std::string const&, bool)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -795,17 +808,17 @@ auto zpt::storage::sqlite::action_replace::add_replace() -> void {
 
 auto zpt::storage::sqlite::action_replace::replace_one() -> void { this->execute(); }
 
-zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection& _collection)
+zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection const& _collection)
   : zpt::storage::sqlite::action::action{ _collection }
   , __search{ zpt::json::object() }
-  , __sort{ zpt::json::array() }
+  , __sort{ zpt::json::object() }
   , __fields{ zpt::json::array() } {}
 
-zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection& _collection,
+zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection const& _collection,
                                                zpt::json _search)
   : zpt::storage::sqlite::action::action{ _collection }
   , __search{ _search }
-  , __sort{ zpt::json::array() }
+  , __sort{ zpt::json::object() }
   , __fields{ zpt::json::array() } {}
 
 auto zpt::storage::sqlite::action_find::add(zpt::json) -> zpt::storage::action::type* {
@@ -847,9 +860,9 @@ auto zpt::storage::sqlite::action_find::patch(zpt::json) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::sort(std::string const& _attribute)
+auto zpt::storage::sqlite::action_find::sort(std::string const& _attribute, bool asc)
   -> zpt::storage::action::type* {
-    this->__sort << _attribute;
+    this->__sort << _attribute << (asc ? "asc" : "desc");
     return this;
 }
 
@@ -938,14 +951,12 @@ auto zpt::storage::sqlite::action_find::add_select() -> void {
     if (this->__sort->size() != 0 && this->__sort->is_object()) {
         _oss << " order by ";
         bool _first{ true };
-        zpt::json _order;
         for (auto [_, _key, _value] : this->__sort) {
             if (!_first) { _oss << ", "; }
             else { _first = false; }
-            _oss << "\"" << _key << "\"";
-            _order = _value;
+            _oss << "\"" << _key << "\" " << _value;
         }
-        _oss << " " << _order << std::flush;
+        _oss << std::flush;
     }
 
     this->prepare(_oss.str());
@@ -977,17 +988,17 @@ auto zpt::storage::sqlite::result::generated_id() -> zpt::json {
     return this->__result["generated"];
 }
 
-auto zpt::storage::sqlite::result::count() -> size_t {
+auto zpt::storage::sqlite::result::count() const -> size_t {
     if (this->__result("generated")->ok()) { return this->__result("generated")->size(); }
     return 0;
 }
 
-auto zpt::storage::sqlite::result::status() -> zpt::status {
+auto zpt::storage::sqlite::result::status() const -> zpt::status {
     return static_cast<size_t>(this->__result("state")("code"));
 }
 
-auto zpt::storage::sqlite::result::message() -> std::string {
+auto zpt::storage::sqlite::result::message() const -> std::string {
     return this->__result("state")("message")->string();
 }
 
-auto zpt::storage::sqlite::result::to_json() -> zpt::json { return this->__result; }
+auto zpt::storage::sqlite::result::to_json() const -> zpt::json { return this->__result; }
