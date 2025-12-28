@@ -59,14 +59,14 @@ auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage:
 
     auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
     auto _user = this->__options("user")->string();
-    auto _pass = this->__options("password")->string();
+    auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _port = this->__options("port")->ok() ? this->__options("port")->integer() : 3306;
     auto _ssl_mode = this->__options("ssl_mode")->ok() && this->__options("ssl_mode")->boolean();
 
     expect(nullptr != mysql_real_connect(this->__mysql.get(), //
                                          _host.data(),
                                          _user.data(),
-                                         _pass.data(),
+                                         _pass.empty() ? nullptr : _pass.data(),
                                          nullptr,
                                          _port,
                                          nullptr,
