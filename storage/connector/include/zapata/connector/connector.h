@@ -169,7 +169,8 @@ class action {
           -> zpt::storage::action::type* = 0;
         virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* = 0;
         virtual auto patch(zpt::json _document) -> zpt::storage::action::type* = 0;
-        virtual auto sort(std::string const& _attribute, bool asc = true) -> zpt::storage::action::type* = 0;
+        virtual auto sort(std::string const& _attribute, bool asc = true)
+          -> zpt::storage::action::type* = 0;
         virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* = 0;
         virtual auto offset(size_t _rows) -> zpt::storage::action::type* = 0;
         virtual auto limit(size_t _number) -> zpt::storage::action::type* = 0;

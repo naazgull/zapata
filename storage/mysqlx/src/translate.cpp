@@ -99,7 +99,6 @@ zpt::storage::mysqlx::result_set_metadata::result_set_metadata(MYSQL_STMT* _stat
                     case MYSQL_TYPE_INVALID:
                     case MYSQL_TYPE_NULL:
                     case MYSQL_TYPE_TYPED_ARRAY:
-                    case MYSQL_TYPE_VECTOR:
                     case MYSQL_TYPE_SET: {
                         assert(false);
                         return;
@@ -166,8 +165,8 @@ auto zpt::storage::mysqlx::result_set_metadata::charset(size_t _column) const ->
     return mysql_fetch_field_direct(this->__metadata, _column)->charsetnr;
 }
 
-auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement) -> zpt::json {
-    zpt::storage::mysqlx::result_set_metadata _cols{ _statement };
+auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
+                                   zpt::storage::mysqlx::result_set_metadata& _cols) -> zpt::json {
     auto _record = zpt::json::object();
 
     for (size_t _col_idx = 0; _col_idx != _cols.__column_count; ++_col_idx) {
@@ -247,7 +246,6 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement) -> zpt::json {
             case MYSQL_TYPE_TYPED_ARRAY:
             case MYSQL_TYPE_GEOMETRY:
             case MYSQL_TYPE_JSON:
-            case MYSQL_TYPE_VECTOR:
             case MYSQL_TYPE_SET: {
                 _record[_name] = nullptr;
                 break;

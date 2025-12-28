@@ -25,6 +25,7 @@
 #include <mysql/mysql.h>
 #include <zapata/connector.h>
 #include <zapata/json.h>
+#include <zapata/mysqlx/translate.h>
 
 namespace zpt {
 namespace storage {
@@ -48,8 +49,8 @@ struct mysql_deinit {
     auto operator()(MYSQL*) const -> void;
 };
 
-struct mysql_thread_end {
-    ~mysql_thread_end();
+struct mysql_thread_deinit {
+    ~mysql_thread_deinit();
 };
 
 struct mysql_stmt_end {
@@ -283,12 +284,13 @@ class action_find : public zpt::storage::mysqlx::action {
 };
 class result : public zpt::storage::result::type {
   public:
+    result(zpt::storage::mysqlx::action& _action);
     result(zpt::storage::mysqlx::action_add& _action);
     result(zpt::storage::mysqlx::action_modify& _action);
     result(zpt::storage::mysqlx::action_remove& _action);
     result(zpt::storage::mysqlx::action_replace& _action);
     result(zpt::storage::mysqlx::action_find& _action);
-    virtual ~result() override = default;
+    virtual ~result() override;
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
     virtual auto generated_id() -> zpt::json override;
     virtual auto count() const -> size_t override;
@@ -299,6 +301,7 @@ class result : public zpt::storage::result::type {
   private:
     mysql_ptr __mysql{ nullptr };
     mysql_stmt_ptr __statement{ nullptr };
+    result_set_metadata __metadata;
     bool __is_doc_result{ false };
     zpt::json __generated_ids{ nullptr };
 };

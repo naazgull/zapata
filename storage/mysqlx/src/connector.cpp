@@ -22,13 +22,12 @@
 
 #include <algorithm>
 #include <zapata/mysqlx/connector.h>
-#include <zapata/mysqlx/translate.h>
 
 auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
     mysql_close(_to_dispose);
 }
 
-zpt::storage::mysqlx::mysql_thread_end::~mysql_thread_end() { mysql_thread_end(); }
+zpt::storage::mysqlx::mysql_thread_deinit::~mysql_thread_deinit() { mysql_thread_end(); }
 
 auto zpt::storage::mysqlx::mysql_stmt_end::operator()(MYSQL_STMT* _to_dispose) const -> void {
     mysql_stmt_close(_to_dispose);
@@ -55,13 +54,13 @@ auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage:
     this->__options = _options;
 
     this->__mysql.reset(mysql_init(nullptr), zpt::storage::mysqlx::mysql_deinit{});
-    thread_local std::unique_ptr<zpt::storage::mysqlx::mysql_thread_end> _thread_end =
-      std::make_unique<zpt::storage::mysqlx::mysql_thread_end>();
+    thread_local std::unique_ptr<zpt::storage::mysqlx::mysql_thread_deinit> _thread_end =
+      std::make_unique<zpt::storage::mysqlx::mysql_thread_deinit>();
 
-    auto _host = this->__options("host")->string();
+    auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
     auto _user = this->__options("user")->string();
     auto _pass = this->__options("password")->string();
-    auto _port = this->__options("port")->integer();
+    auto _port = this->__options("port")->ok() ? this->__options("port")->integer() : 3306;
     auto _ssl_mode = this->__options("ssl_mode")->ok() && this->__options("ssl_mode")->boolean();
 
     expect(nullptr != mysql_real_connect(this->__mysql.get(), //
@@ -197,7 +196,8 @@ auto zpt::storage::mysqlx::collection::table() const -> std::string const& { ret
 auto zpt::storage::mysqlx::collection::mysql() const -> mysql_ptr { return this->__mysql; }
 
 zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection const& _collection)
-  : __table{ _collection.table() } {}
+  : __mysql{ _collection.mysql() }
+  , __table{ _collection.table() } {}
 
 auto zpt::storage::mysqlx::action::statement() const -> mysql_stmt_ptr { return this->__statement; }
 
@@ -703,28 +703,57 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     return _to_return;
 }
 
+zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action& _action)
+  : __mysql{ _action.mysql() }
+  , __statement{ _action.statement() }
+  , __metadata{ _action.statement().get() } {
+    mysql_stmt_bind_result(this->__statement.get(), this->__metadata.__bind.get());
+    mysql_stmt_store_result(this->__statement.get());
+}
+
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_add& _action)
-  : __statement{ _action.statement() }
-  , __generated_ids{ _action.get_generated_ids() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {
+    this->__generated_ids = _action.get_generated_ids();
+}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_modify& _action)
-  : __statement{ _action.statement() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_remove& _action)
-  : __statement{ _action.statement() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_replace& _action)
-  : __statement{ _action.statement() } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_find& _action)
-  : __statement{ _action.statement() }
-  , __is_doc_result{ true } {}
+  : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {
+    this->__is_doc_result = true;
+}
 
-auto zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json { return zpt::undefined; }
+zpt::storage::mysqlx::result::~result() { mysql_stmt_free_result(this->__statement.get()); }
+
+auto zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
+    zpt::json _result = zpt::json::array();
+    if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
+
+    int _status{ MYSQL_NO_DATA };
+    size_t _fetched{ 0 };
+    do {
+        _status = mysql_stmt_fetch(this->__statement.get());
+        if (_status == MYSQL_NO_DATA) { break; }
+
+        _result << zpt::storage::mysqlx::to_json(this->__statement.get(), this->__metadata);
+        ++_fetched;
+    } while (_fetched != _amount);
+
+    return _result;
+}
 
 auto zpt::storage::mysqlx::result::generated_id() -> zpt::json { return this->__generated_ids; }
 
-auto zpt::storage::mysqlx::result::count() const -> size_t { return 0; }
+auto zpt::storage::mysqlx::result::count() const -> size_t {
+    return mysql_stmt_num_rows(this->__statement.get());
+}
 
 auto zpt::storage::mysqlx::result::status() const -> zpt::status { return 0; }
 

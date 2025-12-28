@@ -50,7 +50,7 @@ class result_set_metadata {
   private:
     MYSQL_RES* __metadata{ nullptr };
 };
-auto to_json(MYSQL_STMT* _statement) -> zpt::json;
+auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::result_set_metadata& _cols) -> zpt::json;
 auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
 auto to_insert(zpt::json _to_insert) -> std::string;
 auto to_update(zpt::json _to_update, zpt::json _pattern) -> std::string;
