@@ -1,36 +1,16 @@
-/*
-  This is free and unencumbered software released into the public domain.
-
-  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
-  this software, either in source code form or as a compiled binary, for any
-  purpose, commercial or non-commercial, and by any means.
-
-  In jurisdictions that recognize copyright laws, the author or authors of this
-  software dedicate any and all copyright interest in the software to the public
-  domain. We make this dedication for the benefit of the public at large and to
-  the detriment of our heirs and successors. We intend this dedication to be an
-  overt act of relinquishment in perpetuity of all present and future rights to
-  this software under copyright law.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
 #include <csignal>
 #include <signal.h>
 #include <unistd.h>
+#include <zapata/runtime.h>
 #include <zapata/startup.h>
+#include <zapata/streams.h>
 #include <zapata/transport.h>
 
 namespace {
 auto deallocate(int) -> void;
 } // namespace
 
-auto main(int _argc, char* _argv[]) -> int {
+auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     std::signal(SIGUSR1, ::deallocate);
     std::signal(SIGINT, ::deallocate);
     std::signal(SIGTERM, ::deallocate);
@@ -65,12 +45,12 @@ auto main(int _argc, char* _argv[]) -> int {
 
     if (_parameters("--help")->ok()) {
         std::cout << zpt::parameters::usage(_parameter_setup) << std::flush;
-        return 0;
+        return;
     }
 
     if (_parameters("--terminate")->ok()) {
         kill(static_cast<int>(_parameters("--terminate")), SIGUSR1);
-        return 0;
+        return;
     }
 
     zpt::parameters::verify(_parameters, _parameter_setup);
@@ -140,8 +120,6 @@ auto main(int _argc, char* _argv[]) -> int {
       ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
-
-    return 0;
 }
 
 namespace {
