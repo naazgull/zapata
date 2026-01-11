@@ -77,6 +77,15 @@ set_target_properties(zapata-common-catalog
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-common-catalog.so
 )
 
+add_library(zapata-runtime SHARED IMPORTED)
+add_dependencies(zapata-runtime
+  zapata
+)
+set_target_properties(zapata-runtime
+  PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-runtime.so
+)
+
 add_library(zapata-engine-rest-plugin SHARED IMPORTED)
 add_dependencies(zapata-engine-rest-plugin
   zapata
