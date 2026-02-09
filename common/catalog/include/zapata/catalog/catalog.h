@@ -29,14 +29,14 @@
 
 namespace {
 static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
-static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
+static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*'))";
 static constexpr char const* SEARCH_WITH_PROVIDER_STMT =
   "(_id like '{}{}{}%') and (provider_id = '{}')";
 static constexpr char const* EXACT_SEARCH_WITH_PROVIDER_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
+  "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*')) and (provider_id = '{}')";
 static constexpr char const* RESOLVE_STMT = "(_id like '{}{}{}%') and (provider_id = '{}')";
 static constexpr char const* EXACT_RESOLVE_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
+  "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*')) and (provider_id = '{}')";
 } // namespace
 
 namespace zpt {
@@ -138,7 +138,7 @@ auto zpt::catalog<K, M>::add(K _key,
     _oss << _metadata << std::flush;
     zpt::json _body{ "provider_id", _provider_id, "hash", _hash, "metadata", _oss.str() };
 
-    zlog("Registered " << _t_key, zpt::trace);
+    zlog("Registered " << _t_key, zpt::info);
     this
       ->__catalog //
       ->replace(_t_key, _body)
