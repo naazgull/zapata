@@ -44,11 +44,12 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
     auto _path = _id->string();
     auto hash_code = this->__callbacks.size();
     this->__callbacks.push_back(_callback);
-    auto _to_add =
-      std::format("/{}{}",
-                  (_performative == zpt::Performative_end ? std::string{ "{}" }
-                                                          : zpt::ontology::to_str(_performative)),
-                  _path == "*" ? "/*" : _path);
+    auto _to_add = _path == "*" ? "*"
+                                : std::format("/{}{}",
+                                              (_performative == zpt::Performative_end
+                                                 ? std::string{ "{}" }
+                                                 : zpt::ontology::to_str(_performative)),
+                                              _path);
     this->__catalog.add(_to_add, hash_code, _metadata);
     return (*this);
 }
@@ -78,11 +79,12 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
 auto zpt::rest::resolver_t::remove(zpt::performative _performative, zpt::json const& _id)
   -> zpt::rest::resolver_t& {
     auto _path = _id->string();
-    auto _to_search =
-      std::format("/{}{}",
-                  (_performative == zpt::Performative_end ? std::string{ "{}" }
-                                                          : zpt::ontology::to_str(_performative)),
-                  _path);
+    auto _to_search = _path == "*" ? "*"
+                                   : std::format("/{}{}",
+                                                 (_performative == zpt::Performative_end
+                                                    ? std::string{ "{}" }
+                                                    : zpt::ontology::to_str(_performative)),
+                                                 _path);
     for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
         auto _hash_code = _record("hash")->integer();
         expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),

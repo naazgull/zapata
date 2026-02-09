@@ -27,6 +27,24 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
+class echo : public zpt::events::process {
+  public:
+    echo(zpt::message _received)
+      : zpt::events::process{ _received } {}
+    ~echo() = default;
+
+    auto blocked() const -> bool { return false; }
+
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+      -> zpt::events::state {
+        zlog("Received request: " << this->received()->body(), zpt::info);
+        this
+          ->to_send() //
+          ->status(100);
+        return zpt::events::finish;
+    }
+};
+
 class test_plugin_collection : public zpt::events::process {
   public:
     test_plugin_collection(zpt::message _received)
@@ -37,7 +55,6 @@ class test_plugin_collection : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
-        zlog("Received plugin collection request: " << this->received()->body(), zpt::info);
         this
           ->to_send() //
           ->status(200)
@@ -65,7 +82,9 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-    _resolver->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
+    _resolver //
+      ->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
+      .add<echo>("*");
 
     auto _test_message = zpt::TRANSPORT_LAYER() //
                            .get("tcp")
@@ -86,4 +105,5 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver->remove<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
+    _resolver->remove<echo>("*");
 }
