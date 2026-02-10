@@ -37,7 +37,7 @@ class echo : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
-        zlog("Received request: " << this->received()->body(), zpt::info);
+        zlog("Received request: " << this->received(), zpt::info);
         this
           ->to_send() //
           ->status(100);

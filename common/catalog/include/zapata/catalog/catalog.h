@@ -28,15 +28,16 @@
 #include <zapata/sqlite.h>
 
 namespace {
+static constexpr char const* ASTERISK_STMT = "(_id = '*')";
 static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
-static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*'))";
+static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
 static constexpr char const* SEARCH_WITH_PROVIDER_STMT =
   "(_id like '{}{}{}%') and (provider_id = '{}')";
 static constexpr char const* EXACT_SEARCH_WITH_PROVIDER_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*')) and (provider_id = '{}')";
+  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
 static constexpr char const* RESOLVE_STMT = "(_id like '{}{}{}%') and (provider_id = '{}')";
 static constexpr char const* EXACT_RESOLVE_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}') or (_id = '*')) and (provider_id = '{}')";
+  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
 } // namespace
 
 namespace zpt {
@@ -138,7 +139,7 @@ auto zpt::catalog<K, M>::add(K _key,
     _oss << _metadata << std::flush;
     zpt::json _body{ "provider_id", _provider_id, "hash", _hash, "metadata", _oss.str() };
 
-    zlog("Registered " << _t_key, zpt::info);
+    zlog("Registered " << _t_key, zpt::trace);
     this
       ->__catalog //
       ->replace(_t_key, _body)
@@ -168,6 +169,13 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
     auto _parts = zpt::catalog_id::split(_pattern);
     zpt::json _result = zpt::json::array();
     zpt::json _prefixes{ zpt::array, "" };
+
+    _result += this
+                 ->__catalog //
+                 ->find(ASTERISK_STMT)
+                 ->fields({ zpt::array, "hash" })
+                 ->execute()
+                 ->fetch();
 
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
@@ -221,7 +229,9 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
                 }
             }
 
-            expect(_matching->size() != 0, "Pattern '" << _pattern << "' not found.");
+            if (_matching->size() == 0) {
+                continue;
+            }
             _prefixes = _matching;
         }
     }
@@ -246,6 +256,12 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
     else {
         _search = SEARCH_STMT;
         _exact_search = EXACT_SEARCH_STMT;
+        _result += this
+                     ->__catalog //
+                     ->find(ASTERISK_STMT)
+                     ->fields({ zpt::array, "hash" })
+                     ->execute()
+                     ->fetch();
     }
 
     for (auto const& [_idx, __, _part] : _parts) {
