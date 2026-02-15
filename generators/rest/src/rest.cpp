@@ -117,7 +117,7 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
 
 auto zpt::gen::rest::unit::generate_sql() -> unit& {
     for (auto const& [_, __, _schema] : this->__schema("components")("schemas")) {
-        this->generate_sql_schemata_mysql(_schema);
+        if (_schema("dbCollection")->ok()) { this->generate_sql_schemata_mysql(_schema); }
     }
     return (*this);
 }
@@ -357,9 +357,8 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           .add(_cpp_operator_case_delete);
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
-          .add<zpt::ast::cpp_instruction>("this->to_send()->status(405)")
           .add<zpt::ast::cpp_instruction>(
-            "this->to_send()->body() = { \"message\", \"Only GET, POST, "
+            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, POST, "
             "DELETE allowed to use with a collection\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
@@ -457,9 +456,8 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           .add(_cpp_operator_case_delete);
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
-          .add<zpt::ast::cpp_instruction>("this->to_send()->status(405)")
           .add<zpt::ast::cpp_instruction>(
-            "this->to_send()->body() = { \"message\", \"Only GET, PATCH, "
+            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, PATCH, "
             "DELETE allowed to use with a document\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
@@ -545,9 +543,9 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
           ->add(_cpp_operator_case_post);
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
-          .add<zpt::ast::cpp_instruction>("this->to_send()->status(405)")
-          .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", \"Only POST "
-                                          "allowed to use with a controller\" }")
+          .add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(405).body() = { \"message\", \"Only POST, "
+            "allowed to use with a controller\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
@@ -644,10 +642,9 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
           .add(_cpp_operator_case_delete);
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
-          .add<zpt::ast::cpp_instruction>("this->to_send()->status(405)")
           .add<zpt::ast::cpp_instruction>(
-            "this->to_send()->body() = { \"message\", \"Only GET, POST, "
-            "DELETE allowed to use with a collection\" }")
+            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, PUT, "
+            "DELETE allowed to use with a store\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
