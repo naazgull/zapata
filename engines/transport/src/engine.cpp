@@ -46,21 +46,17 @@ auto zpt::events::call_context::reply() const -> zpt::message { return this->__r
 
 auto zpt::events::call_context::reply(zpt::message _to_update) -> call_context& {
     this->__reply = _to_update;
-    this->__state->store(_to_update->status() < 300 ? zpt::events::REDIRECTION_STATE_SUCCESS_REPLY
-                                                    : zpt::events::REDIRECTION_STATE_FAILURE_REPLY);
+    this->__state->store(_to_update->status() < 300 ? zpt::events::CALL_STATE_SUCCESS_REPLY
+                                                    : zpt::events::CALL_STATE_FAILURE_REPLY);
     return (*this);
 }
 
-auto zpt::events::call_context::is_unprocessed() const -> bool {
-    return this->__state->load() == zpt::events::REDIRECTION_STATE_UNPROCESSED;
-}
-
-auto zpt::events::call_context::is_redirected() const -> bool {
-    return this->__state->load() == zpt::events::REDIRECTION_STATE_REDIRECTED;
+auto zpt::events::call_context::is_replied() const -> bool {
+    return this->__state->load() > zpt::events::CALL_STATE_SENT;
 }
 
 auto zpt::events::call_context::has_error() const -> bool {
-    return this->__state->load() == zpt::events::REDIRECTION_STATE_FAILURE_REPLY;
+    return this->__state->load() == zpt::events::CALL_STATE_FAILURE_REPLY;
 }
 
 zpt::events::receive::receive(zpt::transports::engine& _engine,
