@@ -178,6 +178,9 @@ namespace generate {
 auto key(std::string& _out, size_t _size = 24) -> void;
 auto r_key(size_t _size) -> std::string;
 auto r_key() -> std::string;
+auto pin(std::string& _out, size_t _size = 6) -> void;
+auto r_pin(size_t _size) -> std::string;
+auto r_pin() -> std::string;
 auto hash(std::string& _out) -> void;
 auto r_hash() -> std::string;
 auto uuid(std::string& _out) -> void;

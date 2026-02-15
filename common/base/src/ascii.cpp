@@ -66,6 +66,29 @@ auto zpt::generate::r_key() -> std::string {
     return _out;
 }
 
+auto zpt::generate::pin(std::string& _out, size_t _size) -> void {
+    static std::string charset = "0123456789";
+    timeval _tv = { 0, 0 };
+
+    for (size_t _idx = 0; _idx != _size; _idx++) {
+        gettimeofday(&_tv, nullptr);
+        srand(_tv.tv_usec);
+        _out.append(1, charset[rand() % charset.length()]);
+    }
+}
+
+auto zpt::generate::r_pin(size_t _size) -> std::string {
+    std::string _out;
+    zpt::generate::pin(_out, _size);
+    return _out;
+}
+
+auto zpt::generate::r_pin() -> std::string {
+    std::string _out;
+    zpt::generate::key(_out);
+    return _out;
+}
+
 auto zpt::generate::hash(std::string& _out) -> void {
     static std::string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     std::string _randompass;
