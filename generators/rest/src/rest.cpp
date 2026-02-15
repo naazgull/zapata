@@ -674,16 +674,17 @@ auto zpt::gen::rest::unit::generate_add_element(std::shared_ptr<zpt::ast::basic_
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        "auto _id = _collection->add(_received)->execute()->generated_id()")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->status(201)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"element_id\", _id }");
+        "auto _id = _collection //\n->add(_received)->execute()->generated_id()")
+      .add<zpt::ast::cpp_instruction>("_session->commit()")
+      .add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(201).body() = { \"element_id\", _id }");
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -713,12 +714,12 @@ auto zpt::gen::rest::unit::generate_list_elements(std::shared_ptr<zpt::ast::basi
       .add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>("auto _result = _find->fields(_fields)->execute()->fetch()");
+      .add<zpt::ast::cpp_instruction>(
+        "auto _result = _find //\n->fields(_fields)->execute()->fetch()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
-      .add<zpt::ast::cpp_instruction>(
-        "this->to_send()->body() = { \"items\", _result, \"size\", _result->size() }")
+      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = { \"items\", "
+                                       "_result, \"size\", _result->size() }")
       .add<zpt::ast::cpp_instruction>("zpt::storage::reply_find(this->to_send()->body(), _params)");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
@@ -729,8 +730,8 @@ auto zpt::gen::rest::unit::generate_list_elements(std::shared_ptr<zpt::ast::basi
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -756,17 +757,17 @@ auto zpt::gen::rest::unit::generate_remove_elements(std::shared_ptr<zpt::ast::ba
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        "auto _result = zpt::storage::filter_remove(_collection, _params)->execute()->count()")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->status(202)")
-      .add<zpt::ast::cpp_instruction>(
-        "this->to_send()->body() = { \"removed_for\", _params, \"removed_count\", _result }");
+        "auto _result = zpt::storage::filter_remove(_collection, _params) //\n->execute()->count()")
+      .add<zpt::ast::cpp_instruction>("_session->commit()")
+      .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = { "
+                                      "\"removed_for\", _params, \"removed_count\", _result }");
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -793,12 +794,14 @@ auto zpt::gen::rest::unit::generate_update_element(std::shared_ptr<zpt::ast::bas
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::string{ "auto _result = _collection->modify(\"_id = :id\")->bind({ \"id\", _id "
-                     "})->patch(_received)->execute()->count()" });
+        std::string{ "auto _result = _collection //\n->modify(\"_id = :id\")->bind({ \"id\", _id "
+                     "})->patch(_received)->execute()->count()" })
+      .add<zpt::ast::cpp_instruction>("_session->commit()");
+
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(202)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"updated_count\", _result }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(202).body() = { \"updated_count\", _result }");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
     _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
@@ -808,8 +811,8 @@ auto zpt::gen::rest::unit::generate_update_element(std::shared_ptr<zpt::ast::bas
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -837,23 +840,23 @@ auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_
       ->add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>("auto _result = _collection->find(\"_id = :id\")->bind({ "
-                                      "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
+      .add<zpt::ast::cpp_instruction>(
+        "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
+        "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = _result");
+      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
+    _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
     _method_try_body->add(_else_block);
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -877,23 +880,24 @@ auto zpt::gen::rest::unit::generate_remove_element(std::shared_ptr<zpt::ast::bas
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::string{ "auto _result = _collection->remove(\"_id = :id\")->bind({ \"id\", _id "
-                     "})->execute()->count()" });
+        std::string{ "auto _result = _collection //\n->remove(\"_id = :id\")->bind({ \"id\", _id "
+                     "})->execute()->count()" })
+      .add<zpt::ast::cpp_instruction>("_session->commit()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(202)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"removed_count\", _result }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(202).body() = { \"removed_count\", _result }");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
+    _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
     _method_try_body->add(_else_block);
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
@@ -916,15 +920,14 @@ auto zpt::gen::rest::unit::generate_process_request(std::shared_ptr<zpt::ast::ba
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { }");
+      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = { }");
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _method_catch_body //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(500)")
-      .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"message\", _e.what() }");
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
     _method_body->add(_method_catch_body);
 
     _method_body->add<zpt::ast::cpp_instruction>("return zpt::events::finish");
