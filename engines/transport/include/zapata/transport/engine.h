@@ -30,9 +30,9 @@ class engine {
 namespace events {
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
 };
 
 class receive {
@@ -164,35 +164,46 @@ class call {
     auto call_internally() -> call&;
     auto send_externally() -> call&;
 };
-} // namespace events
-
-auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
-
 
 constexpr int REDIRECTION_STATE_UNPROCESSED = 0;
 constexpr int REDIRECTION_STATE_REDIRECTED = 1;
 constexpr int REDIRECTION_STATE_SUCCESS_REPLY = 2;
 constexpr int REDIRECTION_STATE_FAILURE_REPLY = 3;
 
-class redirection_context {
+class call_context {
   public:
-    redirection_context() = default;
-    ~redirection_context() = default;
+    using ptr = std::shared_ptr<call_context>;
 
+    call_context() = default;
+    ~call_context() = default;
+
+    template<ProcessOperation T>
+    auto send(zpt::events::resolver _resolver, zpt::message _to_send) -> call_context&;
     auto state() const -> int;
-    auto state(int _to_update) -> redirection_context&;
     auto reply() const -> zpt::message;
-    auto reply(zpt::message _to_update) -> redirection_context&;
-    auto was_redirected() const -> bool;
-    auto can_proceed() const -> bool;
+    auto reply(zpt::message _to_update) -> call_context&;
+    auto is_unprocessed() const -> bool;
+    auto is_redirected() const -> bool;
     auto has_error() const -> bool;
 
   private:
-    zpt::padded_atomic<int> __redirection_state{ zpt::REDIRECTION_STATE_UNPROCESSED };
-    zpt::message __redirection_reply{ nullptr };
+    zpt::padded_atomic<int> __state{ zpt::events::REDIRECTION_STATE_UNPROCESSED };
+    zpt::message __reply{ nullptr };
 };
+} // namespace events
 
+auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 } // namespace zpt
+
+template<ProcessOperation T>
+auto zpt::events::call_context::send(zpt::events::resolver _resolver, zpt::message _to_send)
+  -> call_context& {
+    zpt::TRANSPORT_ENGINE() //
+      .dispatcher()
+      ->trigger<zpt::events::call<T>>(_resolver, _to_send);
+    this->__state->store(zpt::events::REDIRECTION_STATE_REDIRECTED);
+    return (*this);
+}
 
 template<ProcessOperation T>
 zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
