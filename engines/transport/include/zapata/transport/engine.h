@@ -167,6 +167,31 @@ class call {
 } // namespace events
 
 auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
+
+
+constexpr int REDIRECTION_STATE_UNPROCESSED = 0;
+constexpr int REDIRECTION_STATE_REDIRECTED = 1;
+constexpr int REDIRECTION_STATE_SUCCESS_REPLY = 2;
+constexpr int REDIRECTION_STATE_FAILURE_REPLY = 3;
+
+class redirection_context {
+  public:
+    redirection_context() = default;
+    ~redirection_context() = default;
+
+    auto state() const -> int;
+    auto state(int _to_update) -> redirection_context&;
+    auto reply() const -> zpt::message;
+    auto reply(zpt::message _to_update) -> redirection_context&;
+    auto was_redirected() const -> bool;
+    auto can_proceed() const -> bool;
+    auto has_error() const -> bool;
+
+  private:
+    zpt::padded_atomic<int> __redirection_state{ zpt::REDIRECTION_STATE_UNPROCESSED };
+    zpt::message __redirection_reply{ nullptr };
+};
+
 } // namespace zpt
 
 template<ProcessOperation T>

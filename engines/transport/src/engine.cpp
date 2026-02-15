@@ -40,6 +40,34 @@ auto report_error(T const& _e,
 }
 } // namespace
 
+auto zpt::redirection_context::state() const -> int { return this->__state->load(); }
+
+auto zpt::redirection_context::send_redirection() -> redirection_context& {
+    this->__state->store(_to_update);
+    return (*this);
+}
+
+auto zpt::redirection_context::reply() const -> zpt::message { return this->__reply; }
+
+auto zpt::redirection_context::reply(zpt::message _to_update) -> redirection_context& {
+    this->__reply = _to_update;
+    this->__state->store(_to_update->status() < 300 ? zpt::REDIRECTION_STATE_SUCCESS
+                                                    : zpt::REDIRECTION_STATE_FAILURE);
+    return (*this);
+}
+
+auto zpt::redirection_context::was_redirected() const -> bool {
+    return this->__state->load() == zpt::REDIRECTION_STATE_REDIRECTED;
+}
+
+auto zpt::redirection_context::can_proceed() const -> bool {
+    return this->__state->load() != zpt::REDIRECTION_STATE_REDIRECTED;
+}
+
+auto zpt::redirection_context::has_error() const -> bool {
+    return this->__state->load() == zpt::REDIRECTION_STATE_FAILURE_REPLY;
+}
+
 zpt::events::receive::receive(zpt::transports::engine& _engine,
                               zpt::polling::ptr _polling,
                               zpt::stream _stream)
@@ -192,6 +220,17 @@ zpt::events::process::~process() {
 auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
+
+auto zpt::events::process::redirection_state() const -> int { return this->__redirection_state; }
+
+auto zpt::events::process::redirection_state(int _state) -> process& {
+    this->__redirection_state = _state;
+    return (*this);
+}
+
+auto zpt::events::process::redirection_reply() const -> zpt::message {
+    return this->__redirection_state;
+}
 
 auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
