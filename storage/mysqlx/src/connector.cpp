@@ -110,7 +110,6 @@ auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
 }
 
 auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
-    zlog("ROLLING BACK TRANSACTION!!!!!!!!", zpt::warning);
     expect(0 == mysql_query(this->__mysql.get(), "ROLLBACK"),
            std::format("Rollback failed: {}", mysql_error(this->__mysql.get())));
     return this;
