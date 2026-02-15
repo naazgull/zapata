@@ -395,7 +395,7 @@ auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
     bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
                   _to_quote->type() == zpt::JSRegex;
     std::ostringstream _oss;
-    _oss << (_needs ? "'" : "") << static_cast<std::string>(_to_quote) << (_needs ? "'" : "")
-         << std::flush;
+    _oss << (_needs ? "'" : "") << (_to_quote->ok() ? static_cast<std::string>(_to_quote) : "NULL")
+         << (_needs ? "'" : "") << std::flush;
     return _oss.str();
 }

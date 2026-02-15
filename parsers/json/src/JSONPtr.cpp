@@ -58,7 +58,7 @@ zpt::json::json()
   : __underlying{ std::make_shared<zpt::JSONElementT>() } {}
 
 zpt::json::json(std::nullptr_t)
-  : __underlying{ nullptr } {}
+  : zpt::json{ zpt::JSUndefined } {}
 
 zpt::json::json(const zpt::json& _rhs) { (*this) = _rhs; }
 
