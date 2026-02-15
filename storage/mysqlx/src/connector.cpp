@@ -379,8 +379,9 @@ auto zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::
 auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         for (auto const& [_, _key, _value] : this->__bind) {
-            zpt::replace(
-              this->__filter->string(), std::format(":{}", _key), static_cast<std::string>(_value));
+            zpt::replace(this->__filter->string(),
+                         std::format(":{}", _key),
+                         zpt::storage::mysqlx::quote(_value));
         }
     }
 
@@ -472,8 +473,9 @@ auto zpt::storage::mysqlx::action_remove::bind(zpt::json _map) -> zpt::storage::
 auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         for (auto const& [_, _key, _value] : this->__bind) {
-            zpt::replace(
-              this->__filter->string(), std::format(":{}", _key), static_cast<std::string>(_value));
+            zpt::replace(this->__filter->string(),
+                         std::format(":{}", _key),
+                         zpt::storage::mysqlx::quote(_value));
         }
     }
 
@@ -667,7 +669,7 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__underlying->string(),
                          std::format(":{}", _key),
-                         static_cast<std::string>(_value));
+                         zpt::storage::mysqlx::quote(_value));
         }
     }
 

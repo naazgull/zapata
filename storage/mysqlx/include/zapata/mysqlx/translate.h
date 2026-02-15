@@ -58,6 +58,7 @@ auto to_replace(zpt::json _to_replace) -> std::string;
 auto to_delete(zpt::json _pattern) -> std::string;
 auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
   -> void;
+auto quote(zpt::json _to_quote) -> std::string;
 } // namespace mysqlx
 } // namespace storage
 } // namespace zpt

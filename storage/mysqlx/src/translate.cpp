@@ -326,7 +326,7 @@ auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std
         for (auto const& [_, __, _field] : _fields) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "`" << _field << "`";
+            _oss << "`" << static_cast<std::string>(_field) << "`";
         }
     }
     else { _oss << "*"; }
@@ -386,6 +386,16 @@ auto zpt::storage::mysqlx::to_assignment_list(zpt::json _to_convert,
     for (auto const& [_, _key, _value] : _to_convert) {
         if (!_first) { _out << _separator; }
         _first = false;
-        _out << "`" << _key << "` = " << _value;
+        _out << "`" << static_cast<std::string>(_key)
+             << "` = " << zpt::storage::mysqlx::quote(_value);
     }
+}
+
+auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
+    bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
+                  _to_quote->type() == zpt::JSRegex;
+    std::ostringstream _oss;
+    _oss << (_needs ? "'" : "") << static_cast<std::string>(_to_quote) << (_needs ? "'" : "")
+         << std::flush;
+    return _oss.str();
 }
