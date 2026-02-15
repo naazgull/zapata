@@ -713,7 +713,7 @@ auto zpt::gen::rest::unit::generate_list_elements(std::shared_ptr<zpt::ast::basi
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>(
         "auto _result = _find //\n->fields(_fields)->execute()->fetch()");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
+    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = { \"items\", "
                                        "_result, \"size\", _result->size() }")
@@ -840,7 +840,7 @@ auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_
       .add<zpt::ast::cpp_instruction>(
         "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
         "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
+    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
     _method_try_body->add(_if_block);
