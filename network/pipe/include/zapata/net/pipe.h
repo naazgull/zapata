@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file pipe.h
+ * @brief Aggregate header for the pipe transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/pipe.h>

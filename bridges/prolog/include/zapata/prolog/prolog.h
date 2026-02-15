@@ -20,6 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file prolog.h
+ * @brief Prolog bridge implementation (stub).
+ *
+ * Placeholder for future Prolog language integration with the
+ * Zapata framework.
+ *
+ * @see zpt::programming::bridge
+ */
+
 #pragma once
 
 namespace zpt {

@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file upnp.h
+ * @brief UPnP/SSDP transport implementation.
+ *
+ * Provides UPnP Simple Service Discovery Protocol (SSDP) support
+ * for device discovery and announcement on local networks.
+ *
+ * Uses multicast UDP for M-SEARCH and NOTIFY messages.
+ *
+ * @see zpt::net::transport::upnp
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -34,6 +46,13 @@
 namespace zpt {
 namespace net {
 namespace transport {
+
+/**
+ * @brief UPnP/SSDP transport implementation.
+ *
+ * Supports device discovery via multicast UDP.
+ * Registered for "upnp" URI scheme.
+ */
 class upnp : public zpt::basic_transport {
   public:
     upnp() = default;

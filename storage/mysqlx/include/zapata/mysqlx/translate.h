@@ -19,6 +19,14 @@
   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+/**
+ * @file translate.h
+ * @brief MySQL result set handling and SQL query generation.
+ *
+ * Provides utilities for converting between MySQL result sets and JSON,
+ * and for generating SQL statements from JSON query descriptions.
+ */
+
 #pragma once
 
 #include <mysql/mysql.h>
@@ -27,6 +35,13 @@
 namespace zpt {
 namespace storage {
 namespace mysqlx {
+
+/**
+ * @brief Metadata for a MySQL result set, binding columns for fetch.
+ *
+ * Wraps MYSQL_BIND arrays and column metadata for a prepared statement
+ * result set. Handles buffer allocation and column-level data retrieval.
+ */
 class result_set_metadata {
   public:
     std::unique_ptr<MYSQL_BIND[]> __bind{ nullptr };
@@ -50,12 +65,19 @@ class result_set_metadata {
   private:
     MYSQL_RES* __metadata{ nullptr };
 };
+/** @brief Converts a MySQL result row to JSON using column metadata. */
 auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::result_set_metadata& _cols) -> zpt::json;
+/** @brief Generates a SELECT SQL query from JSON field/filter descriptions. */
 auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
+/** @brief Generates an INSERT SQL statement from a JSON document. */
 auto to_insert(zpt::json _to_insert) -> std::string;
+/** @brief Generates an UPDATE SQL statement from JSON update/pattern descriptions. */
 auto to_update(zpt::json _to_update, zpt::json _pattern) -> std::string;
+/** @brief Generates a REPLACE SQL statement from a JSON document. */
 auto to_replace(zpt::json _to_replace) -> std::string;
+/** @brief Generates a DELETE SQL statement from a JSON filter pattern. */
 auto to_delete(zpt::json _pattern) -> std::string;
+/** @brief Writes a comma-separated assignment list (col=val) to the stream. */
 auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
   -> void;
 } // namespace mysqlx

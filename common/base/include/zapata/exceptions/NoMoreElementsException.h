@@ -19,6 +19,12 @@
   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * @file NoMoreElementsException.h
+ * @brief Exception for empty collection access.
+ */
+
 #pragma once
 
 #include <exception>
@@ -26,9 +32,24 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when accessing an element from an empty collection.
+ *
+ * Used by collections and queues when pop/front/back operations are
+ * attempted on an empty container.
+ *
+ * @see zpt::lf::queue
+ */
 class NoMoreElementsException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a NoMoreElementsException.
+     * @param _what Description of the error.
+     */
     NoMoreElementsException(std::string const& _what);
+
     virtual ~NoMoreElementsException() throw();
 };
+
 } // namespace zpt

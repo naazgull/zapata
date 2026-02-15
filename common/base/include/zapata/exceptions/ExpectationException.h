@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file ExpectationException.h
+ * @brief Exception thrown when expect() macro fails.
+ *
+ * Provides an exception type that captures the failed condition, source
+ * location, and error message from the expect() assertion macro.
+ */
+
 #pragma once
 
 #include <exception>
@@ -29,16 +37,43 @@
 
 namespace zpt {
 
+/**
+ * @brief Exception thrown when an expect() assertion fails.
+ *
+ * Captures detailed information about the failed assertion including the
+ * condition that failed, the source file and line number, and a custom
+ * error message.
+ *
+ * @see expect()
+ */
 class ExpectationException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs an ExpectationException.
+     * @param _what Error message describing the failure.
+     * @param _desc The stringified condition that failed.
+     * @param _line Source line number where the failure occurred.
+     * @param _file Source file where the failure occurred.
+     */
     ExpectationException(std::string const& _what,
                          std::string _desc,
                          int _line = 0,
                          std::string _file = "");
+
     virtual ~ExpectationException() throw();
 
+    /**
+     * @brief Returns the failed condition description.
+     * @return The stringified condition that failed.
+     */
     virtual auto description() const -> const char*;
 
+    /**
+     * @brief Stream output operator.
+     * @param _out Output stream.
+     * @param _in Exception to output.
+     * @return Reference to the output stream.
+     */
     friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
       -> std::ostream& {
         _out << _in.what() << ": " << _in.description() << ")";
@@ -46,10 +81,12 @@ class ExpectationException : public zpt::exception {
     }
 
   private:
-    std::string __description;
-    int __line;
-    std::string __file;
+    std::string __description; ///< The failed condition string.
+    int __line;                ///< Source line number.
+    std::string __file;        ///< Source file name.
 };
 
+/** @brief Type alias for ExpectationException. */
 using failed_expectation = ExpectationException;
+
 } // namespace zpt

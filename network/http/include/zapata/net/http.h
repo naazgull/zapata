@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file http.h
+ * @brief Aggregate header for the HTTP transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/http.h>

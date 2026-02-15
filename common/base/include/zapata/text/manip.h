@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file manip.h
+ * @brief String manipulation utilities.
+ *
+ * Provides common string operations: trimming whitespace, replacing substrings,
+ * normalizing paths, and formatting header names.
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -33,23 +41,94 @@
 
 namespace zpt {
 
+/**
+ * @brief Trims leading whitespace from a string (in-place).
+ * @param _in_out String to modify.
+ */
 void ltrim(std::string& _in_out);
+
+/**
+ * @brief Trims trailing whitespace from a string (in-place).
+ * @param _in_out String to modify.
+ */
 void rtrim(std::string& _in_out);
+
+/**
+ * @brief Trims leading and trailing whitespace from a string (in-place).
+ * @param _in_out String to modify.
+ */
 void trim(std::string& _in_out);
+
+/**
+ * @brief Replaces all occurrences of a substring (in-place).
+ * @param str String to modify.
+ * @param find Substring to search for.
+ * @param replace Replacement string.
+ */
 auto replace(std::string& str, std::string const& find, std::string const& replace) -> void;
 
+/**
+ * @brief Normalizes a file path (in-place).
+ * @param _in_out Path to normalize.
+ * @param _with_trailing Whether to include trailing slash.
+ *
+ * Removes duplicate slashes and optionally ensures trailing slash.
+ */
 void normalize_path(std::string& _in_out, bool _with_trailing);
 
+/**
+ * @brief Converts a header name to title case (in-place).
+ * @param name Header name to format.
+ *
+ * Converts "content-type" to "Content-Type".
+ */
 void prettify_header_name(std::string& name);
 
+/**
+ * @brief Returns a copy with leading whitespace removed.
+ * @param _in_out Input string.
+ * @return Trimmed copy.
+ */
 std::string r_ltrim(std::string const& _in_out);
+
+/**
+ * @brief Returns a copy with trailing whitespace removed.
+ * @param _in_out Input string.
+ * @return Trimmed copy.
+ */
 std::string r_rtrim(std::string const& _in_out);
+
+/**
+ * @brief Returns a copy with leading and trailing whitespace removed.
+ * @param _in_out Input string.
+ * @return Trimmed copy.
+ */
 std::string r_trim(std::string const& _in_out);
+
+/**
+ * @brief Returns a copy with all occurrences of a substring replaced.
+ * @param str Input string.
+ * @param find Substring to search for.
+ * @param replace Replacement string.
+ * @return Modified copy.
+ */
 std::string r_replace(std::string const& str, std::string const& find, std::string const& replace);
 
+/**
+ * @brief Returns a normalized copy of a file path.
+ * @param _in_out Input path.
+ * @param _with_trailing Whether to include trailing slash.
+ * @return Normalized path.
+ */
 std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
+/**
+ * @brief Returns a copy with header name in title case.
+ * @param name Input header name.
+ * @return Formatted header name.
+ */
 std::string r_prettify_header_name(std::string const& name);
+
 } // namespace zpt
 
 namespace {

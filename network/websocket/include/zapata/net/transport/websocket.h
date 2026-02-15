@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file websocket.h
+ * @brief WebSocket transport implementation.
+ *
+ * Provides WebSocket (RFC 6455) protocol support for real-time
+ * bidirectional communication over persistent connections.
+ *
+ * Capabilities: SYNCHRONOUS | PERSISTENT
+ *
+ * @see zpt::net::transport::websocket
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -30,11 +42,21 @@
 namespace zpt {
 namespace net {
 namespace ws {
+/** @brief Performs WebSocket handshake on a stream. */
 auto handshake(zpt::stream& _stream) -> void;
+/** @brief Reads a WebSocket frame, returns (payload, opcode). */
 auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
+/** @brief Writes data as a WebSocket text frame. */
 auto write(zpt::stream& _stream, std::string const& _in) -> void;
 } // namespace ws
 namespace transport {
+
+/**
+ * @brief WebSocket transport implementation.
+ *
+ * Supports bidirectional messaging over persistent connections.
+ * Registered for "ws" and "wss" URI schemes.
+ */
 class websocket : public zpt::basic_transport {
   public:
     websocket() = default;
@@ -49,5 +71,10 @@ class websocket : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+
+/**
+ * @brief Returns the global WebSocket server socket.
+ * @param _port Port to bind (0 for configured default).
+ */
 auto WEBSOCKET_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

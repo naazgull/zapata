@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file upnp.h
+ * @brief Aggregate header for the UPnP/SSDP discovery protocol module.
+ */
+
 #pragma once
 
 #include <zapata/upnp/UPnP.h>

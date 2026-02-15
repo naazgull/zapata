@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file connector.h
+ * @brief MySQL storage connector implementation using the C API.
+ *
+ * Implements the storage abstraction layer for MySQL databases using
+ * the MySQL C client library. Provides the full connector hierarchy:
+ * connection, session, database, collection, action, and result types.
+ *
+ * @see zpt::storage::connection
+ * @see zpt::storage::make_connection
+ */
+
 #pragma once
 
 #include <mysql/mysql.h>
@@ -37,36 +49,38 @@ class collection;
 class action;
 class result;
 
-// auto cast_to_db_value(zpt::json _value) -> ::mysqlx::Value;
-
-// auto to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
-// auto from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
-
 using mysql_ptr = std::shared_ptr<MYSQL>;
 using mysql_stmt_ptr = std::shared_ptr<MYSQL_STMT>;
 
+/** @brief Deleter for MYSQL handles used with shared_ptr. */
 struct mysql_deinit {
     auto operator()(MYSQL*) const -> void;
 };
 
+/** @brief RAII wrapper for per-thread MySQL cleanup. */
 struct mysql_thread_deinit {
     ~mysql_thread_deinit();
 };
 
+/** @brief Deleter for MYSQL_STMT handles used with shared_ptr. */
 struct mysql_stmt_end {
     auto operator()(MYSQL_STMT* _to_dispose) const -> void;
 };
 
+/** @brief RAII wrapper for MySQL library initialization/cleanup. */
 class library {
   public:
     library();
     virtual ~library();
 };
 
+/** @brief Returns the global MySQL library instance (initializes on first call). */
 auto init() -> library&;
 
+/** @brief MySQL connection implementation. */
 class connection : public zpt::storage::connection::type {
   public:
+    /** @brief Constructs a connection with options (host, user, password, port). */
     connection(zpt::json _options);
     virtual ~connection() override = default;
 
@@ -75,6 +89,7 @@ class connection : public zpt::storage::connection::type {
     virtual auto session() const -> zpt::storage::session override;
     virtual auto options() const -> zpt::json;
 
+    /** @brief Returns the underlying MYSQL handle. */
     auto mysql() const -> mysql_ptr;
 
   private:
@@ -82,6 +97,12 @@ class connection : public zpt::storage::connection::type {
     mysql_ptr __mysql{ nullptr };
 };
 
+/**
+ * @brief MySQL session implementation.
+ *
+ * Wraps a MYSQL connection handle and provides transaction control
+ * and database selection.
+ */
 class session : public zpt::storage::session::type {
   public:
     session(zpt::storage::mysqlx::connection const& _connection);
@@ -99,6 +120,7 @@ class session : public zpt::storage::session::type {
   private:
     mysql_ptr __mysql{ nullptr };
 };
+/** @brief MySQL database implementation (represents a schema/database). */
 class database : public zpt::storage::database::type {
   public:
     database(zpt::storage::mysqlx::session const& _session, std::string const& _db);
@@ -114,6 +136,7 @@ class database : public zpt::storage::database::type {
     mysql_ptr __mysql{ nullptr };
     std::string __database;
 };
+/** @brief MySQL collection implementation (represents a database table). */
 class collection : public zpt::storage::collection::type {
   public:
     collection(zpt::storage::mysqlx::database const& _database, std::string const& _collection);
@@ -133,12 +156,15 @@ class collection : public zpt::storage::collection::type {
     mysql_ptr __mysql{ nullptr };
     std::string __table;
 };
+/** @brief Base class for MySQL action operations (manages prepared statements). */
 class action : public zpt::storage::action::type {
   public:
     action(zpt::storage::mysqlx::collection const& _collection);
     virtual ~action() override = default;
 
+    /** @brief Returns the prepared statement handle. */
     auto statement() const -> mysql_stmt_ptr;
+    /** @brief Returns the MySQL connection handle. */
     auto mysql() const -> mysql_ptr;
 
   protected:
@@ -146,6 +172,7 @@ class action : public zpt::storage::action::type {
     mysql_stmt_ptr __statement{ nullptr };
     std::string __table;
 };
+/** @brief MySQL INSERT action builder. */
 class action_add : public zpt::storage::mysqlx::action {
   public:
     action_add(zpt::storage::mysqlx::collection const& _collection, zpt::json _document);
@@ -173,6 +200,7 @@ class action_add : public zpt::storage::mysqlx::action {
     zpt::json __underlying{ nullptr };
     zpt::json __generated_ids{ nullptr };
 };
+/** @brief MySQL UPDATE action builder. */
 class action_modify : public zpt::storage::mysqlx::action {
   public:
     action_modify(zpt::storage::mysqlx::collection const& _collection, zpt::json _search);
@@ -200,6 +228,7 @@ class action_modify : public zpt::storage::mysqlx::action {
     zpt::json __filter{ nullptr };
     zpt::json __bind{ nullptr };
 };
+/** @brief MySQL DELETE action builder. */
 class action_remove : public zpt::storage::mysqlx::action {
   public:
     action_remove(zpt::storage::mysqlx::collection const& _collection, zpt::json _search);
@@ -226,6 +255,7 @@ class action_remove : public zpt::storage::mysqlx::action {
     zpt::json __filter{ nullptr };
     zpt::json __bind{ nullptr };
 };
+/** @brief MySQL REPLACE action builder. */
 class action_replace : public zpt::storage::mysqlx::action {
   public:
     action_replace(zpt::storage::mysqlx::collection const& _collection,
@@ -253,6 +283,7 @@ class action_replace : public zpt::storage::mysqlx::action {
   private:
     zpt::json __underlying{ nullptr };
 };
+/** @brief MySQL SELECT action builder with filtering, sorting, and pagination. */
 class action_find : public zpt::storage::mysqlx::action {
   public:
     action_find(zpt::storage::mysqlx::collection const& _collection);
@@ -282,6 +313,7 @@ class action_find : public zpt::storage::mysqlx::action {
     zpt::json __bind{ nullptr };
     zpt::json __suffix{ nullptr };
 };
+/** @brief MySQL query result set. */
 class result : public zpt::storage::result::type {
   public:
     result(zpt::storage::mysqlx::action& _action);

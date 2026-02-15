@@ -20,6 +20,21 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file startup.h
+ * @brief Plugin management and application bootstrap.
+ *
+ * Provides dynamic plugin loading and application lifecycle management.
+ * Plugins are loaded as shared libraries and can register event handlers,
+ * transports, and other components.
+ *
+ * @par Plugin Entry Point
+ * Plugins must export a function with this signature:
+ * @code
+ * extern "C" bool zpt_plugin_load(zpt::plugin& plugin);
+ * @endcode
+ */
+
 #pragma once
 
 #include <typeinfo>
@@ -31,14 +46,40 @@
 
 namespace zpt {
 
+/** @brief Plugin state: not loaded. */
 inline constexpr std::uint64_t PLUGIN_STATE_UNLOADED{ 0 };
+/** @brief Plugin state: shutdown in progress. */
 inline constexpr std::uint64_t PLUGIN_STATE_IN_SHUTDOWN{ 1 };
+/** @brief Plugin state: loaded and running. */
 inline constexpr std::uint64_t PLUGIN_STATE_LOADED{ 2 };
 
+/**
+ * @brief Dynamic plugin wrapper.
+ *
+ * Manages the lifecycle of a dynamically loaded shared library plugin.
+ * Plugins can register threads, event handlers, and access configuration.
+ *
+ * @par Example Plugin
+ * @code
+ * // my_plugin.cpp
+ * extern "C" bool zpt_plugin_load(zpt::plugin& plugin) {
+ *     auto& config = plugin.config();
+ *     // Register handlers, start threads, etc.
+ *     plugin.add_thread([&]() {
+ *         while (!plugin.is_shutdown_ongoing()) {
+ *             // Worker loop
+ *         }
+ *     });
+ *     return true;
+ * }
+ * @endcode
+ */
 class plugin {
   public:
+    /** @brief Plugin entry point function signature. */
     using plugin_fn_type = std::function<bool(zpt::plugin& _plugin)>;
 
+    /** @brief Constructs a plugin with options and configuration. */
     plugin(zpt::json _options, zpt::json _config);
     virtual ~plugin();
 
@@ -47,13 +88,20 @@ class plugin {
     auto operator=(plugin const& _rhs) -> plugin& = delete;
     auto operator=(plugin&& _rhs) -> plugin& = delete;
 
+    /** @brief Returns the plugin name. */
     auto name() -> std::string&;
+    /** @brief Returns the shared library path. */
     auto source() -> std::string&;
+    /** @brief Returns the plugin configuration. */
     auto config() -> zpt::json&;
+    /** @brief Returns true if shutdown is in progress. */
     auto is_shutdown_ongoing() -> bool;
+    /** @brief Returns true if plugin is loaded. */
     auto is_loaded() -> bool;
+    /** @brief Returns true if plugin is unloaded. */
     auto is_unloaded() -> bool;
 
+    /** @brief Registers a worker thread. */
     auto add_thread(std::function<void()> _callback) -> plugin&;
 
   private:
@@ -68,10 +116,27 @@ class plugin {
 
 namespace startup {
 
+/**
+ * @brief Application boot manager.
+ *
+ * Manages application startup by loading configuration and plugins
+ * in dependency order.
+ *
+ * @par Example
+ * @code
+ * auto& boot = zpt::BOOT(config);
+ * boot.load();  // Load all plugins
+ *
+ * // ... application runs ...
+ *
+ * boot.unload();  // Clean shutdown
+ * @endcode
+ */
 class boot {
   public:
     using plugin_map_element_type = std::unique_ptr<zpt::plugin>;
 
+    /** @brief Constructs boot manager with configuration. */
     boot(zpt::json _config);
     virtual ~boot();
 
@@ -80,8 +145,11 @@ class boot {
     auto operator=(boot const& _rhs) -> boot& = delete;
     auto operator=(boot&& _rhs) -> boot& = delete;
 
+    /** @brief Loads all plugins in dependency order. */
     auto load() -> zpt::startup::boot&;
+    /** @brief Unloads all plugins in reverse order. */
     auto unload() -> zpt::startup::boot&;
+    /** @brief Returns string representation of loaded plugins. */
     auto to_string() -> std::string;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::boot& _in) {
@@ -101,9 +169,16 @@ class boot {
 
 } // namespace startup
 
+/** @brief Returns the default URI for this service instance. */
 auto get_default_uri() -> std::string;
 
+/**
+ * @brief Returns the global boot manager instance.
+ * @param _config Configuration (used only on first call).
+ */
 auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
+/** @brief Returns the global configuration. */
 auto GLOBAL_CONFIG() -> zpt::json;
+/** @brief Returns the service identity. */
 auto IDENTITY() -> zpt::json const&;
 } // namespace zpt

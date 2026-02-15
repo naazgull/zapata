@@ -20,6 +20,15 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file rest.h
+ * @brief REST API code generator.
+ *
+ * Aggregate header for the REST code generation module.
+ *
+ * @see zpt::gen::rest::unit
+ */
+
 #pragma once
 
 #include <zapata/generator/rest/rest.h>

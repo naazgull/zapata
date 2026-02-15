@@ -20,6 +20,20 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file bridge.h
+ * @brief Language bridge base classes.
+ *
+ * Provides the abstract interface for integrating scripting languages
+ * (Lua, Prolog) with the Zapata framework.
+ *
+ * Key types:
+ * - `zpt::programming::integration` - Base interface
+ * - `zpt::programming::bridge<C, O>` - CRTP bridge template
+ *
+ * @see zpt::programming::bridge
+ */
+
 #pragma once
 
 #include <zapata/bridge/bridge.h>

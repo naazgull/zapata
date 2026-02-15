@@ -20,6 +20,28 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file queue.h
+ * @brief Lock-free FIFO queue implementation.
+ *
+ * Provides a thread-safe, lock-free queue using Michael & Scott's algorithm
+ * with hazard pointer-based memory reclamation. Multiple threads can safely
+ * push and pop concurrently without locks.
+ *
+ * @par Algorithm
+ * Based on "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent
+ * Queue Algorithms" by Michael and Scott (1996), with hazard pointers for
+ * safe memory reclamation (Maged Michael, 2004).
+ *
+ * @par Thread Safety
+ * - `push()`: Multiple threads can push concurrently
+ * - `pop()`: Multiple threads can pop concurrently
+ * - `size()`: Approximate count (may be stale)
+ * - Threads must call `clear_thread_context()` before exiting
+ *
+ * @see zpt::lf::hazard_ptr
+ */
+
 #pragma once
 
 #include <zapata/atomics/padded_atomic.h>
@@ -30,16 +52,26 @@
 namespace zpt {
 namespace lf {
 
+/**
+ * @brief Internal node for lock-free singly-linked structures.
+ *
+ * Stores a value and an atomic pointer to the next node. Used internally
+ * by lock-free queue and other linked structures.
+ *
+ * @tparam T Value type (must be copy-constructible).
+ */
 template<typename T>
 class forward_node {
   public:
+    /** @brief Atomic pointer type for linking nodes. */
     using ptr = zpt::padded_atomic<zpt::lf::forward_node<T>*>;
 
-    T __value;
-    zpt::padded_atomic<bool> __is_null{ true };
-    zpt::lf::forward_node<T>::ptr __next{ nullptr };
+    T __value;                                      ///< Stored value
+    zpt::padded_atomic<bool> __is_null{ true };     ///< True if node is sentinel/empty
+    zpt::lf::forward_node<T>::ptr __next{ nullptr }; ///< Pointer to next node
 
     forward_node() = default;
+    /** @brief Constructs a node with the given value. */
     forward_node(T _value);
     forward_node(forward_node const&) = delete;
     forward_node(forward_node&&) = delete;
@@ -56,6 +88,41 @@ class forward_node {
     }
 };
 
+/**
+ * @brief Lock-free FIFO queue for concurrent producer/consumer patterns.
+ *
+ * A thread-safe queue that allows multiple threads to push and pop elements
+ * concurrently without using locks. Uses compare-and-swap operations and
+ * hazard pointers for memory safety.
+ *
+ * @tparam T Value type (must be copy-constructible).
+ *
+ * @par Example
+ * @code
+ * // Create queue supporting up to 8 threads
+ * zpt::lf::queue<std::string> queue(8);
+ *
+ * // Producer thread
+ * queue.push("message 1");
+ * queue.push("message 2");
+ *
+ * // Consumer thread
+ * try {
+ *     while (true) {
+ *         std::string msg = queue.pop();
+ *         process(msg);
+ *     }
+ * } catch (zpt::NoMoreElementsException&) {
+ *     // Queue is empty
+ * }
+ *
+ * // Before thread exits
+ * queue.clear_thread_context();
+ * @endcode
+ *
+ * @note The `size()` method returns an approximate count that may be stale
+ *       due to concurrent modifications.
+ */
 template<typename T>
 class queue {
     static_assert(std::is_copy_constructible<T>::value,
@@ -63,6 +130,7 @@ class queue {
 
   public:
     using size_type = size_t;
+    /** @brief Hazard pointer domain type for this queue. */
     using hazard_domain = zpt::lf::hazard_ptr<zpt::lf::forward_node<T>>;
 
     class iterator {
@@ -108,6 +176,10 @@ class queue {
         zpt::lf::forward_node<T>* __current{ nullptr };
     };
 
+    /**
+     * @brief Constructs a queue with the specified thread capacity.
+     * @param _max_threads Maximum number of threads that will access the queue.
+     */
     queue(long _max_threads);
     queue(zpt::lf::queue<T> const& _rhs) = delete;
     queue(zpt::lf::queue<T>&& _rhs) = delete;
@@ -116,21 +188,48 @@ class queue {
     auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
+    /**
+     * @brief Returns the front element without removing it.
+     * @return Copy of the front element.
+     * @throws zpt::NoMoreElementsException If queue is empty.
+     */
     auto front() const -> T;
+    /**
+     * @brief Returns the back element without removing it.
+     * @return Copy of the back element.
+     * @throws zpt::NoMoreElementsException If queue is empty.
+     */
     auto back() const -> T;
 
+    /** @brief Returns pointer to head node (internal use). */
     auto head() const -> zpt::lf::forward_node<T>*;
+    /** @brief Returns pointer to tail node (internal use). */
     auto tail() const -> zpt::lf::forward_node<T>*;
 
+    /**
+     * @brief Adds an element to the back of the queue.
+     * @param value Value to add (will be copied).
+     * @return Reference to this queue.
+     */
     auto push(T value) -> zpt::lf::queue<T>&;
+    /**
+     * @brief Removes and returns the front element.
+     * @return The front element (moved).
+     * @throws zpt::NoMoreElementsException If queue is empty.
+     */
     auto pop() -> T;
 
+    /** @brief Returns iterator to front element. */
     auto begin() const -> zpt::lf::queue<T>::iterator;
+    /** @brief Returns iterator past back element. */
     auto end() const -> zpt::lf::queue<T>::iterator;
 
+    /** @brief Returns approximate element count. */
     auto size() const -> size_t;
 
+    /** @brief Cleans up thread-local state (call before thread exit). */
     auto clear_thread_context() -> zpt::lf::queue<T>&;
+    /** @brief Returns count of retired nodes pending deletion. */
     auto get_thread_dangling_count() const -> size_t;
 
     __attribute__((noinline)) auto to_string() const -> std::string;

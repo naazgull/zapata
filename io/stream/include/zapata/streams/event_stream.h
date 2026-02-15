@@ -20,6 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file event_stream.h
+ * @brief Event file descriptor-based stream for epoll integration.
+ *
+ * Wraps a Linux eventfd as a basic_stream, enabling event notification
+ * through the standard polling infrastructure.
+ *
+ * @see zpt::basic_stream
+ */
+
 #pragma once
 
 #include <any>
@@ -27,6 +37,14 @@
 #include <zapata/streams/streams.h>
 
 namespace zpt {
+
+/**
+ * @brief Stream backed by a Linux eventfd for event signaling.
+ *
+ * Provides a basic_stream interface over a Linux eventfd, allowing
+ * event-driven wakeup of polling threads. Used internally by the
+ * transport layer for signaling between threads.
+ */
 class event_stream : public basic_stream {
   public:
     event_stream();
@@ -37,9 +55,13 @@ class event_stream : public basic_stream {
     auto operator=(event_stream const& _rhs) -> event_stream& = delete;
     auto operator=(event_stream&& _rhs) -> event_stream& = delete;
 
+    /** @brief Sets the file descriptor. */
     auto operator=(int _rhs) -> event_stream&;
+    /** @brief Applies a stream manipulator (e.g., std::flush). */
     auto operator<<(ostream_manipulator _in) -> event_stream&;
+    /** @brief Reads content from the internal buffer without I/O. */
     auto read_without_io(std::any& _out) -> event_stream& override;
+    /** @brief Writes content to the internal buffer without I/O. */
     auto write_without_io(std::any const& _in) -> event_stream& override;
 
   private:

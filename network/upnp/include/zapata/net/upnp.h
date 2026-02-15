@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file upnp.h
+ * @brief Aggregate header for the UPnP transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/upnp.h>

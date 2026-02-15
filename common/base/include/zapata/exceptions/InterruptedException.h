@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file InterruptedException.h
+ * @brief Exception for interrupted operations.
+ */
+
 #pragma once
 
 #include <exception>
@@ -27,9 +32,22 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when an operation is interrupted.
+ *
+ * Used when a blocking operation (I/O, wait, etc.) is interrupted
+ * by a signal or cancellation request.
+ */
 class InterruptedException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs an InterruptedException.
+     * @param _what Description of the interrupted operation.
+     */
     InterruptedException(std::string const& _what);
+
     virtual ~InterruptedException() throw();
 };
+
 } // namespace zpt

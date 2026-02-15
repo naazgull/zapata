@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file rest.h
+ * @brief REST resolver implementation.
+ *
+ * Implements the event resolver interface for REST API routing.
+ * Routes incoming HTTP requests to registered handlers based on
+ * URI patterns and HTTP methods (performatives).
+ *
+ * @see zpt::rest::resolver_t
+ */
+
 #pragma once
 
 #include <zapata/catalog.h>
@@ -32,6 +43,28 @@
 
 namespace zpt {
 namespace rest {
+
+/**
+ * @brief REST API request resolver.
+ *
+ * Routes incoming HTTP requests to registered handlers based on
+ * URI patterns and HTTP methods. Supports service discovery and
+ * distributed node coordination.
+ *
+ * @par Example
+ * @code
+ * auto resolver = zpt::REST_RESOLVER(config);
+ *
+ * // Register a handler
+ * resolver->add(zpt::Get, "/api/users/:id", {},
+ *     [](zpt::message req) -> zpt::events::resolver_callback::result_type {
+ *         return zpt::make_event<MyHandler>(req);
+ *     });
+ *
+ * // Add to transport engine
+ * zpt::TRANSPORT_ENGINE(config).add_resolver(resolver);
+ * @endcode
+ */
 class resolver_t : public zpt::events::resolver_t {
   public:
     resolver_t(zpt::json _rest_config);
@@ -69,5 +102,11 @@ class resolver_t : public zpt::events::resolver_t {
     zpt::json __configuration;
 };
 } // namespace rest
+
+/**
+ * @brief Returns the global REST resolver instance.
+ * @param _config Optional configuration (used only on first call).
+ * @return Shared pointer to the REST resolver.
+ */
 auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::events::resolver;
 } // namespace zpt

@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file dispatcher.h
+ * @brief Event dispatcher with consumer thread pool.
+ *
+ * Provides a queue-based event dispatch system where events are enqueued
+ * by producers and processed by a pool of consumer threads.
+ *
+ * @see zpt::events::dispatcher
+ * @see zpt::abstract_event
+ */
+
 #pragma once
 
 #include <memory>
@@ -28,30 +39,93 @@
 #include <zapata/lockfree.h>
 
 namespace zpt {
+
+/** @brief Forward declaration of abstract event interface. */
 class abstract_event;
+/** @brief Shared pointer type for events. */
 using event = std::shared_ptr<zpt::abstract_event>;
 
+/**
+ * @brief Base class for event initialization data.
+ *
+ * Subclass this to pass initialization data to events when they are triggered.
+ */
 class event_initialization {
   public:
     using ptr = std::shared_ptr<event_initialization>;
 };
 
+/**
+ * @brief Event system namespace.
+ */
 namespace events {
-enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
+
+/**
+ * @brief Event processing result states.
+ */
+enum state {
+    retrigger = -2, ///< Re-queue event for another processing cycle
+    ready = -1,     ///< Event is ready but not yet processed
+    finish = 0,     ///< Event completed successfully
+    abort = 1       ///< Event aborted (error occurred)
+};
+
+/**
+ * @brief Event dispatcher with consumer thread pool.
+ *
+ * Manages a lock-free queue of events and a pool of consumer threads
+ * that process events asynchronously. Events can be triggered from
+ * any thread and will be processed by available consumers.
+ *
+ * @par Lifecycle
+ * 1. Create dispatcher with `zpt::DISPATCHER(n_consumers, n_producers)`
+ * 2. Register event handlers or initialization data
+ * 3. Call `start_consumers()` to begin processing
+ * 4. Trigger events with `trigger<T>(args...)`
+ * 5. Call `trap()` to block until shutdown, or `stop_consumers()` to stop
+ *
+ * @par Example
+ * @code
+ * auto dispatcher = zpt::DISPATCHER(4);  // 4 consumers
+ * dispatcher->start_consumers();
+ * dispatcher->trigger<MyEvent>("some", "args");
+ * dispatcher->trap();  // Block until shutdown
+ * @endcode
+ */
 class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
     using ptr = std::shared_ptr<dispatcher>;
 
+    /**
+     * @brief Constructs a dispatcher.
+     * @param _name Dispatcher name (for logging).
+     * @param _max_consumers Maximum consumer threads.
+     * @param _max_producers Maximum producer threads for lock-free queue.
+     */
     dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
     virtual ~dispatcher();
 
+    /** @brief Sets initialization data passed to new events. */
     auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
+    /**
+     * @brief Starts consumer threads.
+     * @param n_consumers Number to start (0 = use max_consumers).
+     */
     auto start_consumers(long n_consumers = 0) -> dispatcher&;
+    /** @brief Signals consumers to stop and waits for completion. */
     auto stop_consumers() -> dispatcher&;
+    /** @brief Enqueues an existing event for processing. */
     auto trigger(zpt::event _event) -> dispatcher&;
+    /**
+     * @brief Creates and enqueues an event.
+     * @tparam T Event operation type (must satisfy Operation concept).
+     * @param _args Arguments forwarded to T's constructor.
+     */
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
+    /** @brief Blocks until dispatcher is shut down. */
     auto trap() -> dispatcher&;
+    /** @brief Checks if shutdown has been initiated. */
     auto is_in_shutdown() -> bool;
 
   public:
@@ -66,6 +140,19 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto loop(long _consumer_nr) -> void;
 };
 
+/**
+ * @brief C++20 concept defining the Operation interface for events.
+ *
+ * Any type used with `trigger<T>()` must satisfy this concept.
+ *
+ * Required methods:
+ * - `initialize(event_initialization&)` - Called when event is created
+ * - `blocked() -> bool` - Return true if event should wait
+ * - `catch_error(exception, dispatcher)` - Handle errors, return true to retry
+ * - `operator()(dispatcher) -> state` - Execute the event
+ *
+ * @tparam T The operation type to check.
+ */
 template<typename T>
 concept Operation = requires(T t,
                              zpt::event_initialization& _i,
@@ -82,31 +169,54 @@ concept Operation = requires(T t,
 };
 } // namespace events
 
+/**
+ * @brief Abstract base class for events processed by the dispatcher.
+ *
+ * Defines the interface that all events must implement. Use `zpt::event_t<T>`
+ * or `zpt::make_event<T>()` to create concrete events from Operation types.
+ */
 class abstract_event {
   public:
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
+    /** @brief Called when event is created with initialization data. */
     virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
+    /** @brief Returns true if event is blocked waiting for something. */
     virtual auto blocked() const -> bool = 0;
+    /** @brief Handles a generic exception. Return true to re-trigger event. */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool = 0;
+    /** @brief Handles memory allocation failure. Return true to retry. */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool = 0;
+    /** @brief Handles expectation failure. Return true to re-trigger. */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
+    /** @brief Executes the event operation. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
 using event = std::shared_ptr<zpt::abstract_event>;
 
+/**
+ * @brief Type-erasing wrapper for Operation types.
+ *
+ * Wraps any type satisfying the Operation concept and provides the
+ * abstract_event interface. Created via `zpt::make_event<T>()`.
+ *
+ * @tparam T Operation type (must satisfy Operation concept).
+ */
 template<zpt::events::Operation T>
 class event_t : public zpt::abstract_event {
   public:
+    /** @brief Constructs event, forwarding args to underlying Operation. */
     template<typename... Args>
     event_t(Args&&... _args);
     virtual ~event_t() override = default;
 
+    /** @brief Access underlying operation. */
     auto operator*() -> T&;
+    /** @brief Access underlying operation (const). */
     auto operator*() const -> T const&;
     virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
     virtual auto blocked() const -> bool override final;
@@ -123,12 +233,39 @@ class event_t : public zpt::abstract_event {
     T __underlying;
 };
 
+/**
+ * @brief Creates an event from an existing Operation instance.
+ * @tparam T Operation type.
+ * @param _operator Operation instance (will be copied).
+ * @return Shared pointer to the event.
+ */
 template<zpt::events::Operation T>
 auto make_event(T _operator) -> zpt::event;
+
+/**
+ * @brief Creates an event with forwarded constructor arguments.
+ * @tparam T Operation type.
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Shared pointer to the event.
+ */
 template<zpt::events::Operation T, typename... Args>
 auto make_event(Args&&... _args) -> zpt::event;
 
+/**
+ * @brief Factory function to create a dispatcher.
+ * @param _consumers Number of consumer threads.
+ * @param _producers Maximum producer threads for queue sizing.
+ * @return Shared pointer to the dispatcher.
+ */
 auto DISPATCHER(long int _consumers = 0, long int _producers = 0) -> zpt::events::dispatcher::ptr;
+
+/**
+ * @brief Casts an event to access its underlying Operation.
+ * @tparam T Expected Operation type.
+ * @param _event Event to cast.
+ * @return Reference to the underlying Operation.
+ */
 template<zpt::events::Operation T>
 auto event_cast(zpt::event& _event) -> T&;
 } // namespace zpt

@@ -20,6 +20,15 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file prolog.h
+ * @brief Prolog scripting language bridge.
+ *
+ * Aggregate header for the Prolog bridge module.
+ *
+ * @see zpt::programming::bridge
+ */
+
 #pragma once
 
 #include <zapata/prolog/prolog.h>

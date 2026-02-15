@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file tcp.h
+ * @brief Aggregate header for the raw TCP transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/tcp.h>

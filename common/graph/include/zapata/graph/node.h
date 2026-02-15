@@ -20,6 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file node.h
+ * @brief Tree node for hierarchical pattern matching.
+ *
+ * Provides a generic tree structure where paths are merged into a trie-like
+ * structure. Used internally by the catalog for URI-based route resolution.
+ *
+ * @see zpt::catalog
+ */
+
 #pragma once
 
 #include <iostream>
@@ -30,6 +40,22 @@
 
 namespace zpt {
 namespace tree {
+
+/**
+ * @brief Tree node for hierarchical pattern matching with callbacks.
+ *
+ * Stores a trie-like tree where sequences of values form paths. Each path
+ * can have associated callbacks that are invoked when the path matches
+ * during evaluation.
+ *
+ * @tparam T Value type for tree segments (e.g., string for URI parts).
+ * @tparam P Path identifier type (e.g., the full URI pattern).
+ * @tparam C Callback type invoked on matching paths.
+ *
+ * @par Usage
+ * Paths are inserted via `merge()` and matched via `eval()`. The tree
+ * supports prefix matching and wildcard nodes.
+ */
 template<typename T, typename P, typename C>
 class node {
   public:
@@ -41,13 +67,36 @@ class node {
     auto operator=(node const& _rhs) -> node&;
     auto operator=(node&& _rhs) -> node&;
 
+    /** @brief Removes all children and callbacks. */
     auto clear() -> node&;
 
+    /**
+     * @brief Evaluates a sequence against this subtree.
+     * @tparam I Iterator type for the sequence.
+     * @tparam M Match value type.
+     * @tparam Types Additional callback argument types.
+     * @param _sequence Iterator to current position in the sequence.
+     * @param _end End iterator.
+     * @param _value_to_match Path identifier to match.
+     * @param _callback_args Arguments forwarded to matching callbacks.
+     * @return True if any callback was invoked.
+     */
     template<typename I, typename M, typename... Types>
     auto eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool;
+
+    /**
+     * @brief Merges a path into the tree with a callback.
+     * @tparam I Iterator type for the path sequence.
+     * @param _sequence Iterator to current position.
+     * @param _end End iterator.
+     * @param _path Path identifier for this route.
+     * @param _callback Callback to invoke on match.
+     * @return True if the path was merged successfully.
+     */
     template<typename I>
     auto merge(I _sequence, I _end, P _path, C _callback) -> bool;
 
+    /** @brief Returns a string representation of the tree structure. */
     auto to_string(uint _n_tabs = 0) const -> std::string;
 
     friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in)

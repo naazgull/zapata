@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file configuration.h
+ * @brief Configuration loading utilities for the startup engine.
+ *
+ * Provides functions to load and merge configuration from command-line
+ * parameters and JSON configuration files.
+ */
+
 #include <zapata/base.h>
 #include <zapata/events.h>
 #include <zapata/json.h>
@@ -28,6 +36,11 @@ namespace zpt {
 namespace startup {
 namespace configuration {
 
+/**
+ * @brief Loads configuration from parameters into the output JSON object.
+ * @param _parameters Command-line parameters as JSON.
+ * @param _output JSON object to populate with merged configuration.
+ */
 auto load(zpt::json _parameters, zpt::json& _output) -> void;
 
 } // namespace configuration

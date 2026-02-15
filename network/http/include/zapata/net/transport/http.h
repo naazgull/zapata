@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file http.h
+ * @brief HTTP transport implementation.
+ *
+ * Provides HTTP/1.1 protocol support for the transport layer.
+ * Handles HTTP request/response parsing and serialization.
+ *
+ * Capabilities: SYNCHRONOUS
+ *
+ * @see zpt::net::transport::http
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -35,6 +47,13 @@
 namespace zpt {
 namespace net {
 namespace transport {
+
+/**
+ * @brief HTTP/1.1 transport implementation.
+ *
+ * Supports standard HTTP request-response communication.
+ * Registered for "http" and "https" URI schemes.
+ */
 class http : public zpt::basic_transport {
   public:
     http() = default;
@@ -49,5 +68,10 @@ class http : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+
+/**
+ * @brief Returns the global HTTP server socket.
+ * @param _port Port to bind (0 for configured default).
+ */
 auto HTTP_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

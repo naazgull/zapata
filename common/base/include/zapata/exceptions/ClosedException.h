@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file ClosedException.h
+ * @brief Exception for operations on closed resources.
+ */
+
 #pragma once
 
 #include <exception>
@@ -27,9 +32,22 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when operating on a closed resource.
+ *
+ * Used when attempting to read/write to a closed stream, socket,
+ * or connection.
+ */
 class ClosedException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a ClosedException.
+     * @param _what Description of the error.
+     */
     ClosedException(std::string const& _what);
+
     virtual ~ClosedException() throw();
 };
+
 } // namespace zpt

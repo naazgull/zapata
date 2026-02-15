@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file UPnP.h
+ * @brief UPnP/SSDP protocol implementation for service discovery.
+ *
+ * Provides multicast-based service discovery using the Simple Service
+ * Discovery Protocol (SSDP) portion of UPnP.
+ */
+
 #include <functional>
 #include <iostream>
 #include <map>
@@ -39,6 +47,7 @@ namespace zpt {
 class UPnP;
 class UPnPPtr;
 
+/** @brief Shared pointer wrapper for UPnP instances. */
 class UPnPPtr : public std::shared_ptr<zpt::UPnP> {
   public:
     UPnPPtr();
@@ -50,6 +59,12 @@ namespace upnp {
 typedef zpt::UPnPPtr broker;
 }
 
+/**
+ * @brief UPnP/SSDP channel for multicast service discovery.
+ *
+ * Implements M-SEARCH and NOTIFY operations for discovering and
+ * announcing services on the local network via multicast UDP.
+ */
 class UPnP : public zpt::Channel {
   public:
     UPnP(zpt::json _options);

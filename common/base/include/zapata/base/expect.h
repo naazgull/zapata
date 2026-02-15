@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file expect.h
+ * @brief Assertion macros and utility functions.
+ *
+ * Provides the expect() macro for runtime assertion checking that throws
+ * ExpectationException on failure, along with timezone and thread utilities.
+ */
+
 #pragma once
 
 #include <cstring>
@@ -30,12 +38,21 @@
 #include <zapata/exceptions/ExpectationException.h>
 
 /**
- * Compact form for throwing exceptions when validating logical requirements and
- * input/output
- * validation
- * @param x a boolean expression to be validated
- * @param y the error message
- * @param z the HTTP status code to be replied to the invoking HTTP client
+ * @def expect(x, y)
+ * @brief Runtime assertion macro that throws ExpectationException on failure.
+ * @param x Boolean expression to validate.
+ * @param y Error message (can be a stream expression).
+ *
+ * If the expression @p x evaluates to false, throws zpt::ExpectationException
+ * with the provided error message, the stringified expression, and source location.
+ *
+ * @par Example Usage
+ * @code
+ * expect(ptr != nullptr, "Pointer must not be null");
+ * expect(value > 0, "Value must be positive, got: " << value);
+ * @endcode
+ *
+ * @throws zpt::ExpectationException When the condition is false.
  */
 #define expect(x, y)                                                                               \
     if (!(x)) {                                                                                    \
@@ -45,11 +62,35 @@
     }
 
 namespace zpt {
+
+/**
+ * @brief Returns the system timezone string.
+ * @return Reference to the timezone string (e.g., "UTC", "EST").
+ */
 auto get_tz() -> std::string const&;
 
+/**
+ * @brief Shared pointer to a tm structure.
+ */
 using tm_ptr = std::shared_ptr<std::tm>;
 
+/**
+ * @brief Converts a time_t to a thread-safe tm structure.
+ * @param _t The time value to convert.
+ * @return Shared pointer to the tm structure.
+ *
+ * Unlike localtime(), this function is thread-safe and returns
+ * a shared pointer to avoid dangling pointer issues.
+ */
 auto get_time(time_t _t) -> zpt::tm_ptr;
 
+/**
+ * @brief Sets the name of the current thread for debugging purposes.
+ * @param _name The name to assign to the current thread.
+ *
+ * Thread names appear in debuggers and profilers, making it easier
+ * to identify threads during development.
+ */
 auto set_thread_name(std::string const& _name) -> void;
+
 } // namespace zpt

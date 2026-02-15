@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file sha512.h
+ * @brief SHA-512 cryptographic hash implementation.
+ *
+ * Provides a pure C++ implementation of the SHA-512 hash algorithm.
+ * Produces a 512-bit (64-byte) hash digest.
+ */
+
 #pragma once
 
 #include <cinttypes>
@@ -62,24 +70,61 @@
     }
 
 namespace zpt::crypto {
+
+/**
+ * @brief SHA-512 hash algorithm implementation.
+ *
+ * Implements the SHA-512 cryptographic hash function as defined in FIPS 180-4.
+ * Produces a 512-bit (64-byte) digest.
+ *
+ * @see zpt::crypto::sha512() for a simpler string-based interface.
+ * @see zpt::crypto::SHA256 for a smaller digest size.
+ */
 class SHA512 {
   protected:
-    static const std::uint64_t sha512_k[];
-    static constexpr unsigned int SHA384_512_BLOCK_SIZE = (1024 / 8);
+    static const std::uint64_t sha512_k[];  ///< Round constants.
+    static constexpr unsigned int SHA384_512_BLOCK_SIZE = (1024 / 8); ///< Block size in bytes.
 
   public:
-    void init();
-    void update(const unsigned char* message, unsigned int len);
-    void finalize(unsigned char* digest);
+    /** @brief Size of the output digest in bytes (64). */
     static constexpr unsigned int DIGEST_SIZE = (512 / 8);
+
+    /**
+     * @brief Initializes the hash state.
+     */
+    void init();
+
+    /**
+     * @brief Updates the hash with additional data.
+     * @param message Pointer to the data to hash.
+     * @param len Length of the data in bytes.
+     */
+    void update(const unsigned char* message, unsigned int len);
+
+    /**
+     * @brief Finalizes the hash and outputs the digest.
+     * @param digest Buffer to receive the 64-byte hash digest.
+     */
+    void finalize(unsigned char* digest);
 
   protected:
     void transform(const unsigned char* message, unsigned int block_nb);
-    unsigned int m_tot_len;
-    unsigned int m_len;
-    unsigned char m_block[2 * SHA384_512_BLOCK_SIZE];
-    std::uint64_t m_h[8];
+    unsigned int m_tot_len;  ///< Total message length.
+    unsigned int m_len;      ///< Current block length.
+    unsigned char m_block[2 * SHA384_512_BLOCK_SIZE]; ///< Message block buffer.
+    std::uint64_t m_h[8];    ///< Hash state.
 };
 
+/**
+ * @brief Computes SHA-512 hash of a string.
+ * @param input The string to hash.
+ * @return Hexadecimal string representation of the 512-bit hash.
+ *
+ * @par Example Usage
+ * @code
+ * std::string hash = zpt::crypto::sha512("Hello, World!");
+ * @endcode
+ */
 std::string sha512(std::string const& input);
+
 } // namespace zpt::crypto

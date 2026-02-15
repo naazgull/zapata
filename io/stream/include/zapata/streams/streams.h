@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file streams.h
+ * @brief Core stream abstractions and epoll-based polling.
+ *
+ * Provides a unified stream interface that wraps std::iostream and
+ * adds file descriptor support for use with epoll-based I/O multiplexing.
+ *
+ * @see zpt::basic_stream
+ * @see zpt::polling
+ */
+
 #pragma once
 
 #include <any>
@@ -32,17 +43,51 @@
 #include <zapata/text/convert.h>
 
 namespace zpt {
-enum class stream_state { IDLE, WAITING, PROCESSING, ERRORING_OUT };
+
+/**
+ * @brief Stream processing states for polling.
+ */
+enum class stream_state {
+    IDLE,         ///< Stream is idle, not being processed
+    WAITING,      ///< Stream is waiting for I/O
+    PROCESSING,   ///< Stream is being processed by a delegate
+    ERRORING_OUT  ///< Stream encountered an error
+};
+
+/** @brief Type alias for epoll event structure. */
 using epoll_event_t = struct epoll_event;
+
 class polling;
 
+/**
+ * @brief Abstract stream wrapper with file descriptor support.
+ *
+ * Wraps a std::iostream and provides file descriptor access for
+ * integration with epoll-based polling. Supports reading/writing
+ * arbitrary types via operator>> and operator<<.
+ *
+ * @par Example
+ * @code
+ * // Create a socket stream
+ * auto stream = zpt::make_stream<zpt::socketstream>("localhost", 8080);
+ *
+ * // Write a message
+ * stream << my_message;
+ *
+ * // Read response
+ * zpt::message response;
+ * stream >> response;
+ * @endcode
+ */
 class basic_stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
 
     basic_stream() = default;
+    /** @brief Constructs from an existing stream. */
     basic_stream(std::ios& _rhs);
+    /** @brief Constructs from a unique pointer to a stream. */
     basic_stream(std::unique_ptr<std::iostream> _underlying);
     basic_stream(basic_stream const& _rhs) = delete;
     basic_stream(basic_stream&& _rhs) = delete;
@@ -51,6 +96,7 @@ class basic_stream {
     auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
     auto operator=(basic_stream&& _rhs) -> basic_stream& = delete;
 
+    /** @brief Sets the file descriptor. */
     virtual auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
     auto read(T& _out) -> basic_stream&;
@@ -88,25 +134,63 @@ class basic_stream {
     auto extract_uri() -> void;
 };
 
+/** @brief Shared pointer type for streams. */
 using stream = std::shared_ptr<zpt::basic_stream>;
 
+/**
+ * @brief Epoll-based I/O multiplexer for efficient stream handling.
+ *
+ * Monitors multiple streams for I/O readiness using Linux epoll and
+ * dispatches to registered delegate functions when data is available.
+ *
+ * @par Example
+ * @code
+ * auto poll = zpt::STREAM_POLLING();
+ *
+ * // Register handler
+ * poll->register_delegate([](zpt::polling::ptr p, zpt::stream s) {
+ *     zpt::message msg;
+ *     s >> msg;
+ *     process(msg);
+ *     return true;  // Keep listening
+ * });
+ *
+ * // Add streams to monitor
+ * poll->listen_on(my_stream);
+ *
+ * // Poll loop
+ * while (!poll->is_in_shutdown()) {
+ *     poll->poll();
+ * }
+ * @endcode
+ */
 class polling : public std::enable_shared_from_this<polling> {
   public:
     using ptr = std::shared_ptr<polling>;
+    /** @brief Delegate function signature: returns true to keep stream, false to remove. */
     using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
+    /** @brief Maximum events processed per poll() call. */
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
     polling();
     virtual ~polling();
 
+    /** @brief Closes the polling instance and all registered streams. */
     auto close() -> zpt::polling&;
+    /** @brief Registers a delegate function called when streams are ready. */
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
+    /** @brief Adds a stream to be monitored for I/O. */
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Temporarily stops monitoring a stream. */
     auto mute(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Resumes monitoring a muted stream. */
     auto unmute(zpt::stream _stream) -> zpt::polling&;
 
+    /** @brief Waits for I/O events and dispatches to delegates. */
     auto poll() -> zpt::polling&;
+    /** @brief Initiates shutdown of the polling loop. */
     auto shutdown() -> zpt::polling&;
+    /** @brief Returns true if shutdown has been initiated. */
     auto is_in_shutdown() const -> bool;
 
   private:
@@ -120,13 +204,30 @@ class polling : public std::enable_shared_from_this<polling> {
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
 
+/**
+ * @brief Returns the global stream polling instance.
+ * @return Shared pointer to the polling instance.
+ */
 auto STREAM_POLLING() -> zpt::polling::ptr;
 
+/**
+ * @brief Creates a stream wrapping a specific iostream type.
+ * @tparam T The underlying iostream type (e.g., socketstream).
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Shared pointer to the stream.
+ */
 template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
 
+/**
+ * @brief Casts a stream to access its underlying iostream type.
+ * @tparam T Target iostream type.
+ * @param _rhs Stream to cast.
+ * @return Reference to the underlying iostream as type T.
+ */
 template<typename T>
 auto stream_cast(zpt::stream& _rhs) -> T& {
     return static_cast<T&>(**_rhs);

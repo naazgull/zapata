@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file globals.h
+ * @brief Thread-local variable storage infrastructure.
+ *
+ * Provides a thread-local table for managing per-thread copies of variables,
+ * keyed by memory address. Used internally by `zpt::thread_local_variable`
+ * to provide safe per-thread variable instances.
+ *
+ * @see zpt::thread_local_variable
+ */
+
 #pragma once
 
 #include <shared_mutex>
@@ -28,24 +39,50 @@
 #include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
+
+/**
+ * @brief Abstract base class for type-erased thread-local table entries.
+ */
 class thread_local_table_entry {
   public:
     virtual ~thread_local_table_entry() = default;
+
+    /** @brief Returns true if the entry holds no value. */
     virtual auto is_null() const -> bool = 0;
 };
+
+/**
+ * @brief Thread-local storage table for per-thread variable instances.
+ *
+ * Maintains a `thread_local` map from variable addresses to type-erased
+ * entries. Each thread gets its own map, allowing lock-free reads of
+ * thread-local copies of shared variables.
+ *
+ * @note This is a low-level mechanism. Prefer `zpt::thread_local_variable<T>`
+ *       for a higher-level interface.
+ *
+ * @see zpt::thread_local_variable
+ */
 class thread_local_table {
   public:
     using entry_type = std::unique_ptr<thread_local_table_entry>;
     using map_type = std::map<std::uintptr_t, entry_type>;
 
+    /**
+     * @brief Typed entry holding the actual per-thread value.
+     * @tparam T Value type stored in the entry.
+     */
     template<typename T>
     class entry : public thread_local_table_entry {
       public:
+        /** @brief Constructs an entry, forwarding args to T's constructor. */
         template<typename... Args>
         entry(Args... _args);
         virtual ~entry() override;
 
+        /** @brief Dereferences to the stored value. */
         auto operator*() -> T&;
+        /** @brief Member access to the stored value. */
         auto operator->() -> T*;
         auto is_null() const -> bool override;
 
@@ -53,12 +90,39 @@ class thread_local_table {
         T __underlying;
     };
 
+    /**
+     * @brief Allocates a thread-local copy of a variable.
+     * @tparam P Variable pointer type (used as key).
+     * @tparam T Value type to store.
+     * @tparam Args Constructor argument types.
+     * @param _member_variable Reference to the variable (address used as key).
+     * @param _args Arguments forwarded to T's constructor.
+     * @return Reference to the newly allocated value.
+     */
     template<typename P, typename T, typename... Args>
     static auto alloc(P const& _member_variable, Args... _args) -> T&;
+
+    /**
+     * @brief Retrieves the thread-local copy of a variable.
+     * @tparam P Variable pointer type.
+     * @tparam T Expected value type.
+     * @param _member_variable Reference to the variable (address used as key).
+     * @return Reference to the thread-local value.
+     * @throws zpt::ExpectationException If no entry exists for this variable.
+     */
     template<typename P, typename T>
     static auto get(P const& _member_variable) -> T&;
+
+    /**
+     * @brief Deallocates the thread-local copy of a variable.
+     * @tparam P Variable pointer type.
+     * @tparam T Value type.
+     * @param _member_variable Reference to the variable (address used as key).
+     */
     template<typename P, typename T>
     static auto dealloc(P const& _member_variable) -> void;
+
+    /** @brief Returns a debug string representation of the table. */
     static auto to_string() -> std::string;
 
   private:

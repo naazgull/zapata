@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file HTTPParser.h
+ * @brief HTTP message parser (bisonc++/flexc++ generated).
+ *
+ * @see zpt::http::basic_request
+ * @see zpt::http::basic_reply
+ */
+
 #pragma once
 
 #include <zapata/http/HTTPObj.h>

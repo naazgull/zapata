@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file manip.h
+ * @brief Filesystem utilities for directory traversal and globbing.
+ *
+ * Provides functions for listing directory contents with pattern matching.
+ */
+
 #pragma once
 
 #include <dirent.h>
@@ -465,12 +472,38 @@ namespace zpt {
 // auto file_exists(std::string const& _path) -> bool;
 // auto dirname(std::string const& _path) -> std::string;
 
+/**
+ * @brief Lists files matching a regex pattern.
+ * @param dir Directory to search in.
+ * @param result Vector to receive matching file paths.
+ * @param pattern Compiled regex pattern to match against filenames.
+ * @param recursion Maximum recursion depth (0 = current directory only).
+ * @return Number of matching files found.
+ *
+ * Searches the directory for files whose names match the regex pattern.
+ */
 auto globRegexp(std::string& dir,
                 std::vector<std::string>& result,
                 std::regex& pattern,
                 short recursion = 0) -> int;
+
+/**
+ * @brief Lists files matching a glob pattern.
+ * @param dir Directory to search in.
+ * @param result Vector to receive matching file paths.
+ * @param pattern Glob pattern (e.g., "*.txt", "*.{cpp,h}").
+ * @param recursion Maximum recursion depth (0 = current directory only).
+ * @return Number of matching files found.
+ *
+ * @par Example Usage
+ * @code
+ * std::vector<std::string> files;
+ * zpt::glob("/src", files, "*.cpp", 3);  // Find .cpp files up to 3 levels deep
+ * @endcode
+ */
 auto glob(std::string dir,
           std::vector<std::string>& result,
           std::string pattern,
           short recursion = 0) -> int;
+
 } // namespace zpt

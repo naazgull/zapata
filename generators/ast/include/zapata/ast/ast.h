@@ -20,6 +20,24 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file ast.h
+ * @brief Base AST classes for code generation.
+ *
+ * Provides abstract syntax tree building blocks for generating
+ * source code. Used by the REST code generator and can be extended
+ * for custom code generation needs.
+ *
+ * @par AST Hierarchy
+ * - basic_module - Contains files
+ * - basic_file - Contains classes, functions, variables
+ * - basic_class - Contains members and methods
+ * - basic_function - Function with parameters and body
+ * - basic_variable - Variable declaration
+ * - basic_instruction - Raw code instruction
+ * - basic_code_block - Block of statements
+ */
+
 #pragma once
 
 #include <filesystem>
@@ -29,14 +47,21 @@
 #include <variant>
 #include <vector>
 
+/** @brief Number of spaces per indentation level. */
 inline std::uint16_t AST_INDENTATION_SPACES{ 4 };
 
 namespace zpt {
 namespace ast {
+
+/** @name Visibility Constants */
+///@{
 static constexpr int PUBLIC{ 0 };
 static constexpr int PROTECTED{ 1 };
 static constexpr int PRIVATE{ 2 };
+///@}
 
+/** @name Function/Variable Modifiers */
+///@{
 static constexpr int VIRTUAL{ 1 };
 static constexpr int FRIEND{ 2 };
 static constexpr int CONST{ 4 };
@@ -48,6 +73,7 @@ static constexpr int ABSTRACT{ 128 };
 static constexpr int PARAMETER{ 256 };
 static constexpr int EXTERN{ 512 };
 static constexpr int EXTERNC{ 1024 };
+///@}
 
 class basic_module;
 class basic_file;
@@ -57,16 +83,26 @@ class basic_function;
 class basic_variable;
 class basic_instruction;
 
+/**
+ * @brief Base class for all AST nodes.
+ *
+ * Provides indentation tracking and serialization interface.
+ * All AST elements (classes, functions, variables, etc.) derive from this.
+ */
 class basic_element : public std::enable_shared_from_this<basic_element> {
   public:
-    std::shared_ptr<basic_element> __parent{ nullptr };
+    std::shared_ptr<basic_element> __parent{ nullptr }; ///< Parent element for indentation.
 
     basic_element() = default;
     virtual ~basic_element() = default;
 
+    /** @brief Serializes this element to a string. */
     virtual auto to_string() const -> std::string = 0;
+    /** @brief Returns the indentation string for this nesting level. */
     virtual auto get_indentation() const -> std::string final;
+    /** @brief Returns whether to emit a newline before this element. */
     virtual auto new_line() const -> bool final;
+    /** @brief Sets whether to emit a newline before this element. */
     virtual auto set_new_line(bool _value) -> basic_element& final;
     friend auto operator<<(std::ostream& _out, basic_element& _in) -> std::ostream& {
         _out << _in.to_string();
@@ -78,9 +114,16 @@ class basic_element : public std::enable_shared_from_this<basic_element> {
     bool __newline{ true };
 };
 
+/** @brief Constrains types to those derived from basic_element. */
 template<typename T>
 concept BasicASTElement = requires(T _t) { requires std::derived_from<T, basic_element>; };
 
+/**
+ * @brief Top-level AST node representing a source module (set of files).
+ *
+ * Groups one or more basic_file nodes under a named module. Provides
+ * serialization (dump) and traversal over contained files.
+ */
 class basic_module {
   public:
     using allowed_type = std::shared_ptr<basic_file>;
@@ -88,12 +131,18 @@ class basic_module {
     basic_module(std::string const& _module_name);
     ~basic_module() = default;
 
+    /** @brief Returns the module name. */
     auto name() const -> std::string const&;
+    /** @brief Adds a file to this module. */
     auto add(std::shared_ptr<basic_file> _to_add) -> basic_module&;
+    /** @brief Constructs and adds a file from arguments. */
     template<typename... Args>
     auto add(Args... _args) -> basic_module&;
+    /** @brief Serializes all files to their respective paths. */
     auto dump() -> basic_module&;
+    /** @brief Serializes all files to the given stream. */
     auto dump(std::ostream& _out) -> basic_module&;
+    /** @brief Invokes a callback for each contained file. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_module&;
 
@@ -102,6 +151,12 @@ class basic_module {
     std::vector<allowed_type> __files;
 };
 
+/**
+ * @brief AST node representing a single source file.
+ *
+ * Contains top-level elements such as classes, functions, variables,
+ * code blocks, and raw instructions. Serializable to an output stream.
+ */
 class basic_file {
   public:
     using allowed_type = std::variant< //
@@ -114,13 +169,19 @@ class basic_file {
     basic_file(std::filesystem::path const& _path);
     ~basic_file() = default;
 
+    /** @brief Returns the output file path. */
     auto path() const -> std::filesystem::path const&;
+    /** @brief Adds an AST element to this file. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_file&;
+    /** @brief Constructs and adds an AST element from arguments. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_file&;
+    /** @brief Serializes all elements to the file path. */
     auto dump() -> basic_file&;
+    /** @brief Serializes all elements to the given stream. */
     auto dump(std::ostream& _out) -> basic_file&;
+    /** @brief Invokes a callback for each contained element. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_file&;
 
@@ -129,6 +190,12 @@ class basic_file {
     std::vector<allowed_type> __elements;
 };
 
+/**
+ * @brief AST node representing a class definition.
+ *
+ * Holds public, protected, and private members (nested classes,
+ * functions, variables). Supports optional base class inheritance.
+ */
 class basic_class : public basic_element {
   public:
     using allowed_type = std::variant< //
@@ -139,10 +206,13 @@ class basic_class : public basic_element {
     basic_class(std::string const& _name, std::string const& _extends = "");
     virtual ~basic_class() override = default;
 
+    /** @brief Adds a member element with the given visibility (PUBLIC/PROTECTED/PRIVATE). */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add, int _visibility) -> basic_class&;
+    /** @brief Constructs and adds a member element with the given visibility. */
     template<BasicASTElement T, typename... Args>
     auto add(int _visibility, Args... _args) -> basic_class&;
+    /** @brief Invokes a callback for each member across all visibility sections. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_class&;
 
@@ -154,6 +224,12 @@ class basic_class : public basic_element {
     std::vector<allowed_type> __private;
 };
 
+/**
+ * @brief AST node representing a braced code block.
+ *
+ * Contains a sequence of statements (classes, nested blocks, variables,
+ * instructions). An optional prefix string appears before the opening brace.
+ */
 class basic_code_block : public basic_element {
   public:
     using allowed_type = std::variant< //
@@ -165,10 +241,13 @@ class basic_code_block : public basic_element {
     basic_code_block(std::string const& _prefix = "");
     virtual ~basic_code_block() override = default;
 
+    /** @brief Adds a statement element to this block. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_code_block&;
+    /** @brief Constructs and adds a statement element from arguments. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_code_block&;
+    /** @brief Invokes a callback for each statement in the block. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_code_block&;
 
@@ -177,6 +256,12 @@ class basic_code_block : public basic_element {
     std::vector<allowed_type> __elements;
 };
 
+/**
+ * @brief AST node representing a function or method declaration.
+ *
+ * Holds the function name, return type, modifier flags (VIRTUAL, CONST, etc.),
+ * parameter list, and an optional body code block.
+ */
 class basic_function : public basic_element {
   public:
     basic_function(std::string const& _name,
@@ -184,11 +269,15 @@ class basic_function : public basic_element {
                    int _modifiers = 0);
     virtual ~basic_function() override = default;
 
+    /** @brief Adds a parameter (basic_variable) or body (basic_code_block). */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_function&;
+    /** @brief Constructs and adds a parameter or body from arguments. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_function&;
+    /** @brief Sets modifier flags (VIRTUAL, CONST, OVERRIDE, etc.). */
     auto set_modifiers(int _modifiers) -> basic_function&;
+    /** @brief Returns the function body code block (may be null). */
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
@@ -199,15 +288,25 @@ class basic_function : public basic_element {
     std::shared_ptr<basic_code_block> __body{ nullptr };
 };
 
+/**
+ * @brief AST node representing a variable or parameter declaration.
+ *
+ * Holds the variable name, type string, modifier flags, and an optional
+ * initialization code block.
+ */
 class basic_variable : public basic_element {
   public:
     basic_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     virtual ~basic_variable() override = default;
 
+    /** @brief Sets the initialization code block. */
     auto add(std::shared_ptr<basic_code_block> _initialization) -> basic_variable&;
+    /** @brief Constructs and sets the initialization code block from arguments. */
     template<typename... Args>
     auto add(Args... _args) -> basic_variable&;
+    /** @brief Sets modifier flags (CONST, EXTERN, PARAMETER, etc.). */
     auto set_modifiers(int _modifiers) -> basic_variable&;
+    /** @brief Returns the initialization code block (may be null). */
     auto initialization() -> std::shared_ptr<basic_code_block>;
 
   protected:
@@ -217,14 +316,23 @@ class basic_variable : public basic_element {
     std::shared_ptr<basic_code_block> __initialization{ nullptr };
 };
 
+/**
+ * @brief AST node representing a raw code instruction or statement.
+ *
+ * Holds a literal code string and an optional body code block
+ * (for constructs like if/for that have a trailing block).
+ */
 class basic_instruction : public basic_element {
   public:
     basic_instruction(std::string const& _code);
     virtual ~basic_instruction() override = default;
 
+    /** @brief Sets the body code block for this instruction. */
     auto add(std::shared_ptr<basic_code_block> _body) -> basic_instruction&;
+    /** @brief Constructs and sets the body code block from arguments. */
     template<typename... Args>
     auto add(Args... _args) -> basic_instruction&;
+    /** @brief Returns the body code block (may be null). */
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
@@ -232,6 +340,11 @@ class basic_instruction : public basic_element {
     std::shared_ptr<basic_code_block> __body{ nullptr };
 };
 } // namespace ast
+
+/** @name AST Factory Functions
+ *  Convenience functions for constructing AST nodes as shared pointers.
+ */
+///@{
 template<typename T, typename... Args>
 auto make_module(Args... _args) -> std::shared_ptr<ast::basic_module>;
 template<typename T, typename... Args>
@@ -246,6 +359,7 @@ template<zpt::ast::BasicASTElement T, typename... Args>
 auto make_variable(Args... _args) -> std::shared_ptr<ast::basic_variable>;
 template<zpt::ast::BasicASTElement T, typename... Args>
 auto make_instruction(Args... _args) -> std::shared_ptr<ast::basic_instruction>;
+///@}
 } // namespace zpt
 
 template<typename Callback>

@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file ast.h
+ * @brief Code generation AST utilities.
+ *
+ * Provides an abstract syntax tree representation for generating
+ * source code programmatically. Includes base AST types and
+ * C++ code generation support.
+ *
+ * @see zpt::ast::basic_module
+ * @see zpt::ast::basic_class
+ */
+
 #pragma once
 
 #include <zapata/ast/ast.h>

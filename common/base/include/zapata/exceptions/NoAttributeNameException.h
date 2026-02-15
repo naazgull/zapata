@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file NoAttributeNameException.h
+ * @brief Exception for missing attribute names.
+ */
+
 #pragma once
 
 #include <exception>
@@ -28,9 +33,21 @@
 
 namespace zpt {
 
+/**
+ * @brief Exception thrown when an expected attribute name is missing.
+ *
+ * Used when parsing structured data (JSON objects, HTTP headers) where
+ * an attribute/key name was expected but not found.
+ */
 class NoAttributeNameException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a NoAttributeNameException.
+     * @param _what Description of the missing attribute.
+     */
     NoAttributeNameException(std::string const& _what);
+
     virtual ~NoAttributeNameException() throw();
 };
+
 } // namespace zpt

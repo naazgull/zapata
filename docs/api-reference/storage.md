@@ -1,0 +1,432 @@
+# Storage API Reference
+
+This document provides the API reference for Zapata's storage connector layer.
+
+## Headers
+
+```cpp
+#include <zapata/connector.h>    // Base connector interface
+#include <zapata/sqlite.h>       // SQLite connector
+#include <zapata/mysqlx.h>       // MySQL connector
+```
+
+---
+
+## Namespace: `zpt::storage`
+
+All storage types are in the `zpt::storage` namespace.
+
+---
+
+## Architecture Overview
+
+The storage layer follows a hierarchical model:
+
+```
+connection → session → database → collection → action → result
+```
+
+Each level provides access to the next:
+- **connection** - Manages database connections
+- **session** - Transaction boundaries, access to databases
+- **database** - Namespace containing collections
+- **collection** - Table/collection with CRUD operations
+- **action** - Query builder with fluent API
+- **result** - Query results and status
+
+---
+
+## Class: `zpt::storage::connection`
+
+Database connection wrapper.
+
+### Inner Class: `type`
+
+Abstract implementation interface.
+
+```cpp
+virtual auto open(zpt::json _options) -> type* = 0;
+virtual auto close() -> type* = 0;
+virtual auto session() const -> zpt::storage::session = 0;
+```
+
+### Methods
+
+```cpp
+auto operator->() -> type*;
+auto operator*() -> type&;
+```
+
+---
+
+## Class: `zpt::storage::session`
+
+Database session with transaction support.
+
+### Inner Class: `type`
+
+```cpp
+virtual auto is_open() const -> bool = 0;
+virtual auto sql(std::string const& _statement) -> type* = 0;
+virtual auto commit() -> type* = 0;
+virtual auto rollback() -> type* = 0;
+virtual auto database(std::string const& _db) const -> zpt::storage::database = 0;
+```
+
+---
+
+## Class: `zpt::storage::database`
+
+Database namespace container.
+
+### Inner Class: `type`
+
+```cpp
+virtual auto sql(std::string const& _statement) -> type* = 0;
+virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
+```
+
+---
+
+## Class: `zpt::storage::collection`
+
+Collection/table interface for CRUD operations.
+
+### Inner Class: `type`
+
+```cpp
+virtual auto add(zpt::json _document) const -> zpt::storage::action = 0;
+virtual auto modify(zpt::json _search) const -> zpt::storage::action = 0;
+virtual auto remove(zpt::json _search) const -> zpt::storage::action = 0;
+virtual auto replace(std::string const& _id, zpt::json _document) const -> zpt::storage::action = 0;
+virtual auto find(zpt::json _search) const -> zpt::storage::action = 0;
+virtual auto count() -> size_t = 0;
+```
+
+| Method | Description |
+|--------|-------------|
+| `add` | Creates an INSERT action |
+| `modify` | Creates an UPDATE action with search criteria |
+| `remove` | Creates a DELETE action with search criteria |
+| `replace` | Creates a REPLACE action for a specific ID |
+| `find` | Creates a SELECT action with search criteria |
+| `count` | Returns total document count |
+
+---
+
+## Class: `zpt::storage::action`
+
+Query builder with fluent API.
+
+### Inner Class: `type`
+
+```cpp
+// Chain operations
+virtual auto add(zpt::json _document) -> type* = 0;
+virtual auto modify(zpt::json _search) -> type* = 0;
+virtual auto remove(zpt::json _search) -> type* = 0;
+virtual auto replace(std::string const& _id, zpt::json _document) -> type* = 0;
+virtual auto find(zpt::json _search) -> type* = 0;
+
+// Update modifiers
+virtual auto set(std::string const& _attribute, zpt::json _value) -> type* = 0;
+virtual auto unset(std::string const& _attribute) -> type* = 0;
+virtual auto patch(zpt::json _document) -> type* = 0;
+
+// Query modifiers
+virtual auto sort(std::string const& _attribute, bool asc = true) -> type* = 0;
+virtual auto fields(zpt::json _fields) -> type* = 0;
+virtual auto offset(size_t _rows) -> type* = 0;
+virtual auto limit(size_t _number) -> type* = 0;
+virtual auto bind(zpt::json _map) -> type* = 0;
+
+// Execution
+virtual auto execute() -> zpt::storage::result = 0;
+```
+
+### Query Modifiers
+
+| Method | Description |
+|--------|-------------|
+| `set(attr, value)` | Sets a field value (for UPDATE) |
+| `unset(attr)` | Removes a field (for UPDATE) |
+| `patch(doc)` | Applies partial update document |
+| `sort(attr, asc)` | Orders results (asc=true for ascending) |
+| `fields(fields)` | Selects specific fields to return |
+| `offset(n)` | Skips first N rows (pagination) |
+| `limit(n)` | Limits results to N rows |
+| `bind(map)` | Binds parameter values |
+
+---
+
+## Class: `zpt::storage::result`
+
+Query result set.
+
+### Inner Class: `type`
+
+```cpp
+virtual auto fetch(size_t _amount = 0) -> zpt::json = 0;
+virtual auto generated_id() -> zpt::json = 0;
+virtual auto count() const -> size_t = 0;
+virtual auto status() const -> zpt::status = 0;
+virtual auto message() const -> std::string = 0;
+virtual auto to_json() const -> zpt::json = 0;
+```
+
+| Method | Description |
+|--------|-------------|
+| `fetch(n)` | Fetches n documents (0 = all) |
+| `generated_id()` | Returns IDs generated by INSERT |
+| `count()` | Number of affected/returned rows |
+| `status()` | Operation status code |
+| `message()` | Status message |
+| `to_json()` | Converts result to JSON |
+
+---
+
+## Factory Functions
+
+### `zpt::make_connection`
+
+```cpp
+template<typename T, typename... Args>
+auto make_connection(Args&... _args) -> zpt::storage::connection;
+```
+
+Creates a thread-local connection of type T.
+
+### `zpt::make_session`
+
+```cpp
+template<typename T, typename... Args>
+auto make_session(Args&... _args) -> zpt::storage::session;
+```
+
+Creates a thread-local session of type T.
+
+### Other Factories
+
+```cpp
+template<typename T, typename... Args>
+auto make_database(Args&... _args) -> zpt::storage::database;
+
+template<typename T, typename... Args>
+auto make_collection(Args&... _args) -> zpt::storage::collection;
+
+template<typename T, typename... Args>
+auto make_action(Args&... _args) -> zpt::storage::action;
+
+template<typename T, typename... Args>
+auto make_result(Args&... _args) -> zpt::storage::result;
+```
+
+---
+
+## Helper Functions
+
+```cpp
+auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+auto filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+```
+
+---
+
+## SQLite Connector
+
+**Header:** `<zapata/sqlite.h>`
+
+**Namespace:** `zpt::storage::sqlite`
+
+### Connection Options
+
+```cpp
+auto options = zpt::json{
+    "path", "/path/to/database.db",
+    // or for in-memory
+    "path", ":memory:"
+};
+
+auto conn = zpt::make_connection<zpt::storage::sqlite::connection>(options);
+conn->open(options);
+```
+
+### SQLite-Specific Types
+
+```cpp
+using sqlite3_ptr = std::shared_ptr<sqlite3>;
+using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
+```
+
+### Helper Functions
+
+```cpp
+auto is_error(long _error) -> bool;
+auto from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
+auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
+```
+
+---
+
+## MySQL Connector
+
+**Header:** `<zapata/mysqlx.h>`
+
+**Namespace:** `zpt::storage::mysqlx`
+
+### Connection Options
+
+```cpp
+auto options = zpt::json{
+    "host", "localhost",
+    "port", 3306,
+    "user", "username",
+    "password", "password",
+    "database", "mydb"
+};
+
+zpt::storage::mysqlx::init();  // Initialize library once
+auto conn = zpt::make_connection<zpt::storage::mysqlx::connection>(options);
+conn->open(options);
+```
+
+### MySQL-Specific Types
+
+```cpp
+using mysql_ptr = std::shared_ptr<MYSQL>;
+using mysql_stmt_ptr = std::shared_ptr<MYSQL_STMT>;
+```
+
+### Library Initialization
+
+```cpp
+auto init() -> library&;
+```
+
+Must be called once before using MySQL connections.
+
+---
+
+## Usage Patterns
+
+### Basic CRUD Operations
+
+```cpp
+#include <zapata/sqlite.h>
+
+// Create connection
+auto options = zpt::json{ "path", "mydb.sqlite3" };
+auto conn = zpt::make_connection<zpt::storage::sqlite::connection>(options);
+conn->open(options);
+
+// Get session and database
+auto session = conn->session();
+auto db = session->database("main");
+auto users = db->collection("users");
+
+// INSERT
+users->add({
+    "name", "John Doe",
+    "email", "john@example.com",
+    "active", true
+})->execute();
+
+// SELECT
+auto results = users->find({ "active", true })
+    ->fields({ "name", "email" })
+    ->sort("name", true)
+    ->limit(10)
+    ->execute();
+
+auto docs = results->fetch();
+for (auto [_, __, doc] : docs) {
+    std::cout << doc("name")->string() << std::endl;
+}
+
+// UPDATE
+users->modify({ "email", "john@example.com" })
+    ->set("active", false)
+    ->execute();
+
+// DELETE
+users->remove({ "active", false })->execute();
+```
+
+### Transactions
+
+```cpp
+auto session = conn->session();
+auto db = session->database("main");
+
+try {
+    auto users = db->collection("users");
+    users->add({ "name", "Alice" })->execute();
+
+    auto orders = db->collection("orders");
+    orders->add({ "user", "alice", "total", 99.99 })->execute();
+
+    session->commit();
+} catch (...) {
+    session->rollback();
+    throw;
+}
+```
+
+### Raw SQL
+
+```cpp
+auto session = conn->session();
+session->sql("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)");
+
+auto db = session->database("main");
+db->sql("CREATE INDEX idx_users_name ON users(name)");
+```
+
+### Query with Parameters
+
+```cpp
+auto results = users->find({ "status", ":status" })
+    ->bind({ "status", "active" })
+    ->execute();
+```
+
+### Partial Updates
+
+```cpp
+// Set specific fields
+users->modify({ "_id", user_id })
+    ->set("last_login", zpt::json::date())
+    ->set("login_count", login_count + 1)
+    ->execute();
+
+// Patch with document
+users->modify({ "_id", user_id })
+    ->patch({
+        "profile", {
+            "bio", "Updated bio",
+            "avatar", "/images/new.png"
+        }
+    })
+    ->execute();
+```
+
+### Pagination
+
+```cpp
+size_t page = 2;
+size_t page_size = 20;
+
+auto results = users->find({})
+    ->sort("created_at", false)  // Newest first
+    ->offset((page - 1) * page_size)
+    ->limit(page_size)
+    ->execute();
+```
+
+---
+
+## See Also
+
+- [JSON API](json.md) - Document structure
+- [Events API](events.md) - Event-driven database operations

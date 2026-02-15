@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file pipe_stream.h
+ * @brief Unix pipe-based stream buffer and iostream wrapper.
+ *
+ * Provides std::iostream-compatible streams backed by Unix pipes,
+ * enabling inter-process or inter-thread communication via standard
+ * C++ stream operations.
+ *
+ * @see zpt::pipestream
+ */
+
 #pragma once
 
 #include <cstring>
@@ -43,6 +54,14 @@ namespace zpt {
 template<typename Char>
 class basic_pipestream;
 
+/**
+ * @brief Stream buffer backed by a Unix pipe.
+ *
+ * Wraps a pair of Unix pipe file descriptors as a std::basic_streambuf,
+ * enabling standard C++ stream I/O over pipes.
+ *
+ * @tparam Char Character type (typically char).
+ */
 template<typename Char>
 class basic_pipebuf : public std::basic_streambuf<Char> {
   public:
@@ -79,6 +98,22 @@ class basic_pipebuf : public std::basic_streambuf<Char> {
     auto dump() -> int_type;
 };
 
+/**
+ * @brief iostream wrapper around a Unix pipe.
+ *
+ * Provides bidirectional stream I/O over a Unix pipe. Can be used for
+ * inter-process communication or as a local message channel.
+ *
+ * @tparam Char Character type (typically char).
+ *
+ * @par Example
+ * @code
+ * zpt::pipestream pipe("my-pipe");
+ * pipe << "Hello" << std::flush;
+ * std::string msg;
+ * pipe >> msg;
+ * @endcode
+ */
 template<typename Char>
 class basic_pipestream : public std::basic_iostream<Char> {
   public:

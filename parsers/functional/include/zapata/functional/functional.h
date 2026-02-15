@@ -20,13 +20,35 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file functional.h
+ * @brief Public API for parsing functional expressions.
+ *
+ * @see zpt::functional::parse
+ */
+
 #pragma once
 
 #include <zapata/json.h>
 
 namespace zpt {
 namespace functional {
+
+/**
+ * @brief Parses a functional expression string into JSON.
+ * @param _in Functional expression string.
+ * @return JSON representation of the parsed expression.
+ * @throws zpt::SyntaxErrorException On invalid syntax.
+ */
 auto parse(std::string const& _in) -> zpt::json;
+
+/**
+ * @brief Parses a functional expression from a stream.
+ * @param _in Input stream containing the expression.
+ * @return JSON representation of the parsed expression.
+ * @throws zpt::SyntaxErrorException On invalid syntax.
+ */
 auto parse(std::istream& _in) -> zpt::json;
+
 } // namespace functional
 } // namespace zpt

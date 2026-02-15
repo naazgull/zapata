@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file self.h
+ * @brief In-process transport for local service calls.
+ *
+ * Provides zero-copy message passing within the same process.
+ * Used when a service calls another service in the same application.
+ *
+ * Capabilities: SYNCHRONOUS
+ *
+ * @see zpt::net::transport::self
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -29,6 +41,13 @@
 namespace zpt {
 namespace net {
 namespace transport {
+
+/**
+ * @brief In-process transport for local calls.
+ *
+ * Provides efficient in-memory message passing without serialization.
+ * Registered for "self" URI scheme.
+ */
 class self : public zpt::basic_transport {
   public:
     self() = default;

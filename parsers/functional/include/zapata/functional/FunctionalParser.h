@@ -20,18 +20,32 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file FunctionalParser.h
+ * @brief Parser for functional-style expressions (bisonc++/flexc++ generated).
+ */
+
 #pragma once
 
 #include <zapata/functional/FunctionalTokenizer.h>
 
 namespace zpt {
 
+/**
+ * @brief Functional expression parser.
+ *
+ * Wrapper around the bisonc++/flexc++ generated parser for functional
+ * expressions. Parses input into a JSON AST.
+ */
 class FunctionalParser : public FunctionalTokenizer {
   public:
+    /** @brief Constructs a parser with the given I/O streams. */
     FunctionalParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~FunctionalParser();
 
+    /** @brief Sets the JSON root node to populate during parsing. */
     void switchRoots(zpt::json& _root);
+    /** @brief Switches the input/output streams. */
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
 } // namespace zpt

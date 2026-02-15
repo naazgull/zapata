@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file bridge.h
+ * @brief Core bridge template for language integration.
+ *
+ * Provides the CRTP base template for implementing language bridges.
+ * Derived classes must implement the required interface methods.
+ */
+
 #pragma once
 
 #include <zapata/json.h>
@@ -27,19 +35,51 @@
 namespace zpt {
 namespace programming {
 
+/**
+ * @brief Abstract base for language integrations.
+ */
 class integration {
   public:
     integration() = default;
     virtual ~integration() = default;
 
+    /** @brief Returns the integration name (e.g., "lua", "prolog"). */
     virtual auto name() const -> std::string = 0;
 };
 
+/**
+ * @brief CRTP base template for language bridges.
+ *
+ * Provides a common interface for integrating scripting languages.
+ * Derived classes implement the actual language-specific operations.
+ *
+ * @tparam C The concrete bridge class (CRTP).
+ * @tparam O The language's native object type.
+ *
+ * @par Required Methods for Derived Class
+ * The derived class C must implement:
+ * - `setup_module(zpt::json, std::string)` - Load external module
+ * - `setup_module(zpt::json, Callback)` - Register callback module
+ * - `setup_lambda(zpt::json, Lambda)` - Register lambda
+ * - `initialize()` - Initialize the bridge
+ * - `find(zpt::json)` - Locate an object by path
+ * - `to_object(zpt::json)` - Convert JSON to native object
+ * - `to_json(O)` - Convert native object to JSON
+ * - `execute(Term, Args...)` - Execute a function
+ *
+ * @par Example
+ * @code
+ * auto& lua = zpt::LUA_BRIDGE();
+ * lua.add_module("my_module.lua");
+ * lua.init();
+ * auto result = lua.call({ "function", "my_func" }, { "arg1", 42 });
+ * @endcode
+ */
 template<typename C, typename O>
 class bridge : public zpt::programming::integration {
   public:
-    using class_type = C;
-    using object_type = O;
+    using class_type = C;    ///< The concrete bridge type
+    using object_type = O;   ///< The language's native object type
 
     bridge() = default;
     bridge(bridge<C, O> const& _rhs) = delete;
@@ -49,21 +89,31 @@ class bridge : public zpt::programming::integration {
     auto operator=(bridge<C, O> const& _rhs) = delete;
     auto operator=(bridge<C, O>&& _rhs) = delete;
 
+    /** @brief Sets bridge configuration options. */
     auto set_options(zpt::json _conf) -> bridge<C, O>&;
+    /** @brief Returns current configuration options. */
     auto options() const -> zpt::json;
 
+    /** @brief Adds an external module from a file path. */
     auto add_module(std::string _external_path, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    /** @brief Adds a module via callback. */
     template<typename Callback>
     auto add_module(Callback _callback, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    /** @brief Registers a lambda function. */
     template<typename Lambda>
     auto add_lambda(Lambda _lambda, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    /** @brief Initializes the bridge after configuration. */
     auto init() -> bridge<C, O>&;
 
+    /** @brief Locates an object by path. */
     auto locate(zpt::json _to_locate) -> object_type;
 
+    /** @brief Converts JSON to native object. */
     auto json_to_object(zpt::json _to_convert) -> object_type;
+    /** @brief Converts native object to JSON. */
     auto object_to_json(object_type _to_convert) -> zpt::json;
 
+    /** @brief Calls a function and returns the result as JSON. */
     template<typename Term, typename... Args>
     auto call(Term _to_call, Args... _arg) -> zpt::json;
 

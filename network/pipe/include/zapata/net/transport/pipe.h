@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file pipe.h
+ * @brief Named pipe transport implementation.
+ *
+ * Provides inter-process communication via named pipes.
+ * Used for internal service communication within the same host.
+ *
+ * Capabilities: SYNCHRONOUS
+ *
+ * @see zpt::net::transport::pipe_stream
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -27,9 +39,17 @@
 #include <zapata/transport.h>
 
 namespace zpt {
+/** @brief Returns reference to the internal server stream counter. */
 auto INTERNAL_SERVER_STREAM() -> ssize_t&;
 namespace net {
 namespace transport {
+
+/**
+ * @brief Named pipe transport implementation.
+ *
+ * Supports inter-process communication within the same host.
+ * Registered for "pipe" URI scheme.
+ */
 class pipe_stream : public zpt::basic_transport {
   public:
     pipe_stream() = default;

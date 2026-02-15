@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file socket_stream.h
+ * @brief TCP/Unix socket stream buffer and iostream wrapper.
+ *
+ * Provides std::iostream-compatible streams backed by TCP sockets (with
+ * optional SSL/TLS) and Unix domain sockets. Includes both client
+ * (socketstream) and server (serversocketstream) variants.
+ *
+ * @see zpt::socketstream
+ * @see zpt::serversocketstream
+ */
+
 #pragma once
 
 #include <arpa/inet.h>
@@ -58,10 +70,24 @@ constexpr char const* ADDR_ANONYMOUS = "";
 constexpr bool NO_SSL = false;
 constexpr bool USE_SSL = true;
 
+/** @brief Returns a human-readable SSL error description. */
 auto ssl_error_print(SSL* _ssl, int _ret) -> std::string;
+/** @brief Returns a human-readable SSL error description for a given error code. */
 auto ssl_error_print(unsigned long _error = 0) -> std::string;
+/** @brief Tests if an IP address is a multicast address. */
 auto is_multicast_address(std::string const& _ip) -> bool;
 
+/**
+ * @brief Stream buffer backed by a network socket.
+ *
+ * Wraps a TCP, UDP, or Unix domain socket file descriptor as a
+ * std::basic_streambuf, enabling standard C++ stream I/O over sockets.
+ * Supports optional SSL/TLS encryption.
+ *
+ * @tparam Char Character type (typically char or wchar_t).
+ *
+ * @see zpt::basic_socketstream
+ */
 template<typename Char>
 class basic_socketbuf : public std::basic_streambuf<Char> {
   public:
@@ -74,22 +100,36 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     basic_socketbuf();
     virtual ~basic_socketbuf();
 
+    /** @brief Returns the underlying socket file descriptor. */
     auto get_socket() -> int;
+    /** @brief Sets the socket file descriptor and configures socket options. */
     auto set_socket(int _sock) -> void;
+    /** @brief Configures SSL/TLS context and initiates handshake. */
     auto set_context(SSL_CTX* _ctx) -> void;
+    /** @brief Sets the protocol (IPPROTO_TCP, IPPROTO_UDP, or UNIXPROTO_RAW). */
     auto set_protocol(short _protocol) -> void;
 
+    /** @brief Returns the local socket address. */
     auto address() -> zpt::sockaddr_t&;
+    /** @brief Returns the peer socket address (UDP only). */
     auto peer() -> zpt::sockaddr_t&;
+    /** @brief Returns whether SSL is enabled. */
     auto ssl() -> bool&;
+    /** @brief Returns the remote hostname or Unix socket path. */
     auto host() -> std::string&;
+    /** @brief Returns the remote port number. */
     auto port() -> int&;
+    /** @brief Returns the socket protocol. */
     auto protocol() -> short;
+    /** @brief Returns the socket timeout in milliseconds. */
     auto timeout() -> unsigned long long&;
 
+    /** @brief Returns the last error code. */
     auto error_code() -> unsigned int&;
+    /** @brief Returns the last error description. */
     auto error_string() -> std::string&;
 
+    /** @brief Returns true if the socket is in a valid state. */
     virtual auto __good() -> bool;
 
   protected:
@@ -130,6 +170,27 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
 using socketbuf = basic_socketbuf<char>;
 using wsocketbuf = basic_socketbuf<wchar_t>;
 
+/**
+ * @brief iostream wrapper around a network socket.
+ *
+ * Provides bidirectional stream I/O over TCP, UDP, or Unix domain sockets
+ * with optional SSL/TLS encryption. Can connect to remote hosts or wrap
+ * an existing socket file descriptor.
+ *
+ * @tparam Char Character type (typically char or wchar_t).
+ *
+ * @par Example
+ * @code
+ * // TCP connection
+ * zpt::socketstream sock("example.com", 8080, zpt::NO_SSL, IPPROTO_TCP);
+ * sock << "GET / HTTP/1.1\r\n\r\n" << std::flush;
+ *
+ * // Unix domain socket
+ * zpt::socketstream unix_sock("/var/run/app.sock");
+ * @endcode
+ *
+ * @see zpt::basic_serversocketstream
+ */
 template<typename Char>
 class basic_socketstream : public std::basic_iostream<Char> {
   public:
@@ -137,11 +198,17 @@ class basic_socketstream : public std::basic_iostream<Char> {
     using __stream_type = std::basic_iostream<__char_type>;
     using __buf_type = basic_socketbuf<__char_type>;
 
+    /** @brief Default constructor (unconnected). */
     basic_socketstream();
+    /** @brief Wraps an existing TCP socket with address info. */
     basic_socketstream(int s, zpt::sockaddrin_t& _address, bool _ssl, short _protocol);
+    /** @brief Connects to a remote host. */
     basic_socketstream(std::string const& _host, std::uint16_t _port, bool _ssl, short _protocol);
+    /** @brief Creates a UDP client socket. */
     basic_socketstream(bool _ssl, short _protocol);
+    /** @brief Wraps an existing Unix domain socket. */
     basic_socketstream(int s, zpt::sockaddrun_t& _address);
+    /** @brief Connects to a Unix domain socket by path. */
     basic_socketstream(std::string const& _path);
     basic_socketstream(const basic_socketstream&) = delete;
     basic_socketstream(basic_socketstream&&) = delete;
@@ -150,33 +217,63 @@ class basic_socketstream : public std::basic_iostream<Char> {
     auto operator=(const basic_socketstream&) -> basic_socketstream& = delete;
     auto operator=(basic_socketstream&&) -> basic_socketstream& = delete;
 
+    /** @brief Returns the socket file descriptor. */
     operator int();
+    /** @brief Returns a URI representation (e.g., "tcp://host:port"). */
     operator std::string();
 
+    /** @brief Sets the peer address for UDP communication. */
     auto set_peer(std::string const& address, int port) -> void;
 
+    /** @brief Returns whether SSL is enabled. */
     auto ssl() -> bool&;
+    /** @brief Returns the remote hostname. */
     auto host() -> std::string&;
+    /** @brief Returns the remote port. */
     auto port() -> int&;
+    /** @brief Returns the socket protocol. */
     auto protocol() -> short;
 
+    /** @brief Assigns a raw socket file descriptor (no SSL). */
     auto assign(int _sockfd) -> void;
+    /** @brief Assigns a raw socket file descriptor with SSL context. */
     auto assign(int _sockfd, SSL_CTX* _ctx) -> void;
+    /** @brief Detaches from the current socket. */
     auto unassign() -> void;
 
+    /** @brief Closes the socket connection. */
     auto close() -> void;
+    /** @brief Returns true if the socket is open and valid. */
     auto is_open() -> bool;
+    /** @brief Returns true if data is available for reading. */
     auto ready() -> bool;
 
+    /** @brief Returns the underlying stream buffer. */
     auto buffer() -> __buf_type&;
+    /** @brief Returns true if an error has occurred. */
     auto is_error() -> bool;
+    /** @brief Returns the last error code. */
     auto error_code() -> unsigned int&;
+    /** @brief Returns the last error description. */
     auto error_string() -> std::string&;
 
+    /**
+     * @brief Opens a TCP/UDP connection to a remote host.
+     * @param _host Hostname or IP address.
+     * @param _port Port number.
+     * @param _ssl Whether to use SSL/TLS.
+     * @param _protocol IPPROTO_TCP or IPPROTO_UDP.
+     * @return True on success.
+     */
     auto open(std::string const& _host,
               std::uint16_t _port,
               bool _ssl = false,
               short _protocol = IPPROTO_TCP) -> bool;
+    /**
+     * @brief Opens a Unix domain socket connection.
+     * @param _path Filesystem path to the socket.
+     * @return True on success.
+     */
     auto open(std::string const& _path) -> bool;
 
   protected:
@@ -195,19 +292,59 @@ class basic_socketstream : public std::basic_iostream<Char> {
 using socketstream = zpt::basic_socketstream<char>;
 using wsocketstream = zpt::basic_socketstream<wchar_t>;
 
+/**
+ * @brief Server-side socket that listens for incoming connections.
+ *
+ * Binds to a TCP port or Unix domain socket path and accepts incoming
+ * client connections, returning them as zpt::stream instances.
+ *
+ * @tparam Char Character type (typically char or wchar_t).
+ *
+ * @par Example
+ * @code
+ * zpt::serversocketstream server(8080);
+ * while (server->is_open()) {
+ *     auto client = server->accept();
+ *     // Handle client connection...
+ * }
+ * @endcode
+ *
+ * @see zpt::basic_socketstream
+ */
 template<typename Char>
 class basic_serversocketstream {
   public:
+    /** @brief Default constructor (unbound). */
     basic_serversocketstream();
+    /** @brief Binds to a TCP port. */
     basic_serversocketstream(std::uint16_t _port);
+    /** @brief Binds to a Unix domain socket path. */
     basic_serversocketstream(std::string const& _path);
     virtual ~basic_serversocketstream();
 
+    /** @brief Closes the server socket. */
     auto close() -> void;
+    /** @brief Returns true if the server socket is open. */
     auto is_open() -> bool;
+    /** @brief Returns true if a connection is pending. */
     auto ready() -> bool;
+    /**
+     * @brief Binds to a TCP port and starts listening.
+     * @param _port Port number to bind to.
+     * @return True on success.
+     */
     auto bind(std::uint16_t _port) -> bool;
+    /**
+     * @brief Binds to a Unix domain socket path and starts listening.
+     * @param _path Filesystem path for the socket.
+     * @return True on success.
+     */
     auto bind(std::string const& _path) -> bool;
+    /**
+     * @brief Accepts an incoming connection.
+     * @return Stream wrapping the new client connection.
+     * @throws zpt::ClosedException If the server socket is closed.
+     */
     auto accept() -> zpt::stream;
 
   protected:
@@ -217,10 +354,18 @@ class basic_serversocketstream {
     std::uint16_t __port{ 0 };
 };
 
+/**
+ * @brief Shared-pointer wrapper for basic_serversocketstream<char>.
+ *
+ * Provides copyable/movable semantics for server sockets via
+ * internal shared_ptr ownership.
+ */
 class serversocketstream {
   public:
     serversocketstream();
+    /** @brief Binds to a TCP port. */
     serversocketstream(std::uint16_t _port);
+    /** @brief Binds to a Unix domain socket path. */
     serversocketstream(std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
     serversocketstream(serversocketstream&& _rhs);
@@ -229,17 +374,26 @@ class serversocketstream {
     auto operator=(const zpt::serversocketstream& _rhs) -> zpt::serversocketstream&;
     auto operator=(zpt::serversocketstream&& _rhs) -> zpt::serversocketstream&;
 
+    /** @brief Access the underlying server socket. */
     auto operator->() -> zpt::basic_serversocketstream<char>*;
+    /** @brief Dereference the underlying server socket. */
     auto operator*() -> zpt::basic_serversocketstream<char>&;
 
   private:
     std::shared_ptr<zpt::basic_serversocketstream<char>> __underlying;
 };
 
+/**
+ * @brief Shared-pointer wrapper for basic_serversocketstream<wchar_t>.
+ *
+ * Wide-character variant of serversocketstream.
+ */
 class wserversocketstream {
   public:
     wserversocketstream();
+    /** @brief Binds to a TCP port. */
     wserversocketstream(std::uint16_t _port);
+    /** @brief Binds to a Unix domain socket path. */
     wserversocketstream(std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
     wserversocketstream(zpt::wserversocketstream&& _rhs);
@@ -248,7 +402,9 @@ class wserversocketstream {
     auto operator=(const zpt::wserversocketstream& _rhs) -> zpt::wserversocketstream&;
     auto operator=(zpt::wserversocketstream&& _rhs) -> zpt::wserversocketstream&;
 
+    /** @brief Access the underlying server socket. */
     auto operator->() -> zpt::basic_serversocketstream<wchar_t>*;
+    /** @brief Dereference the underlying server socket. */
     auto operator*() -> zpt::basic_serversocketstream<wchar_t>&;
 
   private:
