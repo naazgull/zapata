@@ -256,8 +256,7 @@ auto zpt::make_connection(Args&... _args) -> zpt::storage::connection {
 
 template<typename T, typename... Args>
 auto zpt::make_session(Args&... _args) -> zpt::storage::session {
-    static thread_local zpt::storage::session _to_return{ new T{ _args... } };
-    return _to_return;
+    return zpt::storage::session{ new T{ _args... } };
 }
 
 template<typename T, typename... Args>
