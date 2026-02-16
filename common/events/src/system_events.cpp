@@ -1,6 +1,6 @@
 #include <zapata/events/system_events.h>
 
-zpt::system_event::system_event(zpt::message _received)
+zpt::system_event::system_event(zpt::message _received, zpt::call_context::ptr)
   : __received{ _received } {}
 
 zpt::system_event::system_event(zpt::system_event_type _type, zpt::json const& _data)
@@ -46,8 +46,9 @@ auto zpt::system_events::resolver_t::add(zpt::json const&) -> resolver_t& {
     return (*this);
 }
 
-auto zpt::system_events::resolver_t::add(zpt::message, zpt::events::resolver_callback)
-  -> resolver_t& {
+auto zpt::system_events::resolver_t::add(zpt::message,
+                                         zpt::call_context::ptr,
+                                         zpt::events::resolver_callback) -> resolver_t& {
     expect(false, "Not implemented for `zpt::system_events`");
     return (*this);
 }
@@ -81,7 +82,7 @@ auto zpt::system_events::resolver_t::resolve(zpt::message _received,
     auto _per_id = this->__callbacks.find(static_cast<zpt::system_event_type>(_type));
     if (_per_id != this->__callbacks.end()) {
         for (auto [_, _callback] : _per_id->second) {
-            _return.push_back(_callback(_received, _initializer));
+            _return.push_back(_callback(_received, nullptr, _initializer));
         }
     }
 

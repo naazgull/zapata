@@ -30,8 +30,8 @@
 
 class test_client_service : public zpt::events::process {
   public:
-    test_client_service(zpt::message _received)
-      : zpt::events::process{ _received } {}
+    test_client_service(zpt::message _received, zpt::call_context::ptr _context)
+      : zpt::events::process{ _received, _context } {}
     ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }
@@ -44,8 +44,8 @@ class test_client_service : public zpt::events::process {
 
 class test_client_boot : public zpt::system_event {
   public:
-    test_client_boot(zpt::message _received)
-      : zpt::system_event{ _received } {}
+    test_client_boot(zpt::message _received, zpt::call_context::ptr _context)
+      : zpt::system_event{ _received, _context } {}
     ~test_client_boot() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
@@ -63,10 +63,7 @@ class test_client_boot : public zpt::system_event {
                 "from", "client", "date", zpt::json::date(), "id", zpt::generate::r_uuid()
             };
 
-            zpt::TRANSPORT_ENGINE() //
-              .dispatcher()
-              ->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(),
-                                                                _test_message);
+            zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 
             zpt::SYSTEM_EVENTS_RESOLVER() //
               ->remove<test_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);

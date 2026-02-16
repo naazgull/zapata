@@ -23,15 +23,17 @@
 #include <zapata/rest/pending_messages.h>
 
 auto zpt::rest::pending_messages::push(zpt::message _sent,
+                                       zpt::call_context::ptr _context,
                                        zpt::events::resolver_callback _reply_callback)
   -> pending_messages& {
     std::unique_lock _guard{ this->__pending_mutex };
-    this->__pending.insert(
-      std::make_pair(_sent->headers()("X-Conversation-ID")->string(), _reply_callback));
+    this->__pending.insert(std::make_pair(_sent->headers()("X-Conversation-ID")->string(),
+                                          std::make_tuple(_context, _reply_callback)));
     return (*this);
 }
 
-auto zpt::rest::pending_messages::pop(zpt::message _received) -> zpt::events::resolver_callback {
+auto zpt::rest::pending_messages::pop(zpt::message _received)
+  -> std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback> {
     std::unique_lock _guard{ this->__pending_mutex };
     auto _found = this->__pending.find(_received->headers()("X-Conversation-ID")->string());
     expect(_found != this->__pending.end(), "No pending message found");

@@ -68,6 +68,29 @@ class basic_message {
 };
 using message = std::shared_ptr<basic_message>;
 
+constexpr int CALL_STATE_UNPROCESSED = 0;
+constexpr int CALL_STATE_SENT = 1;
+constexpr int CALL_STATE_SUCCESS_REPLY = 2;
+constexpr int CALL_STATE_FAILURE_REPLY = 3;
+
+class call_context {
+  public:
+    using ptr = std::shared_ptr<call_context>;
+
+    call_context() = default;
+    ~call_context() = default;
+
+    auto state() const -> int;
+    auto reply() const -> zpt::message;
+    auto reply(zpt::message _to_update) -> call_context&;
+    auto is_replied() const -> bool;
+    auto has_error() const -> bool;
+
+  private:
+    zpt::padded_atomic<int> __state{ zpt::CALL_STATE_SENT };
+    zpt::message __reply{ nullptr };
+};
+
 class json_message : public basic_message {
   public:
     json_message();

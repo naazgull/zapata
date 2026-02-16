@@ -21,7 +21,7 @@ enum system_event_type : long long {
 class system_event {
   public:
     system_event() = default;
-    system_event(zpt::message _received);
+    system_event(zpt::message _received, zpt::call_context::ptr _context = nullptr);
     system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
     ~system_event() = default;
 
@@ -56,7 +56,9 @@ class resolver_t : public zpt::events::resolver_t {
     template<zpt::events::Operation T>
     auto add(zpt::system_event_type _type) -> resolver_t&;
     auto add(zpt::json const& _service_description) -> resolver_t& override;
-    auto add(zpt::message _sent, zpt::events::resolver_callback callback) -> resolver_t& override;
+    auto add(zpt::message _sent,
+             zpt::call_context::ptr _context,
+             zpt::events::resolver_callback callback) -> resolver_t& override;
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,

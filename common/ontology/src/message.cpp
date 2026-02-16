@@ -23,6 +23,25 @@
 #include <zapata/ontology/message.h>
 #include <zapata/uri/uri.h>
 
+auto zpt::call_context::state() const -> int { return this->__state->load(); }
+
+auto zpt::call_context::reply() const -> zpt::message { return this->__reply; }
+
+auto zpt::call_context::reply(zpt::message _to_update) -> call_context& {
+    this->__reply = _to_update;
+    this->__state->store(_to_update->status() < 300 ? zpt::CALL_STATE_SUCCESS_REPLY
+                                                    : zpt::CALL_STATE_FAILURE_REPLY);
+    return (*this);
+}
+
+auto zpt::call_context::is_replied() const -> bool {
+    return this->__state->load() > zpt::CALL_STATE_SENT;
+}
+
+auto zpt::call_context::has_error() const -> bool {
+    return this->__state->load() == zpt::CALL_STATE_FAILURE_REPLY;
+}
+
 zpt::json_message::json_message()
   : __underlying{ zpt::json::object() } {
     auto _rawtime = time(nullptr);

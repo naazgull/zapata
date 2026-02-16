@@ -160,8 +160,9 @@ auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events:
     return zpt::events::finish;
 }
 
-zpt::events::process::process(zpt::message _received)
-  : __received{ _received } {}
+zpt::events::process::process(zpt::message _received, zpt::call_context::ptr _context)
+  : __received{ _received }
+  , __context{ _context } {}
 
 zpt::events::process::~process() {
 #ifndef PROPAGATE_EXCEPTION
@@ -198,6 +199,8 @@ zpt::events::process::~process() {
 auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
+
+auto zpt::events::process::context() -> zpt::call_context::ptr { return this->__context; }
 
 auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
@@ -320,31 +323,12 @@ auto zpt::transports::engine::shutdown() -> zpt::transports::engine& {
 }
 
 zpt::events::discard::discard(zpt::message _received)
-  : zpt::events::process{ _received } {}
+  : zpt::events::process{ _received, nullptr } {}
 
 auto zpt::events::discard::blocked() const -> bool { return false; }
 
 auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     return zpt::events::finish;
-}
-
-auto zpt::events::call_context::state() const -> int { return this->__state->load(); }
-
-auto zpt::events::call_context::reply() const -> zpt::message { return this->__reply; }
-
-auto zpt::events::call_context::reply(zpt::message _to_update) -> call_context& {
-    this->__reply = _to_update;
-    this->__state->store(_to_update->status() < 300 ? zpt::events::CALL_STATE_SUCCESS_REPLY
-                                                    : zpt::events::CALL_STATE_FAILURE_REPLY);
-    return (*this);
-}
-
-auto zpt::events::call_context::is_replied() const -> bool {
-    return this->__state->load() > zpt::events::CALL_STATE_SENT;
-}
-
-auto zpt::events::call_context::has_error() const -> bool {
-    return this->__state->load() == zpt::events::CALL_STATE_FAILURE_REPLY;
 }
 
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {

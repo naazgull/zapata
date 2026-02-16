@@ -7,7 +7,8 @@
 namespace zpt {
 namespace events {
 using initializer_t = std::function<void(zpt::event _event)>;
-using resolver_callback = std::function<zpt::event(zpt::message, zpt::events::initializer_t)>;
+using resolver_callback =
+  std::function<zpt::event(zpt::message, zpt::call_context::ptr, zpt::events::initializer_t)>;
 class resolver_t {
   public:
     resolver_t() = default;
@@ -20,8 +21,9 @@ class resolver_t {
              zpt::json const& _id,
              zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
     virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
-    virtual auto add(zpt::message _sent, zpt::events::resolver_callback callback)
-      -> resolver_t& = 0;
+    virtual auto add(zpt::message _sent,
+                     zpt::call_context::ptr _context,
+                     zpt::events::resolver_callback callback) -> resolver_t& = 0;
     virtual auto add(zpt::performative _performtive,
                      zpt::json const& _id,
                      zpt::json const& _metadata,
@@ -45,14 +47,17 @@ class resolver_t {
 using resolver = std::shared_ptr<resolver_t>;
 
 template<zpt::events::Operation T>
-auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer) -> zpt::event;
+auto make_callback(zpt::message _received,
+                   zpt::call_context::ptr _context,
+                   zpt::events::initializer_t _initializer) -> zpt::event;
 } // namespace events
 } // namespace zpt
 
 template<zpt::events::Operation T>
-auto zpt::events::make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
-  -> zpt::event {
-    auto _event = zpt::make_event<T>(_received);
+auto zpt::events::make_callback(zpt::message _received,
+                                zpt::call_context::ptr _context,
+                                zpt::events::initializer_t _initializer) -> zpt::event {
+    auto _event = zpt::make_event<T>(_received, _context);
     _initializer(_event);
     return _event;
 }

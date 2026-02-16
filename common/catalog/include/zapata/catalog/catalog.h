@@ -28,7 +28,6 @@
 #include <zapata/sqlite.h>
 
 namespace {
-static constexpr char const* ASTERISK_STMT = "(_id = '*')";
 static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
 static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
 static constexpr char const* SEARCH_WITH_PROVIDER_STMT =
@@ -170,13 +169,6 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
     zpt::json _result = zpt::json::array();
     zpt::json _prefixes{ zpt::array, "" };
 
-    _result += this
-                 ->__catalog //
-                 ->find(ASTERISK_STMT)
-                 ->fields({ zpt::array, "hash" })
-                 ->execute()
-                 ->fetch();
-
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
             for (auto [_, __, _prefix] : _prefixes) {
@@ -256,12 +248,6 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
     else {
         _search = SEARCH_STMT;
         _exact_search = EXACT_SEARCH_STMT;
-        _result += this
-                     ->__catalog //
-                     ->find(ASTERISK_STMT)
-                     ->fields({ zpt::array, "hash" })
-                     ->execute()
-                     ->fetch();
     }
 
     for (auto const& [_idx, __, _part] : _parts) {
