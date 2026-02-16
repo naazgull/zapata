@@ -32,7 +32,7 @@ auto report_error(T const& _e,
     }
 
     _stream->state() = zpt::stream_state::ERRORING_OUT;
-    auto _reply = _transport->make_reply(true);
+    auto _reply = _transport->make_reply(false);
     _reply->status(500);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::get_error_body(_e);
