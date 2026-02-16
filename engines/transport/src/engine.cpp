@@ -331,6 +331,23 @@ auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::even
     return zpt::events::finish;
 }
 
+zpt::events::process_call_reply::process_call_reply(zpt::message _received,
+                                                    zpt::call_context::ptr _context)
+  : zpt::events::process{ _received, _context } {}
+
+auto zpt::events::process_call_reply::blocked() const -> bool { return false; }
+
+auto zpt::events::process_call_reply::operator()(zpt::events::dispatcher::ptr _dispatcher
+                                                 [[maybe_unused]]) -> zpt::events::state {
+    switch (this->received()->performative()) {
+        case zpt::Reply: {
+            this->context()->reply(this->received());
+            break;
+        }
+    }
+    return zpt::events::finish;
+}
+
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {
     static zpt::transports::engine _global{ _config };
     return _global;

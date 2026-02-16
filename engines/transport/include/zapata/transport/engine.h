@@ -166,11 +166,19 @@ class call {
     auto call_internally() -> call&;
     auto send_externally() -> call&;
 };
+
+class process_call_reply : public zpt::events::process {
+  public:
+    process_call_reply(zpt::message _received, zpt::call_context::ptr _context);
+    ~process_call_reply() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
 } // namespace events
 
 auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 
-template<ProcessOperation T>
+template<ProcessOperation T = zpt::events::process_call_reply>
 auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
 } // namespace zpt
 
