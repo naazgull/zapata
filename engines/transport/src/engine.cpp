@@ -191,6 +191,7 @@ zpt::events::process::~process() {
 #endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
+        zlog(this->__to_send, zpt::warning);
         if (this->__to_send->status() != 100) {
             if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
                  this->__received->performative() != zpt::Reply) ||
