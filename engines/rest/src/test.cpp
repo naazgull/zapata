@@ -37,7 +37,7 @@ class echo : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
-        zlog("Received request: " << this->received(), zpt::info);
+        zlog("Received request:\n" << this->received(), zpt::debug);
         this
           ->to_send() //
           ->status(100);
@@ -72,7 +72,7 @@ class test_client_service : public zpt::events::process {
     auto blocked() const -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
+        zlog("Received response:\n" << zpt::pretty{ this->received()->body() }, zpt::debug);
         return zpt::events::finish;
     }
 };

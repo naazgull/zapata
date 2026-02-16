@@ -30,31 +30,12 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 
     _stream->state() = zpt::stream_state::ERRORING_OUT;
     auto _reply = _transport->make_reply(false);
-    _reply->status(500);
-    _reply->headers()["Content-Type"] = "application/json";
-    _reply->body() = ::get_error_body(_e);
+    _reply //
+      ->status(500)
+      .body() = ::get_error_body(_e);
     return _reply;
 }
 } // namespace
-
-auto zpt::events::call_context::state() const -> int { return this->__state->load(); }
-
-auto zpt::events::call_context::reply() const -> zpt::message { return this->__reply; }
-
-auto zpt::events::call_context::reply(zpt::message _to_update) -> call_context& {
-    this->__reply = _to_update;
-    this->__state->store(_to_update->status() < 300 ? zpt::events::CALL_STATE_SUCCESS_REPLY
-                                                    : zpt::events::CALL_STATE_FAILURE_REPLY);
-    return (*this);
-}
-
-auto zpt::events::call_context::is_replied() const -> bool {
-    return this->__state->load() > zpt::events::CALL_STATE_SENT;
-}
-
-auto zpt::events::call_context::has_error() const -> bool {
-    return this->__state->load() == zpt::events::CALL_STATE_FAILURE_REPLY;
-}
 
 zpt::events::receive::receive(zpt::transports::engine& _engine,
                               zpt::polling::ptr _polling,
@@ -125,7 +106,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                       this->__polling, this->__stream, _to_send);
                 }
                 else {
-                    zlog("Couldn't find a callback for '" << _received << "'", zpt::error);
+                    zlog("Couldn't find a callback for '" << _received->uri() << "'", zpt::error);
                     this->__polling->unmute(this->__stream);
                 }
             }
@@ -197,7 +178,6 @@ zpt::events::process::~process() {
                 }
                 if (this->__to_send->status() == 0) { this->__to_send->status(204); }
 
-                zlog("SENDING " << this->__to_send, zpt::info);
                 this->__dispatcher->trigger<zpt::events::send>(
                   this->__polling, this->__stream, this->__to_send);
                 return;
@@ -233,21 +213,36 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
 auto zpt::events::process::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)
   -> bool {
     auto _reply = ::report_error(_e, this->__stream, this->__polling);
-    if (_reply != nullptr) { this->__to_send = _reply; }
+    if (_reply != nullptr) {
+        this
+          ->__to_send //
+          ->status(_reply->status())
+          .body() = _reply->body();
+    }
     return true;
 }
 
 auto zpt::events::process::catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr)
   -> bool {
     auto _reply = ::report_error(_e, this->__stream, this->__polling);
-    if (_reply != nullptr) { this->__to_send = _reply; }
+    if (_reply != nullptr) {
+        this
+          ->__to_send //
+          ->status(_reply->status())
+          .body() = _reply->body();
+    }
     return true;
 }
 
 auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr) -> bool {
     auto _reply = ::report_error(_e, this->__stream, this->__polling);
-    if (_reply != nullptr) { this->__to_send = _reply; }
+    if (_reply != nullptr) {
+        this
+          ->__to_send //
+          ->status(_reply->status())
+          .body() = _reply->body();
+    }
     return true;
 }
 
@@ -331,6 +326,25 @@ auto zpt::events::discard::blocked() const -> bool { return false; }
 
 auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     return zpt::events::finish;
+}
+
+auto zpt::events::call_context::state() const -> int { return this->__state->load(); }
+
+auto zpt::events::call_context::reply() const -> zpt::message { return this->__reply; }
+
+auto zpt::events::call_context::reply(zpt::message _to_update) -> call_context& {
+    this->__reply = _to_update;
+    this->__state->store(_to_update->status() < 300 ? zpt::events::CALL_STATE_SUCCESS_REPLY
+                                                    : zpt::events::CALL_STATE_FAILURE_REPLY);
+    return (*this);
+}
+
+auto zpt::events::call_context::is_replied() const -> bool {
+    return this->__state->load() > zpt::events::CALL_STATE_SENT;
+}
+
+auto zpt::events::call_context::has_error() const -> bool {
+    return this->__state->load() == zpt::events::CALL_STATE_FAILURE_REPLY;
 }
 
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {
