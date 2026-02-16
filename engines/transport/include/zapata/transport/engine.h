@@ -116,7 +116,6 @@ class process {
     zpt::stream __stream;
     zpt::message __received{ nullptr };
     zpt::message __to_send{ nullptr };
-    bool __error_sent{ false };
 };
 } // namespace events
 } // namespace zpt

@@ -17,7 +17,7 @@ template<typename T>
 auto report_error(T const& _e,
                   zpt::stream _stream,
                   zpt::polling::ptr _polling,
-                  zpt::events::dispatcher::ptr _dispatcher) -> bool {
+                  zpt::events::dispatcher::ptr _dispatcher) -> zpt::message {
 #ifdef PROPAGATE_EXCEPTION
     throw _e;
 #endif
@@ -28,7 +28,7 @@ auto report_error(T const& _e,
         _polling->is_in_shutdown() || _dispatcher->is_in_shutdown()) {
         _polling->unmute(_stream);
         zlog(_e.what(), zpt::error);
-        return false;
+        return nullptr;
     }
 
     _stream->state() = zpt::stream_state::ERRORING_OUT;
@@ -36,8 +36,7 @@ auto report_error(T const& _e,
     _reply->status(500);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::get_error_body(_e);
-    _dispatcher->trigger<zpt::events::send>(_polling, _stream, _reply);
-    return true;
+    return _reply;
 }
 } // namespace
 
@@ -75,19 +74,28 @@ auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) {
+        _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _reply);
+    }
     return true;
 }
 
 auto zpt::events::receive::catch_error(std::bad_alloc const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) {
+        _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _reply);
+    }
     return true;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) {
+        _dispatcher->trigger<zpt::events::send>(this->__polling, this->__stream, _reply);
+    }
     return true;
 }
 
@@ -178,8 +186,6 @@ zpt::events::process::process(zpt::message _received)
   : __received{ _received } {}
 
 zpt::events::process::~process() {
-    if (this->__error_sent) { return; }
-
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
@@ -228,19 +234,22 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
 
 auto zpt::events::process::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    this->__error_sent = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) { this->__to_send = _reply; }
     return true;
 }
 
 auto zpt::events::process::catch_error(std::bad_alloc const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    this->__error_sent = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) { this->__to_send = _reply; }
     return true;
 }
 
 auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    this->__error_sent = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    auto _reply = ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    if (_reply != nullptr) { this->__to_send = _reply; }
     return true;
 }
 
