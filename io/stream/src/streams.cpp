@@ -193,7 +193,7 @@ auto zpt::polling::poll() -> zpt::polling& {
         for (auto _k = 0; _k != _n_alive; ++_k) {
             auto _stream =
               std::move(static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream);
-            // zlog("Processing STREAM " << *_stream, zpt::info);
+            zlog("Processing STREAM " << *_stream, zpt::info);
             delete static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr);
 
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
