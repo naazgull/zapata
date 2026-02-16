@@ -14,8 +14,7 @@ auto get_error_body(T const& _e) -> zpt::json {
 }
 
 template<typename T>
-auto report_error(zpt::message _received,
-                  T const& _e,
+auto report_error(T const& _e,
                   zpt::stream _stream,
                   zpt::polling::ptr _polling,
                   zpt::events::dispatcher::ptr _dispatcher) -> void {
@@ -25,8 +24,7 @@ auto report_error(zpt::message _received,
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
 
-    if (_received == nullptr ||
-        !_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+    if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
         _polling->is_in_shutdown() || _dispatcher->is_in_shutdown()) {
         _polling->unmute(_stream);
         zlog(_e.what(), zpt::error);
@@ -34,7 +32,7 @@ auto report_error(zpt::message _received,
     }
 
     _stream->state() = zpt::stream_state::ERRORING_OUT;
-    auto _reply = _transport->make_reply(_received);
+    auto _reply = _transport->make_reply(true);
     _reply->status(500);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::get_error_body(_e);
@@ -76,19 +74,19 @@ auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(nullptr, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
 auto zpt::events::receive::catch_error(std::bad_alloc const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(nullptr, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(nullptr, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
     return true;
 }
 
@@ -227,19 +225,22 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
 
 auto zpt::events::process::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(this->__received, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    this->__to_send->status(100);
     return true;
 }
 
 auto zpt::events::process::catch_error(std::bad_alloc const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(this->__received, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    this->__to_send->status(100);
     return true;
 }
 
 auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
-    ::report_error(this->__received, _e, this->__stream, this->__polling, _dispatcher);
+    ::report_error(_e, this->__stream, this->__polling, _dispatcher);
+    this->__to_send->status(100);
     return true;
 }
 
@@ -263,10 +264,10 @@ zpt::transports::engine::engine(zpt::json _config)
 #ifndef PROPAGATE_EXCEPTION
           }
           catch (std::bad_alloc const& _e) {
-              ::report_error(nullptr, _e, _stream, _poll, this->__dispatcher);
+              ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
           catch (std::exception const& _e) {
-              ::report_error(nullptr, _e, _stream, _poll, this->__dispatcher);
+              ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
 #endif
           return true;
