@@ -261,9 +261,11 @@ zpt::transports::engine::engine(zpt::json _config)
 #ifndef PROPAGATE_EXCEPTION
           }
           catch (std::bad_alloc const& _e) {
+              zlog(_e.what(), zpt::error);
               ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
           catch (std::exception const& _e) {
+              zlog(_e.what(), zpt::error);
               ::report_error(_e, _stream, _poll, this->__dispatcher);
           }
 #endif
