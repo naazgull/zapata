@@ -191,7 +191,6 @@ zpt::events::process::~process() {
 #endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
-        zlog(this->__to_send, zpt::warning);
         if (this->__to_send->status() != 100) {
             if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
                  this->__received->performative() != zpt::Reply) ||
@@ -205,8 +204,8 @@ zpt::events::process::~process() {
                   this->__polling, this->__stream, this->__to_send);
                 return;
             }
+            this->__polling->unmute(this->__stream);
         }
-        this->__polling->unmute(this->__stream);
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
