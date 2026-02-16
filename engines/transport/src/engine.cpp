@@ -200,12 +200,13 @@ zpt::events::process::~process() {
                 }
                 if (this->__to_send->status() == 0) { this->__to_send->status(204); }
 
+                zlog("SENDING " << this->__to_send, zpt::info);
                 this->__dispatcher->trigger<zpt::events::send>(
                   this->__polling, this->__stream, this->__to_send);
                 return;
             }
-            this->__polling->unmute(this->__stream);
         }
+        this->__polling->unmute(this->__stream);
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
