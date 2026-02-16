@@ -119,7 +119,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                       this->__polling, this->__stream, _to_send);
                 }
                 else {
-                    zlog("Couldn't find a callback for '" << _received->uri() << "'", zpt::error);
+                    zlog("Couldn't find a callback for '" << _received << "'", zpt::error);
                     this->__polling->unmute(this->__stream);
                 }
             }
