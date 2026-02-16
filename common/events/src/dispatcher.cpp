@@ -94,6 +94,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         }
     }
     catch (std::exception const& _e) {
+        zlog("Uncaught exception found: " << _e.what(), zpt::error);
         if (!_event->catch_error(_e, this->shared_from_this())) {
             zlog("Uncaught exception found: " << _e.what(), zpt::error);
         }
