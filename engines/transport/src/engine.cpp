@@ -177,6 +177,8 @@ zpt::events::process::process(zpt::message _received)
   : __received{ _received } {}
 
 zpt::events::process::~process() {
+    if (this->__error_sent) { return; }
+
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
@@ -226,21 +228,21 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
 auto zpt::events::process::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
     ::report_error(_e, this->__stream, this->__polling, _dispatcher);
-    this->__to_send->status(100);
+    this->__error_sent = true;
     return true;
 }
 
 auto zpt::events::process::catch_error(std::bad_alloc const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
     ::report_error(_e, this->__stream, this->__polling, _dispatcher);
-    this->__to_send->status(100);
+    this->__error_sent = true;
     return true;
 }
 
 auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
     ::report_error(_e, this->__stream, this->__polling, _dispatcher);
-    this->__to_send->status(100);
+    this->__error_sent = true;
     return true;
 }
 
