@@ -384,7 +384,9 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                                            "public zpt::events::process");
         auto _h_constructor =
           zpt::make_function<zpt::ast::cpp_function>(_def("*")("operationId")->string(), "");
-        _h_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
+        _h_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -420,9 +422,11 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
-        _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
-        auto _cpp_constructor_body =
-          zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
+        _cpp_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
+          ": zpt::events::process{ _received, _context }");
         _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
         _cpp_constructor->add(_cpp_constructor_body);
         _cpp_file->add(_cpp_constructor);
@@ -483,7 +487,9 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
                                                            "public zpt::events::process");
         auto _h_constructor =
           zpt::make_function<zpt::ast::cpp_function>(_def("post")("operationId")->string(), "");
-        _h_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
+        _h_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -517,9 +523,11 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}{}", _class_method_prefix, _def("post")("operationId")->string()), "");
-        _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
-        auto _cpp_constructor_body =
-          zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
+        _cpp_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
+          ": zpt::events::process{ _received, _context }");
         _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
         _cpp_constructor->add(_cpp_constructor_body);
         _cpp_file->add(_cpp_constructor);
@@ -570,7 +578,9 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
                                                            "public zpt::events::process");
         auto _h_constructor =
           zpt::make_function<zpt::ast::cpp_function>(_def("*")("operationId")->string(), "");
-        _h_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
+        _h_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -606,9 +616,11 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
 
         auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
-        _cpp_constructor->add<zpt::ast::cpp_variable>("_received", "zpt::message");
-        auto _cpp_constructor_body =
-          zpt::make_code_block<zpt::ast::cpp_code_block>(": zpt::events::process{ _received }");
+        _cpp_constructor //
+          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
+          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
+          ": zpt::events::process{ _received, _context }");
         _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
         _cpp_constructor->add(_cpp_constructor_body);
         _cpp_file->add(_cpp_constructor);
