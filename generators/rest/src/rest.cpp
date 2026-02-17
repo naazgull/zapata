@@ -377,16 +377,20 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST);
+        auto _retrieve_element =
+          zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
+        _retrieve_element->add<zpt::ast::cpp_variable>("_id", "std:string const&");
+        _class->add(_retrieve_element, zpt::ast::PUBLIC)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "update_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_element", "zpt::events::state");
-        _namespace->add(_class);
-
         auto _h_operator =
           zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
+
+        _namespace->add(_class);
     }
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
@@ -410,6 +414,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         _cpp_blocked->add(_cpp_blocked_body);
         _cpp_file->add(_cpp_blocked);
 
+        this->generate_retrieve_element(_cpp_file, _def, _path);
         this->generate_update_element(_cpp_file, _def, _path);
         this->generate_get_element(_cpp_file, _def, _path);
         this->generate_remove_element(_cpp_file, _def, _path);
@@ -733,6 +738,37 @@ auto zpt::gen::rest::unit::generate_remove_elements(std::shared_ptr<zpt::ast::ba
     _cpp_file->add(_method);
 }
 
+auto zpt::gen::rest::unit::generate_retrieve_element(
+  std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+  zpt::json _def,
+  zpt::json) -> void {
+    auto _class_method_prefix =
+      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+
+    auto _method = zpt::make_function<zpt::ast::cpp_function>(
+      std::format("{}retrieve_element", _class_method_prefix), "zpt::json");
+    _method->add<zpt::ast::cpp_variable>("_id", "std:string const&");
+    auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+    this->add_db_configuration(_method_body, _def);
+
+    _method_body //
+      ->add<zpt::ast::cpp_instruction>(
+        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
+        "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
+    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
+    _if_block //
+      ->add<zpt::ast::cpp_instruction>("return _result(0)");
+    _method_body->add(_if_block);
+
+    _method_body->add<zpt::ast::cpp_instruction>("return zpt::undefined");
+
+    _method->add(_method_body);
+    _cpp_file->add(_method);
+}
+
 auto zpt::gen::rest::unit::generate_update_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
                                                    zpt::json _def,
                                                    zpt::json _path) -> void {
@@ -758,7 +794,7 @@ auto zpt::gen::rest::unit::generate_update_element(std::shared_ptr<zpt::ast::bas
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(202).body() = { \"updated_count\", _result }");
+        "this //\n->to_send()->status(202).body() = this->retrieve_element(_id)");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
     _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
@@ -787,22 +823,16 @@ auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}get_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-    this->add_db_configuration(_method_body, _def);
     _method_body //
       ->add<zpt::ast::cpp_instruction>("auto _params = this->received()->parameters()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
-      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
-        "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
+      ->add<zpt::ast::cpp_instruction>("auto _result = this->retrieve_element(_id)");
+    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result(0)");
+      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
     _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");

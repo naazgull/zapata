@@ -84,6 +84,9 @@ class unit {
     auto generate_remove_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
                                   zpt::json _def,
                                   zpt::json _path) -> void;
+    auto generate_retrieve_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+                                   zpt::json _def,
+                                   zpt::json _path) -> void;
     auto generate_update_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
                                  zpt::json _def,
                                  zpt::json _path) -> void;
