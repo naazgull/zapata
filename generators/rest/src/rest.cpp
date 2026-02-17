@@ -387,8 +387,8 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         _class->add(_h_operator, zpt::ast::PUBLIC);
         auto _retrieve_element =
           zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
-        _retrieve_element->add<zpt::ast::cpp_variable>("_id", "std:string const&")
-          .add<zpt::ast::cpp_variable>("_params", "zpt::json = zpt::undefined");
+        _retrieve_element->add<zpt::ast::cpp_variable>("_id", "std::string const&")
+          .add<zpt::ast::cpp_variable>("_params = zpt::undefined", "zpt::json");
         _class->add(_retrieve_element, zpt::ast::PRIVATE);
 
         _namespace->add(_class);
@@ -446,10 +446,9 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
             "DELETE allowed to use with a document\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
+        _cpp_file->add(_cpp_operator);
 
         this->generate_retrieve_element(_cpp_file, _def, _path);
-
-        _cpp_file->add(_cpp_operator);
     }
     return _h_file;
 }
@@ -750,7 +749,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}retrieve_element", _class_method_prefix), "zpt::json");
-    _method->add<zpt::ast::cpp_variable>("_id", "std:string const&")
+    _method->add<zpt::ast::cpp_variable>("_id", "std::string const&")
       .add<zpt::ast::cpp_variable>("_params", "zpt::json");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
