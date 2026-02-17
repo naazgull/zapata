@@ -58,7 +58,17 @@ class test_redirect : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
         if (this->context() == nullptr) {
-            this->context() = zpt::make_call(zpt::REST_RESOLVER(), this->received());
+            auto _config = zpt::GLOBAL_CONFIG();
+            auto _prefix =
+              _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+            auto _test_message = zpt::TRANSPORT_LAYER() //
+                                   .get("tcp")
+                                   ->make_request();
+            _test_message //
+              ->performative(zpt::Post)
+              .uri(std::format("{}/test_plugin", _prefix))
+              .body() = this->received()->body();
+            this->context(zpt::make_call(zpt::REST_RESOLVER(), _test_message));
         }
         else if (this->context()->is_replied()) {
             this
@@ -92,7 +102,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver //
       ->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
-      .add<test_plugin_collection>(std::format("{}/test_redirect", _prefix));
+      .add<test_redirect>(std::format("{}/test_redirect", _prefix));
 
     auto _test_message = zpt::TRANSPORT_LAYER() //
                            .get("tcp")
@@ -120,5 +130,5 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver //
       ->remove<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
-      .remove<test_plugin_collection>(std::format("{}/test_redirect", _prefix));
+      .remove<test_redirect>(std::format("{}/test_redirect", _prefix));
 }
