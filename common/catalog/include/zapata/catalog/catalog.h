@@ -221,9 +221,7 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
                 }
             }
 
-            if (_matching->size() == 0) {
-                continue;
-            }
+            if (_matching->size() == 0) { continue; }
             _prefixes = _matching;
         }
     }

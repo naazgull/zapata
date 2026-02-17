@@ -877,7 +877,10 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
-    auto _sd = ::socket(AF_INET, SOCK_STREAM, 0);
+    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
+    _in_address.sin_addr.s_addr = inet_addr(this->__buf.host().data());
+
+    auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd,
                   reinterpret_cast<sockaddr*>(&this->__buf.address()),
                   sizeof this->__buf.address()) < 0) {
