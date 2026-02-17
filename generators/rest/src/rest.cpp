@@ -280,7 +280,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -369,7 +369,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -458,7 +458,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("post")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -535,7 +535,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
