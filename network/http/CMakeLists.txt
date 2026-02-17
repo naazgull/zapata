@@ -15,7 +15,9 @@ add_dependencies(zapata-net-http
 target_sources(zapata-net-http
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/http.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/retrieve.cpp
   INTERFACE
+    ${NETWORK_HTTP_INCLUDE_DIR}/zapata/http/retrieve.h
     ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/http.h
     ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/transport/http.h
 )
@@ -117,4 +119,40 @@ install(TARGETS zapata-net-http zapata-net-http-plugin
 install(DIRECTORY ${NETWORK_HTTP_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
+)
+
+add_executable(zapata_test_http_retrieve)
+add_dependencies(zapata_test_http_retrieve
+  zapata-base
+  zapata-net-http
+  zapata-net-transport
+  zapata-parser-http
+  zapata-parser-json
+)
+target_sources(zapata_test_http_retrieve
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+)
+target_include_directories(zapata_test_http_retrieve
+  PRIVATE
+    zapata-base
+    zapata-net-http
+    zapata-net-transport
+    zapata-parser-http
+    zapata-parser-json
+    ${NETWORK_TRANSPORT_INCLUDE_DIR}
+)
+target_link_libraries(zapata_test_http_retrieve
+  PRIVATE
+    ssl
+    zapata-base
+    zapata-net-http
+    zapata-net-transport
+    zapata-parser-http
+    zapata-parser-json
+)
+set_target_properties(zapata_test_http_retrieve
+  PROPERTIES
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

@@ -5,11 +5,9 @@
 namespace {
 template<typename T>
 auto get_error_body(T const& _e) -> zpt::json {
-    int _error{500};
-    if constexpr (std::is_same_v<T, zpt::failed_expectation>) {
-        _error = _e.code();
-    }
-    
+    int _error{ 500 };
+    if constexpr (std::is_same_v<T, zpt::failed_expectation>) { _error = _e.code(); }
+
     zpt::json _to_return{ "error", _error, "exception", zpt::demangle(typeid(T).name()) };
     if constexpr (std::is_same_v<T, std::bad_alloc>) {
         _to_return["what"] = "Unable to allocate memory outside configure maximum value.";

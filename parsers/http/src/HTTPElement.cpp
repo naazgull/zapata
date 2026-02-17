@@ -108,7 +108,7 @@ auto zpt::http::basic_message::anchor() const -> std::string {
 }
 
 auto zpt::http::basic_message::body(std::string const& _body) -> zpt::basic_message& {
-    if (this->content_type() == "application/json") {
+    if (this->content_type().find("application/json") != std::string::npos) {
         this->__underlying["body"] = zpt::json::parse_json_str(_body);
     }
     else { this->__underlying["body"] = _body; }
@@ -134,6 +134,7 @@ auto zpt::init(zpt::http::basic_request& _req) -> void {
     _req.header("Content-Type", "application/json");
     _req.header("Cache-Control", "no-store");
     _req.header("X-Conversation-ID", zpt::generate::r_uuid());
+    _req.header("X-Version", "1.1");
 }
 
 auto zpt::init(zpt::http::basic_reply& _rep) -> void {

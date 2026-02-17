@@ -135,10 +135,8 @@ auto zpt::uri::to_regex_array(zpt::json const& _in) -> zpt::json {
 auto zpt::uri::path::to_string(zpt::json const& _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
-        if (_uri["path"]->ok()) {
-            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
-                 << std::flush;
-        }
+        _oss << (_uri("is_relative")->boolean() ? "" : "/")
+             << (_uri("path")->ok() ? zpt::join(_uri("path"), "/") : "") << std::flush;
     }
     else {
         _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri, "/")

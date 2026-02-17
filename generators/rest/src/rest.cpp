@@ -328,7 +328,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
         _cpp_authorized->add(_cpp_authorized_body);
         _cpp_file->add(_cpp_authorized);
-        
+
         this->generate_add_element(_cpp_file, _def, _path);
         this->generate_list_elements(_cpp_file, _def, _path);
         this->generate_remove_elements(_cpp_file, _def, _path);
@@ -430,7 +430,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
         _cpp_authorized->add(_cpp_authorized_body);
         _cpp_file->add(_cpp_authorized);
-        
+
         this->generate_update_element(_cpp_file, _def, _path);
         this->generate_get_element(_cpp_file, _def, _path);
         this->generate_remove_element(_cpp_file, _def, _path);
@@ -614,7 +614,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
         _cpp_authorized->add(_cpp_authorized_body);
         _cpp_file->add(_cpp_authorized);
-        
+
         this->generate_add_element(_cpp_file, _def, _path);
         this->generate_list_elements(_cpp_file, _def, _path);
         this->generate_remove_elements(_cpp_file, _def, _path);
