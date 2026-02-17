@@ -523,7 +523,13 @@ auto zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSArray: {
-            for (auto [_idx, _, __] : _rhs) { (**this).array()->pop(_idx); }
+            std::vector<size_t> _to_remove;
+            for (auto [__, _, _remove] : _rhs) {
+                for (auto [_idx, ____, _value] : (*this)) {
+                    if (_value == _remove) { _to_remove.push_back(_idx); }
+                }
+            }
+            for (auto _idx : _to_remove) { (**this).array()->pop(_idx); }
             return (*this);
         }
         case zpt::JSString: {
