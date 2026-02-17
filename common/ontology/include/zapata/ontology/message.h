@@ -76,6 +76,7 @@ constexpr int CALL_STATE_FAILURE_REPLY = 3;
 class call_context {
   public:
     using ptr = std::shared_ptr<call_context>;
+    using const_ptr = std::shared_ptr<call_context const>;
 
     call_context() = default;
     ~call_context() = default;

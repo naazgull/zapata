@@ -98,7 +98,8 @@ class process {
 
     virtual auto received() const -> zpt::message const final;
     virtual auto to_send() -> zpt::message final;
-    virtual auto context() const -> zpt::call_context::ptr final;
+    virtual auto context() const -> zpt::call_context::const_ptr final;
+    virtual auto context() -> zpt::call_context::ptr final;
 
     virtual auto initialize(zpt::event_initialization& init) -> void final;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)

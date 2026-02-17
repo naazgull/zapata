@@ -200,7 +200,9 @@ auto zpt::events::process::received() const -> zpt::message const { return this-
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
 
-auto zpt::events::process::context() const -> zpt::call_context::ptr { return this->__context; }
+auto zpt::events::process::context() const -> zpt::call_context::const_ptr { return this->__context; }
+
+auto zpt::events::process::context() -> zpt::call_context::ptr { return this->__context; }
 
 auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
@@ -339,12 +341,7 @@ auto zpt::events::process_call_reply::blocked() const -> bool { return false; }
 
 auto zpt::events::process_call_reply::operator()(zpt::events::dispatcher::ptr _dispatcher
                                                  [[maybe_unused]]) -> zpt::events::state {
-    switch (this->received()->performative()) {
-        case zpt::Reply: {
-            this->context()->reply(this->received());
-            break;
-        }
-    }
+    this->context()->reply(this->received());
     return zpt::events::finish;
 }
 
