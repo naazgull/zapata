@@ -27,28 +27,9 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
-class echo : public zpt::events::process {
-  public:
-    echo(zpt::message _received)
-      : zpt::events::process{ _received } {}
-    ~echo() = default;
-
-    auto blocked() const -> bool { return false; }
-
-    auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
-      -> zpt::events::state {
-        zlog("Received request: " << this->received(), zpt::info);
-        this
-          ->to_send() //
-          ->status(100);
-        return zpt::events::finish;
-    }
-};
-
 class test_plugin_collection : public zpt::events::process {
   public:
-    test_plugin_collection(zpt::message _received)
-      : zpt::events::process{ _received } {}
+    using zpt::events::process::process;
     ~test_plugin_collection() = default;
 
     auto blocked() const -> bool { return false; }
@@ -63,16 +44,50 @@ class test_plugin_collection : public zpt::events::process {
     }
 };
 
+class test_redirect : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~test_redirect() = default;
+
+    auto blocked() const -> bool {
+        return this->context() != nullptr && !this->context()->is_replied();
+    }
+
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+      -> zpt::events::state {
+        if (this->context() == nullptr) {
+            auto _config = zpt::GLOBAL_CONFIG();
+            auto _prefix =
+              _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+            auto _test_message = zpt::TRANSPORT_LAYER() //
+                                   .get("tcp")
+                                   ->make_request();
+            _test_message //
+              ->performative(zpt::Post)
+              .uri(std::format("{}/test_plugin", _prefix))
+              .body() = this->received()->body();
+            this->context(zpt::make_call(zpt::REST_RESOLVER(), _test_message));
+        }
+        else if (this->context()->is_replied()) {
+            this
+              ->to_send() //
+              ->status(this->context()->reply()->status())
+              .body() = this->context()->reply()->body();
+            return zpt::events::finish;
+        }
+        return zpt::events::retrigger;
+    }
+};
+
 class test_client_service : public zpt::events::process {
   public:
-    test_client_service(zpt::message _received)
-      : zpt::events::process{ _received } {}
+    using zpt::events::process::process;
     ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
+        zlog("Received response:\n" << zpt::pretty{ this->received()->body() }, zpt::debug);
         return zpt::events::finish;
     }
 };
@@ -84,7 +99,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver //
       ->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
-      .add<echo>("*");
+      .add<test_redirect>(std::format("{}/test_redirect", _prefix));
 
     auto _test_message = zpt::TRANSPORT_LAYER() //
                            .get("tcp")
@@ -93,10 +108,16 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
       ->performative(zpt::Post)
       .uri(std::format("{}/test_plugin", _prefix))
       .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::generate::r_uuid() };
+    zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 
-    zpt::TRANSPORT_ENGINE() //
-      .dispatcher()
-      ->trigger<zpt::events::call<test_client_service>>(zpt::REST_RESOLVER(), _test_message);
+    _test_message = zpt::TRANSPORT_LAYER() //
+                      .get("tcp")
+                      ->make_request();
+    _test_message //
+      ->performative(zpt::Post)
+      .uri(std::format("{}/test_redirect", _prefix))
+      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::generate::r_uuid() };
+    zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
@@ -104,6 +125,7 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-    _resolver->remove<test_plugin_collection>(std::format("{}/test_plugin", _prefix));
-    _resolver->remove<echo>("*");
+    _resolver //
+      ->remove<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
+      .remove<test_redirect>(std::format("{}/test_redirect", _prefix));
 }

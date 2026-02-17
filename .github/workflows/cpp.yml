@@ -15,9 +15,7 @@ jobs:
     - name: Update OS (APT)
       run: sudo apt update && sudo apt -y upgrade
     - name: Install dependencies (APT)
-      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev uuid-dev g++ cmake liblmdb-dev libsqlite3-dev lua5.4 liblua5.4-dev
-    - name: Install dependencies (Local binaries)
-      run: mkdir -p third_party/install && cd third_party/install && wget https://na.zgul.me/~files/dependencies.tar.bz2 && tar xvjf dependencies.tar.bz2 && sudo cp -rf include lib /usr/local
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev uuid-dev g++ cmake liblmdb-dev libsqlite3-dev lua5.4 liblua5.4-dev libmysqlclient-dev
     - name: Configure
       run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
     - name: Build

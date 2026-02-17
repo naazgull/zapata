@@ -5,6 +5,7 @@ set(COMMON_BASE_INCLUDE_DIR
 add_library(zapata-base SHARED)
 target_sources(zapata-base
   PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_mutex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ExpectationException.cpp
@@ -35,6 +36,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uuid.cpp
   INTERFACE
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoMoreElementsException.h
@@ -76,6 +78,8 @@ target_link_libraries(zapata-base
   PUBLIC
     magic
     uuid
+    ssl
+    crypto
 )
 set_target_properties(zapata-base
   PROPERTIES

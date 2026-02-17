@@ -754,7 +754,8 @@ auto zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
 auto zpt::storage::mysqlx::result::generated_id() -> zpt::json { return this->__generated_ids; }
 
 auto zpt::storage::mysqlx::result::count() const -> size_t {
-    return mysql_stmt_num_rows(this->__statement.get());
+    if (this->__is_doc_result) { return mysql_stmt_num_rows(this->__statement.get()); }
+    else { return mysql_stmt_affected_rows(this->__statement.get()); }
 }
 
 auto zpt::storage::mysqlx::result::status() const -> zpt::status { return 0; }

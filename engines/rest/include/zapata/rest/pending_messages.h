@@ -34,12 +34,17 @@ class pending_messages {
     pending_messages() = default;
     virtual ~pending_messages() = default;
 
-    auto push(zpt::message _sent, zpt::events::resolver_callback _callback) -> pending_messages&;
-    auto pop(zpt::message _received) -> zpt::events::resolver_callback;
+    auto push(zpt::message _sent,
+              zpt::call_context::ptr _context,
+              zpt::events::resolver_callback _callback) -> pending_messages&;
+    auto pop(zpt::message _received)
+      -> std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>;
     auto clear() -> pending_messages&;
 
   private:
-    std::unordered_map<std::string, zpt::events::resolver_callback> __pending;
+    std::unordered_map<std::string,
+                       std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>>
+      __pending;
     zpt::locks::spin_mutex __pending_mutex;
 };
 } // namespace rest

@@ -30,9 +30,11 @@ zpt::rest::resolver_t::resolver_t(zpt::json _global_config)
     this->__catalog.add_provider(zpt::IDENTITY()("_id")->string(), zpt::IDENTITY());
 }
 
-auto zpt::rest::resolver_t::add(zpt::message _sent, zpt::events::resolver_callback callback)
+auto zpt::rest::resolver_t::add(zpt::message _sent,
+                                zpt::call_context::ptr _context,
+                                zpt::events::resolver_callback _callback)
   -> zpt::rest::resolver_t& {
-    this->__pending_requests.push(_sent, callback);
+    this->__pending_requests.push(_sent, _context, _callback);
     return (*this);
 }
 
@@ -44,12 +46,11 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
     auto _path = _id->string();
     auto hash_code = this->__callbacks.size();
     this->__callbacks.push_back(_callback);
-    auto _to_add = _path == "*" ? "*"
-                                : std::format("/{}{}",
-                                              (_performative == zpt::Performative_end
-                                                 ? std::string{ "{}" }
-                                                 : zpt::ontology::to_str(_performative)),
-                                              _path);
+    auto _to_add =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path);
     this->__catalog.add(_to_add, hash_code, _metadata);
     return (*this);
 }
@@ -68,7 +69,6 @@ auto zpt::rest::resolver_t::add(zpt::json const& _service_description) -> zpt::r
 
 auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t& {
     try {
-        zlog("removing " << _sent->headers()("X-Conversation-ID"), zpt::debug);
         this->__pending_requests.pop(_sent);
     }
     catch (...) {
@@ -79,12 +79,11 @@ auto zpt::rest::resolver_t::remove(zpt::message _sent) -> zpt::rest::resolver_t&
 auto zpt::rest::resolver_t::remove(zpt::performative _performative, zpt::json const& _id)
   -> zpt::rest::resolver_t& {
     auto _path = _id->string();
-    auto _to_search = _path == "*" ? "*"
-                                   : std::format("/{}{}",
-                                                 (_performative == zpt::Performative_end
-                                                    ? std::string{ "{}" }
-                                                    : zpt::ontology::to_str(_performative)),
-                                                 _path);
+    auto _to_search =
+      std::format("/{}{}",
+                  (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                          : zpt::ontology::to_str(_performative)),
+                  _path);
     for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
         auto _hash_code = _record("hash")->integer();
         expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
@@ -109,12 +108,12 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
             expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
                    "Couldn't find callback for [" << _hash_code << "]("
                                                   << _received->resource()->string() << ")");
-            _return.push_back(this->__callbacks[_hash_code](_received, _initializer));
+            _return.push_back(this->__callbacks[_hash_code](_received, nullptr, _initializer));
         }
     }
     else {
-        auto _callback = this->__pending_requests.pop(_received);
-        _return.push_back(_callback(_received, _initializer));
+        auto [_context, _callback] = this->__pending_requests.pop(_received);
+        _return.push_back(_callback(_received, _context, _initializer));
     }
     expect(_return.size() != 0,
            "Couldn't find callback for (" << _received->resource()->string() << ")");

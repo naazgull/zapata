@@ -6,9 +6,6 @@ namespace {
 auto add_minion(zpt::json const& _minion) -> void;
 }
 
-zpt::rest::minion_boot::minion_boot(zpt::message _received)
-  : zpt::events::process{ _received } {}
-
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
 auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
@@ -39,8 +36,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
                                _peer("port")->integer()))
               .body() = { "provider", zpt::IDENTITY(), "services", zpt::REST_RESOLVER()->list() };
 
-            _dispatcher->trigger<zpt::events::call<zpt::rest::services_list>>(zpt::REST_RESOLVER(),
-                                                                              _hello);
+            zpt::make_call<zpt::rest::services_list>(zpt::REST_RESOLVER(), _hello);
 #ifndef PROPAGATE_EXCEPTION
         }
         catch (std::exception const& _e) {
@@ -51,9 +47,6 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
 
     return zpt::events::finish;
 }
-
-zpt::rest::minion_shutdown::minion_shutdown(zpt::message _received)
-  : zpt::events::process{ _received } {}
 
 auto zpt::rest::minion_shutdown::blocked() const -> bool { return false; }
 
@@ -77,9 +70,6 @@ auto zpt::rest::minion_shutdown::operator()(zpt::events::dispatcher::ptr _dispat
 
     return zpt::events::finish;
 }
-
-zpt::rest::minion_hello::minion_hello(zpt::message _received)
-  : zpt::events::process{ _received } {}
 
 auto zpt::rest::minion_hello::blocked() const -> bool { return false; }
 
@@ -111,9 +101,6 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
       .body() = { "message", "Only GET allowed to use with `/services`" };
     return zpt::events::abort;
 }
-
-zpt::rest::services_list::services_list(zpt::message _received)
-  : zpt::events::process{ _received } {}
 
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 

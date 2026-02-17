@@ -30,9 +30,9 @@ class engine {
 namespace events {
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
 };
 
 class receive {
@@ -89,6 +89,7 @@ class process {
     friend class zpt::events::receive;
 
     process(zpt::message _received);
+    process(zpt::message _received, zpt::call_context::ptr _context);
     process(zpt::events::process const& _rhs) = delete;
     process(zpt::events::process&& _rhs) = delete;
     virtual ~process();
@@ -98,6 +99,8 @@ class process {
 
     virtual auto received() const -> zpt::message const final;
     virtual auto to_send() -> zpt::message final;
+    virtual auto context() const -> zpt::call_context::ptr final;
+    virtual auto context(zpt::call_context::ptr _context) -> process& final;
 
     virtual auto initialize(zpt::event_initialization& init) -> void final;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -116,6 +119,7 @@ class process {
     zpt::stream __stream;
     zpt::message __received{ nullptr };
     zpt::message __to_send{ nullptr };
+    zpt::call_context::ptr __context{ nullptr };
 };
 } // namespace events
 } // namespace zpt
@@ -127,7 +131,7 @@ namespace zpt {
 namespace events {
 class discard : public zpt::events::process {
   public:
-    discard(zpt::message _received);
+    using zpt::events::process::process;
     ~discard() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
@@ -139,7 +143,7 @@ class call {
     using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
-    call(zpt::events::resolver _resolver, zpt::message _send);
+    call(zpt::events::resolver _resolver, zpt::call_context::ptr _context, zpt::message _send);
     call(zpt::events::call<T> const& _rhs) = delete;
     call(zpt::events::call<T>&& _rhs) = delete;
     virtual ~call();
@@ -164,19 +168,32 @@ class call {
     auto call_internally() -> call&;
     auto send_externally() -> call&;
 };
+
+class process_call_reply : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~process_call_reply() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
 } // namespace events
 
 auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
+
+template<ProcessOperation T = zpt::events::process_call_reply>
+auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
 } // namespace zpt
 
 template<ProcessOperation T>
-zpt::events::call<T>::call(zpt::events::resolver _resolver, zpt::message _send)
+zpt::events::call<T>::call(zpt::events::resolver _resolver,
+                           zpt::call_context::ptr _context,
+                           zpt::message _send)
   : __resolver{ _resolver }
   , __to_send{ _send } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
     }
-    this->__resolver->add(_send, zpt::events::make_callback<T>);
+    this->__resolver->add(_send, _context, zpt::events::make_callback<T>);
 }
 
 template<ProcessOperation T>
@@ -285,4 +302,14 @@ auto zpt::events::call<T>::send_externally() -> call& {
     this->__polling->listen_on(_stream);
 
     return (*this);
+}
+
+template<ProcessOperation T>
+auto zpt::make_call(zpt::events::resolver _resolver, zpt::message _to_send)
+  -> zpt::call_context::ptr {
+    auto _context = std::make_shared<zpt::call_context>();
+    zpt::TRANSPORT_ENGINE() //
+      .dispatcher()
+      ->trigger<zpt::events::call<T>>(_resolver, _context, _to_send);
+    return _context;
 }

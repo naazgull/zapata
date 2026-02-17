@@ -45,7 +45,9 @@ class resolver_t : public zpt::events::resolver_t {
     using zpt::events::resolver_t::add;
     using zpt::events::resolver_t::remove;
     auto add(zpt::json const& _service_description) -> resolver_t& override;
-    auto add(zpt::message _sent, zpt::events::resolver_callback callback) -> resolver_t& override;
+    auto add(zpt::message _sent,
+             zpt::call_context::ptr _context,
+             zpt::events::resolver_callback callback) -> resolver_t& override;
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,

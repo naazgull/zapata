@@ -21,6 +21,7 @@
 */
 
 #include <iomanip>
+#include <random>
 #include <sys/time.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
@@ -67,14 +68,12 @@ auto zpt::generate::r_key() -> std::string {
 }
 
 auto zpt::generate::pin(std::string& _out, size_t _size) -> void {
-    static std::string charset = "0123456789";
-    timeval _tv = { 0, 0 };
+    static std::string _charset = "0123456789";
+    std::random_device _rd;
+    std::mt19937 _gen(_rd());
+    std::uniform_int_distribution<int> _int_dist(0, 9);
 
-    for (size_t _idx = 0; _idx != _size; _idx++) {
-        gettimeofday(&_tv, nullptr);
-        srand(_tv.tv_usec);
-        _out.append(1, charset[rand() % charset.length()]);
-    }
+    for (size_t _idx = 0; _idx != _size; _idx++) { _out.append(1, _charset[_int_dist(_gen)]); }
 }
 
 auto zpt::generate::r_pin(size_t _size) -> std::string {
