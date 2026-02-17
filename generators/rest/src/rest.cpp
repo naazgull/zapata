@@ -377,11 +377,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST);
-        auto _retrieve_element =
-          zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
-        _retrieve_element->add<zpt::ast::cpp_variable>("_id", "std:string const&");
-        _class->add(_retrieve_element, zpt::ast::PUBLIC)
+          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "update_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_element", "zpt::events::state");
@@ -389,6 +385,11 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
+        auto _retrieve_element =
+          zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
+        _retrieve_element->add<zpt::ast::cpp_variable>("_id", "std:string const&")
+          .add<zpt::ast::cpp_variable>("_params", "zpt::json = zpt::undefined");
+        _class->add(_retrieve_element, zpt::ast::PRIVATE);
 
         _namespace->add(_class);
     }
@@ -414,7 +415,6 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         _cpp_blocked->add(_cpp_blocked_body);
         _cpp_file->add(_cpp_blocked);
 
-        this->generate_retrieve_element(_cpp_file, _def, _path);
         this->generate_update_element(_cpp_file, _def, _path);
         this->generate_get_element(_cpp_file, _def, _path);
         this->generate_remove_element(_cpp_file, _def, _path);
@@ -446,6 +446,9 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
             "DELETE allowed to use with a document\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
+
+        this->generate_retrieve_element(_cpp_file, _def, _path);
+
         _cpp_file->add(_cpp_operator);
     }
     return _h_file;
@@ -747,7 +750,8 @@ auto zpt::gen::rest::unit::generate_retrieve_element(
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}retrieve_element", _class_method_prefix), "zpt::json");
-    _method->add<zpt::ast::cpp_variable>("_id", "std:string const&");
+    _method->add<zpt::ast::cpp_variable>("_id", "std:string const&")
+      .add<zpt::ast::cpp_variable>("_params", "zpt::json");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
 
@@ -829,7 +833,7 @@ auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
-      ->add<zpt::ast::cpp_instruction>("auto _result = this->retrieve_element(_id)");
+      ->add<zpt::ast::cpp_instruction>("auto _result = this->retrieve_element(_id, _params)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
