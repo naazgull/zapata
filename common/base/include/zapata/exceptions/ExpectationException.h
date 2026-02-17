@@ -34,10 +34,13 @@ class ExpectationException : public zpt::exception {
     ExpectationException(std::string const& _what,
                          std::string _desc,
                          int _line = 0,
-                         std::string _file = "");
+                         std::string _file = "",
+                         int _code = 500);
     virtual ~ExpectationException() throw();
 
     virtual auto description() const -> const char*;
+
+    virtual auto code() const -> int;
 
     friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
       -> std::ostream& {
@@ -49,6 +52,7 @@ class ExpectationException : public zpt::exception {
     std::string __description;
     int __line;
     std::string __file;
+    int __code;
 };
 
 using failed_expectation = ExpectationException;

@@ -20,6 +20,8 @@ auto zpt::system_event::initialize(zpt::event_initialization&) -> void {
 
 auto zpt::system_event::blocked() const -> bool { return false; }
 
+auto zpt::system_event::authorized() const -> bool { return true; }
+
 auto zpt::system_event::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)
   -> bool {
     zlog(_e.what(), zpt::error);

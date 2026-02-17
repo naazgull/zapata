@@ -27,11 +27,13 @@
 zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 std::string _desc,
                                                 int _line,
-                                                std::string _file)
+                                                std::string _file,
+                                                int _code)
   : zpt::exception{ std::format("{} ({}:{})", _what, _file, _line) }
   , __description(_desc)
   , __line(_line)
-  , __file(_file) {
+  , __file(_file)
+  , __code{ _code } {
     zpt::replace(this->__description, "\"", "");
     this->__description.insert(0, "expected `");
     if (this->__line != 0) {
@@ -47,3 +49,5 @@ zpt::ExpectationException::~ExpectationException() throw() {}
 auto zpt::ExpectationException::description() const -> const char* {
     return this->__description.data();
 }
+
+auto zpt::ExpectationException::code() const -> int { return this->__code; }

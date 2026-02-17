@@ -79,6 +79,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
+        expect_c(_event->authorized(), "No permission to process this event", 401);
         auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(_event); }
 #ifndef PROPAGATE_EXCEPTION

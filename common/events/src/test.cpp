@@ -30,6 +30,7 @@ class my_operator {
 
     auto initialize(zpt::event_initialization&) -> void {}
     auto blocked() const -> bool { return false; }
+    auto authorized() const -> bool { return true; }
     auto catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) -> bool {
@@ -54,6 +55,7 @@ class my_other_operator {
 
     auto initialize(zpt::event_initialization&) -> void {}
     auto blocked() const -> bool { return false; }
+    auto authorized() const -> bool { return true; }
     auto catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) -> bool { return false; }
     auto catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) -> bool {
