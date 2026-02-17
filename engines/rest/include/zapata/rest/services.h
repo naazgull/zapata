@@ -5,7 +5,7 @@ namespace zpt {
 namespace rest {
 class minion_boot : public zpt::events::process {
   public:
-    minion_boot(zpt::message _received, zpt::call_context::ptr _context);
+    using zpt::events::process::process;
     ~minion_boot() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
@@ -13,7 +13,7 @@ class minion_boot : public zpt::events::process {
 
 class minion_shutdown : public zpt::events::process {
   public:
-    minion_shutdown(zpt::message _received, zpt::call_context::ptr _context);
+    using zpt::events::process::process;
     ~minion_shutdown() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
@@ -21,7 +21,7 @@ class minion_shutdown : public zpt::events::process {
 
 class minion_hello : public zpt::events::process {
   public:
-    minion_hello(zpt::message _received, zpt::call_context::ptr _context);
+    using zpt::events::process::process;
     ~minion_hello() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
@@ -29,7 +29,7 @@ class minion_hello : public zpt::events::process {
 
 class services_list : public zpt::events::process {
   public:
-    services_list(zpt::message _received, zpt::call_context::ptr _context);
+    using zpt::events::process::process;
     ~services_list() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;

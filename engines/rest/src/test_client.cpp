@@ -30,8 +30,7 @@
 
 class test_client_service : public zpt::events::process {
   public:
-    test_client_service(zpt::message _received, zpt::call_context::ptr _context)
-      : zpt::events::process{ _received, _context } {}
+    using zpt::events::process::process;
     ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }
@@ -44,8 +43,7 @@ class test_client_service : public zpt::events::process {
 
 class test_client_boot : public zpt::system_event {
   public:
-    test_client_boot(zpt::message _received, zpt::call_context::ptr _context)
-      : zpt::system_event{ _received, _context } {}
+    using zpt::system_event::system_event;
     ~test_client_boot() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {

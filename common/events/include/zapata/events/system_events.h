@@ -21,7 +21,8 @@ enum system_event_type : long long {
 class system_event {
   public:
     system_event() = default;
-    system_event(zpt::message _received, zpt::call_context::ptr _context = nullptr);
+    system_event(zpt::message _received);
+    system_event(zpt::message _received, zpt::call_context::ptr _context);
     system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
     ~system_event() = default;
 

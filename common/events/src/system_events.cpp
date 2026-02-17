@@ -1,5 +1,8 @@
 #include <zapata/events/system_events.h>
 
+zpt::system_event::system_event(zpt::message _received)
+  : __received{ _received } {}
+
 zpt::system_event::system_event(zpt::message _received, zpt::call_context::ptr)
   : __received{ _received } {}
 

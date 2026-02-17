@@ -29,8 +29,7 @@
 
 class test_plugin_collection : public zpt::events::process {
   public:
-    test_plugin_collection(zpt::message _received, zpt::call_context::ptr _context)
-      : zpt::events::process{ _received, _context } {}
+    using zpt::events::process::process;
     ~test_plugin_collection() = default;
 
     auto blocked() const -> bool { return false; }
@@ -47,8 +46,7 @@ class test_plugin_collection : public zpt::events::process {
 
 class test_redirect : public zpt::events::process {
   public:
-    test_redirect(zpt::message _received, zpt::call_context::ptr _context)
-      : zpt::events::process{ _received, _context } {}
+    using zpt::events::process::process;
     ~test_redirect() = default;
 
     auto blocked() const -> bool {
@@ -83,8 +81,7 @@ class test_redirect : public zpt::events::process {
 
 class test_client_service : public zpt::events::process {
   public:
-    test_client_service(zpt::message _received, zpt::call_context::ptr _context)
-      : zpt::events::process{ _received, _context } {}
+    using zpt::events::process::process;
     ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }

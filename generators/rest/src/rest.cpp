@@ -280,10 +280,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_function<zpt::ast::cpp_function>(_def("*")("operationId")->string(), "");
-        _h_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -316,17 +313,6 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
-        _cpp_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
-        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          ": zpt::events::process{ _received, _context }");
-        _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
-        _cpp_constructor->add(_cpp_constructor_body);
-        _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
@@ -383,10 +369,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_function<zpt::ast::cpp_function>(_def("*")("operationId")->string(), "");
-        _h_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -419,17 +402,6 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
-        _cpp_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
-        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          ": zpt::events::process{ _received, _context }");
-        _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
-        _cpp_constructor->add(_cpp_constructor_body);
-        _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
@@ -486,10 +458,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("post")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_function<zpt::ast::cpp_function>(_def("post")("operationId")->string(), "");
-        _h_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -520,17 +489,6 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}{}", _class_method_prefix, _def("post")("operationId")->string()), "");
-        _cpp_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
-        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          ": zpt::events::process{ _received, _context }");
-        _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
-        _cpp_constructor->add(_cpp_constructor_body);
-        _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
@@ -577,10 +535,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
                                                            "public zpt::events::process");
         auto _h_constructor =
-          zpt::make_function<zpt::ast::cpp_function>(_def("*")("operationId")->string(), "");
-        _h_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
+          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process;");
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -613,17 +568,6 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
           "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_constructor = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}{}", _class_method_prefix, _def("*")("operationId")->string()), "");
-        _cpp_constructor //
-          ->add<zpt::ast::cpp_variable>("_received", "zpt::message")
-          .add<zpt::ast::cpp_variable>("_context", "zpt::call_context::ptr");
-        auto _cpp_constructor_body = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          ": zpt::events::process{ _received, _context }");
-        _cpp_constructor_body->add<zpt::ast::cpp_instruction>("");
-        _cpp_constructor->add(_cpp_constructor_body);
-        _cpp_file->add(_cpp_constructor);
 
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
@@ -690,7 +634,7 @@ auto zpt::gen::rest::unit::generate_add_element(std::shared_ptr<zpt::ast::basic_
         "auto _id = _collection //\n->add(_received)->execute()->generated_id()")
       .add<zpt::ast::cpp_instruction>("_session->commit()")
       .add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(201).body() = { \"element_id\", _id }");
+        "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -858,7 +802,7 @@ auto zpt::gen::rest::unit::generate_get_element(std::shared_ptr<zpt::ast::basic_
         "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
+      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result(0)");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
     _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");

@@ -134,7 +134,8 @@ class basic_class : public basic_element {
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_function>,
-      std::shared_ptr<basic_variable>>;
+      std::shared_ptr<basic_variable>,
+      std::shared_ptr<basic_instruction>>;
 
     basic_class(std::string const& _name, std::string const& _extends = "");
     virtual ~basic_class() override = default;

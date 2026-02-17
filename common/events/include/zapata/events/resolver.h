@@ -57,7 +57,10 @@ template<zpt::events::Operation T>
 auto zpt::events::make_callback(zpt::message _received,
                                 zpt::call_context::ptr _context,
                                 zpt::events::initializer_t _initializer) -> zpt::event {
-    auto _event = zpt::make_event<T>(_received, _context);
+
+    zpt::event _event;
+    if (_context != nullptr) { _event = zpt::make_event<T>(_received, _context); }
+    else { _event = zpt::make_event<T>(_received); }
     _initializer(_event);
     return _event;
 }

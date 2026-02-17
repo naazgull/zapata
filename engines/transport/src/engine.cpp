@@ -160,6 +160,10 @@ auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events:
     return zpt::events::finish;
 }
 
+zpt::events::process::process(zpt::message _received)
+  : __received{ _received }
+  , __context{ nullptr } {}
+
 zpt::events::process::process(zpt::message _received, zpt::call_context::ptr _context)
   : __received{ _received }
   , __context{ _context } {}
@@ -327,18 +331,11 @@ auto zpt::transports::engine::shutdown() -> zpt::transports::engine& {
     return (*this);
 }
 
-zpt::events::discard::discard(zpt::message _received)
-  : zpt::events::process{ _received, nullptr } {}
-
 auto zpt::events::discard::blocked() const -> bool { return false; }
 
 auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     return zpt::events::finish;
 }
-
-zpt::events::process_call_reply::process_call_reply(zpt::message _received,
-                                                    zpt::call_context::ptr _context)
-  : zpt::events::process{ _received, _context } {}
 
 auto zpt::events::process_call_reply::blocked() const -> bool { return false; }
 

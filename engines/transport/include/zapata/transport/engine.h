@@ -88,6 +88,7 @@ class process {
     using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
+    process(zpt::message _received);
     process(zpt::message _received, zpt::call_context::ptr _context);
     process(zpt::events::process const& _rhs) = delete;
     process(zpt::events::process&& _rhs) = delete;
@@ -130,7 +131,7 @@ namespace zpt {
 namespace events {
 class discard : public zpt::events::process {
   public:
-    discard(zpt::message _received);
+    using zpt::events::process::process;
     ~discard() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
@@ -170,7 +171,7 @@ class call {
 
 class process_call_reply : public zpt::events::process {
   public:
-    process_call_reply(zpt::message _received, zpt::call_context::ptr _context);
+    using zpt::events::process::process;
     ~process_call_reply() = default;
     auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
