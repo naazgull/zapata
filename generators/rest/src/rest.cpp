@@ -1085,9 +1085,7 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     if (_def("*")("requestBody")("allOf")->ok()) {
         _oss << "_fields -= zpt::json{ zpt::array";
         for (auto const& [_, __, _type] : _def("*")("requestBody")("allOf")) {
-            for (auto const& [___, ____, _prop] : _type("hidden")) {
-                _oss << ", \"" << _prop << "\"";
-            }
+            for (auto const& [___, ____, _prop] : _type("hidden")) { _oss << ", " << _prop; }
         }
         _oss << " }" << std::flush;
     }
