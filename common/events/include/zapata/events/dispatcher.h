@@ -75,6 +75,7 @@ concept Operation = requires(T t,
                              zpt::failed_expectation const& _fe) {
     { t.initialize(_i) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
+    { t.authorized() } -> std::convertible_to<bool>;
     { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
     { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
     { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
@@ -89,6 +90,7 @@ class abstract_event {
 
     virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
     virtual auto blocked() const -> bool = 0;
+    virtual auto authorized() const -> bool = 0;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool = 0;
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -110,6 +112,7 @@ class event_t : public zpt::abstract_event {
     auto operator*() const -> T const&;
     virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
     virtual auto blocked() const -> bool override final;
+    virtual auto authorized() const -> bool override final;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool override final;
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -156,6 +159,11 @@ auto zpt::event_t<T>::initialize(zpt::event_initialization& init_data) -> void {
 template<zpt::events::Operation T>
 auto zpt::event_t<T>::blocked() const -> bool {
     return this->__underlying.blocked();
+}
+
+template<zpt::events::Operation T>
+auto zpt::event_t<T>::authorized() const -> bool {
+    return this->__underlying.authorized();
 }
 
 template<zpt::events::Operation T>

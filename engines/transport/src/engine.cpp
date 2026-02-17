@@ -5,7 +5,12 @@
 namespace {
 template<typename T>
 auto get_error_body(T const& _e) -> zpt::json {
-    zpt::json _to_return{ "error", 500, "exception", zpt::demangle(typeid(T).name()) };
+    int _error{500};
+    if constexpr (std::is_same_v<T, zpt::failed_expectation>) {
+        _error = _e.code();
+    }
+    
+    zpt::json _to_return{ "error", _error, "exception", zpt::demangle(typeid(T).name()) };
     if constexpr (std::is_same_v<T, std::bad_alloc>) {
         _to_return["what"] = "Unable to allocate memory outside configure maximum value.";
     }
@@ -30,9 +35,10 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 
     _stream->state() = zpt::stream_state::ERRORING_OUT;
     auto _reply = _transport->make_reply(false);
+    auto _body = ::get_error_body(_e);
     _reply //
-      ->status(500)
-      .body() = ::get_error_body(_e);
+      ->status(_body("error")->integer())
+      .body() = _body;
     return _reply;
 }
 } // namespace
@@ -49,6 +55,8 @@ zpt::events::receive::~receive() {}
 auto zpt::events::receive::initialize(zpt::event_initialization&) -> void {}
 
 auto zpt::events::receive::blocked() const -> bool { return false; }
+
+auto zpt::events::receive::authorized() const -> bool { return true; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e,
                                        zpt::events::dispatcher::ptr _dispatcher) -> bool {
@@ -139,6 +147,8 @@ auto zpt::events::send::initialize(zpt::event_initialization&) -> void {}
 
 auto zpt::events::send::blocked() const -> bool { return false; }
 
+auto zpt::events::send::authorized() const -> bool { return true; }
+
 auto zpt::events::send::catch_error(std::exception const&, zpt::events::dispatcher::ptr) -> bool {
     return false;
 }
@@ -221,6 +231,8 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
     this->__to_send = _transport->make_reply(this->__received);
     this->__to_send->status(0);
 }
+
+auto zpt::events::process::authorized() const -> bool { return true; }
 
 auto zpt::events::process::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)
   -> bool {

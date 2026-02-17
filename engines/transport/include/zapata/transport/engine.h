@@ -47,6 +47,7 @@ class receive {
 
     auto initialize(zpt::event_initialization& init) -> void;
     auto blocked() const -> bool;
+    auto authorized() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -71,6 +72,7 @@ class send {
 
     auto initialize(zpt::event_initialization& init) -> void;
     auto blocked() const -> bool;
+    auto authorized() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -103,6 +105,7 @@ class process {
     virtual auto context(zpt::call_context::ptr _context) -> process& final;
 
     virtual auto initialize(zpt::event_initialization& init) -> void final;
+    virtual auto authorized() const -> bool;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool final;
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -153,6 +156,7 @@ class call {
 
     auto initialize(zpt::event_initialization& init) -> void;
     auto blocked() const -> bool;
+    auto authorized() const -> bool;
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
@@ -209,6 +213,11 @@ auto zpt::events::call<T>::initialize(zpt::event_initialization& _init) -> void 
 template<ProcessOperation T>
 auto zpt::events::call<T>::blocked() const -> bool {
     return false;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::authorized() const -> bool {
+    return true;
 }
 
 template<ProcessOperation T>

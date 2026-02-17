@@ -45,4 +45,8 @@ class exception : public std::exception {
     std::string __what;
 };
 
+class unauthorized_exception : public zpt::exception {
+  public:
+    using zpt::exception::exception;
+};
 } // namespace zpt

@@ -28,6 +28,7 @@ class system_event {
 
     virtual auto initialize(zpt::event_initialization& _init) -> void final;
     virtual auto blocked() const -> bool;
+    virtual auto authorized() const -> bool;
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
