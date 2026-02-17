@@ -111,6 +111,7 @@ class unit {
                        zpt::json _def,
                        std::string const& _generate) -> void;
     auto get_visible_fields(zpt::json _def) -> std::string;
+    auto remove_hidden_fields(zpt::json _def) -> std::string;
 
     auto generate_sql_schemata_mysql(zpt::json _def) -> std::shared_ptr<zpt::ast::basic_file>;
 

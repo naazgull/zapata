@@ -678,6 +678,7 @@ auto zpt::gen::rest::unit::generate_list_elements(std::shared_ptr<zpt::ast::basi
       .add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
       .add<zpt::ast::cpp_instruction>(
         "auto _result = _find //\n->fields(_fields)->execute()->fetch()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
@@ -758,6 +759,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(
       ->add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
       .add<zpt::ast::cpp_instruction>(
         "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
         "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
@@ -1074,6 +1076,20 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
         _oss << "zpt::json{ zpt::array";
         for (auto const& _prop : _visible) { _oss << ", \"" << _prop << "\""; }
         _oss << " })" << std::flush;
+    }
+    return _oss.str();
+}
+
+auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
+    std::ostringstream _oss;
+    if (_def("*")("requestBody")("allOf")->ok()) {
+        _oss << "_fields -= zpt::json{ zpt::array";
+        for (auto const& [_, __, _type] : _def("*")("requestBody")("allOf")) {
+            for (auto const& [___, ____, _prop] : _type("hidden")) {
+                _oss << ", \"" << _prop << "\"";
+            }
+        }
+        _oss << " }" << std::flush;
     }
     return _oss.str();
 }
