@@ -59,12 +59,18 @@ namespace tree {
 template<typename T, typename P, typename C>
 class node {
   public:
+    /** @brief Default constructor (empty node). */
     node() = default;
+    /** @brief Copy constructor. */
     node(node const& _rhs);
+    /** @brief Move constructor. */
     node(node&& _rhs);
+    /** @brief Destructor. */
     virtual ~node() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(node const& _rhs) -> node&;
+    /** @brief Move assignment. */
     auto operator=(node&& _rhs) -> node&;
 
     /** @brief Removes all children and callbacks. */

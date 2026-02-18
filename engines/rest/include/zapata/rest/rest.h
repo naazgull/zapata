@@ -67,9 +67,11 @@ namespace rest {
  */
 class resolver_t : public zpt::events::resolver_t {
   public:
+    /** @brief Constructs the REST resolver with the given configuration. */
     resolver_t(zpt::json _rest_config);
     resolver_t(resolver_t const&) = delete;
     resolver_t(resolver_t&&) = delete;
+    /** @brief Destructor. */
     virtual ~resolver_t() = default;
 
     auto operator=(resolver_t const&) -> resolver_t& = delete;
@@ -77,24 +79,36 @@ class resolver_t : public zpt::events::resolver_t {
 
     using zpt::events::resolver_t::add;
     using zpt::events::resolver_t::remove;
+    /** @brief Registers a REST service from its JSON description. */
     auto add(zpt::json const& _service_description) -> resolver_t& override;
+    /** @brief Registers a callback for a sent message's reply. */
     auto add(zpt::message _sent,
              zpt::call_context::ptr _context,
              zpt::events::resolver_callback callback) -> resolver_t& override;
+    /** @brief Registers a callback for a performative/URI pattern combination. */
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
+    /** @brief Removes the callback registered for a sent message. */
     auto remove(zpt::message _sent) -> resolver_t& override;
+    /** @brief Removes callback for a performative/URI combination. */
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
+    /** @brief Resolves an incoming request to matching REST handlers. */
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
+    /** @brief Searches for registered services matching the given URI pattern. */
     auto search(zpt::json const& _id, std::string const& _provider_id = "") const
       -> zpt::json override;
+    /** @brief Lists all registered REST services. */
     auto list(std::string const& _provider_id = "") const -> zpt::json override;
+    /** @brief Registers a service provider node. */
     auto register_provider(zpt::json const& _provider) -> zpt::rest::resolver_t& override;
+    /** @brief Unregisters a service provider node by ID. */
     auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;
+    /** @brief Returns provider metadata by ID. */
     auto get_provider(std::string const& _id) const -> zpt::json override;
+    /** @brief Removes all registered services and providers. */
     auto clear() -> resolver_t& override;
 
   private:

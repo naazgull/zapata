@@ -56,14 +56,22 @@ namespace transport {
  */
 class http : public zpt::basic_transport {
   public:
+    /** @brief Default constructor. */
     http() = default;
+    /** @brief Destructor. */
     virtual ~http() = default;
 
+    /** @brief Returns true for SYNCHRONOUS capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Creates a new HTTP request message. */
     auto make_request() const -> zpt::message override;
+    /** @brief Creates a new HTTP reply message. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
+    /** @brief Creates an HTTP reply for a given request. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
+    /** @brief Parses an incoming HTTP request from a stream. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    /** @brief Parses an incoming HTTP reply from a stream. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport

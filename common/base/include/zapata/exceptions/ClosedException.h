@@ -47,6 +47,7 @@ class ClosedException : public zpt::exception {
      */
     ClosedException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~ClosedException() throw();
 };
 

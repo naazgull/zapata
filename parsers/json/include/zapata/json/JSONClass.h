@@ -148,9 +148,13 @@ namespace zpt {
  */
 class pretty {
   public:
+    /** @brief Copy constructor. */
     pretty(const pretty& _rhs);
+    /** @brief Move constructor. */
     pretty(pretty&& _rhs);
+    /** @brief Constructs from a string. */
     pretty(std::string const& _rhs);
+    /** @brief Constructs from a C-string. */
     pretty(const char* _rhs);
     /**
      * @brief Constructs a pretty-printable wrapper from a JSON-like object.
@@ -164,10 +168,14 @@ class pretty {
     /** @brief Converts to the pretty-printed string representation. */
     operator std::string();
 
+    /** @brief Copy assignment. */
     auto operator=(const pretty& _rhs) -> pretty&;
+    /** @brief Move assignment. */
     auto operator=(pretty&& _rhs) -> pretty&;
 
+    /** @brief Accesses the underlying string. */
     auto operator->() -> std::string*;
+    /** @brief Dereferences to the underlying string. */
     auto operator*() -> std::string&;
 
     friend auto operator<<(std::ostream& _out, zpt::pretty _in) -> std::ostream& {
@@ -319,102 +327,193 @@ class json {
     /** @brief Returns a const iterator past the last element. */
     auto end() const -> zpt::json::const_iterator;
 
+    /** @name Assignment Operators */
+    ///@{
+    /** @brief Copy assignment (shared semantics). */
     auto operator=(zpt::json const& _rhs) -> zpt::json&;
+    /** @brief Move assignment. */
     auto operator=(zpt::json&& _rhs) -> zpt::json&;
+    /** @brief Assignment from iterator element tuple. */
     auto operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json&;
+    /** @brief Assignment from initializer list. */
     auto operator=(std::initializer_list<zpt::json> _list) -> zpt::json&;
+    /** @brief Assignment from any compatible type. */
     template<typename T>
     auto operator=(T const& _rhs) -> zpt::json&;
+    ///@}
 
+    /** @name Element Access */
+    ///@{
+    /** @brief Accesses the underlying JSONElementT. */
     auto operator->() -> zpt::JSONElementT*;
+    /** @brief Dereferences to the underlying JSONElementT. */
     auto operator*() -> zpt::JSONElementT&;
+    /** @brief Accesses the underlying JSONElementT (const). */
     auto operator->() const -> zpt::JSONElementT const*;
+    /** @brief Dereferences to the underlying JSONElementT (const). */
     auto operator*() const -> zpt::JSONElementT const&;
+    ///@}
 
+    /** @name Comparison Operators */
+    ///@{
+    /** @brief Equality with iterator element tuple. */
     auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool;
+    /** @brief Inequality with iterator element tuple. */
     auto operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool;
+    /** @brief Equality with nullptr (checks if null/undefined). */
     auto operator==(std::nullptr_t _rhs) const -> bool;
+    /** @brief Inequality with nullptr. */
     auto operator!=(std::nullptr_t _rhs) const -> bool;
+    /** @brief Appends elements from initializer list. */
     auto operator<<(std::initializer_list<zpt::json> _in) -> json&;
+    /** @brief Equality comparison with any compatible type. */
     template<typename T>
     auto operator==(T _rhs) const -> bool;
+    /** @brief Inequality comparison with any compatible type. */
     template<typename T>
     auto operator!=(T _rhs) const -> bool;
+    /** @brief Less-than comparison. */
     template<typename T>
     auto operator<(T _rhs) const -> bool;
+    /** @brief Greater-than comparison. */
     template<typename T>
     auto operator>(T _rhs) const -> bool;
+    /** @brief Less-than-or-equal comparison. */
     template<typename T>
     auto operator<=(T _rhs) const -> bool;
+    /** @brief Greater-than-or-equal comparison. */
     template<typename T>
     auto operator>=(T _rhs) const -> bool;
+    /** @brief Appends an element (stream insertion). */
     template<typename T>
     auto operator<<(T _in) -> json&;
+    /** @brief Accesses element by index or key. */
     template<typename T>
     auto operator[](T _idx) -> json&;
+    /** @brief Accesses element by index or key (const). */
     template<typename T>
     auto operator[](T _idx) const -> zpt::json const;
+    /** @brief Returns element or undefined if not found (safe access). */
     template<typename T>
     auto operator()(T _idx) const -> zpt::json const;
+    ///@}
 
+    /** @name Type Conversion Operators */
+    ///@{
+    /** @brief Converts to string. */
     operator std::string();
+    /** @brief Converts to bool. */
     operator bool();
+    /** @brief Converts to int. */
     operator int();
+    /** @brief Converts to long. */
     operator long();
+    /** @brief Converts to long long. */
     operator long long();
+    /** @brief Converts to size_t. */
     operator size_t();
+    /** @brief Converts to double. */
     operator double();
 #ifdef __LP64__
+    /** @brief Converts to unsigned int. */
     operator unsigned int();
 #endif
+    /** @brief Converts to timestamp. */
     operator zpt::timestamp_t();
+    /** @brief Converts to JSON object. */
     operator zpt::JSONObj();
+    /** @brief Converts to JSON array. */
     operator zpt::JSONArr();
+    /** @brief Converts to JSON object reference. */
     operator zpt::JSONObj&();
+    /** @brief Converts to JSON array reference. */
     operator zpt::JSONArr&();
+    /** @brief Converts to lambda. */
     operator zpt::lambda();
+    /** @brief Converts to regex. */
     operator zpt::regex();
+    /** @brief Converts to regex reference. */
     operator zpt::regex&();
+    /** @brief Converts to std::regex reference. */
     operator std::regex&();
 
+    /** @brief Converts to string (const). */
     operator std::string() const;
+    /** @brief Converts to bool (const). */
     operator bool() const;
+    /** @brief Converts to int (const). */
     operator int() const;
+    /** @brief Converts to long (const). */
     operator long() const;
+    /** @brief Converts to long long (const). */
     operator long long() const;
+    /** @brief Converts to size_t (const). */
     operator size_t() const;
+    /** @brief Converts to double (const). */
     operator double() const;
 #ifdef __LP64__
+    /** @brief Converts to unsigned int (const). */
     operator unsigned int() const;
 #endif
+    /** @brief Converts to timestamp (const). */
     operator zpt::timestamp_t() const;
+    /** @brief Converts to JSON object (const). */
     operator zpt::JSONObj() const;
+    /** @brief Converts to JSON array (const). */
     operator zpt::JSONArr() const;
+    /** @brief Converts to JSON object reference (const). */
     operator zpt::JSONObj&() const;
+    /** @brief Converts to JSON array reference (const). */
     operator zpt::JSONArr&() const;
+    /** @brief Converts to lambda (const). */
     operator zpt::lambda() const;
+    /** @brief Converts to regex (const). */
     operator zpt::regex() const;
+    /** @brief Converts to regex reference (const). */
     operator zpt::regex&() const;
+    /** @brief Converts to std::regex reference (const). */
     operator std::regex&() const;
+    ///@}
 
+    /** @name Set Operations */
+    ///@{
+    /** @brief Returns union of this and the initializer list. */
     auto operator+(std::initializer_list<zpt::json> _in) const -> json;
+    /** @brief In-place union with initializer list. */
     auto operator+=(std::initializer_list<zpt::json> _in) -> json&;
+    /** @brief Returns difference (elements in this but not in the list). */
     auto operator-(std::initializer_list<zpt::json> _in) const -> json;
+    /** @brief In-place difference. */
     auto operator-=(std::initializer_list<zpt::json> _in) -> json&;
+    /** @brief Returns strict union (non-overlapping merge). */
     auto operator/(std::initializer_list<zpt::json> _in) const -> json;
+    /** @brief Returns deep merge of this and the list. */
     auto operator|(std::initializer_list<zpt::json> _in) const -> json;
+    /** @brief In-place deep merge. */
     auto operator|=(std::initializer_list<zpt::json> _in) -> json&;
+    /** @brief Returns intersection of this and the list. */
     auto operator&(std::initializer_list<zpt::json> _in) const -> json;
+    /** @brief In-place intersection. */
     auto operator&=(std::initializer_list<zpt::json> _in) -> json&;
+    /** @brief Returns union of this and another JSON value. */
     auto operator+(zpt::json _rhs) const -> json;
+    /** @brief In-place union. */
     auto operator+=(zpt::json _rhs) -> json&;
+    /** @brief Returns difference. */
     auto operator-(zpt::json _rhs) const -> json;
+    /** @brief In-place difference. */
     auto operator-=(zpt::json _rhs) -> json&;
+    /** @brief Returns strict union. */
     auto operator/(zpt::json _rhs) const -> json;
+    /** @brief Returns deep merge. */
     auto operator|(zpt::json _rhs) const -> json;
+    /** @brief In-place deep merge. */
     auto operator|=(zpt::json _rhs) -> json&;
+    /** @brief Returns intersection. */
     auto operator&(zpt::json _rhs) const -> json;
+    /** @brief In-place intersection. */
     auto operator&=(zpt::json _rhs) -> json&;
+    ///@}
 
     friend auto operator>>(std::istream& _in, zpt::json& _out) -> std::istream& {
         _out.load_from(_in);
@@ -440,50 +539,91 @@ class json {
     static auto object() -> zpt::json;
     /** @brief Creates an empty JSON array. */
     static auto array() -> zpt::json;
+    /** @name Static Type Factories
+     *  Create JSON values with explicit types.
+     */
+    ///@{
+    /** @brief Returns pretty-printed string of a JSON-like object. */
     template<typename T>
     static auto pretty(T _e) -> std::string;
+    /** @brief Creates a JSON string value. */
     template<typename T>
     static auto string(T _e) -> zpt::json;
+    /** @brief Creates a JSON unsigned integer value. */
     template<typename T>
     static auto uinteger(T _e) -> zpt::json;
+    /** @brief Creates a JSON integer value. */
     template<typename T>
     static auto integer(T _e) -> zpt::json;
+    /** @brief Creates a JSON floating-point value. */
     template<typename T>
     static auto floating(T _e) -> zpt::json;
+    /** @brief Creates a JSON unsigned long value. */
     template<typename T>
     static auto ulong(T _e) -> zpt::json;
+    /** @brief Creates a JSON boolean value. */
     template<typename T>
     static auto boolean(T _e) -> zpt::json;
+    /** @brief Creates a JSON date from an ISO 8601 string. */
     static auto date(std::string const& _e) -> zpt::json;
+    /** @brief Creates a JSON date with the current timestamp. */
     static auto date() -> zpt::json;
+    /** @brief Creates a JSON date from a numeric timestamp. */
     template<typename T>
     static auto date(T _e) -> zpt::json;
+    /** @brief Creates a JSON lambda from a callable. */
     template<typename T>
     static auto lambda(T _e) -> zpt::json;
+    /** @brief Creates a JSON lambda with name and argument count. */
     static auto lambda(std::string const& _name, unsigned short _n_args) -> zpt::json;
+    /** @brief Creates a JSON regex value. */
     template<typename T>
     static auto regex(T _e) -> zpt::json;
+    ///@}
 
+    /** @name Type Introspection
+     *  Returns the JSONType for a given C++ value.
+     */
+    ///@{
+    /** @brief Returns JSString. */
     static auto type_of(std::string const& _value) -> zpt::JSONType;
+    /** @brief Returns JSBoolean. */
     static auto type_of(bool _value) -> zpt::JSONType;
+    /** @brief Returns JSInteger. */
     static auto type_of(int _value) -> zpt::JSONType;
+    /** @brief Returns JSInteger. */
     static auto type_of(long _value) -> zpt::JSONType;
+    /** @brief Returns JSInteger. */
     static auto type_of(long long _value) -> zpt::JSONType;
+    /** @brief Returns JSInteger. */
     static auto type_of(size_t _value) -> zpt::JSONType;
+    /** @brief Returns JSDouble. */
     static auto type_of(double _value) -> zpt::JSONType;
 #ifdef __LP64__
+    /** @brief Returns JSInteger. */
     static auto type_of(unsigned int _value) -> zpt::JSONType;
 #endif
+    /** @brief Returns the type stored in the element. */
     static auto type_of(zpt::JSONElementT& _value) -> zpt::JSONType;
+    /** @brief Returns JSDate. */
     static auto type_of(zpt::timestamp_t _value) -> zpt::JSONType;
+    /** @brief Returns JSString. */
     static auto type_of(zpt::pretty _value) -> zpt::JSONType;
+    /** @brief Returns JSObject. */
     static auto type_of(zpt::JSONObj _value) -> zpt::JSONType;
+    /** @brief Returns JSArray. */
     static auto type_of(zpt::JSONArr _value) -> zpt::JSONType;
+    /** @brief Returns JSObject. */
     static auto type_of(zpt::JSONObj& _value) -> zpt::JSONType;
+    /** @brief Returns JSArray. */
     static auto type_of(zpt::JSONArr& _value) -> zpt::JSONType;
+    /** @brief Returns JSLambda. */
     static auto type_of(zpt::lambda _value) -> zpt::JSONType;
+    /** @brief Returns JSRegex. */
     static auto type_of(zpt::regex& _value) -> zpt::JSONType;
+    /** @brief Returns the type of the underlying JSON value. */
     static auto type_of(zpt::json& _value) -> zpt::JSONType;
+    ///@}
 
     /**
      * @brief Recursively traverses a JSON document.
@@ -572,35 +712,34 @@ class JSONIterator {
      * @param _pos Starting position (0 for begin, size() for end).
      */
     explicit JSONIterator(zpt::json const& _target, size_t _pos);
+    /** @brief Copy constructor. */
     JSONIterator(JSONIterator const& _rhs);
+    /** @brief Move constructor. */
     JSONIterator(JSONIterator&& _rhs);
+    /** @brief Destructor. */
     virtual ~JSONIterator() = default;
 
-    // BASIC ITERATOR METHODS //
+    /** @brief Copy assignment. */
     auto operator=(JSONIterator const& _rhs) -> JSONIterator&;
+    /** @brief Move assignment. */
     auto operator=(JSONIterator&& _rhs) -> JSONIterator&;
+    /** @brief Pre-increment: advances to next element. */
     auto operator++() -> JSONIterator&;
+    /** @brief Dereference: returns (index, key, value) tuple. */
     auto operator*() -> reference;
-    // END / BASIC ITERATOR METHODS //
 
-    // INPUT ITERATOR METHODS //
+    /** @brief Post-increment: advances and returns previous position. */
     auto operator++(int) -> JSONIterator;
+    /** @brief Arrow operator: returns (index, key, value) tuple. */
     auto operator->() -> pointer;
+    /** @brief Equality comparison. */
     auto operator==(JSONIterator const& _rhs) const -> bool;
+    /** @brief Inequality comparison. */
     auto operator!=(JSONIterator const& _rhs) const -> bool;
-    // END / INPUT ITERATOR METHODS //
 
-    // OUTPUT ITERATOR METHODS //
-    // reference operator*(); <- already defined
-    // iterator operator++(int); <- already defined
-    // END / OUTPUT ITERATOR METHODS //
-
-    // FORWARD ITERATOR METHODS //
-    // Enable support for both input and output iterator <- already enabled
-    // END / FORWARD ITERATOR METHODS //
-
-    // BIDIRECTIOANL ITERATOR METHODS //
+    /** @brief Pre-decrement: moves to previous element. */
     auto operator--() -> JSONIterator&;
+    /** @brief Post-decrement: moves back and returns previous position. */
     auto operator--(int) -> JSONIterator;
     // END / BIDIRECTIOANL ITERATOR METHODS //
 
@@ -639,7 +778,9 @@ namespace zpt {
  */
 class JSONObjT {
   public:
+    /** @brief Constructs an empty JSON object. */
     JSONObjT();
+    /** @brief Destructor. */
     virtual ~JSONObjT();
 
     /** @name Serialization */
@@ -703,44 +844,83 @@ class JSONObjT {
     /** @brief Creates a deep copy of this object. */
     auto clone() const -> zpt::json;
 
+    /** @name Access Operators */
+    ///@{
+    /** @brief Accesses underlying map. */
     auto operator->() -> zpt::json::map*;
+    /** @brief Dereferences to underlying map. */
     auto operator*() -> zpt::json::map&;
+    /** @brief Accesses underlying map (const). */
     auto operator->() const -> zpt::json::map const*;
+    /** @brief Dereferences to underlying map (const). */
     auto operator*() const -> zpt::json::map const&;
+    ///@}
 
+    /** @name Comparison Operators */
+    ///@{
+    /** @brief Equality comparison. */
     auto operator==(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Equality comparison with wrapper. */
     auto operator==(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Equality comparison with any type. */
     template<typename T>
     auto operator==(T _in) const -> bool;
+    /** @brief Inequality comparison. */
     auto operator!=(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Inequality comparison with wrapper. */
     auto operator!=(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Inequality comparison with any type. */
     template<typename T>
     auto operator!=(T _in) const -> bool;
+    /** @brief Less-than comparison. */
     auto operator<(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Less-than comparison with wrapper. */
     auto operator<(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Less-than comparison with any type. */
     template<typename T>
     auto operator<(T _in) const -> bool;
+    /** @brief Greater-than comparison. */
     auto operator>(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Greater-than comparison with wrapper. */
     auto operator>(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Greater-than comparison with any type. */
     template<typename T>
     auto operator>(T _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison. */
     auto operator>=(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison with wrapper. */
     auto operator>=(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison with any type. */
     template<typename T>
     auto operator>=(T _in) const -> bool;
+    /** @brief Less-than-or-equal comparison. */
     auto operator<=(zpt::JSONObjT const& _in) const -> bool;
+    /** @brief Less-than-or-equal comparison with wrapper. */
     auto operator<=(zpt::JSONObj const& _in) const -> bool;
+    /** @brief Less-than-or-equal comparison with any type. */
     template<typename T>
     auto operator<=(T _in) const -> bool;
+    ///@}
 
+    /** @name Subscript Operators */
+    ///@{
+    /** @brief Access by integer index. */
     auto operator[](int _idx) -> zpt::json&;
+    /** @brief Access by size_t index. */
     auto operator[](size_t _idx) -> zpt::json&;
+    /** @brief Access by C-string key. */
     auto operator[](const char* _idx) -> zpt::json&;
+    /** @brief Access by string key. */
     auto operator[](std::string const& _idx) -> zpt::json&;
+    /** @brief Access by integer index (const). */
     auto operator[](int _idx) const -> zpt::json const;
+    /** @brief Access by size_t index (const). */
     auto operator[](size_t _idx) const -> zpt::json const;
+    /** @brief Access by C-string key (const). */
     auto operator[](const char* _idx) const -> zpt::json const;
+    /** @brief Access by string key (const). */
     auto operator[](std::string const& _idx) const -> zpt::json const;
+    ///@}
 
     friend auto operator<<(std::ostream& _out, zpt::JSONObjT& _in) -> std::ostream& {
         _in.stringify(_out);
@@ -768,7 +948,9 @@ namespace zpt {
  */
 class JSONArrT {
   public:
+    /** @brief Constructs an empty JSON array. */
     JSONArrT();
+    /** @brief Destructor. */
     virtual ~JSONArrT();
 
     /** @name Serialization */
@@ -827,44 +1009,83 @@ class JSONArrT {
     /** @brief Creates a deep copy of this array. */
     auto clone() const -> zpt::json;
 
+    /** @name Access Operators */
+    ///@{
+    /** @brief Accesses underlying vector. */
     auto operator->() -> std::vector<zpt::json>*;
+    /** @brief Dereferences to underlying vector. */
     auto operator*() -> std::vector<zpt::json>&;
+    /** @brief Accesses underlying vector (const). */
     auto operator->() const -> std::vector<zpt::json> const*;
+    /** @brief Dereferences to underlying vector (const). */
     auto operator*() const -> std::vector<zpt::json> const&;
+    ///@}
 
+    /** @name Comparison Operators */
+    ///@{
+    /** @brief Equality comparison. */
     auto operator==(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Equality comparison with wrapper. */
     auto operator==(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Equality comparison with any type. */
     template<typename T>
     auto operator==(T _in) const -> bool;
+    /** @brief Inequality comparison. */
     auto operator!=(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Inequality comparison with wrapper. */
     auto operator!=(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Inequality comparison with any type. */
     template<typename T>
     auto operator!=(T _in) const -> bool;
+    /** @brief Less-than comparison. */
     auto operator<(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Less-than comparison with wrapper. */
     auto operator<(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Less-than comparison with any type. */
     template<typename T>
     auto operator<(T _in) const -> bool;
+    /** @brief Greater-than comparison. */
     auto operator>(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Greater-than comparison with wrapper. */
     auto operator>(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Greater-than comparison with any type. */
     template<typename T>
     auto operator>(T _in) const -> bool;
+    /** @brief Less-than-or-equal comparison. */
     auto operator<=(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Less-than-or-equal comparison with wrapper. */
     auto operator<=(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Less-than-or-equal comparison with any type. */
     template<typename T>
     auto operator<=(T _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison. */
     auto operator>=(zpt::JSONArrT const& _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison with wrapper. */
     auto operator>=(zpt::JSONArr const& _in) const -> bool;
+    /** @brief Greater-than-or-equal comparison with any type. */
     template<typename T>
     auto operator>=(T _in) const -> bool;
+    ///@}
 
+    /** @name Subscript Operators */
+    ///@{
+    /** @brief Access by integer index. */
     auto operator[](int _idx) -> zpt::json&;
+    /** @brief Access by size_t index. */
     auto operator[](size_t _idx) -> zpt::json&;
+    /** @brief Access by C-string key. */
     auto operator[](const char* _idx) -> zpt::json&;
+    /** @brief Access by string key. */
     auto operator[](std::string const& _idx) -> zpt::json&;
+    /** @brief Access by integer index (const). */
     auto operator[](int _idx) const -> zpt::json const;
+    /** @brief Access by size_t index (const). */
     auto operator[](size_t _idx) const -> zpt::json const;
+    /** @brief Access by C-string key (const). */
     auto operator[](const char* _idx) const -> zpt::json const;
+    /** @brief Access by string key (const). */
     auto operator[](std::string const& _idx) const -> zpt::json const;
+    ///@}
 
     friend auto operator<<(std::ostream& _out, zpt::JSONArrT& _in) -> std::ostream& {
         _in.stringify(_out);
@@ -897,45 +1118,69 @@ namespace zpt {
  */
 class JSONObj {
   public:
+    /** @brief Constructs an empty JSON object wrapper. */
     JSONObj();
+    /** @brief Copy constructor (shared semantics). */
     JSONObj(const zpt::JSONObj& _rhs);
+    /** @brief Move constructor. */
     JSONObj(zpt::JSONObj&& _rhs);
     /** @brief Takes ownership of a raw JSONObjT pointer. */
     JSONObj(zpt::JSONObjT* _target);
+    /** @brief Destructor. */
     virtual ~JSONObj();
 
     /** @brief Computes hash value for use in containers. */
     auto hash() const -> size_t;
 
+    /** @brief Copy assignment. */
     auto operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj&;
+    /** @brief Move assignment. */
     auto operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj&;
 
+    /** @brief Accesses underlying JSONObjT. */
     auto operator->() -> zpt::JSONObjT*;
+    /** @brief Dereferences to underlying JSONObjT. */
     auto operator*() -> zpt::JSONObjT&;
+    /** @brief Accesses underlying JSONObjT (const). */
     auto operator->() const -> zpt::JSONObjT const*;
+    /** @brief Dereferences to underlying JSONObjT (const). */
     auto operator*() const -> zpt::JSONObjT const&;
 
+    /** @brief Converts to JSON string. */
     operator std::string();
+    /** @brief Converts to pretty-printed string. */
     operator zpt::pretty();
+    /** @brief Equality comparison. */
     template<typename T>
     auto operator==(T _rhs) const -> bool;
+    /** @brief Inequality comparison. */
     template<typename T>
     auto operator!=(T _rhs) const -> bool;
+    /** @brief Less-than comparison. */
     template<typename T>
     auto operator<(T _rhs) const -> bool;
+    /** @brief Greater-than comparison. */
     template<typename T>
     auto operator>(T _rhs) const -> bool;
+    /** @brief Less-than-or-equal comparison. */
     template<typename T>
     auto operator<=(T _rhs) const -> bool;
+    /** @brief Greater-than-or-equal comparison. */
     template<typename T>
     auto operator>=(T _rhs) const -> bool;
+    /** @brief Pushes a key string. */
     auto operator<<(std::string const& _in) -> zpt::JSONObj&;
+    /** @brief Pushes a C-string key. */
     auto operator<<(const char* _in) -> zpt::JSONObj&;
+    /** @brief Pushes key-value pairs from initializer list. */
     auto operator<<(std::initializer_list<zpt::json> _list) -> zpt::JSONObj&;
+    /** @brief Pushes a value for the pending key. */
     template<typename T>
     auto operator<<(T _in) -> zpt::JSONObj&;
+    /** @brief Accesses element by index or key. */
     template<typename T>
     auto operator[](T _idx) -> zpt::json&;
+    /** @brief Accesses element by index or key (const). */
     template<typename T>
     auto operator[](T _idx) const -> zpt::json const;
 
@@ -970,44 +1215,66 @@ namespace zpt {
  */
 class JSONArr {
   public:
+    /** @brief Constructs an empty JSON array wrapper. */
     JSONArr();
+    /** @brief Copy constructor (shared semantics). */
     JSONArr(const JSONArr& _rhs);
+    /** @brief Move constructor. */
     JSONArr(JSONArr&& _rhs);
     /** @brief Takes ownership of a raw JSONArrT pointer. */
     JSONArr(zpt::JSONArrT* _target);
+    /** @brief Destructor. */
     virtual ~JSONArr();
 
     /** @brief Computes hash value for use in containers. */
     auto hash() const -> size_t;
 
+    /** @brief Converts to JSON string. */
     operator std::string();
+    /** @brief Converts to pretty-printed string. */
     operator zpt::pretty();
 
+    /** @brief Copy assignment. */
     auto operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr&;
+    /** @brief Move assignment. */
     auto operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr&;
 
+    /** @brief Accesses underlying JSONArrT. */
     auto operator->() -> zpt::JSONArrT*;
+    /** @brief Dereferences to underlying JSONArrT. */
     auto operator*() -> zpt::JSONArrT&;
+    /** @brief Accesses underlying JSONArrT (const). */
     auto operator->() const -> zpt::JSONArrT const*;
+    /** @brief Dereferences to underlying JSONArrT (const). */
     auto operator*() const -> zpt::JSONArrT const&;
 
+    /** @brief Equality comparison. */
     template<typename T>
     auto operator==(T _rhs) const -> bool;
+    /** @brief Inequality comparison. */
     template<typename T>
     auto operator!=(T _rhs) const -> bool;
+    /** @brief Less-than comparison. */
     template<typename T>
     auto operator<(T _rhs) const -> bool;
+    /** @brief Greater-than comparison. */
     template<typename T>
     auto operator>(T _rhs) const -> bool;
+    /** @brief Less-than-or-equal comparison. */
     template<typename T>
     auto operator<=(T _rhs) const -> bool;
+    /** @brief Greater-than-or-equal comparison. */
     template<typename T>
     auto operator>=(T _rhs) const -> bool;
+    /** @brief Appends elements from initializer list. */
     auto operator<<(std::initializer_list<zpt::json> _list) -> JSONArr&;
+    /** @brief Appends an element to the array. */
     template<typename T>
     auto operator<<(T _in) -> JSONArr&;
+    /** @brief Accesses element by index. */
     template<typename T>
     auto operator[](T _idx) -> json&;
+    /** @brief Accesses element by index (const). */
     template<typename T>
     auto operator[](T _idx) const -> json const;
 
@@ -1046,8 +1313,11 @@ namespace zpt {
  */
 class JSONRegex {
   public:
+    /** @brief Constructs an empty regex. */
     JSONRegex();
+    /** @brief Copy constructor. */
     JSONRegex(const zpt::JSONRegex& _rhs);
+    /** @brief Move constructor. */
     JSONRegex(zpt::JSONRegex&& _rhs);
     /**
      * @brief Constructs from a regex pattern string.
@@ -1055,18 +1325,26 @@ class JSONRegex {
      * @throws std::regex_error If pattern is invalid.
      */
     JSONRegex(std::string const& _target);
+    /** @brief Destructor. */
     virtual ~JSONRegex();
 
+    /** @brief Copy assignment. */
     auto operator=(const zpt::JSONRegex& _rhs) -> zpt::JSONRegex&;
+    /** @brief Move assignment. */
     auto operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex&;
 
     /** @brief Access underlying std::regex. */
     auto operator->() -> std::regex*;
+    /** @brief Dereference to underlying std::regex. */
     auto operator*() -> std::regex&;
+    /** @brief Access underlying std::regex (const). */
     auto operator->() const -> std::regex const*;
+    /** @brief Dereference to underlying std::regex (const). */
     auto operator*() const -> std::regex const&;
 
+    /** @brief Converts to pretty-printed pattern string. */
     operator zpt::pretty();
+    /** @brief Converts to std::regex reference. */
     operator std::regex&();
 
     /** @brief Compares regex patterns. */

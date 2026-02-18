@@ -46,6 +46,7 @@ class SyntaxErrorException : public zpt::exception {
      */
     SyntaxErrorException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~SyntaxErrorException() throw();
 };
 

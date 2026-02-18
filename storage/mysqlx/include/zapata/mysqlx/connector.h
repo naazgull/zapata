@@ -70,7 +70,9 @@ struct mysql_stmt_end {
 /** @brief RAII wrapper for MySQL library initialization/cleanup. */
 class library {
   public:
+    /** @brief Initializes the MySQL client library. */
     library();
+    /** @brief Finalizes the MySQL client library. */
     virtual ~library();
 };
 
@@ -82,11 +84,16 @@ class connection : public zpt::storage::connection::type {
   public:
     /** @brief Constructs a connection with options (host, user, password, port). */
     connection(zpt::json _options);
+    /** @brief Destructor. */
     virtual ~connection() override = default;
 
+    /** @brief Opens or re-opens the MySQL connection with the given options. */
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
+    /** @brief Closes the MySQL connection. */
     virtual auto close() -> zpt::storage::connection::type* override;
+    /** @brief Creates a new session from this connection. */
     virtual auto session() const -> zpt::storage::session override;
+    /** @brief Returns the connection configuration options. */
     virtual auto options() const -> zpt::json;
 
     /** @brief Returns the underlying MYSQL handle. */
@@ -105,16 +112,24 @@ class connection : public zpt::storage::connection::type {
  */
 class session : public zpt::storage::session::type {
   public:
+    /** @brief Constructs a session from the given MySQL connection. */
     session(zpt::storage::mysqlx::connection const& _connection);
     session(zpt::storage::mysqlx::session const& _rhs) = delete;
     session(zpt::storage::mysqlx::session&& _rhs) = delete;
+    /** @brief Destructor; ends the session thread. */
     virtual ~session() override;
+    /** @brief Returns true if the underlying MySQL connection is active. */
     virtual auto is_open() const -> bool override;
+    /** @brief Commits the current transaction. */
     virtual auto commit() -> zpt::storage::session::type* override;
+    /** @brief Rolls back the current transaction. */
     virtual auto rollback() -> zpt::storage::session::type* override;
+    /** @brief Executes a raw SQL statement on this session. */
     virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
+    /** @brief Selects a database (schema) within this session. */
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
 
+    /** @brief Returns the underlying MYSQL handle. */
     auto mysql() const -> mysql_ptr;
 
   private:
@@ -123,13 +138,18 @@ class session : public zpt::storage::session::type {
 /** @brief MySQL database implementation (represents a schema/database). */
 class database : public zpt::storage::database::type {
   public:
+    /** @brief Constructs a database handle for the given schema name. */
     database(zpt::storage::mysqlx::session const& _session, std::string const& _db);
     database(zpt::storage::mysqlx::database const& _rhs) = delete;
     database(zpt::storage::mysqlx::database&& _rhs) = delete;
+    /** @brief Destructor. */
     virtual ~database() override = default;
+    /** @brief Executes a raw SQL statement on this database. */
     virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
+    /** @brief Returns a collection (table) handle for the given name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
 
+    /** @brief Returns the underlying MYSQL handle. */
     auto mysql() const -> mysql_ptr;
 
   private:
@@ -139,17 +159,27 @@ class database : public zpt::storage::database::type {
 /** @brief MySQL collection implementation (represents a database table). */
 class collection : public zpt::storage::collection::type {
   public:
+    /** @brief Constructs a collection handle for the given table within a database. */
     collection(zpt::storage::mysqlx::database const& _database, std::string const& _collection);
+    /** @brief Destructor. */
     virtual ~collection() override = default;
+    /** @brief Creates an INSERT action for the given document. */
     virtual auto add(zpt::json _document) const -> zpt::storage::action override;
+    /** @brief Creates an UPDATE action with the given search criteria. */
     virtual auto modify(zpt::json _search) const -> zpt::storage::action override;
+    /** @brief Creates a DELETE action with the given search criteria. */
     virtual auto remove(zpt::json _search) const -> zpt::storage::action override;
+    /** @brief Creates a REPLACE action for the document with the given ID. */
     virtual auto replace(std::string const& _id, zpt::json _document) const
       -> zpt::storage::action override;
+    /** @brief Creates a SELECT action with the given search criteria. */
     virtual auto find(zpt::json _search) const -> zpt::storage::action override;
+    /** @brief Returns the total number of rows in the table. */
     virtual auto count() -> size_t override;
 
+    /** @brief Returns the table name. */
     auto table() const -> std::string const&;
+    /** @brief Returns the underlying MYSQL handle. */
     auto mysql() const -> mysql_ptr;
 
   private:
@@ -159,7 +189,9 @@ class collection : public zpt::storage::collection::type {
 /** @brief Base class for MySQL action operations (manages prepared statements). */
 class action : public zpt::storage::action::type {
   public:
+    /** @brief Constructs an action bound to the given collection. */
     action(zpt::storage::mysqlx::collection const& _collection);
+    /** @brief Destructor. */
     virtual ~action() override = default;
 
     /** @brief Returns the prepared statement handle. */
@@ -175,25 +207,42 @@ class action : public zpt::storage::action::type {
 /** @brief MySQL INSERT action builder. */
 class action_add : public zpt::storage::mysqlx::action {
   public:
+    /** @brief Constructs an INSERT action for the given document. */
     action_add(zpt::storage::mysqlx::collection const& _collection, zpt::json _document);
+    /** @brief Destructor. */
     virtual ~action_add() override = default;
+    /** @brief Queues an additional document for insertion. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to INSERT; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    /** @brief Binds named parameter values into the prepared INSERT statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    /** @brief Executes the INSERT statement and returns a result with generated IDs. */
     virtual auto execute() -> zpt::storage::result override;
+    /** @brief Returns the auto-generated IDs from the last INSERT execution. */
     auto get_generated_ids() const -> zpt::json;
 
   private:
@@ -203,24 +252,40 @@ class action_add : public zpt::storage::mysqlx::action {
 /** @brief MySQL UPDATE action builder. */
 class action_modify : public zpt::storage::mysqlx::action {
   public:
+    /** @brief Constructs an UPDATE action with the given search criteria. */
     action_modify(zpt::storage::mysqlx::collection const& _collection, zpt::json _search);
+    /** @brief Destructor. */
     virtual ~action_modify() override = default;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Refines the WHERE clause with additional search criteria. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Adds a SET clause assigning the given value to the named column. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
+    /** @brief Adds a SET clause that clears (nullifies) the named column. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
+    /** @brief Applies a JSON patch document as multiple SET clauses. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to UPDATE; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    /** @brief Binds named parameter values into the prepared UPDATE statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    /** @brief Executes the UPDATE statement and returns the affected row count. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
@@ -231,24 +296,40 @@ class action_modify : public zpt::storage::mysqlx::action {
 /** @brief MySQL DELETE action builder. */
 class action_remove : public zpt::storage::mysqlx::action {
   public:
+    /** @brief Constructs a DELETE action targeting rows that match the given search criteria. */
     action_remove(zpt::storage::mysqlx::collection const& _collection, zpt::json _search);
+    /** @brief Destructor. */
     virtual ~action_remove() override = default;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Refines the WHERE clause with additional search criteria. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to DELETE; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    /** @brief Binds named parameter values into the prepared DELETE statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    /** @brief Executes the DELETE statement and returns the affected row count. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
@@ -258,26 +339,42 @@ class action_remove : public zpt::storage::mysqlx::action {
 /** @brief MySQL REPLACE action builder. */
 class action_replace : public zpt::storage::mysqlx::action {
   public:
+    /** @brief Constructs a REPLACE action for the document with the given ID. */
     action_replace(zpt::storage::mysqlx::collection const& _collection,
                    std::string _id,
                    zpt::json _document);
+    /** @brief Destructor. */
     virtual ~action_replace() override = default;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Updates the replacement document and target ID. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to REPLACE; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    /** @brief Binds named parameter values into the prepared REPLACE statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    /** @brief Executes the MySQL REPLACE statement and returns the result. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
@@ -286,25 +383,42 @@ class action_replace : public zpt::storage::mysqlx::action {
 /** @brief MySQL SELECT action builder with filtering, sorting, and pagination. */
 class action_find : public zpt::storage::mysqlx::action {
   public:
+    /** @brief Constructs a SELECT action that returns all rows in the collection. */
     action_find(zpt::storage::mysqlx::collection const& _collection);
+    /** @brief Constructs a SELECT action with an initial WHERE clause from the search document. */
     action_find(zpt::storage::mysqlx::collection const& _collection, zpt::json _search);
+    /** @brief Destructor. */
     virtual ~action_find() override = default;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
+    /** @brief Refines the WHERE clause with additional search criteria. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
+    /** @brief Not applicable to SELECT; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    /** @brief Adds an ORDER BY clause for the given column. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
+    /** @brief Restricts the columns returned by the SELECT to the given field list. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    /** @brief Sets the number of rows to skip (OFFSET) in the result set. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    /** @brief Sets the maximum number of rows (LIMIT) to return. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    /** @brief Binds named parameter values into the prepared SELECT statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    /** @brief Executes the SELECT query and returns the result set. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
@@ -316,18 +430,31 @@ class action_find : public zpt::storage::mysqlx::action {
 /** @brief MySQL query result set. */
 class result : public zpt::storage::result::type {
   public:
+    /** @brief Constructs a result from a generic action (executes the statement). */
     result(zpt::storage::mysqlx::action& _action);
+    /** @brief Constructs a result from an INSERT action, capturing generated IDs. */
     result(zpt::storage::mysqlx::action_add& _action);
+    /** @brief Constructs a result from an UPDATE action, capturing affected row count. */
     result(zpt::storage::mysqlx::action_modify& _action);
+    /** @brief Constructs a result from a DELETE action, capturing affected row count. */
     result(zpt::storage::mysqlx::action_remove& _action);
+    /** @brief Constructs a result from a REPLACE action. */
     result(zpt::storage::mysqlx::action_replace& _action);
+    /** @brief Constructs a result from a SELECT action, holding the result set. */
     result(zpt::storage::mysqlx::action_find& _action);
+    /** @brief Destructor; frees the MySQL result set. */
     virtual ~result() override;
+    /** @brief Fetches up to @p _amount rows as a JSON array (0 = all). */
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
+    /** @brief Returns the auto-generated ID(s) from the last INSERT or REPLACE. */
     virtual auto generated_id() -> zpt::json override;
+    /** @brief Returns the number of rows in the result set or affected by the statement. */
     virtual auto count() const -> size_t override;
+    /** @brief Returns the HTTP-style status code reflecting the operation outcome. */
     virtual auto status() const -> zpt::status override;
+    /** @brief Returns a human-readable message describing the operation outcome. */
     virtual auto message() const -> std::string override;
+    /** @brief Serializes the entire result to a JSON representation. */
     virtual auto to_json() const -> zpt::json override;
 
   private:

@@ -57,8 +57,11 @@ namespace zpt {
  */
 class basic_message {
   public:
+    /** @brief Default constructor. */
     basic_message() = default;
+    /** @brief Constructs a reply message from a request. */
     basic_message(basic_message const& _req, bool);
+    /** @brief Destructor. */
     virtual ~basic_message() = default;
 
     /** @brief Returns the request method (GET, POST, etc.). */
@@ -122,17 +125,31 @@ constexpr int CALL_STATE_SENT = 1;
 constexpr int CALL_STATE_SUCCESS_REPLY = 2;
 constexpr int CALL_STATE_FAILURE_REPLY = 3;
 
+/**
+ * @brief Context for tracking an outbound call and its reply.
+ *
+ * Holds the state of an asynchronous call (unprocessed, sent, success, failure)
+ * and the reply message once received. Used with zpt::events::call to
+ * correlate requests with responses.
+ */
 class call_context {
   public:
     using ptr = std::shared_ptr<call_context>;
 
+    /** @brief Default constructor. Initial state is CALL_STATE_SENT. */
     call_context() = default;
+    /** @brief Destructor. */
     ~call_context() = default;
 
+    /** @brief Returns the current call state (UNPROCESSED, SENT, SUCCESS_REPLY, FAILURE_REPLY). */
     auto state() const -> int;
+    /** @brief Returns the reply message (may be null if not yet replied). */
     auto reply() const -> zpt::message;
+    /** @brief Sets the reply message and updates the call state. */
     auto reply(zpt::message _to_update) -> call_context&;
+    /** @brief Returns true if a reply has been received. */
     auto is_replied() const -> bool;
+    /** @brief Returns true if the reply indicates a failure. */
     auto has_error() const -> bool;
 
   private:
@@ -148,31 +165,56 @@ class call_context {
  */
 class json_message : public basic_message {
   public:
+    /** @brief Constructs an empty JSON message. */
     json_message();
+    /** @brief Constructs a JSON reply from an existing request. */
     json_message(basic_message const& _req, bool);
+    /** @brief Destructor. */
     virtual ~json_message() = default;
 
+    /** @brief Returns the request method. */
     auto performative() const -> zpt::performative override;
+    /** @brief Returns the response status code. */
     auto status() const -> zpt::status override;
+    /** @brief Returns mutable reference to URI. */
     auto uri() -> zpt::json& override;
+    /** @brief Returns the URI (const). */
     auto uri() const -> zpt::json const override;
+    /** @brief Returns protocol version. */
     auto version() const -> std::string override;
+    /** @brief Returns URI scheme. */
     auto scheme() const -> std::string override;
+    /** @brief Returns the resource path. */
     auto resource() const -> zpt::json const override;
+    /** @brief Returns query parameters. */
     auto parameters() const -> zpt::json const override;
+    /** @brief Returns mutable reference to headers. */
     auto headers() -> zpt::json& override;
+    /** @brief Returns headers (const). */
     auto headers() const -> zpt::json const override;
+    /** @brief Returns mutable reference to body. */
     auto body() -> zpt::json& override;
+    /** @brief Returns body (const). */
     auto body() const -> zpt::json const override;
+    /** @brief Returns true if connection should persist. */
     auto keep_alive() const -> bool override;
+    /** @brief Returns Content-Type header value. */
     auto content_type() const -> std::string override;
+    /** @brief Serializes message to output stream as JSON. */
     auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    /** @brief Deserializes message from input stream. */
     auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+    /** @brief Sets the request method. */
     auto performative(zpt::performative _performative) -> zpt::basic_message& override;
+    /** @brief Sets the response status code. */
     auto status(zpt::status _status) -> zpt::basic_message& override;
+    /** @brief Sets the URI from a string. */
     auto uri(std::string const& _uri) -> zpt::basic_message& override;
+    /** @brief Sets the protocol version. */
     auto version(std::string const& _version) -> zpt::basic_message& override;
+    /** @brief Returns true if message is empty/uninitialized. */
     auto empty() const -> bool override;
+    /** @brief Appends a value to the underlying JSON. */
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 

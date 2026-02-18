@@ -78,12 +78,14 @@ class thread_local_table {
         /** @brief Constructs an entry, forwarding args to T's constructor. */
         template<typename... Args>
         entry(Args... _args);
+        /** @brief Destructor. */
         virtual ~entry() override;
 
         /** @brief Dereferences to the stored value. */
         auto operator*() -> T&;
         /** @brief Member access to the stored value. */
         auto operator->() -> T*;
+        /** @brief Returns false (typed entries always hold a value). */
         auto is_null() const -> bool override;
 
       private:

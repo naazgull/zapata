@@ -656,7 +656,9 @@ inline const char* status_names[] = {
  */
 class basic_message : public zpt::basic_message {
   public:
+    /** @brief Default constructor. */
     basic_message() = default;
+    /** @brief Destructor. */
     virtual ~basic_message() = default;
 
     /** @brief Returns the HTTP method (GET, POST, etc.). */
@@ -735,6 +737,7 @@ class basic_message : public zpt::basic_message {
  */
 class basic_request : public zpt::http::basic_message {
   public:
+    /** @brief Default constructor. */
     basic_request();
     /**
      * @brief Constructs from a generic message.
@@ -742,6 +745,7 @@ class basic_request : public zpt::http::basic_message {
      * @param Unused compatibility parameter.
      */
     basic_request(zpt::basic_message const& _request, bool);
+    /** @brief Destructor. */
     virtual ~basic_request() = default;
 
     /** @brief Serializes the request to an output stream. */
@@ -769,6 +773,7 @@ using request = std::shared_ptr<basic_request>;
  */
 class basic_reply : public zpt::http::basic_message {
   public:
+    /** @brief Default constructor. */
     basic_reply();
     /**
      * @brief Constructs a reply from a request (for response generation).
@@ -776,6 +781,7 @@ class basic_reply : public zpt::http::basic_message {
      * @param Unused compatibility parameter.
      */
     basic_reply(zpt::basic_message const& _request, bool);
+    /** @brief Destructor. */
     virtual ~basic_reply() = default;
 
     /** @brief Serializes the response to an output stream. */

@@ -47,6 +47,7 @@ class InterruptedException : public zpt::exception {
      */
     InterruptedException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~InterruptedException() throw();
 };
 

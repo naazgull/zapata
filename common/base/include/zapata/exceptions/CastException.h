@@ -47,6 +47,7 @@ class CastException : public zpt::exception {
      */
     CastException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~CastException() throw();
 };
 

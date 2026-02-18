@@ -70,11 +70,13 @@ class forward_node {
     zpt::padded_atomic<bool> __is_null{ true };     ///< True if node is sentinel/empty
     zpt::lf::forward_node<T>::ptr __next{ nullptr }; ///< Pointer to next node
 
+    /** @brief Default constructor (sentinel/empty node). */
     forward_node() = default;
     /** @brief Constructs a node with the given value. */
     forward_node(T _value);
     forward_node(forward_node const&) = delete;
     forward_node(forward_node&&) = delete;
+    /** @brief Destructor. */
     virtual ~forward_node() = default;
 
     auto operator=(forward_node const&) -> forward_node& = delete;
@@ -141,34 +143,34 @@ class queue {
         using reference = T;
         using iterator_category = std::forward_iterator_tag;
 
+        /** @brief Constructs an iterator at the given node. */
         explicit iterator(zpt::lf::forward_node<T>* _current);
+        /** @brief Copy constructor. */
         iterator(const iterator& _rhs);
+        /** @brief Move constructor. */
         iterator(iterator&& _rhs);
+        /** @brief Destructor. */
         virtual ~iterator() = default;
 
-        // BASIC ITERATOR METHODS //
+        /** @brief Copy assignment. */
         auto operator=(const iterator& _rhs) -> iterator&;
+        /** @brief Move assignment. */
         auto operator=(iterator&& _rhs) -> iterator&;
+        /** @brief Pre-increment: advances to next node. */
         auto operator++() -> iterator&;
+        /** @brief Dereference: returns the stored value. */
         auto operator*() -> reference;
-        // END / BASIC ITERATOR METHODS //
 
-        // INPUT ITERATOR METHODS //
+        /** @brief Post-increment: advances and returns previous. */
         auto operator++(int) -> iterator;
+        /** @brief Arrow operator: returns the stored value. */
         auto operator->() -> pointer;
+        /** @brief Equality comparison. */
         auto operator==(iterator const& _rhs) const -> bool;
+        /** @brief Inequality comparison. */
         auto operator!=(iterator const& _rhs) const -> bool;
-        // END / INPUT ITERATOR METHODS //
 
-        // OUTPUT ITERATOR METHODS //
-        // reference operator*(); <- already defined
-        // iterator operator++(int); <- already defined
-        // END / OUTPUT ITERATOR METHODS //
-
-        // FORWARD ITERATOR METHODS //
-        // Enable support for both input and output iterator <- already enabled
-        // END / FORWARD ITERATOR METHODS //
-
+        /** @brief Returns the underlying node pointer. */
         auto node() const -> zpt::lf::forward_node<T>*;
 
       private:
@@ -232,7 +234,9 @@ class queue {
     /** @brief Returns count of retired nodes pending deletion. */
     auto get_thread_dangling_count() const -> size_t;
 
+    /** @brief Returns a debug string representation of the queue. */
     __attribute__((noinline)) auto to_string() const -> std::string;
+    /** @brief Converts to string (calls to_string()). */
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {

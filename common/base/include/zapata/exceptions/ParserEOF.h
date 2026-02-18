@@ -47,6 +47,7 @@ class ParserEOF : public zpt::exception {
      */
     ParserEOF(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~ParserEOF() throw();
 };
 

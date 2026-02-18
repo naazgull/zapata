@@ -84,6 +84,7 @@ class basic_stream {
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
 
+    /** @brief Default constructor. */
     basic_stream() = default;
     /** @brief Constructs from an existing stream. */
     basic_stream(std::ios& _rhs);
@@ -91,6 +92,7 @@ class basic_stream {
     basic_stream(std::unique_ptr<std::iostream> _underlying);
     basic_stream(basic_stream const& _rhs) = delete;
     basic_stream(basic_stream&& _rhs) = delete;
+    /** @brief Destructor. Closes the stream. */
     virtual ~basic_stream();
 
     auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
@@ -98,21 +100,31 @@ class basic_stream {
 
     /** @brief Sets the file descriptor. */
     virtual auto operator=(int _rhs) -> basic_stream&;
+    /** @brief Reads a value from the stream using the transport protocol. */
     template<typename T>
     auto read(T& _out) -> basic_stream&;
+    /** @brief Writes a value to the stream using the transport protocol. */
     template<typename T>
     auto write(T _in) -> basic_stream&;
+    /** @brief Reads without performing I/O (e.g., from internal buffer). */
     virtual auto read_without_io(std::any& _out) -> basic_stream&;
+    /** @brief Writes without performing I/O (e.g., to internal buffer). */
     virtual auto write_without_io(std::any const& _in) -> basic_stream&;
+    /** @brief Stream extraction operator. */
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
+    /** @brief Stream insertion operator. */
     template<typename T>
     auto operator<<(T _in) -> basic_stream&;
+    /** @brief Stream manipulator support (e.g., std::endl). */
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
+    /** @brief Dereferences to the underlying iostream. */
     auto operator*() -> std::iostream&;
 
+    /** @brief Returns the file descriptor. */
     virtual operator int();
 
+    /** @brief Sets the peer address and port on the underlying socket. */
     template<typename IOStream>
     auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
     virtual auto close() -> basic_stream&;

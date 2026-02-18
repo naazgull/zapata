@@ -63,10 +63,12 @@ namespace zpt {
 template<typename T>
 class cached {
   public:
+    /** @brief Default constructor. */
     cached() = default;
     /** @brief Constructs with an initial value. */
     template<typename... Args>
     cached(Args... _args);
+    /** @brief Destructor. */
     virtual ~cached();
 
     /**

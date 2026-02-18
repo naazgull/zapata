@@ -56,8 +56,10 @@ class spin_mutex {
     static constexpr bool shared{ true };      ///< Constant for shared lock mode.
     static constexpr bool exclusive{ false };  ///< Constant for exclusive lock mode.
 
+    /** @brief Default constructor. */
     spin_mutex() = default;
     spin_mutex(zpt::locks::spin_mutex const&) = delete;
+    /** @brief Destructor. */
     virtual ~spin_mutex() = default;
 
     auto operator=(zpt::locks::spin_mutex const&) -> zpt::locks::spin_mutex& = delete;
