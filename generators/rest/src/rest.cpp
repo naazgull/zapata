@@ -288,15 +288,17 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
@@ -385,13 +387,15 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "update_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_element", "zpt::events::state");
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
         auto _retrieve_element =
@@ -489,13 +493,15 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("post")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
@@ -574,15 +580,17 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
