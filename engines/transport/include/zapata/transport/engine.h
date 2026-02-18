@@ -204,6 +204,8 @@ class process {
     auto operator=(zpt::events::process const& _rhs) -> process& = delete;
     auto operator=(zpt::events::process&& _rhs) -> process& = delete;
 
+    /** @brief Returns the type of transport used to receive the message. */
+    virtual auto transport_type() -> std::string const& final;
     /** @brief Returns the received message. */
     virtual auto received() const -> zpt::message const final;
     /** @brief Returns the message to send as response. */
