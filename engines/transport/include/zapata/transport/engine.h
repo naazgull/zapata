@@ -1,3 +1,21 @@
+/**
+ * @file engine.h
+ * @brief Transport engine for handling network I/O and event dispatch.
+ *
+ * Provides the main processing loop that integrates transports with
+ * the event system. Handles receiving messages from streams, resolving
+ * them to event handlers, and dispatching responses.
+ *
+ * Key types:
+ * - `zpt::transports::engine` - Main engine class
+ * - `zpt::events::receive` - Event for receiving messages
+ * - `zpt::events::send` - Event for sending messages
+ * - `zpt::events::process` - Base class for message handlers
+ *
+ * @see zpt::transports::engine
+ * @see zpt::events::process
+ */
+
 #pragma once
 
 #include <list>
@@ -9,15 +27,39 @@
 
 namespace zpt {
 namespace transports {
+
+/**
+ * @brief Transport engine coordinating network I/O with event dispatch.
+ *
+ * The engine manages the lifecycle of network communication:
+ * 1. Receives messages from streams via polling
+ * 2. Resolves messages to registered event handlers
+ * 3. Dispatches events to consumer threads
+ * 4. Sends responses back through streams
+ *
+ * @par Example
+ * @code
+ * auto& engine = zpt::TRANSPORT_ENGINE(config);
+ * engine.add_resolver(my_resolver);
+ *
+ * // Engine runs in background, processing incoming connections
+ * engine.dispatcher()->trap();  // Wait for shutdown
+ * @endcode
+ */
 class engine {
   public:
+    /** @brief Constructs an engine with the given configuration. */
     engine(zpt::json _config);
     virtual ~engine() = default;
 
+    /** @brief Adds an event resolver for routing messages. */
     auto add_resolver(zpt::events::resolver _resolver) -> engine&;
+    /** @brief Resolves a message to matching event handlers. */
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event>;
+    /** @brief Returns the event dispatcher. */
     auto dispatcher() -> zpt::events::dispatcher::ptr;
+    /** @brief Initiates engine shutdown. */
     auto shutdown() -> engine&;
 
   private:
@@ -28,13 +70,26 @@ class engine {
 } // namespace transports
 
 namespace events {
+
+/**
+ * @brief Initialization data passed to transport events.
+ *
+ * Contains references to the dispatcher, polling instance, and
+ * stream for use during event processing.
+ */
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
-    zpt::polling::ptr __polling{ nullptr };
-    zpt::stream __stream{ nullptr };
+    zpt::events::dispatcher::ptr __dispatcher; ///< Event dispatcher
+    zpt::polling::ptr __polling;               ///< I/O polling instance
+    zpt::stream __stream;                      ///< Source stream
 };
 
+/**
+ * @brief Event operation for receiving messages from a stream.
+ *
+ * Reads a message from the stream using the appropriate transport,
+ * resolves it to handlers, and triggers processing events.
+ */
 class receive {
   public:
     receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
@@ -60,6 +115,12 @@ class receive {
     zpt::stream __stream;
 };
 
+/**
+ * @brief Event operation for sending messages to a stream.
+ *
+ * Serializes and writes a message to a stream using the
+ * appropriate transport protocol.
+ */
 class send {
   public:
     send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::message _to_send);
@@ -85,11 +146,34 @@ class send {
     zpt::message __to_send;
 };
 
+/**
+ * @brief Abstract base class for message processing events.
+ *
+ * Subclass this to implement custom message handlers. The process
+ * class manages the received message and prepares the response.
+ *
+ * @par Example
+ * @code
+ * class MyHandler : public zpt::events::process {
+ * public:
+ *     MyHandler(zpt::message msg) : process(msg) {}
+ *
+ *     bool blocked() const override { return false; }
+ *
+ *     zpt::events::state operator()(zpt::events::dispatcher::ptr d) override {
+ *         // Process received()
+ *         to_send()->body() = { "status", "ok" };
+ *         return zpt::events::finish;
+ *     }
+ * };
+ * @endcode
+ */
 class process {
   public:
     using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
+    /** @brief Constructs a process event with the received message. */
     process(zpt::message _received);
     process(zpt::message _received, zpt::call_context::ptr _context);
     process(zpt::events::process const& _rhs) = delete;
@@ -99,7 +183,9 @@ class process {
     auto operator=(zpt::events::process const& _rhs) -> process& = delete;
     auto operator=(zpt::events::process&& _rhs) -> process& = delete;
 
+    /** @brief Returns the received message. */
     virtual auto received() const -> zpt::message const final;
+    /** @brief Returns the message to send as response. */
     virtual auto to_send() -> zpt::message final;
     virtual auto context() const -> zpt::call_context::ptr final;
     virtual auto context(zpt::call_context::ptr _context) -> process& final;
@@ -113,7 +199,9 @@ class process {
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool final;
 
+    /** @brief Returns true if processing is blocked waiting for something. */
     virtual auto blocked() const -> bool = 0;
+    /** @brief Executes the message processing logic. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
   private:
@@ -127,11 +215,21 @@ class process {
 } // namespace events
 } // namespace zpt
 
+/**
+ * @brief Concept constraining types to zpt::events::process subclasses.
+ */
 template<typename T>
 concept ProcessOperation = std::is_base_of<zpt::events::process, T>::value;
 
 namespace zpt {
 namespace events {
+
+/**
+ * @brief Default message processor that discards messages.
+ *
+ * Used as the default handler when no other processor is registered.
+ * Simply completes without sending a response.
+ */
 class discard : public zpt::events::process {
   public:
     using zpt::events::process::process;
@@ -140,6 +238,23 @@ class discard : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
+/**
+ * @brief Event operation for making outbound calls.
+ *
+ * Sends a message to a remote endpoint and registers a callback
+ * for handling the response.
+ *
+ * @tparam T ProcessOperation type for handling the response.
+ *
+ * @par Example
+ * @code
+ * auto request = transport->make_request();
+ * request->performative(zpt::Get);
+ * request->uri()["path"] = "/api/resource";
+ *
+ * dispatcher->trigger<zpt::events::call<MyResponseHandler>>(resolver, request);
+ * @endcode
+ */
 template<ProcessOperation T = zpt::events::discard>
 class call {
   public:
@@ -182,6 +297,11 @@ class process_call_reply : public zpt::events::process {
 };
 } // namespace events
 
+/**
+ * @brief Returns the global transport engine instance.
+ * @param _config Optional configuration (used only on first call).
+ * @return Reference to the global transport engine.
+ */
 auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
 
 template<ProcessOperation T = zpt::events::process_call_reply>

@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file catalog.h
+ * @brief Aggregate header for the service catalog module.
+ *
+ * @see zpt::catalog
+ */
+
 #pragma once
 
 #include <zapata/catalog/catalog.h>

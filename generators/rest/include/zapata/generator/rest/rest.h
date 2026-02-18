@@ -20,6 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file rest.h
+ * @brief REST API scaffolding code generator.
+ *
+ * Generates C++ backend code, SQL schemata, CMake build files,
+ * and Vue.js frontend UI from an OpenAPI-style JSON schema.
+ *
+ * @see zpt::gen::rest::unit
+ */
+
 #pragma once
 
 #include <filesystem>
@@ -30,6 +40,28 @@
 namespace zpt {
 namespace gen {
 namespace rest {
+
+/**
+ * @brief Code generation unit for a REST API resource.
+ *
+ * Takes a JSON schema definition and generates:
+ * - C++ operation handler files (CRUD endpoints)
+ * - Plugin registration code
+ * - SQL DDL for MySQL
+ * - CMakeLists.txt build configuration
+ * - Vue.js HTML/JS UI scaffolding
+ *
+ * @par Example
+ * @code
+ * zpt::gen::rest::unit gen("my_api", backend_path, frontend_path, schema, langs);
+ * gen.generate_operations()
+ *    .generate_plugin()
+ *    .generate_sql()
+ *    .generate_cmake()
+ *    .generate_ui()
+ *    .dump();
+ * @endcode
+ */
 class unit {
   public:
     unit(std::string const& _name,

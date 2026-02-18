@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file NoHeaderNameException.h
+ * @brief Exception for missing HTTP header names.
+ */
+
 #pragma once
 
 #include <exception>
@@ -28,9 +33,20 @@
 
 namespace zpt {
 
+/**
+ * @brief Exception thrown when an HTTP header name is missing.
+ *
+ * Used by the HTTP parser when a header line is encountered without
+ * a valid header field name.
+ */
 class NoHeaderNameException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a NoHeaderNameException.
+     * @param _what Description of the error.
+     */
     NoHeaderNameException(std::string const& _what);
+
     virtual ~NoHeaderNameException() throw();
 };
 } // namespace zpt

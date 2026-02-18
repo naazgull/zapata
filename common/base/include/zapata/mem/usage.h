@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file usage.h
+ * @brief Memory usage monitoring utilities.
+ *
+ * Provides functions for querying the current process's memory usage.
+ */
+
 #pragma once
 
 #include <fstream>
@@ -28,15 +35,39 @@
 #include <unistd.h>
 
 namespace zpt {
+
+/**
+ * @brief Type trait to detect pointer types.
+ * @tparam T Type to check.
+ */
 template<typename T>
 struct is_pointer {
-    static const bool value = false;
+    static const bool value = false; ///< False for non-pointer types.
 };
 
+/**
+ * @brief Specialization for pointer types.
+ * @tparam T Pointed-to type.
+ */
 template<typename T>
 struct is_pointer<T*> {
-    static const bool value = true;
+    static const bool value = true; ///< True for pointer types.
 };
 
+/**
+ * @brief Queries the current process's memory usage.
+ * @param vm_usage Output: virtual memory size in KB.
+ * @param resident_set Output: resident set size (physical memory) in KB.
+ *
+ * Reads from /proc/self/stat on Linux to obtain memory statistics.
+ *
+ * @par Example Usage
+ * @code
+ * double vm, rss;
+ * zpt::process_mem_usage(vm, rss);
+ * std::cout << "VM: " << vm << " KB, RSS: " << rss << " KB\n";
+ * @endcode
+ */
 void process_mem_usage(double& vm_usage, double& resident_set);
-}; // namespace zpt
+
+} // namespace zpt

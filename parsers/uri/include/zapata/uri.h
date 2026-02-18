@@ -20,6 +20,42 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file uri.h
+ * @brief URI parsing and manipulation utilities.
+ *
+ * This is the aggregate header for the URI parser module. It provides
+ * functions to parse URIs into structured JSON objects and convert them
+ * back to strings.
+ *
+ * The URI is decomposed into components:
+ * - scheme (e.g., "http", "https")
+ * - authority (host, port, user info)
+ * - path segments
+ * - query parameters
+ * - fragment
+ *
+ * @par Example
+ * @code
+ * #include <zapata/uri.h>
+ *
+ * // Parse a URI
+ * auto uri = zpt::uri::parse("https://user:pass@example.com:8080/path?q=1#frag");
+ *
+ * // Access components
+ * std::string scheme = uri["scheme"];   // "https"
+ * std::string host = uri["host"];       // "example.com"
+ * int port = uri["port"];               // 8080
+ * auto params = uri["params"];          // {"q": "1"}
+ *
+ * // Convert back to string
+ * std::string url = zpt::uri::to_string(uri);
+ * @endcode
+ *
+ * @see zpt::uri::parse
+ * @see zpt::uri::to_string
+ */
+
 #pragma once
 
 #include <zapata/exceptions/NoHeaderNameException.h>

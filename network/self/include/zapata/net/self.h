@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file self.h
+ * @brief Aggregate header for the self (loopback) transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/self.h>

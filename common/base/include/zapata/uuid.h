@@ -20,41 +20,139 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file uuid.h
+ * @brief UUID (Universally Unique Identifier) class.
+ *
+ * Provides a UUID type for generating and manipulating 128-bit unique identifiers.
+ */
+
 #pragma once
 
 #include <string>
 
 namespace zpt {
+
+/**
+ * @brief Universally Unique Identifier (UUID) class.
+ *
+ * Represents a 128-bit UUID with support for generation, parsing, and
+ * string conversion. Uses the standard 8-4-4-4-12 hexadecimal format.
+ *
+ * @par Example Usage
+ * @code
+ * zpt::uuid id;                    // Generate new UUID
+ * std::cout << id << std::endl;    // e.g., "550e8400-e29b-41d4-a716-446655440000"
+ *
+ * zpt::uuid parsed("550e8400-e29b-41d4-a716-446655440000");
+ * @endcode
+ */
 class uuid {
   public:
+    /**
+     * @brief Generates a new random UUID.
+     */
     uuid();
+
+    /**
+     * @brief Constructs a UUID from a string.
+     * @param _str UUID string in 8-4-4-4-12 format.
+     */
     uuid(std::string const& _str);
+
+    /**
+     * @brief Copy constructor.
+     * @param _rhs UUID to copy.
+     */
     uuid(uuid const& _rhs);
+
+    /**
+     * @brief Move constructor.
+     * @param _rhs UUID to move from.
+     */
     uuid(uuid&& _rhs);
+
     ~uuid() = default;
 
+    /**
+     * @brief Copy assignment operator.
+     * @param _rhs UUID to copy.
+     * @return Reference to this UUID.
+     */
     auto operator=(uuid const& _rhs) -> uuid&;
+
+    /**
+     * @brief Move assignment operator.
+     * @param _rhs UUID to move from.
+     * @return Reference to this UUID.
+     */
     auto operator=(uuid&& _rhs) -> uuid&;
 
+    /**
+     * @brief Equality comparison.
+     * @param _rhs UUID to compare with.
+     * @return True if UUIDs are equal.
+     */
     auto operator==(uuid const& _rhs) -> bool;
+
+    /**
+     * @brief Inequality comparison.
+     * @param _rhs UUID to compare with.
+     * @return True if UUIDs are not equal.
+     */
     auto operator!=(uuid const& _rhs) -> bool;
 
+    /**
+     * @brief Converts the UUID to a string.
+     * @return UUID in 8-4-4-4-12 hexadecimal format.
+     */
     auto to_string() const -> std::string;
+
+    /**
+     * @brief Parses a UUID from a string.
+     * @param _str UUID string to parse.
+     * @return Reference to this UUID.
+     */
     auto from_string(std::string const& _str) -> uuid&;
+
+    /**
+     * @brief Writes the UUID to an output stream.
+     * @param _out Output stream.
+     * @return Reference to this UUID.
+     */
     auto to_stream(std::ostream& _out) const -> uuid const&;
+
+    /**
+     * @brief Reads a UUID from an input stream.
+     * @param _in Input stream.
+     * @return Reference to this UUID.
+     */
     auto from_stream(std::istream& _in) -> uuid&;
 
+    /**
+     * @brief Stream output operator.
+     * @param _out Output stream.
+     * @param _uuid UUID to output.
+     * @return Reference to output stream.
+     */
     friend auto operator<<(std::ostream& _out, zpt::uuid const& _uuid) -> std::ostream& {
         _uuid.to_stream(_out);
         return _out;
     }
 
+    /**
+     * @brief Stream input operator.
+     * @param _in Input stream.
+     * @param _uuid UUID to read into.
+     * @return Reference to input stream.
+     */
     friend auto operator>>(std::istream& _in, zpt::uuid& _uuid) -> std::istream& {
         _uuid.from_stream(_in);
         return _in;
     }
 
   private:
-    __uint128_t __base;
+    __uint128_t __base; ///< 128-bit UUID value.
 };
+
 } // namespace zpt

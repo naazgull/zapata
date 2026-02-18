@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file lua.h
+ * @brief Lua scripting language bridge.
+ *
+ * Integrates Lua 5.4 with the Zapata framework, allowing Lua scripts
+ * to be called from C++ and vice versa.
+ *
+ * @see zpt::lua::bridge
+ * @see zpt::LUA_BRIDGE
+ */
+
 #pragma once
 
 #include <zapata/lua/lua.h>

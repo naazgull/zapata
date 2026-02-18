@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file catalog.h
+ * @brief SQLite-backed service catalog for handler registration and lookup.
+ *
+ * Provides a catalog that stores service/handler registrations in an in-memory
+ * SQLite database, supporting pattern-based lookup (e.g., URI routing).
+ * Used internally by the REST engine resolver for service discovery.
+ *
+ * @see zpt::events::resolver_t
+ */
+
 #pragma once
 
 #include <deque>
@@ -40,24 +51,62 @@ static constexpr char const* EXACT_RESOLVE_STMT =
 } // namespace
 
 namespace zpt {
+
+/** @brief Returns the global catalog identifier. */
 auto CATALOG() -> ssize_t&;
 
+/**
+ * @brief SQLite-backed service catalog with pattern matching.
+ *
+ * Stores key-value handler registrations in an in-memory SQLite database.
+ * Keys support hierarchical pattern matching (e.g., "/api/users/{id}")
+ * for URI-based routing.
+ *
+ * @tparam K Key type (typically std::string for URI paths).
+ * @tparam M Metadata type (stored as serialized text).
+ *
+ * @par Example Usage
+ * @code
+ * zpt::catalog<std::string, zpt::json> cat("services", "node-1");
+ * cat.add("/api/users", hash_code, zpt::json{ "handler", "users" });
+ * auto matches = cat.resolve("/api/users");
+ * @endcode
+ */
 template<typename K, typename M>
 class catalog {
   public:
+    /**
+     * @brief Constructs a catalog backed by an in-memory SQLite database.
+     * @param _catalog_name Name for the SQLite database.
+     * @param _self_id Provider ID for this node.
+     */
     catalog(std::string const& _catalog_name, std::string const& _self_id);
     virtual ~catalog() = default;
 
+    /** @brief Removes all entries and providers. */
     auto clear() -> catalog&;
+    /** @brief Adds an entry using self as provider. */
     auto add(K _key, std::uint64_t hash, M _metadata) -> catalog&;
+    /** @brief Adds an entry with an explicit provider ID. */
     auto add(K _key, std::string const& _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
+    /** @brief Removes an entry by key. */
     auto remove(K _key) -> catalog&;
+    /**
+     * @brief Resolves a pattern to matching entries (self provider only).
+     * @param _pattern Pattern to match (supports {} placeholders).
+     * @return JSON array of matching entries.
+     */
     auto resolve(K const& _pattern) const -> zpt::json const;
+    /** @brief Searches for entries matching a pattern, optionally filtering by provider. */
     auto search(K const& _pattern, std::string const& _provider = "") const -> zpt::json const;
+    /** @brief Lists all entries for a provider (default: self). */
     auto list(std::string const& _provider_id = "") const -> zpt::json const;
 
+    /** @brief Registers a service provider. */
     auto add_provider(std::string const& _id, zpt::json const& _info) -> catalog&;
+    /** @brief Unregisters a service provider and its entries. */
     auto remove_provider(std::string const& _id) -> catalog&;
+    /** @brief Retrieves provider information by ID. */
     auto get_provider(std::string const& _id) const -> zpt::json;
 
   private:

@@ -20,26 +20,74 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file cached.h
+ * @brief Thread-safe cached value with copy-on-read semantics.
+ *
+ * Provides a value wrapper where writes are protected by a spin mutex and
+ * reads use thread-local copies that are refreshed when the version changes.
+ *
+ * @see zpt::locks::spin_mutex
+ * @see zpt::thread_local_variable
+ */
+
 #pragma once
 
 #include <typeinfo>
 #include <zapata/base.h>
 
 namespace zpt {
+
+/**
+ * @brief Thread-safe cached value with per-thread read copies.
+ *
+ * Stores a shared value that can be updated atomically via `commit()`.
+ * Each reader thread maintains a local copy that is refreshed only when
+ * the version number changes, minimizing lock contention for read-heavy
+ * workloads.
+ *
+ * @tparam T Value type (must be copy-assignable).
+ *
+ * @par Example Usage
+ * @code
+ * zpt::cached<zpt::json> config;
+ * config.commit(zpt::json{ "key", "value" });  // Writer thread
+ *
+ * auto& local = *config;  // Reader thread gets local copy
+ * @endcode
+ *
+ * @par Thread Safety
+ * - `commit()`: Thread-safe (exclusive lock)
+ * - `operator*()`, `operator->()`: Thread-safe (shared lock on version check)
+ */
 template<typename T>
 class cached {
   public:
     cached() = default;
+    /** @brief Constructs with an initial value. */
     template<typename... Args>
     cached(Args... _args);
     virtual ~cached();
 
+    /**
+     * @brief Commits the internal instance as the new shared value.
+     * @return Reference to this cached.
+     */
     auto commit() -> cached<T>&;
+
+    /**
+     * @brief Commits a new value as the shared value.
+     * @param _new_value Value to set.
+     * @return Reference to this cached.
+     */
     auto commit(T const& _new_value) -> cached<T>&;
 
+    /** @brief Returns the current version number. */
     auto version() -> unsigned long long;
 
+    /** @brief Access the thread-local copy. */
     auto operator->() -> T*;
+    /** @brief Dereference to the thread-local copy. */
     auto operator*() -> T&;
 
   private:

@@ -20,6 +20,45 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file json.h
+ * @brief Aggregate header for the zapata-parser-json module.
+ *
+ * Include this single header to access all JSON functionality:
+ * - zpt::json - Dynamic JSON value type
+ * - zpt::JSONObj - JSON object type
+ * - zpt::JSONArr - JSON array type
+ * - JSON parsing from strings and streams
+ * - JSON serialization
+ * - Path-based access (get_path, set_path)
+ * - Lambda functions in JSON
+ * - Regular expressions in JSON
+ *
+ * @par Example Usage
+ * @code
+ * #include <zapata/json.h>
+ *
+ * // Create JSON objects
+ * zpt::json obj = { "name", "John", "age", 30 };
+ * zpt::json arr = { zpt::array, 1, 2, 3 };
+ *
+ * // Access values
+ * std::string name = obj["name"];
+ * int age = obj["age"];
+ *
+ * // Parse JSON
+ * zpt::json parsed;
+ * parsed.load_from("{\"key\": \"value\"}");
+ *
+ * // Serialize
+ * std::cout << obj << std::endl;
+ * @endcode
+ *
+ * @see zpt::json
+ * @see zpt::JSONObj
+ * @see zpt::JSONArr
+ */
+
 #pragma once
 
 #include <zapata/base/expect.h>

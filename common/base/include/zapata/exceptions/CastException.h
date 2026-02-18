@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file CastException.h
+ * @brief Exception for type conversion failures.
+ */
+
 #pragma once
 
 #include <exception>
@@ -27,9 +32,22 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when a type cast or conversion fails.
+ *
+ * Used when attempting to convert between incompatible types,
+ * such as JSON type mismatches.
+ */
 class CastException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a CastException.
+     * @param _what Description of the cast failure.
+     */
     CastException(std::string const& _what);
+
     virtual ~CastException() throw();
 };
+
 } // namespace zpt

@@ -20,6 +20,15 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file allocator.h
+ * @brief Custom memory allocator utilities.
+ *
+ * Aggregate header for the allocator module.
+ *
+ * @see zpt::allocator
+ */
+
 #pragma once
 
 #include <zapata/allocator/allocator.h>

@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file message.h
+ * @brief Protocol-agnostic message interfaces for transport abstraction.
+ *
+ * Defines abstract message types that can be serialized to/from different
+ * transport protocols (HTTP, WebSocket, etc.). The interface mirrors HTTP
+ * semantics with performatives (methods), URIs, headers, and bodies.
+ *
+ * @see zpt::basic_message
+ * @see zpt::json_message
+ */
+
 #pragma once
 
 #include <zapata/allocator.h>
@@ -28,32 +40,68 @@
 #include <zapata/ontology/performative.h>
 
 namespace zpt {
+
+/**
+ * @brief Abstract base class for protocol-agnostic messages.
+ *
+ * Defines the interface for request/response messages that can be
+ * transported over various protocols. Implementations include
+ * `zpt::http::basic_request`, `zpt::http::basic_reply`, and `zpt::json_message`.
+ *
+ * @par Message Components
+ * - Performative: The HTTP-like method (GET, POST, etc.)
+ * - URI: Target resource with path and parameters
+ * - Headers: Key-value metadata
+ * - Body: Message payload (typically JSON)
+ * - Status: Response status code
+ */
 class basic_message {
   public:
     basic_message() = default;
     basic_message(basic_message const& _req, bool);
     virtual ~basic_message() = default;
 
+    /** @brief Returns the request method (GET, POST, etc.). */
     virtual auto performative() const -> zpt::performative = 0;
+    /** @brief Returns the response status code. */
     virtual auto status() const -> zpt::status = 0;
+    /** @brief Returns mutable reference to URI. */
     virtual auto uri() -> zpt::json& = 0;
+    /** @brief Returns the URI (const). */
     virtual auto uri() const -> zpt::json const = 0;
+    /** @brief Returns protocol version (e.g., "1.1"). */
     virtual auto version() const -> std::string = 0;
+    /** @brief Returns URI scheme (http, https, ws, etc.). */
     virtual auto scheme() const -> std::string = 0;
+    /** @brief Returns the resource path. */
     virtual auto resource() const -> zpt::json const = 0;
+    /** @brief Returns query parameters. */
     virtual auto parameters() const -> zpt::json const = 0;
+    /** @brief Returns mutable reference to headers. */
     virtual auto headers() -> zpt::json& = 0;
+    /** @brief Returns headers (const). */
     virtual auto headers() const -> zpt::json const = 0;
+    /** @brief Returns mutable reference to body. */
     virtual auto body() -> zpt::json& = 0;
+    /** @brief Returns body (const). */
     virtual auto body() const -> zpt::json const = 0;
+    /** @brief Returns true if connection should persist. */
     virtual auto keep_alive() const -> bool = 0;
+    /** @brief Returns Content-Type header value. */
     virtual auto content_type() const -> std::string = 0;
+    /** @brief Sets the request method. */
     virtual auto performative(zpt::performative _performative) -> basic_message& = 0;
+    /** @brief Sets the response status code. */
     virtual auto status(zpt::status _status) -> basic_message& = 0;
+    /** @brief Sets the URI from a string. */
     virtual auto uri(std::string const& _uri) -> basic_message& = 0;
+    /** @brief Sets the protocol version. */
     virtual auto version(std::string const& _version) -> basic_message& = 0;
+    /** @brief Serializes message to output stream. */
     virtual auto to_stream(std::ostream& _out) const -> basic_message const& = 0;
+    /** @brief Deserializes message from input stream. */
     virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
+    /** @brief Returns true if message is empty/uninitialized. */
     virtual auto empty() const -> bool = 0;
 
     friend auto operator<<(std::ostream& _out, zpt::basic_message const& _in) -> std::ostream& {
@@ -66,6 +114,7 @@ class basic_message {
         return _in;
     }
 };
+/** @brief Shared pointer type for messages. */
 using message = std::shared_ptr<basic_message>;
 
 constexpr int CALL_STATE_UNPROCESSED = 0;
@@ -91,6 +140,12 @@ class call_context {
     zpt::message __reply{ nullptr };
 };
 
+/**
+ * @brief JSON-based message implementation.
+ *
+ * Stores message data as JSON internally, suitable for internal
+ * message passing and JSON-based protocols.
+ */
 class json_message : public basic_message {
   public:
     json_message();
@@ -125,11 +180,32 @@ class json_message : public basic_message {
     zpt::json __underlying;
 };
 
+/**
+ * @brief Creates a message using standard allocator.
+ * @tparam T Message type (e.g., json_message, http::basic_request).
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Shared pointer to the message.
+ */
 template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
+
+/**
+ * @brief Creates a message using the memory pool allocator.
+ * @tparam T Message type.
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Shared pointer to the message.
+ */
 template<typename T, typename... Args>
 auto allocate_message(Args... _args) -> zpt::message;
 
+/**
+ * @brief Casts a message to a specific derived type.
+ * @tparam T Target message type.
+ * @param _rhs Message to cast.
+ * @return Reference to the message as type T.
+ */
 template<typename T>
 auto message_cast(zpt::message _rhs) -> T& {
     return static_cast<T&>(*_rhs);

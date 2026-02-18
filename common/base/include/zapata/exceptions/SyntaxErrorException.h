@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file SyntaxErrorException.h
+ * @brief Exception for parser syntax errors.
+ */
+
 #pragma once
 
 #include <exception>
@@ -27,9 +32,21 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when a parser encounters invalid syntax.
+ *
+ * Used by JSON, HTTP, URI, and other parsers to report malformed input.
+ */
 class SyntaxErrorException : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a SyntaxErrorException.
+     * @param _what Description of the syntax error.
+     */
     SyntaxErrorException(std::string const& _what);
+
     virtual ~SyntaxErrorException() throw();
 };
+
 } // namespace zpt

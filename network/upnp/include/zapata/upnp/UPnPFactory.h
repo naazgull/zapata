@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file UPnPFactory.h
+ * @brief Factory for creating UPnP channel instances.
+ */
+
 #pragma once
 
 #include <functional>
@@ -32,6 +37,7 @@
 
 namespace zpt {
 
+/** @brief Factory for creating and managing UPnP socket channels. */
 class UPnPFactory : public zpt::ChannelFactory {
   public:
     UPnPFactory();

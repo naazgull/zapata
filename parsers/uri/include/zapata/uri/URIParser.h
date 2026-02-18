@@ -20,18 +20,37 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file URIParser.h
+ * @brief URI parser (bisonc++/flexc++ generated).
+ *
+ * Parses URI strings into structured JSON components (scheme, host,
+ * path, query parameters, fragment).
+ *
+ * @see zpt::uri::parse
+ */
+
 #pragma once
 
 #include <zapata/uri/URITokenizer.h>
 
 namespace zpt {
 
+/**
+ * @brief URI parser.
+ *
+ * Wrapper around the bisonc++/flexc++ generated parser for URIs.
+ * Parses URI strings into structured JSON.
+ */
 class URIParser : public URITokenizer {
   public:
+    /** @brief Constructs a parser with the given I/O streams. */
     URIParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~URIParser();
 
+    /** @brief Sets the JSON root node to populate during parsing. */
     void switchRoots(zpt::json& _root);
+    /** @brief Switches the input/output streams. */
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
 } // namespace zpt

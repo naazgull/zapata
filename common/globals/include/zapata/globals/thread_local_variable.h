@@ -20,11 +20,44 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file thread_local_variable.h
+ * @brief Per-thread variable wrapper using thread-local table storage.
+ *
+ * Provides a template that stores a separate copy of a value per thread,
+ * automatically initialized from an initial value on first access.
+ *
+ * @see zpt::thread_local_table
+ * @see zpt::cached
+ */
+
 #pragma once
 
 #include <zapata/globals/globals.h>
 
 namespace zpt {
+
+/**
+ * @brief Per-thread variable with automatic lazy initialization.
+ *
+ * Wraps a value that is stored separately for each thread. On first access
+ * from a new thread, a copy of the initial value is created in the
+ * thread-local table. Subsequent accesses from the same thread return the
+ * local copy without synchronization.
+ *
+ * @tparam T Value type (must be copy-constructible).
+ *
+ * @par Example Usage
+ * @code
+ * zpt::thread_local_variable<int> counter{0};
+ *
+ * // Each thread gets its own copy:
+ * *counter = 42;  // Only affects current thread's copy
+ * @endcode
+ *
+ * @note This class is non-copyable and non-movable. Each instance has a
+ *       unique address used as the key in the thread-local table.
+ */
 template<typename T>
 class thread_local_variable {
     static_assert(std::is_copy_constructible<T>::value,
@@ -37,6 +70,7 @@ class thread_local_variable {
     using const_pointer = type const*;
     using const_reference = type const&;
 
+    /** @brief Constructs with an initial value forwarded to T. */
     template<typename... Args>
     thread_local_variable(Args... _args);
     virtual ~thread_local_variable();
@@ -46,14 +80,21 @@ class thread_local_variable {
     auto operator=(thread_local_variable const&) -> thread_local_variable& = delete;
     auto operator=(thread_local_variable&&) -> thread_local_variable& = delete;
 
+    /** @brief Implicit conversion to reference. */
     operator reference();
+    /** @brief Implicit conversion to const reference. */
     operator const_reference() const;
+    /** @brief Dereference to the thread-local value. */
     auto operator*() -> reference;
+    /** @brief Dereference to the thread-local value (const). */
     auto operator*() const -> const_reference;
+    /** @brief Member access (enabled only for class types). */
     template<typename D = T, std::enable_if_t<std::is_class<D>::value, bool> = true>
     auto operator->() -> pointer;
+    /** @brief Member access (const, enabled only for class types). */
     template<typename D = T, std::enable_if_t<std::is_class<D>::value, bool> = true>
     auto operator->() const -> const_pointer;
+    /** @brief Removes the current thread's copy from the table. */
     auto dispose_local_image() -> void;
 
   private:

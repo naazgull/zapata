@@ -20,6 +20,42 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file http.h
+ * @brief HTTP message parsing and serialization.
+ *
+ * This is the aggregate header for the HTTP parser module. It provides
+ * classes for parsing and serializing HTTP/1.1 requests and responses.
+ *
+ * Key types:
+ * - `zpt::http::basic_request` - HTTP request message
+ * - `zpt::http::basic_reply` - HTTP response message
+ * - `zpt::http::status` - HTTP status codes
+ *
+ * @par Example
+ * @code
+ * #include <zapata/http.h>
+ *
+ * // Parse an HTTP request
+ * auto req = "GET /api/users HTTP/1.1\r\nHost: example.com\r\n\r\n"_HTTP_REQUEST;
+ *
+ * // Access request properties
+ * auto method = req->performative();  // zpt::Get
+ * auto uri = req->uri();              // URI JSON object
+ * auto headers = req->headers();      // Headers JSON object
+ *
+ * // Create and serialize a response
+ * zpt::http::basic_reply reply;
+ * reply.status(zpt::http::HTTP200);
+ * reply.header("Content-Type", "application/json");
+ * reply.body("{\"status\": \"ok\"}");
+ * reply.to_stream(std::cout);
+ * @endcode
+ *
+ * @see zpt::http::basic_request
+ * @see zpt::http::basic_reply
+ */
+
 #pragma once
 
 #include <zapata/exceptions/NoHeaderNameException.h>

@@ -20,6 +20,30 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file hazard_ptr.h
+ * @brief Hazard pointer implementation for safe memory reclamation in lock-free structures.
+ *
+ * Hazard pointers provide a mechanism for safe memory reclamation in lock-free
+ * data structures. They solve the ABA problem and prevent use-after-free bugs
+ * by tracking which memory locations are currently being accessed by threads.
+ *
+ * @par How It Works
+ * 1. Before accessing a shared pointer, a thread "acquires" it by publishing
+ *    the pointer value in a hazard pointer slot
+ * 2. When done, the thread "releases" the hazard pointer slot
+ * 3. When a node is removed, it's placed in a "retired" list
+ * 4. Periodically, retired nodes are scanned and deleted only if no hazard
+ *    pointer references them
+ *
+ * @par Thread Requirements
+ * - Each thread must call `clear_thread_context()` before exiting
+ * - Maximum threads must be specified at construction time
+ * - Each thread gets K hazard pointer slots (default: 2)
+ *
+ * @see zpt::lf::queue
+ */
+
 #pragma once
 
 #include <zapata/base/expect.h>
@@ -27,24 +51,77 @@
 #include <zapata/log/log.h>
 
 namespace zpt {
+/**
+ * @brief Lock-free data structures namespace.
+ */
 namespace lf {
 
+/**
+ * @brief Hazard pointer domain for safe memory reclamation.
+ *
+ * Manages a pool of hazard pointer slots that threads use to protect
+ * memory locations from being freed while still in use. This is essential
+ * for implementing lock-free data structures safely.
+ *
+ * @tparam T Type of pointers being protected.
+ *
+ * @par Configuration Parameters
+ * - P: Maximum number of threads (set at construction)
+ * - K: Hazard pointers per thread (default: 2)
+ * - N: Total hazard pointers (P * K)
+ * - R: Reclamation threshold (N * 2)
+ *
+ * @par Example
+ * @code
+ * zpt::lf::hazard_ptr<MyNode> hp(16);  // Support up to 16 threads
+ *
+ * // Protect a pointer during access
+ * MyNode* node = shared_ptr.load();
+ * long slot = hp.acquire(node);
+ * // ... use node safely ...
+ * hp.release(slot);
+ *
+ * // Or use RAII guard
+ * {
+ *     zpt::lf::hazard_ptr<MyNode>::guard guard(node, hp);
+ *     // ... use guard.target() safely ...
+ *     guard.retire();  // Mark for deletion when guard destructs
+ * }
+ * @endcode
+ */
 template<typename T>
 class hazard_ptr {
   public:
     using size_type = size_t;
+    /** @brief Type for hazard pointer storage. */
     using hp_type = zpt::padded_atomic<T*>;
+    /** @brief Type for thread slot availability tracking. */
     using thr_slot_type = zpt::padded_atomic<bool>;
+    /** @brief Type for retired pointer pending list. */
     using pending_list = std::map<T*, T*>;
 
+    /**
+     * @brief RAII guard for hazard pointer acquisition/release.
+     *
+     * Automatically acquires a hazard pointer slot on construction and
+     * releases it on destruction. Optionally retires the protected pointer.
+     */
     class guard {
       public:
         friend class zpt::lf::hazard_ptr<T>;
 
+        /**
+         * @brief Acquires a hazard pointer for the target.
+         * @param _target Pointer to protect.
+         * @param _parent Hazard pointer domain.
+         */
         guard(T* _target, zpt::lf::hazard_ptr<T>& _parent);
+        /** @brief Releases the hazard pointer, optionally retiring the target. */
         virtual ~guard();
 
+        /** @brief Marks the protected pointer for retirement on destruction. */
         auto retire() -> guard&;
+        /** @brief Returns the protected pointer. */
         auto target() const -> T*;
 
       private:
@@ -54,6 +131,11 @@ class hazard_ptr {
         bool __retire{ false };
     };
 
+    /**
+     * @brief Constructs a hazard pointer domain.
+     * @param _max_threads Maximum number of concurrent threads.
+     * @param _ptr_per_thread Hazard pointer slots per thread (min: 2).
+     */
     hazard_ptr(long _max_threads, long _ptr_per_thread = 2);
     hazard_ptr(const hazard_ptr<T>& _rhs) = delete;
     hazard_ptr(hazard_ptr<T>&& _rhs) = delete;
@@ -62,16 +144,36 @@ class hazard_ptr {
     auto operator=(const hazard_ptr<T>& _rhs) -> hazard_ptr<T>& = delete;
     auto operator=(hazard_ptr<T>&& _rhs) -> hazard_ptr<T>& = delete;
 
+    /** @brief Access hazard pointer slot by index. */
     auto operator[](size_t _idx) -> hp_type&;
+    /** @brief Access hazard pointer slot by index. */
     auto at(size_t _idx) -> hp_type&;
 
+    /**
+     * @brief Acquires a hazard pointer slot for a pointer.
+     * @param _ptr Pointer to protect.
+     * @return Slot index (use with release()).
+     * @throws zpt::ExpectationException If no slots available.
+     */
     auto acquire(T* _ptr) -> long;
+    /**
+     * @brief Releases a hazard pointer slot.
+     * @param _idx Slot index from acquire().
+     */
     auto release(long _idx) -> hazard_ptr<T>&;
+    /**
+     * @brief Marks a pointer for deferred deletion.
+     * @param _ptr Pointer to retire.
+     */
     auto retire(T* _ptr) -> hazard_ptr<T>&;
+    /** @brief Scans retired list and deletes unreferenced pointers. */
     auto clean() -> hazard_ptr<T>&;
+    /** @brief Cleans up thread-local state (call before thread exit). */
     auto clear_thread_context() -> hazard_ptr<T>&;
 
+    /** @brief Returns count of retired pointers not yet deleted. */
     auto get_thread_dangling_count() -> size_t;
+    /** @brief Returns count of hazard pointers held by this thread. */
     auto get_thread_held_count() -> size_t;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::hazard_ptr<T>& _in) -> std::ostream& {

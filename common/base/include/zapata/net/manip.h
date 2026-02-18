@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file manip.h
+ * @brief Network utility functions.
+ *
+ * Provides utilities for querying network interface information.
+ */
+
 #pragma once
 
 #include <arpa/inet.h>
@@ -31,6 +38,20 @@
 
 namespace zpt {
 namespace net {
+
+/**
+ * @brief Returns the IP address of a network interface.
+ * @param _if Interface name (e.g., "eth0", "wlan0"). If empty, returns
+ *        the first non-loopback interface's address.
+ * @return IP address as a string, or empty string if not found.
+ *
+ * @par Example Usage
+ * @code
+ * std::string ip = zpt::net::getip("eth0");
+ * std::string any_ip = zpt::net::getip();  // First available
+ * @endcode
+ */
 auto getip(std::string const& _if = "") -> std::string;
-}
+
+} // namespace net
 } // namespace zpt

@@ -20,6 +20,25 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file connector.h
+ * @brief Abstract database connector interface.
+ *
+ * Provides a unified API for database operations across different
+ * database backends (SQLite, MySQL, etc.).
+ *
+ * Key types:
+ * - `zpt::storage::connection` - Database connection
+ * - `zpt::storage::session` - Database session with transactions
+ * - `zpt::storage::database` - Database namespace
+ * - `zpt::storage::collection` - Table/collection interface
+ * - `zpt::storage::action` - Query builder
+ * - `zpt::storage::result` - Query results
+ *
+ * @see zpt::storage::connection
+ * @see zpt::storage::collection
+ */
+
 #pragma once
 
 #include <zapata/connector/connector.h>

@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file ParserEOF.h
+ * @brief Exception for unexpected end-of-file during parsing.
+ */
+
 #pragma once
 
 #include <exception>
@@ -27,9 +32,22 @@
 #include <zapata/exceptions/Exception.h>
 
 namespace zpt {
+
+/**
+ * @brief Exception thrown when a parser unexpectedly reaches end-of-file.
+ *
+ * Used by parsers when input ends before a complete token or structure
+ * has been read.
+ */
 class ParserEOF : public zpt::exception {
   public:
+    /**
+     * @brief Constructs a ParserEOF exception.
+     * @param _what Description of what was expected.
+     */
     ParserEOF(std::string const& _what);
+
     virtual ~ParserEOF() throw();
 };
+
 } // namespace zpt

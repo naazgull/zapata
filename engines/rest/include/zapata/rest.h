@@ -20,6 +20,21 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file rest.h
+ * @brief REST API engine for building HTTP services.
+ *
+ * Provides the REST resolver for routing HTTP requests to handlers,
+ * service discovery, and distributed node coordination.
+ *
+ * Key types:
+ * - `zpt::rest::resolver_t` - REST request resolver
+ * - Service event handlers for distributed coordination
+ *
+ * @see zpt::rest::resolver_t
+ * @see zpt::REST_RESOLVER
+ */
+
 #pragma once
 
 #include <zapata/rest/rest.h>

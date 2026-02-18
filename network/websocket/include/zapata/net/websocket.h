@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file websocket.h
+ * @brief Aggregate header for the WebSocket transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/websocket.h>

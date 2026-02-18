@@ -20,6 +20,19 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file local.h
+ * @brief Unix domain socket and file transports.
+ *
+ * Provides local IPC via Unix domain sockets and file-based
+ * message passing.
+ *
+ * Capabilities: SYNCHRONOUS | PERSISTENT
+ *
+ * @see zpt::net::transport::unix_socket
+ * @see zpt::net::transport::file
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -30,6 +43,13 @@
 namespace zpt {
 namespace net {
 namespace transport {
+
+/**
+ * @brief Unix domain socket transport.
+ *
+ * Efficient local IPC using Unix domain sockets.
+ * Registered for "unix" URI scheme.
+ */
 class unix_socket : public zpt::basic_transport {
   public:
     unix_socket() = default;
@@ -42,6 +62,13 @@ class unix_socket : public zpt::basic_transport {
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
+
+/**
+ * @brief File-based transport.
+ *
+ * Reads/writes messages to files.
+ * Registered for "file" URI scheme.
+ */
 class file : public zpt::basic_transport {
   public:
     file() = default;
@@ -56,5 +83,10 @@ class file : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+
+/**
+ * @brief Returns the global Unix socket server.
+ * @param _path Socket path (empty for configured default).
+ */
 auto UNIX_SERVER_SOCKET(std::string const& _path = "") -> zpt::serversocketstream&;
 } // namespace zpt

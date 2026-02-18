@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file local.h
+ * @brief Aggregate header for the Unix domain socket transport plugin.
+ */
+
 #pragma once
 
 #include <zapata/net/transport/local.h>

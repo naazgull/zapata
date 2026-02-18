@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file connector.h
+ * @brief SQLite storage connector implementation.
+ *
+ * Implements the storage abstraction layer for SQLite databases.
+ * Provides the full connector hierarchy: connection, session, database,
+ * collection, action, and result types.
+ *
+ * @see zpt::storage::connection
+ * @see zpt::storage::make_connection
+ */
+
 #pragma once
 
 #include <sqlite3.h>
@@ -36,27 +48,36 @@ class collection;
 class action;
 class result;
 
+/** @brief Deleter for sqlite3 handles used with shared_ptr. */
 struct close_connection {
     void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
 };
 
+/** @brief Deleter for sqlite3_stmt handles used with shared_ptr. */
 struct finalize_statement {
     void operator()(sqlite3_stmt* _statement) const { sqlite3_finalize(_statement); }
 };
 
-using sqlite3_ptr = std::shared_ptr<sqlite3>;
-using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
+using sqlite3_ptr = std::shared_ptr<sqlite3>;       ///< Managed SQLite database handle.
+using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>; ///< Managed SQLite statement handle.
 
+/** @brief Tests if a SQLite return code indicates an error. */
 auto is_error(long _error) -> bool;
+/** @brief Converts a SQLite result row to JSON. */
 auto from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
+/** @brief Serializes a JSON value to a byte array for BLOB storage. */
 auto to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
+/** @brief Frees a byte array allocated by to_byte_array(). */
 auto free_byte_array(void* _to_delete) -> void;
+/** @brief Binds a JSON value to a named parameter in a prepared statement. */
 auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
 
+/** @brief SQLite connection implementation. */
 class connection : public zpt::storage::connection::type {
   public:
     friend class session;
 
+    /** @brief Constructs a connection with the given options (e.g., "path" to database file). */
     connection(zpt::json _options);
     virtual ~connection() override = default;
 
@@ -68,6 +89,13 @@ class connection : public zpt::storage::connection::type {
   private:
     zpt::json __options;
 };
+
+/**
+ * @brief SQLite session implementation.
+ *
+ * Wraps one or more sqlite3 connection handles and provides
+ * transaction control (commit/rollback) and database selection.
+ */
 class session : public zpt::storage::session::type {
   public:
     friend class database;
@@ -87,6 +115,7 @@ class session : public zpt::storage::session::type {
     std::vector<sqlite3_ptr> __underlying;
     zpt::json __options;
 };
+/** @brief SQLite database implementation (represents a single .db file). */
 class database : public zpt::storage::database::type {
   public:
     friend class collection;
@@ -104,6 +133,7 @@ class database : public zpt::storage::database::type {
     std::string __path;
     sqlite3_ptr __underlying{ nullptr };
 };
+/** @brief SQLite collection implementation (represents a database table). */
 class collection : public zpt::storage::collection::type {
   public:
     friend class action;
@@ -122,12 +152,15 @@ class collection : public zpt::storage::collection::type {
     sqlite3_ptr __underlying{ nullptr };
     std::string __collection_name;
 };
+/** @brief Base class for SQLite action operations (manages prepared statements). */
 class action : public zpt::storage::action::type {
   public:
     action(zpt::storage::sqlite::collection const& _collection);
     virtual ~action() override = default;
 
+    /** @brief Records a SQLite error code as action state. */
     auto set_state(int _error) -> void;
+    /** @brief Returns the current action state (code + message). */
     auto get_state() const -> zpt::json;
 
   protected:
@@ -138,6 +171,7 @@ class action : public zpt::storage::action::type {
 
     virtual auto prepare(std::string const& _statement) -> void;
 };
+/** @brief SQLite INSERT action builder. */
 class action_add : public zpt::storage::sqlite::action {
   public:
     action_add(zpt::storage::sqlite::collection const& _collection, zpt::json _document);
@@ -165,6 +199,7 @@ class action_add : public zpt::storage::sqlite::action {
 
     auto add_insert(zpt::json _document) -> void;
 };
+/** @brief SQLite UPDATE action builder. */
 class action_modify : public zpt::storage::sqlite::action {
   public:
     action_modify(zpt::storage::sqlite::collection const& _collection, zpt::json _search);
@@ -194,6 +229,7 @@ class action_modify : public zpt::storage::sqlite::action {
 
     auto add_update() -> void;
 };
+/** @brief SQLite DELETE action builder. */
 class action_remove : public zpt::storage::sqlite::action {
   public:
     action_remove(zpt::storage::sqlite::collection const& _collection, zpt::json _search);
@@ -222,6 +258,7 @@ class action_remove : public zpt::storage::sqlite::action {
 
     auto add_delete() -> void;
 };
+/** @brief SQLite REPLACE (INSERT OR REPLACE) action builder. */
 class action_replace : public zpt::storage::sqlite::action {
   public:
     action_replace(zpt::storage::sqlite::collection const& _collection,
@@ -253,6 +290,7 @@ class action_replace : public zpt::storage::sqlite::action {
 
     auto add_replace() -> void;
 };
+/** @brief SQLite SELECT action builder with filtering, sorting, and pagination. */
 class action_find : public zpt::storage::sqlite::action {
   public:
     action_find(zpt::storage::sqlite::collection const& _collection);
@@ -286,6 +324,7 @@ class action_find : public zpt::storage::sqlite::action {
 
     auto add_select() -> void;
 };
+/** @brief SQLite query result set. */
 class result : public zpt::storage::result::type {
   public:
     result(zpt::json _result);

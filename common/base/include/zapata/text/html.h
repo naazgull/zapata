@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file html.h
+ * @brief HTML entity encoding and decoding utilities.
+ *
+ * Provides functions for escaping and unescaping HTML entities in strings.
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -39,10 +46,43 @@
 
 namespace zpt {
 namespace html {
+
+/**
+ * @brief Encodes HTML entities from a wide string to a stream.
+ * @param s Wide string to encode.
+ * @param out Output stream for encoded result.
+ * @param quote Whether to encode quote characters.
+ * @param tags Whether to encode tag characters (< and >).
+ */
 auto entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false)
   -> void;
+
+/**
+ * @brief Encodes HTML entities in a string (in-place).
+ * @param out String to encode (modified in place).
+ * @param quote Whether to encode quote characters.
+ * @param tags Whether to encode tag characters.
+ *
+ * Converts characters like &, <, >, " to their HTML entity equivalents
+ * (&amp;, &lt;, &gt;, &quot;).
+ */
 auto entities_encode(std::string& out, bool quote = true, bool tags = false) -> void;
+
+/**
+ * @brief Decodes HTML entities in a string (in-place).
+ * @param out String to decode (modified in place).
+ *
+ * Converts HTML entities like &amp;, &lt;, &gt; back to their
+ * character equivalents.
+ */
 auto entities_decode(std::string& out) -> void;
+
+/**
+ * @brief Extracts the multipart boundary from a Content-Type header.
+ * @param _in Content-Type header value.
+ * @param _out Extracted boundary string.
+ */
 auto content_boundary(std::string& _in, std::string& _out) -> void;
+
 } // namespace html
 } // namespace zpt

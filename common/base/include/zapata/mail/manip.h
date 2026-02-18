@@ -20,6 +20,13 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file manip.h
+ * @brief Email sending utilities.
+ *
+ * Provides a simple interface for sending emails via the system sendmail command.
+ */
+
 #pragma once
 
 #include <errno.h>
@@ -28,9 +35,28 @@
 #include <string>
 
 namespace zpt {
+
+/**
+ * @brief Sends an email via the system sendmail command.
+ * @param _to Recipient email address.
+ * @param _from Sender email address.
+ * @param _subject Email subject line.
+ * @param _message Email body content.
+ * @param _replyto Optional Reply-To address.
+ * @return True if sendmail command succeeded, false otherwise.
+ *
+ * @note Requires the sendmail command to be available on the system.
+ *
+ * @par Example Usage
+ * @code
+ * zpt::sendmail("user@example.com", "app@example.com",
+ *               "Welcome", "Thanks for signing up!");
+ * @endcode
+ */
 bool sendmail(std::string const& _to,
               std::string _from,
               std::string _subject,
               std::string _message,
               std::string _replyto = "");
-}
+
+} // namespace zpt

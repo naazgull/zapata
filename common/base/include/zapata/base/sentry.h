@@ -20,20 +20,60 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file sentry.h
+ * @brief RAII scope guard for automatic cleanup.
+ *
+ * Provides a simple scope guard that executes a callback when destroyed,
+ * useful for ensuring cleanup code runs regardless of how a scope exits.
+ */
+
 #pragma once
 
 #include <functional>
 
 namespace zpt {
+
+/**
+ * @brief RAII scope guard that executes a callback on destruction.
+ * @tparam T Callable type (defaults to std::function<void()>).
+ *
+ * The sentry class provides a mechanism to execute cleanup code when a scope
+ * exits, regardless of whether it exits normally or via exception. The callback
+ * is invoked in the destructor.
+ *
+ * @par Example Usage
+ * @code
+ * void process_file() {
+ *     auto* file = open_file("data.txt");
+ *     zpt::sentry cleanup([file]() { close_file(file); });
+ *
+ *     // Work with file...
+ *     // close_file() is called automatically when scope exits
+ * }
+ * @endcode
+ *
+ * @note The callback is always invoked on destruction. There is no mechanism
+ *       to dismiss the sentry.
+ */
 template<typename T = std::function<void()>>
 class sentry {
   public:
+    /**
+     * @brief Constructs a sentry with the given callback.
+     * @param _callback The callable to invoke on destruction.
+     */
     sentry(T _callback);
+
+    /**
+     * @brief Destructor that invokes the stored callback.
+     */
     virtual ~sentry();
 
   private:
-    T __underlying;
+    T __underlying; ///< The callback to invoke on destruction.
 };
+
 } // namespace zpt
 
 template<typename T>

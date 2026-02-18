@@ -20,12 +20,24 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file sha256.h
+ * @brief SHA-256 cryptographic hash implementation.
+ *
+ * Provides a pure C++ implementation of the SHA-256 hash algorithm.
+ * Produces a 256-bit (32-byte) hash digest.
+ */
+
 #pragma once
 
 #include <cinttypes>
 #include <cstdint>
 #include <string>
 
+/** @name SHA-2 Helper Macros
+ * Internal macros for SHA-2 algorithm operations.
+ * @{
+ */
 #define SHA2_SHFR(x, n) (x >> n)
 #define SHA2_ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
 #define SHA2_ROTL(x, n) ((x << n) | (x >> ((sizeof(x) << 3) - n)))
@@ -47,26 +59,85 @@
         *(x) = ((std::uint32_t)*((str) + 3)) | ((std::uint32_t)*((str) + 2) << 8) |                \
                ((std::uint32_t)*((str) + 1) << 16) | ((std::uint32_t)*((str) + 0) << 24);          \
     }
+/** @} */
 
 namespace zpt::crypto {
+
+/**
+ * @brief SHA-256 hash algorithm implementation.
+ *
+ * Implements the SHA-256 cryptographic hash function as defined in FIPS 180-4.
+ * Produces a 256-bit (32-byte) digest.
+ *
+ * @par Example Usage (Low-level API)
+ * @code
+ * zpt::crypto::SHA256 hasher;
+ * hasher.init();
+ * hasher.update(reinterpret_cast<const unsigned char*>(data), len);
+ * unsigned char digest[SHA256::DIGEST_SIZE];
+ * hasher.finalize(digest);
+ * @endcode
+ *
+ * @see zpt::crypto::sha256() for a simpler string-based interface.
+ */
 class SHA256 {
   protected:
-    static const std::uint32_t sha256_k[];
-    static constexpr unsigned int SHA224_256_BLOCK_SIZE = (512 / 8);
+    static const std::uint32_t sha256_k[];  ///< Round constants.
+    static constexpr unsigned int SHA224_256_BLOCK_SIZE = (512 / 8); ///< Block size in bytes.
 
   public:
-    void init();
-    void update(const unsigned char* message, unsigned int len);
-    void finalize(unsigned char* digest);
+    /** @brief Size of the output digest in bytes (32). */
     static constexpr unsigned int DIGEST_SIZE = (256 / 8);
 
+    /**
+     * @brief Initializes the hash state.
+     *
+     * Must be called before update() to reset the hasher.
+     */
+    void init();
+
+    /**
+     * @brief Updates the hash with additional data.
+     * @param message Pointer to the data to hash.
+     * @param len Length of the data in bytes.
+     *
+     * Can be called multiple times to hash data incrementally.
+     */
+    void update(const unsigned char* message, unsigned int len);
+
+    /**
+     * @brief Finalizes the hash and outputs the digest.
+     * @param digest Buffer to receive the 32-byte hash digest.
+     *
+     * After calling finalize(), call init() before hashing new data.
+     */
+    void finalize(unsigned char* digest);
+
   protected:
+    /**
+     * @brief Processes a block of data.
+     * @param message Pointer to the message block.
+     * @param block_nb Number of blocks to process.
+     */
     void transform(const unsigned char* message, unsigned int block_nb);
-    unsigned int m_tot_len;
-    unsigned int m_len;
-    unsigned char m_block[2 * SHA224_256_BLOCK_SIZE];
-    std::uint32_t m_h[8];
+
+    unsigned int m_tot_len;  ///< Total message length.
+    unsigned int m_len;      ///< Current block length.
+    unsigned char m_block[2 * SHA224_256_BLOCK_SIZE]; ///< Message block buffer.
+    std::uint32_t m_h[8];    ///< Hash state.
 };
 
+/**
+ * @brief Computes SHA-256 hash of a string.
+ * @param input The string to hash.
+ * @return Hexadecimal string representation of the 256-bit hash.
+ *
+ * @par Example Usage
+ * @code
+ * std::string hash = zpt::crypto::sha256("Hello, World!");
+ * // hash = "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+ * @endcode
+ */
 std::string sha256(std::string const& input);
+
 } // namespace zpt::crypto

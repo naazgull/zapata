@@ -20,6 +20,18 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file tcp.h
+ * @brief Raw TCP transport implementation.
+ *
+ * Provides raw TCP socket communication with JSON message framing.
+ * Uses length-prefixed messages for reliable delivery.
+ *
+ * Capabilities: SYNCHRONOUS | PERSISTENT
+ *
+ * @see zpt::net::transport::tcp
+ */
+
 #pragma once
 #include <string>
 #include <utility>
@@ -30,6 +42,13 @@
 namespace zpt {
 namespace net {
 namespace transport {
+
+/**
+ * @brief Raw TCP transport with JSON framing.
+ *
+ * Supports persistent connections with message framing.
+ * Registered for "tcp" URI scheme.
+ */
 class tcp : public zpt::basic_transport {
   public:
     tcp() = default;
@@ -44,5 +63,10 @@ class tcp : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+
+/**
+ * @brief Returns the global TCP server socket.
+ * @param _port Port to bind (0 for configured default).
+ */
 auto TCP_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
 } // namespace zpt

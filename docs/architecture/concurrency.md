@@ -1,0 +1,119 @@
+# Concurrency Model
+
+How Zapata handles concurrent operations using event-driven I/O and lock-free data structures.
+
+## Threading Model
+
+Zapata uses a multi-threaded event-driven architecture:
+
+- **Main thread** - Configuration loading, plugin initialization, and shutdown coordination
+- **I/O threads** - Epoll-based event loops handling socket accept/read/write
+- **Worker threads** - Request handler execution and event processing
+
+Threads communicate via lock-free queues, avoiding mutex contention.
+
+## Event-Driven I/O
+
+### Epoll Integration
+
+Network I/O uses Linux `epoll` for efficient multiplexing:
+
+```
+┌─────────────────────────────────┐
+│         Epoll Event Loop         │
+│                                  │
+│  ┌─────┐ ┌─────┐ ┌─────┐       │
+│  │ fd1 │ │ fd2 │ │ fd3 │ ...   │
+│  └──┬──┘ └──┬──┘ └──┬──┘       │
+│     └───────┼───────┘           │
+│             ▼                    │
+│     Event Dispatcher             │
+│             │                    │
+│     ┌───────┼───────┐           │
+│     ▼       ▼       ▼           │
+│  Handler Handler Handler        │
+└─────────────────────────────────┘
+```
+
+The I/O layer uses non-blocking sockets with `EPOLLIN`/`EPOLLOUT` events, dispatching incoming data to protocol parsers which produce messages for the transport layer.
+
+## Lock-Free Data Structures
+
+### Hazard Pointers
+
+Zapata implements hazard pointer-based memory reclamation for safe lock-free operations:
+
+```cpp
+// Each thread maintains a list of hazard pointers
+// pointing to objects it is currently accessing.
+// Objects are only reclaimed when no thread holds
+// a hazard pointer to them.
+```
+
+**How it works:**
+
+1. Before accessing a shared object, a thread publishes a hazard pointer to it
+2. Other threads check all hazard pointers before freeing an object
+3. Objects not referenced by any hazard pointer are safely reclaimed
+4. This avoids ABA problems without requiring locks
+
+### Lock-Free Queue
+
+The `zpt::lf::queue<T>` provides a multi-producer, multi-consumer FIFO queue:
+
+- **Enqueue**: Lock-free push using CAS (compare-and-swap)
+- **Dequeue**: Lock-free pop with hazard pointer protection
+- **Memory**: Retired nodes reclaimed via hazard pointer scan
+
+Used for inter-thread message passing between I/O and worker threads.
+
+### Padded Atomics
+
+`zpt::padded_atomic<T>` aligns atomic variables to cache line boundaries (typically 64 bytes), preventing false sharing between cores:
+
+```cpp
+// Without padding: two atomics on same cache line cause contention
+std::atomic<int> a, b;  // May share cache line
+
+// With padding: each atomic gets its own cache line
+zpt::padded_atomic<int> a, b;  // Guaranteed separate cache lines
+```
+
+## Spin Mutex
+
+For short critical sections where contention is low, `zpt::spin_mutex` provides a lightweight alternative to `std::mutex`:
+
+- Uses atomic test-and-set (no kernel involvement)
+- Spins in userspace waiting for the lock
+- Suitable for very short hold times (nanoseconds)
+- Not suitable for long or contended critical sections
+
+## Thread Safety Guidelines
+
+### JSON Values
+
+`zpt::json` uses shared pointers internally. Reference counting is thread-safe, but concurrent mutations to the same value are not:
+
+```cpp
+// Safe: read-only access from multiple threads
+auto config = load_config();  // Shared across threads
+auto value = config["key"];   // OK: read-only
+
+// Unsafe: concurrent modification
+// Use clone() or external synchronization
+auto copy = config->clone();  // Independent copy for mutation
+```
+
+### Event Dispatcher
+
+The event dispatcher is thread-safe for:
+- Subscribing handlers (from any thread)
+- Publishing events (from any thread)
+
+Handler execution is serialized per-event but concurrent across different events.
+
+## See Also
+
+- [Architecture Overview](overview.md) - High-level design
+- [Lock-Free API Reference](../api-reference/lockfree.md) - Hazard pointers and queue API
+- [Component Architecture](components.md) - Module relationships

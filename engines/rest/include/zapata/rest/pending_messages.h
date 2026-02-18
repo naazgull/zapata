@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file pending_messages.h
+ * @brief Tracks pending request/response pairings in the REST engine.
+ *
+ * Maintains a thread-safe map of sent messages awaiting replies,
+ * keyed by message correlation ID.
+ */
+
 #pragma once
 
 #include <unordered_map>
@@ -29,16 +37,26 @@
 
 namespace zpt {
 namespace rest {
+
+/**
+ * @brief Thread-safe store for pending request/response callbacks.
+ *
+ * When a message is sent that expects a reply, the callback is stored
+ * here. When the reply arrives, the callback is retrieved and invoked.
+ */
 class pending_messages {
   public:
     pending_messages() = default;
     virtual ~pending_messages() = default;
 
+    /** @brief Stores a callback for a sent message. */
     auto push(zpt::message _sent,
               zpt::call_context::ptr _context,
               zpt::events::resolver_callback _callback) -> pending_messages&;
+    /** @brief Retrieves and removes the callback for a received reply. */
     auto pop(zpt::message _received)
       -> std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>;
+    /** @brief Removes all pending callbacks. */
     auto clear() -> pending_messages&;
 
   private:

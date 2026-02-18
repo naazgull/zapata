@@ -20,6 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file functional.h
+ * @brief Aggregate header for the functional expression parser.
+ *
+ * Provides a parser for functional-style expressions, converting them
+ * to JSON representations.
+ *
+ * @see zpt::functional::parse
+ */
+
 #pragma once
 
 #include <zapata/functional/FunctionalLexer.h>
