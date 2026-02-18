@@ -208,6 +208,10 @@ zpt::events::process::~process() {
 #endif
 }
 
+auto zpt::events::process::transport_type() const -> std::string const& {
+    return this->__stream->transport();
+}
+
 auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
