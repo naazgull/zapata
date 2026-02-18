@@ -18,13 +18,12 @@
 
 namespace zpt {
 namespace events {
-namespace zpt {
-namespace events {
 
 /** @brief Function type for event initialization callbacks. */
 using initializer_t = std::function<void(zpt::event _event)>;
 /** @brief Function type for resolver callbacks that create events from messages. */
-using resolver_callback = std::function<zpt::event(zpt::message, zpt::events::initializer_t)>;
+using resolver_callback =
+  std::function<zpt::event(zpt::message, zpt::call_context::ptr, zpt::events::initializer_t)>;
 
 /**
  * @brief Abstract base class for event resolvers.
