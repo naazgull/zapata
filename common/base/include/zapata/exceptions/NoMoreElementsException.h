@@ -49,6 +49,7 @@ class NoMoreElementsException : public zpt::exception {
      */
     NoMoreElementsException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~NoMoreElementsException() throw();
 };
 

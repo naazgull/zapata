@@ -50,6 +50,7 @@ class engine {
   public:
     /** @brief Constructs an engine with the given configuration. */
     engine(zpt::json _config);
+    /** @brief Destructor. */
     virtual ~engine() = default;
 
     /** @brief Adds an event resolver for routing messages. */
@@ -92,21 +93,30 @@ class transport_event_init : public zpt::event_initialization {
  */
 class receive {
   public:
+    /** @brief Constructs a receive event for the given engine, polling instance, and stream. */
     receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
     receive(zpt::events::receive const& _rhs) = delete;
     receive(zpt::events::receive&& _rhs) = delete;
+    /** @brief Destructor. */
     virtual ~receive();
 
     auto operator=(zpt::events::receive const& _rhs) -> receive& = delete;
     auto operator=(zpt::events::receive&& _rhs) -> receive& = delete;
 
+    /** @brief Stores dispatcher and polling references from initialization data. */
     auto initialize(zpt::event_initialization& init) -> void;
+    /** @brief Returns false (receive events are never blocked). */
     auto blocked() const -> bool;
+    /** @brief Returns true (receive events are always authorized). */
     auto authorized() const -> bool;
+    /** @brief Handles generic exceptions during receive. Returns false. */
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles allocation failures during receive. Returns false. */
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles expectation failures during receive. Returns false. */
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Reads a message from the stream and triggers processing events. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -123,21 +133,30 @@ class receive {
  */
 class send {
   public:
+    /** @brief Constructs a send event for the given stream and message. */
     send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::message _to_send);
     send(zpt::events::send const& _rhs) = delete;
     send(zpt::events::send&& _rhs) = delete;
+    /** @brief Destructor. */
     virtual ~send();
 
     auto operator=(zpt::events::send const& _rhs) -> send& = delete;
     auto operator=(zpt::events::send&& _rhs) -> send& = delete;
 
+    /** @brief Stores dispatcher and polling references from initialization data. */
     auto initialize(zpt::event_initialization& init) -> void;
+    /** @brief Returns false (send events are never blocked). */
     auto blocked() const -> bool;
+    /** @brief Returns true (send events are always authorized). */
     auto authorized() const -> bool;
+    /** @brief Handles generic exceptions during send. Returns false. */
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles allocation failures during send. Returns false. */
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles expectation failures during send. Returns false. */
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Writes the message to the stream using the appropriate transport. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -175,9 +194,11 @@ class process {
 
     /** @brief Constructs a process event with the received message. */
     process(zpt::message _received);
+    /** @brief Constructs a process event with the received message and call context. */
     process(zpt::message _received, zpt::call_context::ptr _context);
     process(zpt::events::process const& _rhs) = delete;
     process(zpt::events::process&& _rhs) = delete;
+    /** @brief Destructor. Sends the response if a stream is available. */
     virtual ~process();
 
     auto operator=(zpt::events::process const& _rhs) -> process& = delete;
@@ -187,15 +208,22 @@ class process {
     virtual auto received() const -> zpt::message const final;
     /** @brief Returns the message to send as response. */
     virtual auto to_send() -> zpt::message final;
+    /** @brief Returns the call context for this process event. */
     virtual auto context() const -> zpt::call_context::ptr final;
+    /** @brief Sets the call context for this process event. */
     virtual auto context(zpt::call_context::ptr _context) -> process& final;
 
+    /** @brief Stores dispatcher, polling, and stream from initialization data. */
     virtual auto initialize(zpt::event_initialization& init) -> void final;
+    /** @brief Returns true if the request is authorized. Default returns true. */
     virtual auto authorized() const -> bool;
+    /** @brief Handles generic exceptions. Sends error response. Returns false. */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool final;
+    /** @brief Handles allocation failures. Sends error response. Returns false. */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool final;
+    /** @brief Handles expectation failures. Sends error response. Returns false. */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool final;
 
@@ -233,8 +261,11 @@ namespace events {
 class discard : public zpt::events::process {
   public:
     using zpt::events::process::process;
+    /** @brief Destructor. */
     ~discard() = default;
+    /** @brief Returns false (discard events are never blocked). */
     auto blocked() const -> bool;
+    /** @brief Completes without sending a response. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
@@ -261,21 +292,30 @@ class call {
     using ptr = std::shared_ptr<process>;
     friend class zpt::events::receive;
 
+    /** @brief Constructs a call event with resolver, context, and outbound message. */
     call(zpt::events::resolver _resolver, zpt::call_context::ptr _context, zpt::message _send);
     call(zpt::events::call<T> const& _rhs) = delete;
     call(zpt::events::call<T>&& _rhs) = delete;
+    /** @brief Destructor. */
     virtual ~call();
 
     auto operator=(zpt::events::call<T> const& _rhs) -> call& = delete;
     auto operator=(zpt::events::call<T>&& _rhs) -> call& = delete;
 
+    /** @brief Stores dispatcher and polling references from initialization data. */
     auto initialize(zpt::event_initialization& init) -> void;
+    /** @brief Returns false (call events are never blocked). */
     auto blocked() const -> bool;
+    /** @brief Returns true (call events are always authorized). */
     auto authorized() const -> bool;
+    /** @brief Handles generic exceptions during call. Returns false. */
     auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles allocation failures during call. Returns false. */
     auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Handles expectation failures during call. Returns false. */
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Resolves the target and sends the message (internally or externally). */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   private:
@@ -288,11 +328,19 @@ class call {
     auto send_externally() -> call&;
 };
 
+/**
+ * @brief Default processor for call reply messages.
+ *
+ * Delivers the reply to the call_context so the caller can retrieve the response.
+ */
 class process_call_reply : public zpt::events::process {
   public:
     using zpt::events::process::process;
+    /** @brief Destructor. */
     ~process_call_reply() = default;
+    /** @brief Returns false (reply processing is never blocked). */
     auto blocked() const -> bool;
+    /** @brief Delivers the reply to the call context. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 } // namespace events

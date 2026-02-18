@@ -87,7 +87,9 @@ enum transport_capability {
  */
 class basic_transport {
   public:
+    /** @brief Default constructor. */
     basic_transport() = default;
+    /** @brief Destructor. */
     virtual ~basic_transport() = default;
 
     /** @brief Checks if the transport has a specific capability. */
@@ -143,6 +145,7 @@ class layer {
 
     /** @brief Constructs a network layer with the given configuration. */
     layer(zpt::json _global_config);
+    /** @brief Destructor. */
     virtual ~layer() = default;
 
     /** @brief Registers a transport for a URI scheme. */

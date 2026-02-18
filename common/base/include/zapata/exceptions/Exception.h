@@ -85,6 +85,11 @@ class exception : public std::exception {
     std::string __what; ///< The error message.
 };
 
+/**
+ * @brief Exception thrown for unauthorized access attempts.
+ *
+ * Inherits all constructors from zpt::exception.
+ */
 class unauthorized_exception : public zpt::exception {
   public:
     using zpt::exception::exception;

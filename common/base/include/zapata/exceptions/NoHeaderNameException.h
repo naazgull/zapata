@@ -47,6 +47,7 @@ class NoHeaderNameException : public zpt::exception {
      */
     NoHeaderNameException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~NoHeaderNameException() throw();
 };
 } // namespace zpt

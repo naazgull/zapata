@@ -47,11 +47,11 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
     this->__module.add(_file);
 
-    _file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
-
     for (auto const& _include : this->__header_files) {
         _file->add<zpt::ast::cpp_instruction>(std::format("#include <{}>", _include));
     }
+
+    _file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>\n");
 
     auto _load =
       zpt::make_function<zpt::ast::cpp_function>("_zpt_load_", "void", zpt::ast::EXTERNC);
@@ -240,6 +240,9 @@ auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
         this->__module.add(_file);
+        _file //
+          ->add<zpt::ast::cpp_instruction>("#pragma once\n")
+          .add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>\n");
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
     }
@@ -272,7 +275,6 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
-        _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
@@ -288,15 +290,17 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
@@ -311,7 +315,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
         _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
+          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
@@ -369,7 +373,6 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
-        _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
@@ -385,13 +388,15 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "update_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_element", "zpt::events::state");
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
         auto _retrieve_element =
@@ -413,7 +418,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
         _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
+          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
@@ -473,7 +478,6 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "post");
     if (_h_file != nullptr) {
-        _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
@@ -489,13 +493,15 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("post")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
@@ -510,7 +516,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
           std::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
 
         _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
+          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 
@@ -558,7 +564,6 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _h_file = this->generate_operation_h_file(_def, "*");
     if (_h_file != nullptr) {
-        _h_file->add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>");
         auto _namespace = zpt::make_code_block<zpt::ast::cpp_code_block>(
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
@@ -574,15 +579,17 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+          .add<zpt::ast::cpp_function>(
+            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
           .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
         _namespace->add(_class);
 
-        auto _h_operator =
-          zpt::make_function<zpt::ast::cpp_function>("operator()", "zpt::events::state");
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
         _class->add(_h_operator, zpt::ast::PUBLIC);
     }
@@ -597,7 +604,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
         _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>",
+          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
           _include_path,
           this->__schema("info")("dbDriver")->string()));
 

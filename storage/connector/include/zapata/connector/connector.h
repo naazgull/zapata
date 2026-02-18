@@ -93,16 +93,25 @@ class connection {
         virtual auto session() const -> zpt::storage::session = 0;
     };
 
+    /** @brief Default constructor (null connection). */
     connection() = default;
+    /** @brief Wraps a raw connection implementation. */
     connection(zpt::storage::connection::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     connection(zpt::storage::connection const& _rhs);
+    /** @brief Move constructor. */
     connection(zpt::storage::connection&& _rhs);
+    /** @brief Destructor. */
     virtual ~connection() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::connection const& _rhs) -> zpt::storage::connection&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::connection&& _rhs) -> zpt::storage::connection&;
 
+    /** @brief Accesses the underlying connection implementation. */
     auto operator->() -> zpt::storage::connection::type*;
+    /** @brief Dereferences to the underlying connection implementation. */
     auto operator*() -> zpt::storage::connection::type&;
 
   private:
@@ -134,16 +143,25 @@ class session {
         virtual auto database(std::string const& _db) const -> zpt::storage::database = 0;
     };
 
+    /** @brief Default constructor (null session). */
     session() = default;
+    /** @brief Wraps a raw session implementation. */
     session(zpt::storage::session::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     session(zpt::storage::session const& _rhs);
+    /** @brief Move constructor. */
     session(zpt::storage::session&& _rhs);
+    /** @brief Destructor. */
     virtual ~session() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::session const& _rhs) -> zpt::storage::session&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::session&& _rhs) -> zpt::storage::session&;
 
+    /** @brief Accesses the underlying session implementation. */
     auto operator->() -> zpt::storage::session::type*;
+    /** @brief Dereferences to the underlying session implementation. */
     auto operator*() -> zpt::storage::session::type&;
 
   private:
@@ -169,16 +187,25 @@ class database {
         virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
     };
 
+    /** @brief Default constructor (null database). */
     database() = default;
+    /** @brief Wraps a raw database implementation. */
     database(zpt::storage::database::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     database(zpt::storage::database const& _rhs);
+    /** @brief Move constructor. */
     database(zpt::storage::database&& _rhs);
+    /** @brief Destructor. */
     virtual ~database() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::database const& _rhs) -> zpt::storage::database&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::database&& _rhs) -> zpt::storage::database&;
 
+    /** @brief Accesses the underlying database implementation. */
     auto operator->() -> zpt::storage::database::type*;
+    /** @brief Dereferences to the underlying database implementation. */
     auto operator*() -> zpt::storage::database::type&;
 
   private:
@@ -226,16 +253,25 @@ class collection {
         virtual auto count() -> size_t = 0;
     };
 
+    /** @brief Default constructor (null collection). */
     collection() = default;
+    /** @brief Wraps a raw collection implementation. */
     collection(zpt::storage::collection::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     collection(zpt::storage::collection const& _rhs);
+    /** @brief Move constructor. */
     collection(zpt::storage::collection&& _rhs);
+    /** @brief Destructor. */
     virtual ~collection() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::collection const& _rhs) -> zpt::storage::collection&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::collection&& _rhs) -> zpt::storage::collection&;
 
+    /** @brief Accesses the underlying collection implementation. */
     auto operator->() -> zpt::storage::collection::type*;
+    /** @brief Dereferences to the underlying collection implementation. */
     auto operator*() -> zpt::storage::collection::type&;
 
   private:
@@ -297,16 +333,25 @@ class action {
         virtual auto execute() -> zpt::storage::result = 0;
     };
 
+    /** @brief Default constructor (null action). */
     action() = default;
+    /** @brief Wraps a raw action implementation. */
     action(zpt::storage::action::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     action(zpt::storage::action const& _rhs);
+    /** @brief Move constructor. */
     action(zpt::storage::action&& _rhs);
+    /** @brief Destructor. */
     virtual ~action() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::action const& _rhs) -> zpt::storage::action&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::action&& _rhs) -> zpt::storage::action&;
 
+    /** @brief Accesses the underlying action implementation. */
     auto operator->() -> zpt::storage::action::type*;
+    /** @brief Dereferences to the underlying action implementation. */
     auto operator*() -> zpt::storage::action::type&;
 
   private:
@@ -341,16 +386,25 @@ class result {
         virtual auto to_json() const -> zpt::json = 0;
     };
 
+    /** @brief Default constructor (null result). */
     result() = default;
+    /** @brief Wraps a raw result implementation. */
     result(zpt::storage::result::type* _underlying);
+    /** @brief Copy constructor (shared semantics). */
     result(zpt::storage::result const& _rhs);
+    /** @brief Move constructor. */
     result(zpt::storage::result&& _rhs);
+    /** @brief Destructor. */
     virtual ~result() = default;
 
+    /** @brief Copy assignment. */
     auto operator=(zpt::storage::result const& _rhs) -> zpt::storage::result&;
+    /** @brief Move assignment. */
     auto operator=(zpt::storage::result&& _rhs) -> zpt::storage::result&;
 
+    /** @brief Accesses the underlying result implementation. */
     auto operator->() -> zpt::storage::result::type*;
+    /** @brief Dereferences to the underlying result implementation. */
     auto operator*() -> zpt::storage::result::type&;
 
   private:

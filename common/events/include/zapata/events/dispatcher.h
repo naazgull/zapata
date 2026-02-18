@@ -103,6 +103,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      * @param _max_producers Maximum producer threads for lock-free queue.
      */
     dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
+    /** @brief Destructor. Stops consumers if running. */
     virtual ~dispatcher();
 
     /** @brief Sets initialization data passed to new events. */
@@ -215,21 +216,29 @@ class event_t : public zpt::abstract_event {
     /** @brief Constructs event, forwarding args to underlying Operation. */
     template<typename... Args>
     event_t(Args&&... _args);
+    /** @brief Destructor. */
     virtual ~event_t() override = default;
 
     /** @brief Access underlying operation. */
     auto operator*() -> T&;
     /** @brief Access underlying operation (const). */
     auto operator*() const -> T const&;
+    /** @brief Delegates to underlying Operation's initialize(). */
     virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
+    /** @brief Delegates to underlying Operation's blocked(). */
     virtual auto blocked() const -> bool override final;
+    /** @brief Delegates to underlying Operation's authorized(). */
     virtual auto authorized() const -> bool override final;
+    /** @brief Delegates to underlying Operation's catch_error() for generic exceptions. */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool override final;
+    /** @brief Delegates to underlying Operation's catch_error() for allocation failures. */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool override final;
+    /** @brief Delegates to underlying Operation's catch_error() for expectation failures. */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
+    /** @brief Delegates to underlying Operation's operator(). */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
       -> zpt::events::state override final;
 

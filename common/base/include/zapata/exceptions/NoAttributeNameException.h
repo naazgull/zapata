@@ -47,6 +47,7 @@ class NoAttributeNameException : public zpt::exception {
      */
     NoAttributeNameException(std::string const& _what);
 
+    /** @brief Destructor. */
     virtual ~NoAttributeNameException() throw();
 };
 

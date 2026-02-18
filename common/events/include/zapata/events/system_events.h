@@ -53,17 +53,25 @@ class system_event {
     system_event(zpt::message _received, zpt::call_context::ptr _context);
     /** @brief Constructs with a specific event type and optional data. */
     system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
+    /** @brief Destructor. */
     ~system_event() = default;
 
+    /** @brief Stores the dispatcher reference from initialization data. */
     virtual auto initialize(zpt::event_initialization& _init) -> void final;
+    /** @brief Returns false (system events are never blocked). */
     virtual auto blocked() const -> bool;
+    /** @brief Returns true (system events are always authorized). */
     virtual auto authorized() const -> bool;
+    /** @brief Handles generic exceptions. Returns false (no retry). */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Handles allocation failures. Returns false (no retry). */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Handles expectation failures. Returns false (no retry). */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool;
+    /** @brief Resolves and dispatches the system event to registered handlers. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -103,26 +111,39 @@ class resolver_t : public zpt::events::resolver_t {
      */
     template<zpt::events::Operation T>
     auto add(zpt::system_event_type _type) -> resolver_t&;
+    /** @brief Registers a service from its JSON description. */
     auto add(zpt::json const& _service_description) -> resolver_t& override;
+    /** @brief Registers a callback for a sent message's reply. */
     auto add(zpt::message _sent,
              zpt::call_context::ptr _context,
              zpt::events::resolver_callback callback) -> resolver_t& override;
+    /** @brief Registers a callback for a performative/ID combination. */
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
+    /** @brief Removes handler for a system event type. */
     template<zpt::events::Operation T>
     auto remove(zpt::system_event_type _type) -> resolver_t&;
+    /** @brief Removes the callback registered for a sent message. */
     auto remove(zpt::message _sent) -> resolver_t& override;
+    /** @brief Removes callback for a performative/ID combination. */
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
+    /** @brief Resolves a message to matching system event handlers. */
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
+    /** @brief Searches for registered handlers matching the given ID. */
     auto search(zpt::json const& _id, std::string const& _provider_id = "") const
       -> zpt::json override;
+    /** @brief Lists all registered handlers. */
     auto list(std::string const& _provider_id = "") const -> zpt::json override;
+    /** @brief Registers a service provider. */
     auto register_provider(zpt::json const& _provider) -> resolver_t& override;
+    /** @brief Unregisters a service provider by ID. */
     auto unregister_provider(std::string const& _id) -> resolver_t& override;
+    /** @brief Returns provider metadata by ID. */
     auto get_provider(std::string const& _id) const -> zpt::json override;
+    /** @brief Removes all registered handlers and providers. */
     auto clear() -> resolver_t& override;
 
   private:
