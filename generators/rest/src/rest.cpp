@@ -1162,9 +1162,11 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
             std::string _type = zpt::gen::rest::unit::__sql_types[_field("type")->string()];
             if (_field("sql:type")->ok()) { _type = _field("sql:type")->string(); }
             else if (_field("type")->string() == "string") {
-                _type = std::format("varchar({})",
-                                    (_field("maximum")->ok() ? _field("maximum")->integer() : 512));
+                _type = (_field("maximum")->ok()
+                           ? std::format("varchar({})", _field("maximum")->integer())
+                           : "text");
             }
+            else if (_field("type")->string() == "uuid") { _type = "varchar(36)"; }
 
             _oss << _name << " " << _type
                  << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
