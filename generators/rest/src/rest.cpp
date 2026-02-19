@@ -1170,8 +1170,15 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
                  << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
             if (_field("sql:index")->ok()) {
                 auto _index_type = _field("sql:index")->string();
-                _oss << (_index_type == "unique" ? "unique " : "") << "key " << _name << "_"
-                     << _field("sql:index")->string() << "_idx(" << _name << ")," << std::endl;
+                if (_index_type == "foreign") {
+                    _oss << "foreign key " << _name << "_" << _index_type << "_idx(" << _name
+                         << ") references " << _field("sql:references")->string() << ","
+                         << std::endl;
+                }
+                else {
+                    _oss << (_index_type == "unique" ? "unique " : "") << "key " << _name << "_"
+                         << _index_type << "_idx(" << _name << ")," << std::endl;
+                }
             }
         }
     }

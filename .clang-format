@@ -37,3 +37,33 @@ AllowShortFunctionsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLambdasOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
+
+---
+
+Language: JavaScript
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: true
+    BeforeElse: true
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+
+---
+
+Language: Json
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+
