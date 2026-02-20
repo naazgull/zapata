@@ -668,6 +668,7 @@ auto zpt::gen::rest::unit::generate_add_element(std::shared_ptr<zpt::ast::basic_
       std::format("{}add_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
+
     _method_body //
       ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
     this->add_generated(_method_body, _def, "create");
