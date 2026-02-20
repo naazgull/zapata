@@ -289,20 +289,27 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
-                                        zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
-        _namespace->add(_class);
+                                        zpt::ast::DEFAULT);
+        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+            this->generate_redirect_h(_def, _class);
+        }
+        else {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+              .add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+              .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
+              .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "list_elements", "zpt::events::state")
+              .add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "remove_elements", "zpt::events::state");
+            _namespace->add(_class);
 
-        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
-          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
-        _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
-        _class->add(_h_operator, zpt::ast::PUBLIC);
+            auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+              "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
+            _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
+            _class->add(_h_operator, zpt::ast::PUBLIC);
+        }
     }
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
@@ -333,30 +340,36 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         _cpp_authorized->add(_cpp_authorized_body);
         _cpp_file->add(_cpp_authorized);
 
-        this->generate_add_element(_cpp_file, _def, _path);
-        this->generate_list_elements(_cpp_file, _def, _path);
-        this->generate_remove_elements(_cpp_file, _def, _path);
+        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+            this->generate_redirect_cpp(_def, _class);
+        }
+        else {
+            this->generate_add_element(_cpp_file, _def, _path);
+            this->generate_list_elements(_cpp_file, _def, _path);
+            this->generate_remove_elements(_cpp_file, _def, _path);
 
-        auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}operator()", _class_method_prefix), "zpt::events::state");
-        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
-                                                   "zpt::events::dispatcher::ptr");
-        auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
-          "switch(this->received()->performative())");
-        auto _cpp_operator_case_get =
-          zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
-        _cpp_operator_case_get->add<zpt::ast::cpp_instruction>("return this->list_elements()");
-        auto _cpp_operator_case_post =
-          zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Post :");
-        _cpp_operator_case_post->add<zpt::ast::cpp_instruction>("return this->add_element()");
-        auto _cpp_operator_case_delete =
-          zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Delete :");
-        _cpp_operator_case_delete->add<zpt::ast::cpp_instruction>("return this->remove_elements()");
-        _cpp_operator_switch //
-          ->add(_cpp_operator_case_post)
-          .add(_cpp_operator_case_get)
-          .add(_cpp_operator_case_delete);
+            auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}operator()", _class_method_prefix), "zpt::events::state");
+            _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
+                                                       "zpt::events::dispatcher::ptr");
+            auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
+              "switch(this->received()->performative())");
+            auto _cpp_operator_case_get =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
+            _cpp_operator_case_get->add<zpt::ast::cpp_instruction>("return this->list_elements()");
+            auto _cpp_operator_case_post =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Post :");
+            _cpp_operator_case_post->add<zpt::ast::cpp_instruction>("return this->add_element()");
+            auto _cpp_operator_case_delete =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Delete :");
+            _cpp_operator_case_delete->add<zpt::ast::cpp_instruction>(
+              "return this->remove_elements()");
+            _cpp_operator_switch //
+              ->add(_cpp_operator_case_post)
+              .add(_cpp_operator_case_get)
+              .add(_cpp_operator_case_delete);
+        }
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
