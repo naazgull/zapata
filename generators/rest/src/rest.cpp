@@ -1107,7 +1107,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _try_body //
       ->add<zpt::ast::cpp_instruction>(std::format(
-        "auto _redirect_to{{ \"{}\" }}", _def("*")("requestBody")("zp::redirect")->string()))
+        "auto _redirect_to{{ \"{}\" }}", _def("*")("requestBody")("zpt:redirect")->string()))
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(\"tcp\")->make_request()")
       .add<zpt::ast::cpp_instruction>(
