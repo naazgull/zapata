@@ -536,6 +536,8 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
               ->add(_cpp_operator_case_put)
               .add(_cpp_operator_case_get)
               .add(_cpp_operator_case_delete);
+
+            this->generate_retrieve_element(_cpp_file, _def, _path);
         }
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
@@ -545,8 +547,6 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
-
-        this->generate_retrieve_element(_cpp_file, _def, _path);
     }
     return _h_file;
 }
