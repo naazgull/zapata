@@ -257,12 +257,12 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
             case MYSQL_TYPE_TIME2:
             case MYSQL_TYPE_TIME: {
                 auto _time = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                _record[_name] = std::format("{}{}:{}:{}.{}",
-                                             (_time.neg ? "-" : ""), //
-                                             _time.hour,             //
-                                             _time.minute,           //
-                                             _time.second,           //
-                                             _time.second_part);
+                std::ostringstream _oss;
+                _oss << (_time.neg ? "-" : "") << std::setfill('0') << std::setw(2) << _time.hour
+                     << ":" << std::setfill('0') << std::setw(2) << _time.minute << ":"
+                     << std::setfill('0') << std::setw(2) << _time.second << "."
+                     << std::setfill('0') << std::setw(3) << _time.second_part;
+                _record[_name] = _oss.str();
                 break;
             }
             case MYSQL_TYPE_YEAR: {
@@ -271,37 +271,38 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
             }
             case MYSQL_TYPE_NEWDATE:
             case MYSQL_TYPE_DATE: {
-                auto date = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                _record[_name] = std::format("{}-{}-{}",
-                                             date.year,  //
-                                             date.month, //
-                                             date.day);
+                auto _date = _cols.get<MYSQL_TIME>(_statement, _col_idx);
+                std::ostringstream _oss;
+                _oss << _date.year << "-" << std::setfill('0') << std::setw(2) << _date.month << "-"
+                     << std::setfill('0') << std::setw(2) << _date.day;
+                _record[_name] = _oss.str();
                 break;
             }
             case MYSQL_TYPE_TIMESTAMP2:
             case MYSQL_TYPE_TIMESTAMP: {
                 auto _timestamp = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                _record[_name] = std::format("{}-{}-{}T{}:{}:{}.{}",
-                                             _timestamp.year,   //
-                                             _timestamp.month,  //
-                                             _timestamp.day,    //
-                                             _timestamp.hour,   //
-                                             _timestamp.minute, //
-                                             _timestamp.second, //
-                                             _timestamp.second_part);
+                std::ostringstream _oss;
+                _oss << _timestamp.year << "-" << std::setfill('0') << std::setw(2)
+                     << _timestamp.month << "-" << std::setfill('0') << std::setw(2)
+                     << _timestamp.day << "T" << std::setfill('0') << std::setw(2)
+                     << _timestamp.hour << ":" << std::setfill('0') << std::setw(2)
+                     << _timestamp.minute << ":" << std::setfill('0') << std::setw(2)
+                     << _timestamp.second << "." << std::setfill('0') << std::setw(3)
+                     << _timestamp.second_part;
+                _record[_name] = _oss.str();
                 break;
             }
             case MYSQL_TYPE_DATETIME2:
             case MYSQL_TYPE_DATETIME: {
                 auto _datetime = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                _record[_name] = std::format("{}-{}-{}T{}:{}:{}.{}",
-                                             _datetime.year,   //
-                                             _datetime.month,  //
-                                             _datetime.day,    //
-                                             _datetime.hour,   //
-                                             _datetime.minute, //
-                                             _datetime.second, //
-                                             _datetime.second_part);
+                std::ostringstream _oss;
+                _oss << _datetime.year << "-" << std::setfill('0') << std::setw(2)
+                     << _datetime.month << "-" << std::setfill('0') << std::setw(2) << _datetime.day
+                     << "T" << std::setfill('0') << std::setw(2) << _datetime.hour << ":"
+                     << std::setfill('0') << std::setw(2) << _datetime.minute << ":"
+                     << std::setfill('0') << std::setw(2) << _datetime.second << "."
+                     << std::setfill('0') << std::setw(3) << _datetime.second_part;
+                _record[_name] = _oss.str();
                 break;
             }
             case MYSQL_TYPE_INVALID: {
