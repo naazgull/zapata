@@ -126,6 +126,7 @@ concept BasicASTElement = requires(T _t) { requires std::derived_from<T, basic_e
  */
 class basic_module {
   public:
+    using ptr = std::shared_ptr<basic_module>;
     using allowed_type = std::shared_ptr<basic_file>;
 
     basic_module(std::string const& _module_name);
@@ -159,6 +160,7 @@ class basic_module {
  */
 class basic_file {
   public:
+    using ptr = std::shared_ptr<basic_file>;
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_function>,
@@ -198,6 +200,7 @@ class basic_file {
  */
 class basic_class : public basic_element {
   public:
+    using ptr = std::shared_ptr<basic_class>;
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_function>,
@@ -233,6 +236,7 @@ class basic_class : public basic_element {
  */
 class basic_code_block : public basic_element {
   public:
+    using ptr = std::shared_ptr<basic_code_block>;
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_code_block>,
@@ -265,6 +269,8 @@ class basic_code_block : public basic_element {
  */
 class basic_function : public basic_element {
   public:
+    using ptr = std::shared_ptr<basic_function>;
+
     basic_function(std::string const& _name,
                    std::string const& _return_type = "",
                    int _modifiers = 0);
@@ -297,6 +303,8 @@ class basic_function : public basic_element {
  */
 class basic_variable : public basic_element {
   public:
+    using ptr = std::shared_ptr<basic_variable>;
+
     basic_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     virtual ~basic_variable() override = default;
 
@@ -325,6 +333,8 @@ class basic_variable : public basic_element {
  */
 class basic_instruction : public basic_element {
   public:
+    using ptr = std::shared_ptr<basic_instruction>;
+
     basic_instruction(std::string const& _code);
     virtual ~basic_instruction() override = default;
 

@@ -95,66 +95,59 @@ class unit {
     };
 
     auto generate_operation_h_file(zpt::json _def, std::string const& _method)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+      -> zpt::ast::basic_file::ptr;
     auto generate_operation_cpp_file(zpt::json _def, std::string const& _method)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+      -> zpt::ast::basic_file::ptr;
 
-    auto generate_collection(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_document(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_controller(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_store(zpt::json _def, zpt::json _path) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_collection(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
+    auto generate_document(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
+    auto generate_controller(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
+    auto generate_store(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
 
-    auto generate_add_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-                              zpt::json _def,
-                              zpt::json _path) -> void;
-    auto generate_list_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_add_element(zpt::ast::basic_file::ptr _cpp_file, zpt::json _def, zpt::json _path)
+      -> void;
+    auto generate_list_elements(zpt::ast::basic_file::ptr _cpp_file,
                                 zpt::json _def,
                                 zpt::json _path) -> void;
-    auto generate_remove_elements(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_remove_elements(zpt::ast::basic_file::ptr _cpp_file,
                                   zpt::json _def,
                                   zpt::json _path) -> void;
-    auto generate_retrieve_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_retrieve_element(zpt::ast::basic_file::ptr _cpp_file,
                                    zpt::json _def,
                                    zpt::json _path) -> void;
-    auto generate_update_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_update_element(zpt::ast::basic_file::ptr _cpp_file,
                                  zpt::json _def,
                                  zpt::json _path) -> void;
-    auto generate_get_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
-                              zpt::json _def,
-                              zpt::json _path) -> void;
-    auto generate_remove_element(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_get_element(zpt::ast::basic_file::ptr _cpp_file, zpt::json _def, zpt::json _path)
+      -> void;
+    auto generate_remove_element(zpt::ast::basic_file::ptr _cpp_file,
                                  zpt::json _def,
                                  zpt::json _path) -> void;
-    auto generate_process_request(std::shared_ptr<zpt::ast::basic_file> _cpp_file,
+    auto generate_process_request(zpt::ast::basic_file::ptr _cpp_file,
                                   zpt::json _def,
                                   zpt::json _path) -> void;
-
-    auto add_db_configuration(std::shared_ptr<zpt::ast::basic_code_block> _block, zpt::json _def)
+    auto generate_redirect(zpt::ast::basic_file::ptr _cpp_file, zpt::json _def, zpt::json _path)
       -> void;
-    auto add_parameters_and_validation(std::shared_ptr<zpt::ast::basic_code_block> _block,
+
+    auto add_db_configuration(zpt::ast::basic_code_block::ptr _block, zpt::json _def) -> void;
+    auto add_parameters_and_validation(zpt::ast::basic_code_block::ptr _block,
                                        zpt::json _def,
                                        zpt::json _path) -> void;
-    auto add_schema_validation(std::shared_ptr<zpt::ast::basic_code_block> _block, zpt::json _def)
-      -> void;
-    auto add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
+    auto add_schema_validation(zpt::ast::basic_code_block::ptr _block, zpt::json _def) -> void;
+    auto add_generated(zpt::ast::basic_code_block::ptr _block,
                        zpt::json _def,
                        std::string const& _generate) -> void;
     auto get_visible_fields(zpt::json _def) -> std::string;
     auto remove_hidden_fields(zpt::json _def) -> std::string;
 
-    auto generate_sql_schemata_mysql(zpt::json _def) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_sql_schemata_mysql(zpt::json _def) -> zpt::ast::basic_file::ptr;
 
     auto generate_operation_lang_file(zpt::json _def, std::string const& _method)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+      -> zpt::ast::basic_file::ptr;
     auto generate_operation_html_file(zpt::json _def, std::string const& _method)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_collection_ui(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
-    auto generate_document_ui(zpt::json _def, zpt::json _path)
-      -> std::shared_ptr<zpt::ast::basic_file>;
+      -> zpt::ast::basic_file::ptr;
+    auto generate_collection_ui(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
+    auto generate_document_ui(zpt::json _def, zpt::json _path) -> zpt::ast::basic_file::ptr;
     auto extract_languages() -> std::string;
     auto extract_field_translations(zpt::json _def) -> std::string;
     auto extract_static_translations() -> std::string;
