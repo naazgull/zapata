@@ -336,7 +336,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context->is_replied()");
+              "return this->context() != nullptr && !this->context()->is_replied()");
         }
         else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
         _cpp_blocked->add(_cpp_blocked_body);
@@ -455,6 +455,11 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         }
 
         _namespace->add(_class);
+
+        auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
+          "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
+        _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
+        _class->add(_h_operator, zpt::ast::PUBLIC);
     }
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
@@ -476,7 +481,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context->is_replied()");
+              "return this->context() != nullptr && !this->context()->is_replied()");
         }
         else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
         _cpp_blocked->add(_cpp_blocked_body);
@@ -702,7 +707,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context->is_replied()");
+              "return this->context() != nullptr && !this->context()->is_replied()");
         }
         else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
         _cpp_blocked->add(_cpp_blocked_body);
@@ -1094,7 +1099,6 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       std::format("{}process_request", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     _method_body->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
-    this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _if_block =
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
@@ -1103,6 +1107,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
                                       "_config(\"rest\")(\"prefix\")->string() : \"\"");
+    this->add_parameters_and_validation(_if_block, _def, _path);
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _try_body //
@@ -1117,6 +1122,12 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
     _if_block->add(_try_body);
+    auto _catch_body =
+      zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
+    _catch_body //
+      ->add<zpt::ast::cpp_instruction>(
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
+    _if_block->add(_catch_body);
 
     auto _else_block =
       zpt::make_code_block<zpt::ast::cpp_code_block>("else if (this->context()->is_replied())");
@@ -1128,7 +1139,8 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
 
     _method_body //
       ->add(_if_block)
-      .add(_else_block);
+      .add(_else_block)
+      .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
 
     _method->add(_method_body);
     _cpp_file->add(_method);
