@@ -1345,6 +1345,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
                            : "text");
             }
             else if (_field("type")->string() == "uuid") { _type = "varchar(36)"; }
+            else if (_field("type")->string() == "object") { _type = "json"; }
+            else if (_field("type")->string() == "array") { _type = "json"; }
 
             _oss << _name << " " << _type
                  << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
@@ -1352,8 +1354,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
                 auto _index_type = _field("sql:index")->string();
                 if (_index_type == "foreign") {
                     _oss << "foreign key " << _name << "_" << _index_type << "_idx(" << _name
-                         << ") references " << _field("sql:references")->string() << ","
-                         << std::endl;
+                         << ") references " << _field("sql:references")->string()
+                         << " on delete cascade on update cascade," << std::endl;
                 }
                 else {
                     _oss << (_index_type == "unique" ? "unique " : "") << "key " << _name << "_"
