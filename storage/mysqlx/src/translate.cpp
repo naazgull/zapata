@@ -244,7 +244,11 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
             case MYSQL_TYPE_MEDIUM_BLOB:
             case MYSQL_TYPE_LONG_BLOB:
             case MYSQL_TYPE_BLOB: {
-                _record[_name] = _cols.get<std::string>(_statement, _col_idx);
+                if (_cols.charset(_col_idx) == 63) { // JSON
+                    _record[_name] =
+                      zpt::json::parse_json_str(_cols.get<std::string>(_statement, _col_idx));
+                }
+                else { _record[_name] = _cols.get<std::string>(_statement, _col_idx); }
                 break;
             }
             case MYSQL_TYPE_TYPED_ARRAY:
@@ -394,7 +398,8 @@ auto zpt::storage::mysqlx::to_assignment_list(zpt::json _to_convert,
 
 auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
     bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
-                  _to_quote->type() == zpt::JSRegex;
+                  _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
+                  _to_quote->type() == zpt::JSObject;
     std::ostringstream _oss;
     _oss << (_needs ? "'" : "") << (_to_quote->ok() ? static_cast<std::string>(_to_quote) : "NULL")
          << (_needs ? "'" : "") << std::flush;
