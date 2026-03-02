@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <zapata/base/sentry.h>
 #include <zapata/sqlite/connector.h>
+#include <zapata/uuid.h>
 
 #define sqlite_expect(_error, _message)                                                            \
     {                                                                                              \
@@ -353,7 +354,7 @@ zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection co
 auto zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
     expect(_document->is_object(), "expected add parameter to be a JSON object");
     if (!_document("_id")->ok()) {
-        std::string _id{ zpt::generate::r_uuid() };
+        std::string _id{ zpt::uuid{}.to_string() };
         _document << "_id" << _id;
         this->__generated_uuid << _id;
     }

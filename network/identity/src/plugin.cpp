@@ -23,13 +23,14 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
+#include <zapata/uuid.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto _global_config = zpt::GLOBAL_CONFIG();
     auto& _config = _plugin.config();
     expect(_config->type() == zpt::JSObject, "Configuration 'identity' must be defined");
 
-    std::string _id = _config("id")->ok() ? _config("id")->string() : zpt::generate::r_uuid();
+    std::string _id = _config("id")->ok() ? _config("id")->string() : zpt::uuid{}.to_string();
     _config["_id"] = _id;
     _config["name"] = _config("name")->ok() ? _config("name") : _config["_id"];
     _config->object()->pop("id");

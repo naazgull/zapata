@@ -107,7 +107,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     _test_message //
       ->performative(zpt::Post)
       .uri(std::format("{}/test_plugin", _prefix))
-      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::generate::r_uuid() };
+      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::uuid{}.to_string() };
     zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 
     _test_message = zpt::TRANSPORT_LAYER() //
@@ -116,7 +116,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     _test_message //
       ->performative(zpt::Post)
       .uri(std::format("{}/test_redirect", _prefix))
-      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::generate::r_uuid() };
+      .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::uuid{}.to_string() };
     zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 }
 

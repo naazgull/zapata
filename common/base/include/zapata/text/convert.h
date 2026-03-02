@@ -223,7 +223,7 @@ void decode(std::string& _out);
 namespace unicode {
 /** @brief Escapes non-ASCII characters as \\uXXXX sequences (in-place). */
 void escape(std::string& _out);
-}
+} // namespace unicode
 
 namespace quoted_printable {
 auto encode(std::string const& _quote, std::string const& _charset, std::string& _out) -> void;
@@ -272,10 +272,6 @@ auto r_pin() -> std::string;
 auto hash(std::string& _out) -> void;
 /** @brief Returns a random hash string. */
 auto r_hash() -> std::string;
-/** @brief Generates a UUID string (in-place). */
-auto uuid(std::string& _out) -> void;
-/** @brief Returns a new UUID string. */
-auto r_uuid() -> std::string;
 } // namespace generate
 
 /**
@@ -323,8 +319,8 @@ auto timestamp_to_str(std::uint64_t _millis) -> std::string;
  * auto sec = zpt::now<double>();         // 1705315800.0
  * @endcode
  */
- template<typename T>
- auto now() -> T;
+template<typename T>
+auto now() -> T;
 } // namespace zpt
 
 template<typename T>

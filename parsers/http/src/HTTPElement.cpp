@@ -24,6 +24,7 @@
 #include <zapata/exceptions/CastException.h>
 #include <zapata/http/HTTPObj.h>
 #include <zapata/uri/uri.h>
+#include <zapata/uuid.h>
 
 auto zpt::http::basic_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());
@@ -133,7 +134,7 @@ auto zpt::init(zpt::http::basic_request& _req) -> void {
     _req.header("Date", std::string(_buffer_date));
     _req.header("Content-Type", "application/json");
     _req.header("Cache-Control", "no-store");
-    _req.header("X-Conversation-ID", zpt::generate::r_uuid());
+    _req.header("X-Conversation-ID", zpt::uuid{}.to_string());
     _req.header("X-Version", "1.1");
 }
 

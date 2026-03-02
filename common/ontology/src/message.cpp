@@ -22,6 +22,7 @@
 
 #include <zapata/ontology/message.h>
 #include <zapata/uri/uri.h>
+#include <zapata/uuid.h>
 
 auto zpt::call_context::state() const -> int { return this->__state->load(); }
 
@@ -55,7 +56,7 @@ zpt::json_message::json_message()
                         "Cache-Control",
                         "no-store",
                         "X-Conversation-ID",
-                        zpt::generate::r_uuid(),
+                        zpt::uuid{}.to_string(),
                         "X-Version",
                         "1.1",
                         "Date",

@@ -20,13 +20,21 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <uuid/uuid.h>
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 #include <zapata/uuid.h>
 
-zpt::uuid::uuid() { this->from_string(zpt::generate::r_uuid()); }
+zpt::uuid::uuid() {
+    uuid_t _uuid;
+    uuid_generate(_uuid);
+    std::memcpy(&this->__base, _uuid, 16);
+}
 
 zpt::uuid::uuid(std::string const& _str) { this->from_string(_str); }
+
+zpt::uuid::uuid(__uint128_t _bytes)
+  : __base{ _bytes } {}
 
 zpt::uuid::uuid(uuid const& _rhs)
   : __base{ _rhs.__base } {}
@@ -34,6 +42,11 @@ zpt::uuid::uuid(uuid const& _rhs)
 zpt::uuid::uuid(uuid&& _rhs)
   : __base{ _rhs.__base } {
     _rhs.__base = 0;
+}
+
+auto zpt::uuid::operator=(__uint128_t _rhs) -> uuid& {
+    this->__base = _rhs;
+    return (*this);
 }
 
 auto zpt::uuid::operator=(uuid const& _rhs) -> uuid& {
@@ -51,10 +64,23 @@ auto zpt::uuid::operator==(uuid const& _rhs) -> bool { return (this->__base == _
 
 auto zpt::uuid::operator!=(uuid const& _rhs) -> bool { return !((*this) == _rhs); }
 
+zpt::uuid::operator std::string() { return this->to_string(); }
+
 auto zpt::uuid::to_string() const -> std::string {
     std::ostringstream _oss;
     this->to_stream(_oss);
     return _oss.str();
+}
+
+auto zpt::uuid::to_128bit_string() const -> std::string {
+    auto _to_convert = this->__base;
+    if (_to_convert == 0) return "0";
+    std::string _result;
+    while (_to_convert > 0) {
+        _result = char('0' + (_to_convert % 10)) + _result;
+        _to_convert /= 10;
+    }
+    return _result;
 }
 
 auto zpt::uuid::from_string(std::string const& _str) -> uuid& {

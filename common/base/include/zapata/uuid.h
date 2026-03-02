@@ -61,6 +61,12 @@ class uuid {
     uuid(std::string const& _str);
 
     /**
+     * @brief Constructs a UUID from a 16 byte array.
+     * @param _str UUID stored in an unsigned 128-bit integer.
+     */
+    uuid(__uint128_t _bytes);
+
+    /**
      * @brief Copy constructor.
      * @param _rhs UUID to copy.
      */
@@ -73,6 +79,13 @@ class uuid {
     uuid(uuid&& _rhs);
 
     ~uuid() = default;
+
+    /**
+     * @brief Copy assignment operator.
+     * @param _rhs UUID to copy.
+     * @return Reference to this UUID.
+     */
+    auto operator=(__uint128_t _rhs) -> uuid&;
 
     /**
      * @brief Copy assignment operator.
@@ -102,11 +115,20 @@ class uuid {
      */
     auto operator!=(uuid const& _rhs) -> bool;
 
+    /** @brief Converts to string. */
+    operator std::string();
+
     /**
      * @brief Converts the UUID to a string.
      * @return UUID in 8-4-4-4-12 hexadecimal format.
      */
     auto to_string() const -> std::string;
+
+    /**
+     * @brief Converts the UUID to the textual representation of the underlying 128-bit integer.
+     * @return UUID as the textual representation of the underlying 128-bit integer.
+     */
+    auto to_128bit_string() const -> std::string;
 
     /**
      * @brief Parses a UUID from a string.

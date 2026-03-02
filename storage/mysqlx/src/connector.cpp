@@ -21,6 +21,7 @@
 */
 
 #include <algorithm>
+#include <zapata/uuid.h>
 #include <zapata/mysqlx/connector.h>
 
 auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
@@ -275,7 +276,7 @@ auto zpt::storage::mysqlx::action_add::bind(zpt::json) -> zpt::storage::action::
 auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     std::ostringstream _oss;
     for (auto [_, __, _record] : this->__underlying) {
-        auto _id = zpt::generate::r_uuid();
+        auto _id = zpt::uuid{}.to_string();
         _record << "_id" << _id;
         this->__generated_ids << _id;
         _oss << std::vformat(zpt::storage::mysqlx::to_insert(_record),

@@ -24,6 +24,7 @@
 #include <zapata/startup.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/uuid.h>
 
 namespace zpt {
 namespace transports {
@@ -365,7 +366,7 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
   : __resolver{ _resolver }
   , __to_send{ _send } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
-        this->__to_send->headers()["X-Conversation-ID"] = zpt::generate::r_uuid();
+        this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
     this->__resolver->add(_send, _context, zpt::events::make_callback<T>);
 }
