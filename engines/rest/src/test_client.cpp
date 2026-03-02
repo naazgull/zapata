@@ -58,7 +58,7 @@ class test_client_boot : public zpt::system_event {
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
               .body() = {
-                "from", "client", "date", zpt::json::date(), "id", zpt::generate::r_uuid()
+                "from", "client", "date", zpt::json::date(), "id", zpt::uuid{}.to_string()
             };
 
             zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);

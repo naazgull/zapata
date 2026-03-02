@@ -26,6 +26,7 @@
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPParser.h>
 #include <zapata/uri/uri.h>
+#include <zapata/uuid.h>
 
 zpt::http::basic_reply::basic_reply() {
     this->__underlying["performative"] = zpt::ontology::to_str(zpt::Reply);
@@ -41,7 +42,7 @@ zpt::http::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
       _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
     _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
                                       ? _req_headers("X-Conversation-ID")->string()
-                                      : zpt::generate::r_uuid();
+                                      : zpt::uuid{}.to_string();
     _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1";
 
     this->__underlying           //

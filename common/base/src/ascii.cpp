@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 #include <zapata/text/convert.h>
+#include <zapata/uuid.h>
 
 auto zpt::ascii::encode(std::string& _out, bool) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
@@ -107,17 +108,6 @@ auto zpt::generate::r_hash() -> std::string {
     std::string _out;
     zpt::generate::hash(_out);
     return _out;
-}
-
-auto zpt::generate::uuid(std::string& _out) -> void { _out.append(zpt::generate::r_uuid()); }
-
-auto zpt::generate::r_uuid() -> std::string {
-    uuid_t _uuid;
-    uuid_generate(_uuid);
-    std::string _generated;
-    _generated.resize(36);
-    uuid_unparse(_uuid, _generated.data());
-    return _generated;
 }
 
 auto zpt::test::uuid(std::string const& _uuid) -> bool {

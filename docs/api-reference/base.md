@@ -182,7 +182,7 @@ std::string trimmed = zpt::r_trim("  hello  ");
 ```cpp
 std::string key = zpt::generate::r_key(32);  // 32-char random key
 std::string hash = zpt::generate::r_hash();  // Random hash
-std::string uuid = zpt::generate::r_uuid();  // New UUID
+std::string uuid = zpt::uuid{};  // New UUID
 ```
 
 ## Input Validation
