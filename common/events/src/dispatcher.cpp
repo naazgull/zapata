@@ -24,8 +24,8 @@
 
 zpt::events::dispatcher::dispatcher(std::string const& _name,
                                     long _max_consumers,
-                                    long _max_producers)
-  : __queue{ _max_consumers + _max_producers }
+                                    size_t _max_queue_size)
+  : __queue{ _max_queue_size }
   , __max_consumers{ _max_consumers }
   , __name{ _name } {}
 

@@ -100,9 +100,10 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      * @brief Constructs a dispatcher.
      * @param _name Dispatcher name (for logging).
      * @param _max_consumers Maximum consumer threads.
-     * @param _max_producers Maximum producer threads for lock-free queue.
+     * @param _max_queue_size Maximum number of elements allowed in the queue (resource management
+     *                        cap).
      */
-    dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
+    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size);
     /** @brief Destructor. Stops consumers if running. */
     virtual ~dispatcher();
 
