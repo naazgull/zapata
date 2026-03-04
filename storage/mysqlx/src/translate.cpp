@@ -251,9 +251,13 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
                 else { _record[_name] = _cols.get<std::string>(_statement, _col_idx); }
                 break;
             }
+            case MYSQL_TYPE_JSON: {
+                _record[_name] =
+                  zpt::json::parse_json_str(_cols.get<std::string>(_statement, _col_idx));
+                break;
+            }
             case MYSQL_TYPE_TYPED_ARRAY:
             case MYSQL_TYPE_GEOMETRY:
-            case MYSQL_TYPE_JSON:
             case MYSQL_TYPE_SET: {
                 _record[_name] = nullptr;
                 break;
