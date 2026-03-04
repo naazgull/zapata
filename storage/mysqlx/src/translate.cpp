@@ -401,7 +401,11 @@ auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
                   _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
                   _to_quote->type() == zpt::JSObject;
     std::ostringstream _oss;
-    _oss << (_needs ? "'" : "") << (_to_quote->ok() ? static_cast<std::string>(_to_quote) : "NULL")
+    _oss << (_needs ? "'" : "")
+         << (_to_quote->ok() ? zpt::r_replace_multiple(static_cast<std::string>(_to_quote),
+                                                       { "'", "{", "}" },
+                                                       { "\\'", "{{", "}}" })
+                             : "NULL")
          << (_needs ? "'" : "") << std::flush;
     return _oss.str();
 }

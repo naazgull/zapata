@@ -132,3 +132,17 @@ if(NOT TARGET uninstall)
   add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
+
+# Print flags
+include(CMakePrintHelpers)
+cmake_print_variables(CMAKE_VERSION)
+cmake_print_variables(CMAKE_GENERATOR)
+cmake_print_variables(CMAKE_C_COMPILER)
+cmake_print_variables(CMAKE_CXX_COMPILER)
+cmake_print_variables(CMAKE_CXX_COMPILER_VERSION)
+cmake_print_variables(CMAKE_BUILD_TYPE)
+cmake_print_variables(CMAKE_CXX_FLAGS)
+cmake_print_variables(CMAKE_C_FLAGS)
+cmake_print_variables(CMAKE_CXX_LINK_FLAGS)
+cmake_print_variables(WITH_ASAN)
+cmake_print_variables(WITH_UBSAN)

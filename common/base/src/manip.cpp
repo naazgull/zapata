@@ -63,6 +63,30 @@ auto zpt::replace(std::string& str, std::string const& find, std::string const& 
     }
 }
 
+auto zpt::replace_multiple(std::string& _str,
+                           std::vector<std::string> const& _find,
+                           std::vector<std::string> const& _replace) -> void {
+    if (_str.length() == 0) { return; }
+
+    size_t _start{ 0 };
+    while (true) {
+        size_t _which{ 0 };
+        size_t _next{ std::string::npos };
+        for (size_t _idx = 0; _idx != _find.size(); ++_idx) {
+            auto _found = _str.find(_find[_idx], _start);
+            if (_found < _next) {
+                _next = _found;
+                _which = _idx;
+            }
+        }
+        if (_next != std::string::npos) {
+            _str.replace(_next, _find[_which].size(), _replace[_which]);
+            _start = _next + _replace[_which].length();
+        }
+        else { break; }
+    }
+}
+
 auto zpt::normalize_path(std::string& _in_out, bool _with_trailing) -> void {
     if (_with_trailing) {
         if (_in_out[_in_out.length() - 1] != '/') { _in_out.insert(_in_out.length(), "/"); }
@@ -113,14 +137,15 @@ auto zpt::r_trim(std::string const& _in_out) -> std::string {
 auto zpt::r_replace(std::string const& str, std::string const& find, std::string const& replace)
   -> std::string {
     std::string _return{ str.data() };
-    if (_return.length() == 0) { return _return; }
+    zpt::replace(_return, find, replace);
+    return _return;
+}
 
-    size_t start{ 0 };
-
-    while ((start = _return.find(find, start)) != std::string::npos) {
-        _return.replace(start, find.size(), replace);
-        start += replace.length();
-    }
+auto zpt::r_replace_multiple(std::string const& _str,
+                             std::vector<std::string> const& _find,
+                             std::vector<std::string> const& _replace) -> std::string {
+    std::string _return{ _str.data() };
+    zpt::replace_multiple(_return, _find, _replace);
     return _return;
 }
 

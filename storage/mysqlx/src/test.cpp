@@ -1,7 +1,7 @@
 #include <zapata/mysqlx.h>
 
 auto main(int, char**) -> int {
-    zpt::json _config{ { "storage", { "mysqlx", { "user", "root", "host", "127.0.0.1" } } } };
+    zpt::json _config{ { "storage", { "mysqlx", { "user", "zpt", "host", "127.0.0.1" } } } };
     auto _connection = zpt::make_connection<zpt::storage::mysqlx::connection>(_config);
     auto _session = _connection->session();
     _session->sql("create schema if not exists test");
@@ -13,7 +13,7 @@ auto main(int, char**) -> int {
       ->remove({})
       ->execute();
     auto _ids = _collection //
-                  ->add({ "name", "John Smith", "address", "Upside Down" })
+                  ->add({ "name", "John Smith", "address", "Upside Down 'just for fun' with {}" })
                   ->execute()
                   ->generated_id();
 
@@ -26,12 +26,12 @@ auto main(int, char**) -> int {
 
     _collection //
       ->modify(std::format("_id = \"{}\"", _ids(0)->string()))
-      ->set("name", "Zé Povinho")
+      ->set("name", "Zé Povinho 'or with {}'")
       ->execute();
 
     _collection //
       ->modify(std::format("_id = \"{}\"", _ids(0)->string()))
-      ->patch({ "name", "Pixie", "address", "Neverland" })
+      ->patch({ "name", "Pixie", "address", "Neverland or a placeholder like '{}'" })
       ->execute();
 
     std::cout << zpt::pretty(_collection->find({})->execute()->fetch()) << std::endl;
