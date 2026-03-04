@@ -66,8 +66,8 @@ class forward_node {
     /** @brief Atomic pointer type for linking nodes. */
     using ptr = zpt::padded_atomic<zpt::lf::forward_node<T>*>;
 
-    T __value;                                      ///< Stored value
-    zpt::padded_atomic<bool> __is_null{ true };     ///< True if node is sentinel/empty
+    T __value;                                       ///< Stored value
+    zpt::padded_atomic<bool> __is_null{ true };      ///< True if node is sentinel/empty
     zpt::lf::forward_node<T>::ptr __next{ nullptr }; ///< Pointer to next node
 
     /** @brief Default constructor (sentinel/empty node). */
@@ -101,8 +101,8 @@ class forward_node {
  *
  * @par Example
  * @code
- * // Create queue supporting up to 8 threads
- * zpt::lf::queue<std::string> queue(8);
+ * // Create queue supporting up to 10000 elements in the queue
+ * zpt::lf::queue<std::string> queue(10000);
  *
  * // Producer thread
  * queue.push("message 1");
@@ -118,8 +118,6 @@ class forward_node {
  *     // Queue is empty
  * }
  *
- * // Before thread exits
- * queue.clear_thread_context();
  * @endcode
  *
  * @note The `size()` method returns an approximate count that may be stale
@@ -132,60 +130,17 @@ class queue {
 
   public:
     using size_type = size_t;
-    /** @brief Hazard pointer domain type for this queue. */
-    using hazard_domain = zpt::lf::hazard_ptr<zpt::lf::forward_node<T>>;
-
-    class iterator {
-      public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = T;
-        using pointer = T;
-        using reference = T;
-        using iterator_category = std::forward_iterator_tag;
-
-        /** @brief Constructs an iterator at the given node. */
-        explicit iterator(zpt::lf::forward_node<T>* _current);
-        /** @brief Copy constructor. */
-        iterator(const iterator& _rhs);
-        /** @brief Move constructor. */
-        iterator(iterator&& _rhs);
-        /** @brief Destructor. */
-        virtual ~iterator() = default;
-
-        /** @brief Copy assignment. */
-        auto operator=(const iterator& _rhs) -> iterator&;
-        /** @brief Move assignment. */
-        auto operator=(iterator&& _rhs) -> iterator&;
-        /** @brief Pre-increment: advances to next node. */
-        auto operator++() -> iterator&;
-        /** @brief Dereference: returns the stored value. */
-        auto operator*() -> reference;
-
-        /** @brief Post-increment: advances and returns previous. */
-        auto operator++(int) -> iterator;
-        /** @brief Arrow operator: returns the stored value. */
-        auto operator->() -> pointer;
-        /** @brief Equality comparison. */
-        auto operator==(iterator const& _rhs) const -> bool;
-        /** @brief Inequality comparison. */
-        auto operator!=(iterator const& _rhs) const -> bool;
-
-        /** @brief Returns the underlying node pointer. */
-        auto node() const -> zpt::lf::forward_node<T>*;
-
-      private:
-        zpt::lf::forward_node<T> const* __initial{ nullptr };
-        zpt::lf::forward_node<T>* __current{ nullptr };
-    };
+    using ptr = std::shared_ptr<T>;
+    using const_ptr = std::shared_ptr<T const>;
 
     /**
      * @brief Constructs a queue with the specified thread capacity.
-     * @param _max_threads Maximum number of threads that will access the queue.
+     * @param _max_queue_size Maximum number elements in the queue.
      */
-    queue(long _max_threads);
+    queue(long _max_queue_size);
     queue(zpt::lf::queue<T> const& _rhs) = delete;
     queue(zpt::lf::queue<T>&& _rhs) = delete;
-    virtual ~queue();
+    virtual ~queue() = default;
 
     auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
@@ -195,18 +150,13 @@ class queue {
      * @return Copy of the front element.
      * @throws zpt::NoMoreElementsException If queue is empty.
      */
-    auto front() const -> T;
+    auto front() const -> ptr;
     /**
      * @brief Returns the back element without removing it.
      * @return Copy of the back element.
      * @throws zpt::NoMoreElementsException If queue is empty.
      */
-    auto back() const -> T;
-
-    /** @brief Returns pointer to head node (internal use). */
-    auto head() const -> zpt::lf::forward_node<T>*;
-    /** @brief Returns pointer to tail node (internal use). */
-    auto tail() const -> zpt::lf::forward_node<T>*;
+    auto back() const -> ptr;
 
     /**
      * @brief Adds an element to the back of the queue.
@@ -215,24 +165,20 @@ class queue {
      */
     auto push(T value) -> zpt::lf::queue<T>&;
     /**
+     * @brief Adds an element to the back of the queue.
+     * @param value Shared-pointer to the value to add.
+     * @return Reference to this queue.
+     */
+    auto push(ptr value) -> zpt::lf::queue<T>&;
+    /**
      * @brief Removes and returns the front element.
      * @return The front element (moved).
      * @throws zpt::NoMoreElementsException If queue is empty.
      */
-    auto pop() -> T;
-
-    /** @brief Returns iterator to front element. */
-    auto begin() const -> zpt::lf::queue<T>::iterator;
-    /** @brief Returns iterator past back element. */
-    auto end() const -> zpt::lf::queue<T>::iterator;
+    auto pop() -> ptr;
 
     /** @brief Returns approximate element count. */
     auto size() const -> size_t;
-
-    /** @brief Cleans up thread-local state (call before thread exit). */
-    auto clear_thread_context() -> zpt::lf::queue<T>&;
-    /** @brief Returns count of retired nodes pending deletion. */
-    auto get_thread_dangling_count() const -> size_t;
 
     /** @brief Returns a debug string representation of the queue. */
     __attribute__((noinline)) auto to_string() const -> std::string;
@@ -263,81 +209,42 @@ class queue {
     }
 
   private:
-    zpt::lf::forward_node<T>::ptr __head{ nullptr };
-    zpt::lf::forward_node<T>::ptr __tail{ nullptr };
-    zpt::lf::queue<T>::hazard_domain __hazard_domain;
-    zpt::padded_atomic<std::uint64_t> __size;
+    std::unique_ptr<ptr[]> __elements{ nullptr };
+    zpt::padded_atomic<std::uint64_t> __max{ 0 };
+    zpt::padded_atomic<std::uint64_t> __next{ 0 };
+    zpt::padded_atomic<std::uint64_t> __size{ 0 };
+    std::uint64_t __capacity{ 0 };
 };
 } // namespace lf
 } // namespace zpt
 
 template<typename T>
-zpt::lf::forward_node<T>::forward_node(T _value)
-  : __value{ _value } {}
+zpt::lf::queue<T>::queue(long _max_queue_size)
+  : __elements{ std::make_unique<ptr[]>(_max_queue_size) }
+  , __capacity{ _max_queue_size } {}
 
 template<typename T>
-zpt::lf::queue<T>::queue(long _max_threads)
-  : __hazard_domain{ _max_threads, 2 } {
-    auto _initial = new zpt::lf::forward_node<T>();
-    this->__head->store(_initial);
-    this->__tail->store(_initial);
-}
-
-template<typename T>
-zpt::lf::queue<T>::~queue() {
-    for (auto _it = this->__head->load(); _it != this->__tail->load();) {
-        auto _current = _it;
-        _it = _it->__next;
-        delete _current;
-    }
-    delete this->__tail->load();
-}
-
-template<typename T>
-auto zpt::lf::queue<T>::front() const -> T {
-    auto _front = this->head();
-    if (_front != nullptr && _front->__next->load() != nullptr) { return _front->__value; }
+auto zpt::lf::queue<T>::front() const -> ptr {
+    auto _front = this->__elements[this->__max->load() % this->__capacity];
+    if (_front != nullptr) { return _front; }
     throw zpt::NoMoreElementsException("there is no element in the front");
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::back() const -> T {
-    auto _tail = this->tail();
-    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) {
-        return _tail->__value;
-    }
-    throw zpt::NoMoreElementsException("there is no element in the back");
+auto zpt::lf::queue<T>::back() const -> ptr {
+    auto _tail = this->__elements[this->__next->load() % this->__capacity];
+    if (_tail != nullptr) { return _tail; }
+    throw zpt::NoMoreElementsException("there is no element in the front");
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::head() const -> zpt::lf::forward_node<T>* {
-    return this->__head->load(std::memory_order_relaxed);
-}
-
-template<typename T>
-auto zpt::lf::queue<T>::tail() const -> zpt::lf::forward_node<T>* {
-    return this->__tail->load(std::memory_order_relaxed);
+auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {    
+    return this->push(std::make_shared<T>(_value));
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
-    zpt::lf::forward_node<T>* _new{ new zpt::lf::forward_node<T>{} };
-    typename zpt::lf::queue<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
-
-    do {
-        typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail,
-                                                                       this->__hazard_domain };
-        auto _tail = _tail_sentry.target();
-        zpt::lf::forward_node<T>* _null{ nullptr };
-        if (_tail->__next->compare_exchange_strong(_null, _new)) {
-            ++(*this->__size);
-            _tail->__value = _value;
-            _tail->__is_null = false;
-            this->__tail->store(_new, std::memory_order_release);
-            return (*this);
-        }
-    } while (true);
-
+    
     return (*this); // never reached
 }
 
