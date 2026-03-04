@@ -68,6 +68,16 @@ void trim(std::string& _in_out);
 auto replace(std::string& str, std::string const& find, std::string const& replace) -> void;
 
 /**
+ * @brief Replaces all occurrences of a list of substrings (in-place).
+ * @param str String to modify.
+ * @param find List of substrings to search for.
+ * @param replace List of replacements string.
+ */
+auto replace_multiple(std::string& _str,
+                      std::vector<std::string> const& _find,
+                      std::vector<std::string> const& _replace) -> void;
+
+/**
  * @brief Normalizes a file path (in-place).
  * @param _in_out Path to normalize.
  * @param _with_trailing Whether to include trailing slash.
@@ -113,6 +123,17 @@ std::string r_trim(std::string const& _in_out);
  * @return Modified copy.
  */
 std::string r_replace(std::string const& str, std::string const& find, std::string const& replace);
+
+/**
+ * @brief Returns a copy with all occurrences of a list of substrings replaced.
+ * @param str Input string.
+ * @param find List of substrings to search for.
+ * @param replace List of replacement strings.
+ * @return Modified copy.
+ */
+auto r_replace_multiple(std::string const& _str,
+                        std::vector<std::string> const& _find,
+                        std::vector<std::string> const& _replace) -> std::string;
 
 /**
  * @brief Returns a normalized copy of a file path.

@@ -7,6 +7,8 @@ ExternalProject_Add(zapata
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -DWITH_ASAN=${WITH_ASAN}
+    -DWITH_UBSAN=${WITH_UBSAN}
 )
 
 include_directories(
