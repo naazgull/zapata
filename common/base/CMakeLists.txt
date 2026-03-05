@@ -36,6 +36,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NoSpaceAvailableException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uuid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/atomic.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h

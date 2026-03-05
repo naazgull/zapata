@@ -131,7 +131,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto is_in_shutdown() -> bool;
 
   public:
-    zpt::lf::queue<zpt::event> __queue;
+    zpt::lf::queue<zpt::abstract_event> __queue;
     std::vector<std::thread> __consumers;
     zpt::padded_atomic<bool> __shutdown{ false };
     zpt::padded_atomic<long> __running_consumers{ 0 };

@@ -124,7 +124,6 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
         }
 #endif
     } while (!this->__shutdown->load(std::memory_order_relaxed));
-    this->__queue.clear_thread_context();
     --(*this->__running_consumers);
     zlog(_name << " stopping", zpt::trace);
 }

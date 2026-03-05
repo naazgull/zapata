@@ -10,7 +10,6 @@ add_dependencies(zapata-lockfree
 target_sources(zapata-lockfree
   INTERFACE
     ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree.h
-    ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree/hazard_ptr.h
     ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree/queue.h
 )
 target_include_directories(zapata-lockfree

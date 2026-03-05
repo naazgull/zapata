@@ -52,6 +52,10 @@
 namespace zpt {
 namespace lf {
 
+constexpr __uint128_t UNMASK = (static_cast<__uint128_t>(1) << 126) - 1;
+constexpr __uint128_t MASK =
+  (static_cast<__uint128_t>(1) << 127) + (static_cast<__uint128_t>(1) << 126);
+
 /**
  * @brief Lock-free FIFO queue for concurrent producer/consumer patterns.
  *
@@ -87,8 +91,8 @@ namespace lf {
  */
 template<typename T>
 class queue {
-    static_assert(std::is_copy_constructible<T>::value,
-                  "Type `T` in `zpt::lf::queue<T>` must be copy constuctible.");
+    // static_assert(std::is_copy_constructible<T>::value,
+    //               "Type `T` in `zpt::lf::queue<T>` must be copy constuctible.");
 
   public:
     using size_type = size_t;
@@ -99,7 +103,7 @@ class queue {
      * @brief Constructs a queue with the specified thread capacity.
      * @param _max_queue_size Maximum number elements in the queue.
      */
-    queue(long _max_queue_size);
+    queue(size_t _max_queue_size);
     queue(zpt::lf::queue<T> const& _rhs) = delete;
     queue(zpt::lf::queue<T>&& _rhs) = delete;
     virtual ~queue() = default;
@@ -149,56 +153,45 @@ class queue {
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
         _out << "queue(" << std::hex << &_in << "):" << std::dec << std::endl
-             << "  #head -> " << std::hex << _in.head() << std::dec << " is_null(" << std::boolalpha
-             << _in.head()->__is_null->load(std::memory_order_relaxed) << ")" << std::endl
-             << "  #tail -> " << std::hex << _in.tail() << std::dec << " is_null(" << std::boolalpha
-             << _in.tail()->__is_null->load(std::memory_order_relaxed) << ")" << std::endl
-             << std::endl;
-
-        _out << "  #items ->\n     [ " << std::flush;
-        try {
-            size_t _count{ 0 };
-            for (auto _it = _in.begin(); _it != _in.end(); ++_it, ++_count) {
-                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", ")) << *_it.node()
-                     << std::flush;
-            }
-        }
-        catch (zpt::NoMoreElementsException const& e) {
-        }
-        _out << (_in.size() != 0 ? " " : "") << "]" << std::endl
-             << "   (" << _in.size() << " elements) " << _in.__hazard_domain << std::flush;
+             << "  #head -> " << std::hex << _in.front().get() << std::dec << " is_null("
+             << std::boolalpha << (_in.front() == nullptr) << ")" << std::endl
+             << "  #tail -> " << std::hex << _in.back().get() << std::dec << " is_null("
+             << std::boolalpha << (_in.back() == nullptr) << ")" << std::endl
+             << std::endl
+             << "   (" << _in.size() << " elements) " << std::flush;
         return _out;
     }
 
   private:
     std::unique_ptr<ptr[]> __elements{ nullptr };
-    zpt::padded_atomic<__uint128_t> __boundaries{ -1 };
+    zpt::padded_atomic<__uint128_t> __boundaries{ 0 };
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
-    std::uint64_t __capacity{ 0 };
+    size_t __capacity{ 0 };
 
-    auto serialize() -> __uint128_t;
-    auto deserialize() -> std::tuple<std::uint64_t, std::uint64_t>;
+    auto serialize(std::uint64_t _lower, std::uint64_t _upper) const -> __uint128_t;
+    auto deserialize(__uint128_t _value) const -> std::tuple<std::uint64_t, std::uint64_t>;
 };
 } // namespace lf
 } // namespace zpt
 
 template<typename T>
-zpt::lf::queue<T>::queue(long _max_queue_size)
+zpt::lf::queue<T>::queue(size_t _max_queue_size)
   : __elements{ std::make_unique<ptr[]>(_max_queue_size) }
+  , __boundaries{ 0 }
   , __capacity{ _max_queue_size } {}
 
 template<typename T>
 auto zpt::lf::queue<T>::front() const -> ptr {
-    auto _front = this->__elements[this->__max->load() % this->__capacity];
-    if (_front != nullptr) { return _front; }
-    throw zpt::NoMoreElementsException("there is no element in the front");
+    auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
+    auto [_lower, _] = this->deserialize(_boundaries);
+    return this->__elements[_lower % this->__capacity];
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::back() const -> ptr {
-    auto _tail = this->__elements[this->__cur->load() % this->__capacity];
-    if (_tail != nullptr) { return _tail; }
-    throw zpt::NoMoreElementsException("there is no element in the front");
+    auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
+    auto [_, _upper] = this->deserialize(_boundaries);
+    return this->__elements[(_upper - 1) % this->__capacity];
 }
 
 template<typename T>
@@ -209,26 +202,44 @@ auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
 template<typename T>
 auto zpt::lf::queue<T>::push(ptr _value) -> zpt::lf::queue<T>& {
     while (true) {
-        auto _boundaries = this->__boundaries->load(std::memory_order_acquire);
+        auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
         auto [_lower, _upper] = this->deserialize(_boundaries);
-        auto _new_upper = 
-        auto _new_boundaries = this->serialize(_lower, _new_upper);
-        if ((_new_upper - this->__cur->load()) < this->__capacity &&
-            this->__upper->compare_exchange_strong(_upper, _new_upper, std::memory_order_release)) {
-            this->__elements[_new_upper] = _value;
-            return (*this);
+        if ((_upper - _lower) <= this->__capacity) {
+            auto _new_upper = _upper + 1;
+            auto _new_boundaries = this->serialize(_lower, _new_upper) | MASK;
+            if (this->__boundaries->compare_exchange_strong(
+                  _boundaries, _new_boundaries, std::memory_order_release)) {
+                this->__elements[_upper % this->__capacity] = _value;
+                this->__size->fetch_add(1);
+                this->__boundaries->store(_new_boundaries & UNMASK);
+                return (*this);
+            }
         }
-        break;
+        std::this_thread::yield();
     }
-    throw zpt::NoSpaceAvailableException("maximum queue size reached");
+    return (*this);
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
-    auto _cur = this->__cur->load(std::memory_order_acquire);
-    auto _next = _cur + 1;
-    if (_next < this->__max->load() &&
-        this->__cur->compare_exchange_strong(_cur, _next, std::memory_order_release)) {}
+    while (true) {
+        auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
+        auto [_lower, _upper] = this->deserialize(_boundaries);
+        if (_lower != _upper) {
+            auto _new_lower = _lower + 1;
+            auto _new_boundaries = this->serialize(_new_lower, _upper) | MASK;
+            if (this->__boundaries->compare_exchange_strong(
+                  _boundaries, _new_boundaries, std::memory_order_release)) {
+                ptr _to_return;
+                this->__elements[_lower % this->__capacity].swap(_to_return);
+                this->__size->fetch_sub(1);
+                this->__boundaries->store(_new_boundaries & UNMASK);
+                return _to_return;
+            }
+        }
+        else { break; }
+        std::this_thread::yield();
+    }
     throw NoMoreElementsException("no element to pop");
 }
 
@@ -250,11 +261,12 @@ zpt::lf::queue<T>::operator std::string() {
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::serialize(std::uint64_t _lower, std::uint64_t _upper) -> __uint128_t {
+auto zpt::lf::queue<T>::serialize(std::uint64_t _lower, std::uint64_t _upper) const -> __uint128_t {
     return (static_cast<__uint128_t>(_upper) << 64) + static_cast<__uint128_t>(_lower);
 }
 
 template<typename T>
-auto zpt::lf::queue::deserialize(__uint128_t _value) -> std::tuple<std::uint64_t, std::uint64_t> {
+auto zpt::lf::queue<T>::deserialize(__uint128_t _value) const
+  -> std::tuple<std::uint64_t, std::uint64_t> {
     return { static_cast<std::uint64_t>(_value), static_cast<std::uint64_t>(_value >> 64) };
 }

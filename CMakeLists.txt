@@ -58,6 +58,7 @@ add_compile_options(
   -pedantic
   -Wno-interference-size
   -Wno-restrict
+  -mcx16
 )
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" ZAPATA_BUILD_TYPE)

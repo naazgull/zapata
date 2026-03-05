@@ -39,7 +39,7 @@
 #include <zapata/text/manip.h>
 
 constexpr int N_ELEMENTS_QUEUE = 100000;
-constexpr int MAX_THREADS_QUEUE = 16;
+constexpr int MAX_THREADS_QUEUE = 4;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
@@ -53,7 +53,7 @@ using item_type = std::shared_ptr<std::string>;
 #else
 using item_type = int;
 #endif
-zpt::lf::queue<item_type> _queue{ MAX_THREADS_QUEUE };
+zpt::lf::queue<item_type> _queue{ N_ELEMENTS_QUEUE };
 
 auto pause(int) -> void {
     std::cout << _queue << std::endl << std::flush;
@@ -109,7 +109,6 @@ auto test_queue() -> int {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
-              _queue.clear_thread_context();
           },
           _i);
     }
@@ -128,7 +127,7 @@ auto test_queue() -> int {
 }
 
 auto test_hazard_ptr() -> void {
-    zpt::lf::queue<long> _q1{ 2 };
+    zpt::lf::queue<long> _q1{ 1000 };
 
     _q1.push(1);
     _q1.push(2);
@@ -146,12 +145,17 @@ auto test_hazard_ptr() -> void {
     _q1.push(12);
     _q1.push(13);
 
+    try {
+        while (true) { std::cout << *_q1.pop() << std::endl; }
+    }
+    catch (...) {
+    }
+
     std::cout << std::endl
               << "> " << _q1 << std::endl
               << std::endl
               << "  #front: " << _q1.front() << std::endl
               << std::flush;
-    _q1.clear_thread_context();
 }
 
 auto test_aligned() -> void {
