@@ -65,14 +65,14 @@ auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
 }
 
 auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
-    this->__queue.push(_event);
+    this->__queue.push(std::move(_event));
     return (*this);
 }
 
 auto zpt::events::dispatcher::trap() -> dispatcher& {
     auto _event = this->__queue.pop();
     if (_event->blocked()) {
-        this->trigger(_event);
+        this->trigger(std::move(_event));
         std::this_thread::yield();
         return (*this);
     }
@@ -81,7 +81,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
 #endif
         expect_c(_event->authorized(), "No permission to process this event", 401);
         auto state = (*_event)(this->shared_from_this());
-        if (state == zpt::events::retrigger) { this->trigger(_event); }
+        if (state == zpt::events::retrigger) { this->trigger(std::move(_event)); }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {

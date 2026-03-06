@@ -91,12 +91,9 @@ constexpr __uint128_t MASK =
  */
 template<typename T>
 class queue {
-    // static_assert(std::is_copy_constructible<T>::value,
-    //               "Type `T` in `zpt::lf::queue<T>` must be copy constuctible.");
-
   public:
     using size_type = size_t;
-    using ptr = std::shared_ptr<T>;
+    using ptr = std::unique_ptr<T>;
     using const_ptr = std::shared_ptr<T const>;
 
     /**
@@ -112,19 +109,6 @@ class queue {
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
     /**
-     * @brief Returns the front element without removing it.
-     * @return Copy of the front element.
-     * @throws zpt::NoMoreElementsException If queue is empty.
-     */
-    auto front() const -> ptr;
-    /**
-     * @brief Returns the back element without removing it.
-     * @return Copy of the back element.
-     * @throws zpt::NoMoreElementsException If queue is empty.
-     */
-    auto back() const -> ptr;
-
-    /**
      * @brief Adds an element to the back of the queue.
      * @param value Value to add (will be copied).
      * @return Reference to this queue.
@@ -135,7 +119,7 @@ class queue {
      * @param value Shared-pointer to the value to add.
      * @return Reference to this queue.
      */
-    auto push(ptr value) -> zpt::lf::queue<T>&;
+    auto push(ptr&& value) -> zpt::lf::queue<T>&;
     /**
      * @brief Removes and returns the front element.
      * @return The front element (moved).
@@ -152,13 +136,19 @@ class queue {
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
-        _out << "queue(" << std::hex << &_in << "):" << std::dec << std::endl
-             << "  #head -> " << std::hex << _in.front().get() << std::dec << " is_null("
-             << std::boolalpha << (_in.front() == nullptr) << ")" << std::endl
-             << "  #tail -> " << std::hex << _in.back().get() << std::dec << " is_null("
-             << std::boolalpha << (_in.back() == nullptr) << ")" << std::endl
-             << std::endl
-             << "   (" << _in.size() << " elements) " << std::flush;
+        _out << "queue(" << std::hex << &_in << "):" << std::dec << "\n  #items ->\n     [ ";
+        try {
+            size_t _count{ 0 };
+            auto [_lower, _upper] = _in.deserialize(_in.__boundaries->load());
+            for (size_t _idx = _lower; _idx != _upper; ++_idx, ++_count) {
+                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", "))
+                     << *_in.__elements[_idx % _in.__capacity];
+            }
+        }
+        catch (zpt::NoMoreElementsException const& e) {
+        }
+        _out << (_in.size() != 0 ? " " : "") << "]\n"
+             << "   (" << _in.size() << " elements) ";
         return _out;
     }
 
@@ -181,26 +171,12 @@ zpt::lf::queue<T>::queue(size_t _max_queue_size)
   , __capacity{ _max_queue_size } {}
 
 template<typename T>
-auto zpt::lf::queue<T>::front() const -> ptr {
-    auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
-    auto [_lower, _] = this->deserialize(_boundaries);
-    return this->__elements[_lower % this->__capacity];
-}
-
-template<typename T>
-auto zpt::lf::queue<T>::back() const -> ptr {
-    auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
-    auto [_, _upper] = this->deserialize(_boundaries);
-    return this->__elements[(_upper - 1) % this->__capacity];
-}
-
-template<typename T>
 auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
-    return this->push(std::make_shared<T>(_value));
+    return this->push(std::make_unique<T>(_value));
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::push(ptr _value) -> zpt::lf::queue<T>& {
+auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
     while (true) {
         auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
         auto [_lower, _upper] = this->deserialize(_boundaries);
@@ -209,7 +185,7 @@ auto zpt::lf::queue<T>::push(ptr _value) -> zpt::lf::queue<T>& {
             auto _new_boundaries = this->serialize(_lower, _new_upper) | MASK;
             if (this->__boundaries->compare_exchange_strong(
                   _boundaries, _new_boundaries, std::memory_order_release)) {
-                this->__elements[_upper % this->__capacity] = _value;
+                this->__elements[_upper % this->__capacity] = std::move(_value);
                 this->__size->fetch_add(1);
                 this->__boundaries->store(_new_boundaries & UNMASK);
                 return (*this);

@@ -39,7 +39,7 @@
 #include <zapata/text/manip.h>
 
 constexpr int N_ELEMENTS_QUEUE = 100000;
-constexpr int MAX_THREADS_QUEUE = 4;
+constexpr int MAX_THREADS_QUEUE = 16;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
@@ -145,17 +145,13 @@ auto test_hazard_ptr() -> void {
     _q1.push(12);
     _q1.push(13);
 
-    try {
-        while (true) { std::cout << *_q1.pop() << std::endl; }
-    }
-    catch (...) {
-    }
+    // try {
+    //     while (true) { std::cout << *_q1.pop() << std::endl; }
+    // }
+    // catch (...) {
+    // }
 
-    std::cout << std::endl
-              << "> " << _q1 << std::endl
-              << std::endl
-              << "  #front: " << _q1.front() << std::endl
-              << std::flush;
+    std::cout << std::endl << "> " << _q1 << std::endl << std::flush;
 }
 
 auto test_aligned() -> void {

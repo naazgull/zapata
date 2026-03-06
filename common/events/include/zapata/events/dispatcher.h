@@ -43,7 +43,7 @@ namespace zpt {
 /** @brief Forward declaration of abstract event interface. */
 class abstract_event;
 /** @brief Shared pointer type for events. */
-using event = std::shared_ptr<zpt::abstract_event>;
+using event = std::unique_ptr<zpt::abstract_event>;
 
 /**
  * @brief Base class for event initialization data.
@@ -201,7 +201,7 @@ class abstract_event {
     /** @brief Executes the event operation. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
-using event = std::shared_ptr<zpt::abstract_event>;
+using event = std::unique_ptr<zpt::abstract_event>;
 
 /**
  * @brief Type-erasing wrapper for Operation types.
@@ -339,21 +339,19 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zp
 
 template<zpt::events::Operation T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
-                                                 _operator);
+    return std::make_unique<zpt::event_t<T>>(_operator);
 }
 
 template<zpt::events::Operation T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::allocate_shared<zpt::event_t<T>>(zpt::allocator<zpt::event_t<T>>{ zpt::MEM_POOL() },
-                                                 std::forward<Args>(_args)...);
+    return std::make_unique<zpt::event_t<T>>(std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>
 auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
     if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
-    this->trigger(_event);
+    this->trigger(std::move(_event));
     return (*this);
 }
 
