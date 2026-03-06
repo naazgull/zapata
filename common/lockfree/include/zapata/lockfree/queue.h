@@ -22,24 +22,18 @@
 
 /**
  * @file queue.h
- * @brief Lock-free FIFO queue implementation.
+ * @brief Bounded lock-free FIFO queue implementation.
  *
- * Provides a thread-safe, lock-free queue using Michael & Scott's algorithm
- * with hazard pointer-based memory reclamation. Multiple threads can safely
- * push and pop concurrently without locks.
- *
- * @par Algorithm
- * Based on "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent
- * Queue Algorithms" by Michael and Scott (1996), with hazard pointers for
- * safe memory reclamation (Maged Michael, 2004).
+ * Provides a thread-safe, bounded queue backed by a fixed-size ring buffer.
+ * Head and tail indices are packed into a single 128-bit atomic, with the
+ * two most-significant bits used as a mutation guard to serialise concurrent
+ * index updates via compare-and-swap. No per-thread state or cleanup is
+ * required.
  *
  * @par Thread Safety
- * - `push()`: Multiple threads can push concurrently
- * - `pop()`: Multiple threads can pop concurrently
- * - `size()`: Approximate count (may be stale)
- * - Threads must call `clear_thread_context()` before exiting
- *
- * @see zpt::lf::hazard_ptr
+ * - `push()`: Multiple threads can push concurrently; spins when the queue is full.
+ * - `pop()`: Multiple threads can pop concurrently; throws when the queue is empty.
+ * - `size()`: Approximate count (may be transiently stale).
  */
 
 #pragma once
@@ -47,65 +41,72 @@
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/sentry.h>
 #include <zapata/exceptions/exceptions.h>
-#include <zapata/lockfree/hazard_ptr.h>
 
 namespace zpt {
 namespace lf {
 
+/** @brief Bitmask that isolates the lower 126 bits (the packed head/tail indices). */
 constexpr __uint128_t UNMASK = (static_cast<__uint128_t>(1) << 126) - 1;
+/** @brief Mutation-guard bits (bits 126–127) set during an index update CAS. */
 constexpr __uint128_t MASK =
   (static_cast<__uint128_t>(1) << 127) + (static_cast<__uint128_t>(1) << 126);
 
 /**
- * @brief Lock-free FIFO queue for concurrent producer/consumer patterns.
+ * @brief Bounded lock-free FIFO queue for concurrent producer/consumer patterns.
  *
- * A thread-safe queue that allows multiple threads to push and pop elements
- * concurrently without using locks. Uses compare-and-swap operations and
- * hazard pointers for memory safety.
+ * Backed by a fixed-capacity ring buffer allocated at construction time.
+ * Head and tail positions are packed into a single 128-bit atomic value;
+ * the two most-significant bits serve as a mutation guard so that only one
+ * CAS winner at a time may advance the index, eliminating the need for
+ * per-thread hazard pointers or a linked-node allocator.
  *
- * @tparam T Value type (must be copy-constructible).
+ * @tparam T Value type stored in the queue.
  *
  * @par Example
  * @code
- * // Create queue supporting up to 10000 elements in the queue
- * zpt::lf::queue<std::string> queue(10000);
+ * // Create a queue with capacity for up to 1000 elements
+ * zpt::lf::queue<std::string> q(1000);
  *
  * // Producer thread
- * queue.push("message 1");
- * queue.push("message 2");
+ * q.push("message 1");
+ * q.push("message 2");
  *
  * // Consumer thread
  * try {
  *     while (true) {
- *         std::string msg = queue.pop();
- *         process(msg);
+ *         auto msg = q.pop();
+ *         process(*msg);
  *     }
  * } catch (zpt::NoMoreElementsException&) {
  *     // Queue is empty
  * }
- *
  * @endcode
  *
- * @note The `size()` method returns an approximate count that may be stale
- *       due to concurrent modifications.
+ * @note `push()` spins until a slot is available when the queue is full.
+ * @note `size()` may be transiently stale because the size counter is updated
+ *       separately from the index CAS.
  */
 template<typename T>
 class queue {
   public:
     using size_type = size_t;
     using ptr = std::unique_ptr<T>;
-    using const_ptr = std::shared_ptr<T const>;
 
     /**
-     * @brief Constructs a queue with the specified thread capacity.
-     * @param _max_queue_size Maximum number elements in the queue.
+     * @brief Constructs a bounded queue with the given fixed capacity.
+     * @param _max_queue_size Maximum number of elements the queue can hold simultaneously.
      */
     queue(size_t _max_queue_size);
+    /** @brief Not copyable — the ring buffer cannot be shared. */
     queue(zpt::lf::queue<T> const& _rhs) = delete;
+    /** @brief Not movable — the atomic state cannot be transferred safely. */
     queue(zpt::lf::queue<T>&& _rhs) = delete;
-    virtual ~queue() = default;
+    /** @brief Destructor. */
+    ~queue() = default;
 
+    /** @brief Not copyable — the ring buffer cannot be shared. */
     auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
+    /** @brief Not movable — the atomic state cannot be transferred safely. */
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
     /**
@@ -115,14 +116,14 @@ class queue {
      */
     auto push(T value) -> zpt::lf::queue<T>&;
     /**
-     * @brief Adds an element to the back of the queue.
-     * @param value Shared-pointer to the value to add.
+     * @brief Adds an element to the back of the queue, transferring ownership.
+     * @param value Unique pointer whose ownership is transferred to the queue.
      * @return Reference to this queue.
      */
     auto push(ptr&& value) -> zpt::lf::queue<T>&;
     /**
      * @brief Removes and returns the front element.
-     * @return The front element (moved).
+     * @return Unique pointer owning the dequeued element.
      * @throws zpt::NoMoreElementsException If queue is empty.
      */
     auto pop() -> ptr;
@@ -133,7 +134,7 @@ class queue {
     /** @brief Returns a debug string representation of the queue. */
     __attribute__((noinline)) auto to_string() const -> std::string;
     /** @brief Converts to string (calls to_string()). */
-    operator std::string();
+    operator std::string() const;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
         _out << "queue(" << std::hex << &_in << "):" << std::dec << "\n  #items ->\n     [ ";
@@ -180,7 +181,7 @@ auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
     while (true) {
         auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
         auto [_lower, _upper] = this->deserialize(_boundaries);
-        if ((_upper - _lower) <= this->__capacity) {
+        if ((_upper - _lower) < this->__capacity) {
             auto _new_upper = _upper + 1;
             auto _new_boundaries = this->serialize(_lower, _new_upper) | MASK;
             if (this->__boundaries->compare_exchange_strong(
@@ -230,7 +231,7 @@ auto zpt::lf::queue<T>::to_string() const -> std::string {
 }
 
 template<typename T>
-zpt::lf::queue<T>::operator std::string() {
+zpt::lf::queue<T>::operator std::string() const {
     std::ostringstream _oss;
     _oss << (*this) << std::flush;
     return _oss.str();
