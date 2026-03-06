@@ -33,13 +33,16 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoSpaceAvailableException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uuid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/atomic.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoMoreElementsException.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoSpaceAvailableException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoAttributeNameException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/ParserEOF.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/ClosedException.h

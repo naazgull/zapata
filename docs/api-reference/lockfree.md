@@ -5,9 +5,8 @@ This document provides the API reference for the Zapata lock-free data structure
 ## Headers
 
 ```cpp
-#include <zapata/lockfree.h>              // Main aggregate header
-#include <zapata/lockfree/hazard_ptr.h>   // Hazard pointers only
-#include <zapata/lockfree/queue.h>        // Lock-free queue only
+#include <zapata/lockfree.h>         // Main aggregate header
+#include <zapata/lockfree/queue.h>   // Lock-free queue only
 ```
 
 ---
@@ -18,261 +17,97 @@ Lock-free data structures and utilities.
 
 ---
 
-## Class Template: `zpt::lf::hazard_ptr<T>`
-
-Hazard pointer domain for safe memory reclamation in lock-free structures.
-
-### Template Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `T` | Type of pointers being protected |
-
-### Type Aliases
+## Constants
 
 ```cpp
-using size_type = size_t;
-using hp_type = zpt::padded_atomic<T*>;
-using thr_slot_type = zpt::padded_atomic<bool>;
-using pending_list = std::map<T*, T*>;
+constexpr __uint128_t zpt::lf::UNMASK;
+constexpr __uint128_t zpt::lf::MASK;
 ```
 
-### Configuration Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| P | Maximum number of threads |
-| K | Hazard pointers per thread (default: 2) |
-| N | Total hazard pointers (P × K) |
-| R | Reclamation threshold (N × 2) |
-
-### Constructor
-
-```cpp
-hazard_ptr(long _max_threads, long _ptr_per_thread = 2);
-```
-
-Creates a hazard pointer domain.
-
-**Parameters:**
-- `_max_threads` - Maximum concurrent threads accessing the domain
-- `_ptr_per_thread` - Hazard pointer slots per thread (minimum 2)
-
-**Note:** Copy and move constructors are deleted.
-
-### Methods
-
-#### `acquire`
-
-```cpp
-auto acquire(T* _ptr) -> long;
-```
-
-Acquires a hazard pointer slot and publishes the pointer.
-
-**Parameters:**
-- `_ptr` - Pointer to protect
-
-**Returns:** Slot index to use with `release()`
-
-**Throws:** `zpt::ExpectationException` if no slots available
-
----
-
-#### `release`
-
-```cpp
-auto release(long _idx) -> hazard_ptr<T>&;
-```
-
-Releases a hazard pointer slot.
-
-**Parameters:**
-- `_idx` - Slot index from `acquire()`
-
----
-
-#### `retire`
-
-```cpp
-auto retire(T* _ptr) -> hazard_ptr<T>&;
-```
-
-Marks a pointer for deferred deletion. The pointer will be deleted when no hazard pointer references it.
-
-**Parameters:**
-- `_ptr` - Pointer to retire
-
-**Note:** Automatically triggers `clean()` when retired list reaches threshold R.
-
----
-
-#### `clean`
-
-```cpp
-auto clean() -> hazard_ptr<T>&;
-```
-
-Scans all hazard pointers and deletes retired pointers that are no longer referenced.
-
----
-
-#### `clear_thread_context`
-
-```cpp
-auto clear_thread_context() -> hazard_ptr<T>&;
-```
-
-Cleans up thread-local state. **Must be called before thread exit.**
-
----
-
-#### `get_thread_dangling_count`
-
-```cpp
-auto get_thread_dangling_count() -> size_t;
-```
-
-Returns the number of retired pointers not yet deleted for the current thread.
-
----
-
-#### `get_thread_held_count`
-
-```cpp
-auto get_thread_held_count() -> size_t;
-```
-
-Returns the number of hazard pointer slots currently held by this thread.
-
----
-
-### Nested Class: `guard`
-
-RAII wrapper for hazard pointer acquisition/release.
-
-#### Constructor
-
-```cpp
-guard(T* _target, zpt::lf::hazard_ptr<T>& _parent);
-```
-
-Acquires a hazard pointer slot for the target pointer.
-
-#### Destructor
-
-Releases the hazard pointer slot. If `retire()` was called, also retires the target pointer.
-
-#### Methods
-
-| Method | Description |
-|--------|-------------|
-| `retire() -> guard&` | Marks target for retirement on destruction |
-| `target() -> T*` | Returns the protected pointer |
-
-#### Example
-
-```cpp
-zpt::lf::hazard_ptr<Node> hp(16);
-
-void safe_access(std::atomic<Node*>& shared) {
-    Node* ptr = shared.load();
-    zpt::lf::hazard_ptr<Node>::guard guard(ptr, hp);
-
-    // Safe to use guard.target() here
-    process(guard.target());
-
-    // If removing the node:
-    if (try_remove(shared, ptr)) {
-        guard.retire();  // Will be deleted when safe
-    }
-}
-```
+Internal bitmasks used by `zpt::lf::queue` to pack and guard head/tail indices inside a single 128-bit atomic. `UNMASK` isolates the lower 126 bits (the actual index values); `MASK` has bits 126–127 set and is used as a mutation guard during CAS operations.
 
 ---
 
 ## Class Template: `zpt::lf::queue<T>`
 
-Lock-free FIFO queue for concurrent producer/consumer patterns.
+Bounded lock-free FIFO queue for concurrent producer/consumer patterns.
+
+Backed by a fixed-capacity ring buffer allocated at construction time. Head and tail positions are packed into a single 128-bit atomic value; the two most-significant bits serve as a mutation guard so that only one CAS winner at a time may advance an index. No per-thread state or cleanup is required.
 
 ### Template Parameters
 
-| Parameter | Constraint | Description |
-|-----------|------------|-------------|
-| `T` | Copy-constructible | Element type |
+| Parameter | Description |
+|-----------|-------------|
+| `T` | Element type stored in the queue |
 
 ### Type Aliases
 
 ```cpp
 using size_type = size_t;
-using hazard_domain = zpt::lf::hazard_ptr<zpt::lf::forward_node<T>>;
+using ptr       = std::unique_ptr<T>;
+using const_ptr = std::shared_ptr<T const>;
 ```
 
 ### Constructor
 
 ```cpp
-queue(long _max_threads);
+queue(size_t _max_queue_size);
 ```
 
-Creates a lock-free queue.
+Creates a bounded queue.
 
 **Parameters:**
-- `_max_threads` - Maximum concurrent threads accessing the queue
+- `_max_queue_size` — Maximum number of elements the queue can hold simultaneously.
 
-**Note:** Copy and move constructors are deleted.
+**Note:** Copy and move constructors are deleted — the ring buffer and atomic state cannot be shared or transferred.
 
 ### Methods
 
-#### `push`
+#### `push` (by value)
 
 ```cpp
 auto push(T value) -> zpt::lf::queue<T>&;
 ```
 
-Adds an element to the back of the queue. Thread-safe for concurrent calls.
+Copies the value into a new heap-allocated node and enqueues it.
 
 **Parameters:**
-- `value` - Value to add (will be copied)
+- `value` — Value to copy into the queue.
 
-**Returns:** Reference to the queue for chaining
+**Returns:** Reference to the queue for chaining.
+
+**Note:** Spins with `std::this_thread::yield()` until a slot becomes available when the queue is at capacity.
+
+---
+
+#### `push` (by unique_ptr)
+
+```cpp
+auto push(ptr&& value) -> zpt::lf::queue<T>&;
+```
+
+Transfers ownership of an already-allocated node into the queue.
+
+**Parameters:**
+- `value` — Owning pointer to the element. Ownership is transferred to the queue.
+
+**Returns:** Reference to the queue for chaining.
+
+**Note:** Spins with `std::this_thread::yield()` until a slot becomes available when the queue is at capacity.
 
 ---
 
 #### `pop`
 
 ```cpp
-auto pop() -> T;
+auto pop() -> ptr;
 ```
 
-Removes and returns the front element. Thread-safe for concurrent calls.
+Removes and returns the front element.
 
-**Returns:** The front element (moved)
+**Returns:** `std::unique_ptr<T>` owning the dequeued element.
 
-**Throws:** `zpt::NoMoreElementsException` if queue is empty
-
----
-
-#### `front`
-
-```cpp
-auto front() const -> T;
-```
-
-Returns the front element without removing it.
-
-**Throws:** `zpt::NoMoreElementsException` if queue is empty
-
----
-
-#### `back`
-
-```cpp
-auto back() const -> T;
-```
-
-Returns the back element without removing it.
-
-**Throws:** `zpt::NoMoreElementsException` if queue is empty
+**Throws:** `zpt::NoMoreElementsException` if the queue is empty.
 
 ---
 
@@ -282,68 +117,39 @@ Returns the back element without removing it.
 auto size() const -> size_t;
 ```
 
-Returns the approximate element count.
+Returns the current element count.
 
-**Note:** May be stale due to concurrent modifications.
+**Note:** May be transiently stale because the size counter is updated separately from the index CAS.
 
 ---
 
-#### `begin` / `end`
+#### `to_string`
 
 ```cpp
-auto begin() const -> iterator;
-auto end() const -> iterator;
+auto to_string() const -> std::string;
 ```
 
-Returns iterators for range-based traversal.
-
-**Warning:** Iteration is not thread-safe during concurrent modifications.
+Returns a debug string listing the queue's current contents.
 
 ---
 
-#### `clear_thread_context`
+#### `operator std::string`
 
 ```cpp
-auto clear_thread_context() -> zpt::lf::queue<T>&;
+operator std::string();
 ```
 
-Cleans up thread-local hazard pointer state. **Must be called before thread exit.**
+Implicit conversion to string; delegates to `to_string()`.
 
 ---
 
-#### `get_thread_dangling_count`
+#### `operator<<`
 
 ```cpp
-auto get_thread_dangling_count() const -> size_t;
+friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream&;
 ```
 
-Returns count of retired nodes pending deletion for the current thread.
-
----
-
-### Nested Class: `iterator`
-
-Forward iterator for queue traversal.
-
-```cpp
-using difference_type = std::ptrdiff_t;
-using value_type = T;
-using iterator_category = std::forward_iterator_tag;
-```
-
----
-
-## Class Template: `zpt::lf::forward_node<T>`
-
-Internal node type for lock-free linked structures.
-
-### Members
-
-| Member | Type | Description |
-|--------|------|-------------|
-| `__value` | `T` | Stored value |
-| `__is_null` | `zpt::padded_atomic<bool>` | True if node is sentinel |
-| `__next` | `zpt::padded_atomic<forward_node*>` | Next node pointer |
+Streams a human-readable representation of the queue to `_out`.
 
 ---
 
@@ -354,86 +160,57 @@ Internal node type for lock-free linked structures.
 ```cpp
 #include <zapata/lockfree.h>
 #include <thread>
-#include <vector>
 
-zpt::lf::queue<int> work_queue(8);  // 8 threads max
-std::atomic<bool> done{false};
+// Capacity of 1000 elements; no thread-count limit
+zpt::lf::queue<int> work_queue(1000);
+std::atomic<bool> done{ false };
 
 void producer() {
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 500; ++i) {
         work_queue.push(i);
     }
     done = true;
-    work_queue.clear_thread_context();
 }
 
 void consumer() {
     while (!done || work_queue.size() > 0) {
         try {
-            int item = work_queue.pop();
-            process(item);
-        } catch (zpt::NoMoreElementsException&) {
+            auto item = work_queue.pop();
+            process(*item);
+        }
+        catch (zpt::NoMoreElementsException&) {
             std::this_thread::yield();
         }
     }
-    work_queue.clear_thread_context();
 }
 ```
 
-### Custom Lock-Free Structure
+### Passing Ownership Without Copying
 
 ```cpp
-#include <zapata/lockfree/hazard_ptr.h>
+zpt::lf::queue<std::vector<char>> buffer_queue(256);
 
-template<typename T>
-class LockFreeStack {
-    struct Node {
-        T value;
-        std::atomic<Node*> next;
-    };
+// Producer: build and enqueue without an extra copy
+auto buf = std::make_unique<std::vector<char>>(4096);
+fill_buffer(*buf);
+buffer_queue.push(std::move(buf));
 
-    std::atomic<Node*> head{nullptr};
-    zpt::lf::hazard_ptr<Node> hp;
-
-public:
-    LockFreeStack(int max_threads) : hp(max_threads, 2) {}
-
-    void push(T value) {
-        Node* node = new Node{value, head.load()};
-        while (!head.compare_exchange_weak(node->next, node));
-    }
-
-    T pop() {
-        while (true) {
-            Node* old_head = head.load();
-            if (!old_head) throw std::runtime_error("empty");
-
-            zpt::lf::hazard_ptr<Node>::guard guard(old_head, hp);
-            if (head.compare_exchange_strong(old_head, old_head->next.load())) {
-                T value = std::move(old_head->value);
-                guard.retire();
-                return value;
-            }
-        }
-    }
-
-    void clear_thread() { hp.clear_thread_context(); }
-};
+// Consumer: take ownership directly
+auto received = buffer_queue.pop();
+process(*received);
 ```
 
 ---
 
 ## Thread Safety Notes
 
-1. **Thread Exit**: Always call `clear_thread_context()` before a thread exits to prevent resource leaks.
+1. **No thread registration** — Any thread may call `push()` or `pop()` without prior registration.
 
-2. **Maximum Threads**: The maximum thread count is fixed at construction. Exceeding it causes an exception.
+2. **Bounded capacity** — `push()` spins when the queue is full. Size the queue to the peak concurrent load to avoid starvation.
 
-3. **Hazard Pointer Slots**: Each thread has K slots (default 2). Acquiring more than K pointers simultaneously will fail.
+3. **Approximate size** — `size()` is updated outside the CAS critical section and may be transiently stale; use it for monitoring, not synchronisation.
 
-4. **Memory Reclamation**: Retired pointers are batch-deleted when the retired list reaches threshold R (= 2NK).
-
-5. **Iteration**: Queue iteration is not safe during concurrent `push`/`pop` operations.
+4. **No iteration** — The queue does not provide iterators; elements must be consumed via `pop()`.
 
 ---
 

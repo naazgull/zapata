@@ -39,31 +39,30 @@ The I/O layer uses non-blocking sockets with `EPOLLIN`/`EPOLLOUT` events, dispat
 
 ## Lock-Free Data Structures
 
-### Hazard Pointers
-
-Zapata implements hazard pointer-based memory reclamation for safe lock-free operations:
-
-```cpp
-// Each thread maintains a list of hazard pointers
-// pointing to objects it is currently accessing.
-// Objects are only reclaimed when no thread holds
-// a hazard pointer to them.
-```
-
-**How it works:**
-
-1. Before accessing a shared object, a thread publishes a hazard pointer to it
-2. Other threads check all hazard pointers before freeing an object
-3. Objects not referenced by any hazard pointer are safely reclaimed
-4. This avoids ABA problems without requiring locks
-
 ### Lock-Free Queue
 
-The `zpt::lf::queue<T>` provides a multi-producer, multi-consumer FIFO queue:
+`zpt::lf::queue<T>` provides a bounded, multi-producer, multi-consumer FIFO queue backed by a fixed-size ring buffer:
 
-- **Enqueue**: Lock-free push using CAS (compare-and-swap)
-- **Dequeue**: Lock-free pop with hazard pointer protection
-- **Memory**: Retired nodes reclaimed via hazard pointer scan
+- **Enqueue** (`push`): Atomically advances the tail index with CAS; spins on contention or when the buffer is full.
+- **Dequeue** (`pop`): Atomically advances the head index with CAS; throws `zpt::NoMoreElementsException` when empty.
+- **Memory**: A flat `unique_ptr` array is allocated once at construction — no per-element allocation at runtime.
+- **Index packing**: Head and tail are packed into a single 128-bit atomic. Bits 126–127 act as a mutation guard so only one CAS winner at a time may commit an index advance, avoiding ABA issues without separate hazard pointer bookkeeping.
+- **No thread limit**: Any number of threads may push or pop concurrently without registration or cleanup.
+
+```cpp
+// Size the queue to the expected peak depth
+zpt::lf::queue<zpt::message> channel(4096);
+
+// Producer
+channel.push(make_message());
+
+// Consumer
+try {
+    auto msg = channel.pop();   // returns std::unique_ptr<zpt::message>
+    handle(*msg);
+}
+catch (zpt::NoMoreElementsException&) { /* queue empty */ }
+```
 
 Used for inter-thread message passing between I/O and worker threads.
 
@@ -115,5 +114,5 @@ Handler execution is serialized per-event but concurrent across different events
 ## See Also
 
 - [Architecture Overview](overview.md) - High-level design
-- [Lock-Free API Reference](../api-reference/lockfree.md) - Hazard pointers and queue API
+- [Lock-Free API Reference](../api-reference/lockfree.md) - Bounded queue API
 - [Component Architecture](components.md) - Module relationships

@@ -41,8 +41,8 @@ auto zpt::system_event::catch_error(zpt::failed_expectation const& _e, zpt::even
 }
 
 auto zpt::system_event::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state {
-    auto _events = zpt::SYSTEM_EVENTS_RESOLVER()->resolve(this->__received, [this](zpt::event) {});
-    for (auto& _event : _events) { _dispatcher->trigger(_event); }
+    auto _events = zpt::SYSTEM_EVENTS_RESOLVER()->resolve(this->__received, [this](zpt::event&) {});
+    for (auto& _event : _events) { _dispatcher->trigger(std::move(_event)); }
     return zpt::events::finish;
 }
 

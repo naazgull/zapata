@@ -21,6 +21,7 @@
  *   - zpt::ExpectationException - Failed expect() assertions
  *   - zpt::SyntaxErrorException - Parser syntax errors
  *   - zpt::NoMoreElementsException - Empty collection access
+ *   - zpt::NoSpaceAvailableException - Full collection write access
  *   - zpt::ClosedException - Operations on closed resources
  *   - zpt::CastException - Type conversion failures
  *   - zpt::InterruptedException - Interrupted operations
@@ -38,5 +39,6 @@
 #include <zapata/exceptions/InterruptedException.h>
 #include <zapata/exceptions/NoAttributeNameException.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
+#include <zapata/exceptions/NoSpaceAvailableException.h>
 #include <zapata/exceptions/ParserEOF.h>
 #include <zapata/exceptions/SyntaxErrorException.h>

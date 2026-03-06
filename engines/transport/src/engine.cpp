@@ -95,7 +95,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
             !_dispatcher->is_in_shutdown()) {
 
             auto _events =
-              this->__engine.resolve(_received, [this, _dispatcher](zpt::event _event) {
+              this->__engine.resolve(_received, [this, _dispatcher](zpt::event& _event) {
                   zpt::events::transport_event_init _init;
                   _init.__dispatcher = _dispatcher;
                   _init.__polling = this->__polling;
@@ -117,7 +117,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 }
             }
             else {
-                for (auto _event : _events) { _dispatcher->trigger(_event); }
+                for (auto& _event : _events) { _dispatcher->trigger(std::move(_event)); }
             }
             return zpt::events::finish;
         }
@@ -328,7 +328,7 @@ auto zpt::transports::engine::resolve(zpt::message _received,
     for (auto& _resolver : this->__resolvers) {
         try {
             auto _events = _resolver->resolve(_received, _initializer);
-            _return.insert(_return.end(), _events.begin(), _events.end());
+            _return.merge(_events);
         }
         catch (...) {
         }

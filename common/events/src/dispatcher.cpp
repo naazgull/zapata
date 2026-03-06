@@ -24,8 +24,8 @@
 
 zpt::events::dispatcher::dispatcher(std::string const& _name,
                                     long _max_consumers,
-                                    long _max_producers)
-  : __queue{ _max_consumers + _max_producers }
+                                    size_t _max_queue_size)
+  : __queue{ _max_queue_size }
   , __max_consumers{ _max_consumers }
   , __name{ _name } {}
 
@@ -65,14 +65,14 @@ auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
 }
 
 auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
-    this->__queue.push(_event);
+    this->__queue.push(std::move(_event));
     return (*this);
 }
 
 auto zpt::events::dispatcher::trap() -> dispatcher& {
     auto _event = this->__queue.pop();
     if (_event->blocked()) {
-        this->trigger(_event);
+        this->trigger(std::move(_event));
         std::this_thread::yield();
         return (*this);
     }
@@ -81,7 +81,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
 #endif
         expect_c(_event->authorized(), "No permission to process this event", 401);
         auto state = (*_event)(this->shared_from_this());
-        if (state == zpt::events::retrigger) { this->trigger(_event); }
+        if (state == zpt::events::retrigger) { this->trigger(std::move(_event)); }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {
@@ -124,7 +124,6 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
         }
 #endif
     } while (!this->__shutdown->load(std::memory_order_relaxed));
-    this->__queue.clear_thread_context();
     --(*this->__running_consumers);
     zlog(_name << " stopping", zpt::trace);
 }
