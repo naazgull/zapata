@@ -166,7 +166,7 @@ HTTP request message.
 
 ```cpp
 basic_request();
-basic_request(zpt::basic_message const& _request, bool);
+basic_request(zpt::message _request, bool);
 ```
 
 ### Methods
@@ -198,7 +198,7 @@ HTTP response message.
 
 ```cpp
 basic_reply();
-basic_reply(zpt::basic_message const& _request, bool);
+basic_reply(zpt::message _request, bool);
 ```
 
 ### Methods

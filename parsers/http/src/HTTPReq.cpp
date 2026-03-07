@@ -35,22 +35,26 @@ zpt::http::basic_request::basic_request() {
     zpt::init(*this);
 }
 
-zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool)
+zpt::http::basic_request::basic_request(zpt::message _request, bool)
   : basic_request{} {
-    auto _req_headers = _request.headers();
-    auto _headers = zpt::json::object();
-    _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
-    _headers["Cache-Control"] =
-      _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-    _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
-                                      ? _req_headers("X-Conversation-ID")->string()
-                                      : zpt::uuid{}.to_string();
-    _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1";
+    auto _req_headers = _request->headers();
 
-    this->__underlying           //
-      << "uri" << _request.uri() //
-      << "headers" << _headers;
+    this->__underlying["headers"]["Content-Type"] = zpt::network::resolve_content_type(_request);
+    if (_req_headers("Cache-Control")->ok()) {
+        this->__underlying["headers"]["Cache-Control"] = _req_headers("Cache-Control");
+    }
+    if (_req_headers("X-Conversation-ID")->ok()) {
+        this->__underlying["headers"]["X-Conversation-ID"] = _req_headers("X-Conversation-ID");
+    }
+    if (_req_headers("X-Version")->ok()) {
+        this->__underlying["headers"]["X-Version"] = _req_headers("X-Version");
+    }
+
+    this->__underlying //
+      << "uri" << _request->uri();
 }
+
+zpt::http::basic_request::~basic_request() {}
 
 auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     auto _uri = this->__underlying("uri");

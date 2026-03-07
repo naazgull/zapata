@@ -368,7 +368,7 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
-    this->__resolver->add(_send, _context, zpt::events::make_callback<T>);
+    this->__resolver->add(this->__to_send, _context, zpt::events::make_callback<T>);
 }
 
 template<ProcessOperation T>

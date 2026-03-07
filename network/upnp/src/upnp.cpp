@@ -39,7 +39,7 @@ auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const 
 auto zpt::net::transport::upnp::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::upnp::basic_request>();
     zpt::init(static_cast<zpt::http::basic_request&>(
-      zpt::message_cast<zpt::upnp::basic_request&>(_to_return)));
+      zpt::message_cast<zpt::upnp::basic_request>(_to_return)));
     return _to_return;
 }
 
@@ -47,15 +47,14 @@ auto zpt::net::transport::upnp::make_reply(bool _with_allocator) const -> zpt::m
     auto _to_return = _with_allocator ? zpt::allocate_message<zpt::upnp::basic_reply>()
                                       : zpt::make_message<zpt::upnp::basic_reply>();
     zpt::init(
-      static_cast<zpt::http::basic_reply&>(zpt::message_cast<zpt::upnp::basic_reply&>(_to_return)));
+      static_cast<zpt::http::basic_reply&>(zpt::message_cast<zpt::upnp::basic_reply>(_to_return)));
     return _to_return;
 }
 
 auto zpt::net::transport::upnp::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::upnp::basic_reply>(
-      zpt::message_cast<zpt::upnp::basic_request>(_request), true);
+    auto _to_return = zpt::allocate_message<zpt::upnp::basic_reply>(_request, true);
     zpt::init(
-      static_cast<zpt::http::basic_reply&>(zpt::message_cast<zpt::upnp::basic_reply&>(_to_return)));
+      static_cast<zpt::http::basic_reply&>(zpt::message_cast<zpt::upnp::basic_reply>(_to_return)));
     return _to_return;
 }
 

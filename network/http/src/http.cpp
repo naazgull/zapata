@@ -44,8 +44,7 @@ auto zpt::net::transport::http::make_reply(bool _with_allocator) const -> zpt::m
 }
 
 auto zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::http::basic_reply>(
-      zpt::message_cast<zpt::http::basic_request>(_request), true);
+    auto _to_return = zpt::allocate_message<zpt::http::basic_reply>(_request, true);
     zpt::init(zpt::message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
@@ -57,7 +56,8 @@ auto zpt::net::transport::http::process_incoming_request(zpt::stream _stream) co
     (*_stream) >> std::noskipws >> _request;
 
     if (_request->headers()("Host")->ok()) {
-        auto _host = zpt::uri::parse(std::format("http://{}", _request->headers()("Host")));
+        auto _host =
+          zpt::uri::parse(std::format("http://{}", _request->headers()("Host")->string()));
         _request->uri()["domain"] = _host("domain");
         _request->uri()["port"] = _host("port")->ok() ? _host("port")->integer() : 80;
     }

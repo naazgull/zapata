@@ -701,7 +701,7 @@ namespace zpt {
 class JSONIterator {
   public:
     using difference_type = std::ptrdiff_t;
-    using value_type = zpt::json::element;      ///< Tuple of (index, key, value)
+    using value_type = zpt::json::element; ///< Tuple of (index, key, value)
     using pointer = zpt::json::element;
     using reference = zpt::json::element;
     using iterator_category = std::bidirectional_iterator_tag;
@@ -1291,7 +1291,7 @@ class JSONArr {
 namespace zpt {
 /** @brief Shared pointer to string for internal use. */
 using JSONStr = std::shared_ptr<std::string>;
-}
+} // namespace zpt
 
 namespace zpt {
 
@@ -1921,7 +1921,7 @@ zpt::pretty::pretty(T _rhs) {
 /// Class `zpt::json` methods
 template<typename T>
 zpt::json::json(T const& _rhs)
-  : __underlying{ std::make_shared<zpt::JSONElementT>(_rhs) } {}
+  : __underlying{ new zpt::JSONElementT{ _rhs } } {}
 template<typename T>
 auto zpt::json::operator=(T const& _rhs) -> zpt::json& {
     (*this->__underlying.get()) = _rhs;

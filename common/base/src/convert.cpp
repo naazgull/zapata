@@ -294,7 +294,7 @@ auto zpt::demangle(std::string const& _mangled) -> std::string {
     return _return;
 }
 
-auto zpt::get_backtrace(unsigned int _skip) -> std::string {
+auto zpt::get_backtrace(int _skip) -> std::string {
     static const std::regex _line_rgx{ "([^(]+)\\(([^)]+)\\) \\[([^\\]]+)\\](.*)",
                                        std::regex_constants::ECMAScript |
                                          std::regex_constants::optimize };

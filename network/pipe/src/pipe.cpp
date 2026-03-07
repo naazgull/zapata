@@ -49,7 +49,7 @@ auto zpt::net::transport::pipe_stream::make_reply(bool _with_allocator) const ->
 
 auto zpt::net::transport::pipe_stream::make_reply(zpt::message _request) const -> zpt::message {
     auto _to_return =
-      zpt::make_message<zpt::json_message>(zpt::message_cast<zpt::json_message>(_request), true);
+      zpt::make_message<zpt::json_message>(_request, true);
     return _to_return;
 }
 
