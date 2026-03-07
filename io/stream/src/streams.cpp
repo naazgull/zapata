@@ -29,12 +29,6 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
 
-namespace zpt {
-struct stream_ptr {
-    zpt::stream __stream;
-};
-} // namespace zpt
-
 zpt::basic_stream::basic_stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() }
   , __fd{ -1 } {
@@ -116,6 +110,7 @@ zpt::polling::~polling() {
 
 auto zpt::polling::close() -> zpt::polling& {
     for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
+    this->__polled_streams.clear();
     return (*this);
 }
 
@@ -146,7 +141,7 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
-    if (this->__shutdown.load() || _stream->__muted) { return (*this); }
+    if (_stream->__muted) { return (*this); }
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
@@ -155,11 +150,11 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
-    if (this->__shutdown.load() || !_stream->__muted) { return (*this); }
+    if (!_stream->__muted) { return (*this); }
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
-    _new_event.data.ptr = new zpt::stream_ptr{ _stream };
+    _new_event.data.ptr = _stream.get();
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
@@ -192,8 +187,8 @@ auto zpt::polling::poll() -> zpt::polling& {
 
         for (auto _k = 0; _k != _n_alive; ++_k) {
             auto _stream =
-              std::move(static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream);
-            delete static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr);
+              static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr)->shared_from_this();
+            _epoll_events[_k].data.ptr = nullptr;
 
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                 ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||

@@ -48,10 +48,10 @@ namespace zpt {
  * @brief Stream processing states for polling.
  */
 enum class stream_state {
-    IDLE,         ///< Stream is idle, not being processed
-    WAITING,      ///< Stream is waiting for I/O
-    PROCESSING,   ///< Stream is being processed by a delegate
-    ERRORING_OUT  ///< Stream encountered an error
+    IDLE,        ///< Stream is idle, not being processed
+    WAITING,     ///< Stream is waiting for I/O
+    PROCESSING,  ///< Stream is being processed by a delegate
+    ERRORING_OUT ///< Stream encountered an error
 };
 
 /** @brief Type alias for epoll event structure. */
@@ -79,7 +79,7 @@ class polling;
  * stream >> response;
  * @endcode
  */
-class basic_stream {
+class basic_stream : public std::enable_shared_from_this<basic_stream> {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
