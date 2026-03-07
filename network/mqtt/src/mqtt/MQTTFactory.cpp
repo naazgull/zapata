@@ -116,7 +116,7 @@ auto zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt
     _mqtt->buffer(_envelope);
 }
 
-extern "C" void _zpt_plugin_load_() {
+extern "C" void () {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::MQTTFactory());
     _emitter->channel({ { "mqtt", _factory }, { "mqtts", _factory } });

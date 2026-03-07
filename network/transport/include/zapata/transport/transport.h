@@ -189,7 +189,7 @@ class layer {
 };
 
 /** @brief Determines the content type from a message's headers. */
-auto resolve_content_type(zpt::basic_message const& _message) -> std::string;
+auto resolve_content_type(zpt::message _message) -> std::string;
 } // namespace network
 
 /**

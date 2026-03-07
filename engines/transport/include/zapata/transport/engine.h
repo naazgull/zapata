@@ -67,7 +67,7 @@ class engine {
   private:
     zpt::json __configuration;
     std::vector<zpt::events::resolver> __resolvers;
-    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
 };
 } // namespace transports
 
@@ -81,9 +81,9 @@ namespace events {
  */
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher; ///< Event dispatcher
-    zpt::polling::ptr __polling;               ///< I/O polling instance
-    zpt::stream __stream;                      ///< Source stream
+    zpt::events::dispatcher::weak_ptr __dispatcher; ///< Event dispatcher
+    zpt::polling::ptr __polling{ nullptr };                    ///< I/O polling instance
+    zpt::stream __stream{ nullptr };                           ///< Source stream
 };
 
 /**
@@ -122,8 +122,8 @@ class receive {
 
   protected:
     zpt::transports::engine& __engine;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
 };
 
 /**
@@ -161,9 +161,9 @@ class send {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
-    zpt::message __to_send;
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
+    zpt::message __to_send{ nullptr };
 };
 
 /**
@@ -235,10 +235,10 @@ class process {
     /** @brief Executes the message processing logic. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
-  private:
-    zpt::events::dispatcher::ptr __dispatcher;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+  protected:
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
     zpt::message __received{ nullptr };
     zpt::message __to_send{ nullptr };
     zpt::call_context::ptr __context{ nullptr };
@@ -368,7 +368,7 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
-    this->__resolver->add(_send, _context, zpt::events::make_callback<T>);
+    this->__resolver->add(this->__to_send, _context, zpt::events::make_callback<T>);
 }
 
 template<ProcessOperation T>
@@ -377,7 +377,7 @@ zpt::events::call<T>::~call() {}
 template<ProcessOperation T>
 auto zpt::events::call<T>::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
-    this->__dispatcher = _transport_init.__dispatcher;
+    this->__dispatcher = _transport_init.__dispatcher.lock();
     this->__polling = _transport_init.__polling;
 }
 

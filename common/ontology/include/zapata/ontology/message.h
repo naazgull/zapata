@@ -57,12 +57,12 @@ namespace zpt {
  */
 class basic_message {
   public:
-    /** @brief Default constructor. */
-    basic_message() = default;
-    /** @brief Constructs a reply message from a request. */
-    basic_message(basic_message const& _req, bool);
-    /** @brief Destructor. */
-    virtual ~basic_message() = default;
+    // /** @brief Default constructor. */
+    // basic_message() = default;
+    // /** @brief Constructs a reply message from a request. */
+    // basic_message(basic_message const& _req, bool);
+    // /** @brief Destructor. */
+    // virtual ~basic_message() = default;
 
     /** @brief Returns the request method (GET, POST, etc.). */
     virtual auto performative() const -> zpt::performative = 0;
@@ -168,9 +168,9 @@ class json_message : public basic_message {
     /** @brief Constructs an empty JSON message. */
     json_message();
     /** @brief Constructs a JSON reply from an existing request. */
-    json_message(basic_message const& _req, bool);
+    json_message(zpt::message _req, bool);
     /** @brief Destructor. */
-    virtual ~json_message() = default;
+    virtual ~json_message();
 
     /** @brief Returns the request method. */
     auto performative() const -> zpt::performative override;
@@ -264,6 +264,7 @@ auto zpt::make_message(Args... _args) -> zpt::message {
 
 template<typename T, typename... Args>
 auto zpt::allocate_message(Args... _args) -> zpt::message {
-    return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
-                                   std::forward<Args>(_args)...);
+    return std::make_shared<T>(std::forward<Args>(_args)...);
+    // return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
+    //                                std::forward<Args>(_args)...);
 }

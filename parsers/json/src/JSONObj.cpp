@@ -395,9 +395,6 @@ zpt::JSONObj::JSONObj(const JSONObj& _rhs) { (*this) = _rhs; }
 
 zpt::JSONObj::JSONObj(JSONObj&& _rhs) { (*this) = _rhs; }
 
-zpt::JSONObj::JSONObj(JSONObjT* _target)
-  : __underlying{ _target } {}
-
 zpt::JSONObj::~JSONObj() {}
 
 auto zpt::JSONObj::hash() const -> size_t {

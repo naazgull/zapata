@@ -63,6 +63,7 @@ class event_stream : public basic_stream {
     auto read_without_io(std::any& _out) -> event_stream& override;
     /** @brief Writes content to the internal buffer without I/O. */
     auto write_without_io(std::any const& _in) -> event_stream& override;
+    auto persistent() -> bool override;
 
   private:
     std::any __content;

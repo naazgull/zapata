@@ -29,12 +29,6 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
 
-namespace zpt {
-struct stream_ptr {
-    zpt::stream __stream;
-};
-} // namespace zpt
-
 zpt::basic_stream::basic_stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() }
   , __fd{ -1 } {
@@ -106,6 +100,8 @@ auto zpt::basic_stream::uri() -> std::string& { return this->__uri; }
 
 auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
 
+auto zpt::basic_stream::persistent() -> bool { return true; }
+
 zpt::polling::polling()
   : __epoll_fd{ epoll_create(1) } {}
 
@@ -116,6 +112,7 @@ zpt::polling::~polling() {
 
 auto zpt::polling::close() -> zpt::polling& {
     for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
+    this->__polled_streams.clear();
     return (*this);
 }
 
@@ -125,23 +122,7 @@ auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling
 }
 
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
-    if (!this->__shutdown.load()) {
-        this->unmute(_stream);
-        {
-            std::unique_lock _sentry{ this->__poll_lock };
-            this->__polled_streams.emplace(static_cast<int>(*_stream), _stream);
-        }
-    }
-    return (*this);
-}
-
-auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
-    auto _fd = static_cast<int>(*_stream);
-    epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
-    {
-        std::unique_lock _sentry{ this->__poll_lock };
-        this->__polled_streams.erase(this->__polled_streams.find(_fd));
-    }
+    if (!this->__shutdown.load()) { this->insert(_stream); }
     return (*this);
 }
 
@@ -156,15 +137,44 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     if (!_stream->__muted) { return (*this); }
+    if (!_stream->persistent() && _stream->state() == zpt::stream_state::IDLE) {
+        this->erase(_stream);
+        return (*this);
+    }
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
-    _new_event.data.ptr = new zpt::stream_ptr{ _stream };
+    _new_event.data.ptr = _stream.get();
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
 
     _stream->__muted = false;
+    return (*this);
+}
+
+auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
+    zpt::epoll_event_t _new_event;
+    _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+    _new_event.data.ptr = _stream.get();
+    auto _fd = static_cast<int>(*_stream);
+    epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
+    _stream->__muted = false;
+    {
+        std::unique_lock _sentry{ this->__poll_lock };
+        this->__polled_streams.emplace(static_cast<int>(*_stream), _stream);
+    }
+    return (*this);
+}
+
+auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
+    auto _fd = static_cast<int>(*_stream);
+    epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
+    _stream->shutdown();
+    {
+        std::unique_lock _sentry{ this->__poll_lock };
+        this->__polled_streams.erase(this->__polled_streams.find(_fd));
+    }
     return (*this);
 }
 
@@ -192,8 +202,8 @@ auto zpt::polling::poll() -> zpt::polling& {
 
         for (auto _k = 0; _k != _n_alive; ++_k) {
             auto _stream =
-              std::move(static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr)->__stream);
-            delete static_cast<zpt::stream_ptr*>(_epoll_events[_k].data.ptr);
+              static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr)->shared_from_this();
+            _epoll_events[_k].data.ptr = nullptr;
 
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                 ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||

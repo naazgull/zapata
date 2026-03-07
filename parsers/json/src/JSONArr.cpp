@@ -359,9 +359,6 @@ zpt::JSONArr::JSONArr(const JSONArr& _rhs) { (*this) = _rhs; }
 
 zpt::JSONArr::JSONArr(JSONArr&& _rhs) { (*this) = _rhs; }
 
-zpt::JSONArr::JSONArr(zpt::JSONArrT* _target)
-  : __underlying{ _target } {}
-
 zpt::JSONArr::~JSONArr() {}
 
 auto zpt::JSONArr::hash() const -> size_t {

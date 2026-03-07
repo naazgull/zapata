@@ -252,9 +252,9 @@ auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json) -> std:
     return "text/xml";
 }
 
-auto zpt::network::resolve_content_type(zpt::basic_message const& _message) -> std::string {
-    if (_message.headers()("Accept")->ok()) {
-        auto _accept = _message.headers()("Accept")->string();
+auto zpt::network::resolve_content_type(zpt::message _message) -> std::string {
+    if (_message->headers()("Accept")->ok()) {
+        auto _accept = _message->headers()("Accept")->string();
         auto _mime_types = zpt::split(_accept, ",");
         double _weight{ 0 };
         std::string _highest{ "*/*" };
@@ -276,8 +276,8 @@ auto zpt::network::resolve_content_type(zpt::basic_message const& _message) -> s
         }
         return _highest;
     }
-    return _message.headers()("Content-Type")->ok() ? _message.headers()("Content-Type")->string()
-                                                    : "*/*";
+    return _message->headers()("Content-Type")->ok() ? _message->headers()("Content-Type")->string()
+                                                     : "*/*";
 }
 
 auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {

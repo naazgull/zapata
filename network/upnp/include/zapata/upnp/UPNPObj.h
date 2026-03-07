@@ -38,8 +38,7 @@ namespace upnp {
 /** @brief SSDP request message (M-SEARCH, NOTIFY). */
 class basic_request : public zpt::http::basic_request {
   public:
-    basic_request();
-    basic_request(zpt::basic_message const& _request, bool);
+    using zpt::http::basic_request::basic_request;
     virtual ~basic_request() = default;
 
     auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
@@ -50,8 +49,7 @@ using request = std::shared_ptr<zpt::upnp::basic_request>;
 /** @brief SSDP reply message. */
 class basic_reply : public zpt::http::basic_reply {
   public:
-    basic_reply();
-    basic_reply(zpt::basic_message const& _request, bool);
+    using zpt::http::basic_reply::basic_reply;
     virtual ~basic_reply() = default;
 
     auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
@@ -59,7 +57,4 @@ class basic_reply : public zpt::http::basic_reply {
 };
 using reply = std::shared_ptr<zpt::upnp::basic_reply>;
 } // namespace upnp
-
-void init(zpt::upnp::basic_request& _out);
-void init(zpt::upnp::basic_reply& _out);
 } // namespace zpt

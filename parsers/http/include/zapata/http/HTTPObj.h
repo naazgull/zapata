@@ -744,9 +744,9 @@ class basic_request : public zpt::http::basic_message {
      * @param _request Source message.
      * @param Unused compatibility parameter.
      */
-    basic_request(zpt::basic_message const& _request, bool);
+    basic_request(zpt::message _request, bool);
     /** @brief Destructor. */
-    virtual ~basic_request() = default;
+    virtual ~basic_request();
 
     /** @brief Serializes the request to an output stream. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
@@ -780,9 +780,9 @@ class basic_reply : public zpt::http::basic_message {
      * @param _request Original request message.
      * @param Unused compatibility parameter.
      */
-    basic_reply(zpt::basic_message const& _request, bool);
+    basic_reply(zpt::message _request, bool);
     /** @brief Destructor. */
-    virtual ~basic_reply() = default;
+    virtual ~basic_reply();
 
     /** @brief Serializes the response to an output stream. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;

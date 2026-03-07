@@ -172,7 +172,7 @@ auto demangle(std::string const& _mangled) -> std::string;
  * @param _skip Number of frames to skip from the top.
  * @return Formatted backtrace string.
  */
-auto get_backtrace(unsigned int _skip = 0) -> std::string;
+auto get_backtrace(int _skip = 0) -> std::string;
 
 /**
  * @brief Base64 encoding and decoding functions.

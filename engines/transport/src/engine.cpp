@@ -225,7 +225,7 @@ auto zpt::events::process::context(zpt::call_context::ptr _context) -> process& 
 
 auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
-    this->__dispatcher = _transport_init.__dispatcher;
+    this->__dispatcher = _transport_init.__dispatcher.lock();
     this->__polling = _transport_init.__polling;
     this->__stream = _transport_init.__stream;
     auto _transport = zpt::TRANSPORT_LAYER() //

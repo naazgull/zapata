@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <mutex>
 #include <zapata/ontology/message.h>
 #include <zapata/uri/uri.h>
 #include <zapata/uuid.h>
@@ -65,32 +66,26 @@ zpt::json_message::json_message()
     this->__underlying << "headers" << _headers;
 }
 
-zpt::json_message::json_message(basic_message const& _request, bool)
-  : __underlying{ zpt::json::object() } {
-    auto _req_headers = _request.headers();
-    auto _rawtime = time(nullptr);
-    struct tm _ptm;
-    char _buffer_date[80];
-    localtime_r(&_rawtime, &_ptm);
-    strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+zpt::json_message::json_message(zpt::message _request, bool)
+  : json_message{} {
+    auto _req_headers = _request->headers();
 
-    auto _headers =
-      zpt::json{ "Content-Type",
-                 "application/json",
-                 "Cache-Control",
-                 _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
-                 "X-Conversation-ID",
-                 _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0",
-                 "X-Version",
-                 _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1",
-                 "Date",
-                 std::string{ _buffer_date } };
+    if (_req_headers("Cache-Control")->ok()) {
+        this->__underlying["headers"]["Cache-Control"] = _req_headers("Cache-Control");
+    }
+    if (_req_headers("X-Conversation-ID")->ok()) {
+        this->__underlying["headers"]["X-Conversation-ID"] = _req_headers("X-Conversation-ID");
+    }
+    if (_req_headers("X-Version")->ok()) {
+        this->__underlying["headers"]["X-Version"] = _req_headers("X-Version");
+    }
 
     this->__underlying                                       //
       << "performative" << zpt::ontology::to_str(zpt::Reply) //
-      << "uri" << _request.uri()                             //
-      << "headers" << _headers;
+      << "uri" << _request->uri();
 }
+
+zpt::json_message::~json_message() {}
 
 auto zpt::json_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());

@@ -297,7 +297,7 @@ public:
     }
 };
 
-extern "C" bool zpt_plugin_load(zpt::plugin& plugin) {
+extern "C" bool _zpt_load_(zpt::plugin& plugin) {
     auto& config = plugin.config();
 
     // Register REST endpoints
