@@ -345,15 +345,11 @@ auto zpt::transports::engine::shutdown() -> zpt::transports::engine& {
     return (*this);
 }
 
-zpt::events::discard::~discard() { this->__stream->shutdown(); }
-
 auto zpt::events::discard::blocked() const -> bool { return false; }
 
 auto zpt::events::discard::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     return zpt::events::finish;
 }
-
-zpt::events::process_call_reply::~process_call_reply() { this->__stream->shutdown(); }
 
 auto zpt::events::process_call_reply::blocked() const -> bool { return false; }
 

@@ -29,9 +29,7 @@ zpt::event_stream::event_stream() {
 
 zpt::event_stream::~event_stream() {}
 
-auto zpt::event_stream::operator=(int _fd) -> zpt::event_stream& {
-    return (*this);
-}
+auto zpt::event_stream::operator=(int) -> zpt::event_stream& { return (*this); }
 
 auto zpt::event_stream::operator<<(ostream_manipulator) -> zpt::event_stream& { return (*this); }
 
@@ -47,3 +45,5 @@ auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stre
     eventfd_write(this->__fd, 1);
     return (*this);
 }
+
+auto zpt::event_stream::persistent() -> bool { return false; }

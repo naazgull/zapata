@@ -265,7 +265,7 @@ class discard : public zpt::events::process {
   public:
     using zpt::events::process::process;
     /** @brief Destructor. */
-    ~discard();
+    ~discard() = default;
     /** @brief Returns false (discard events are never blocked). */
     auto blocked() const -> bool;
     /** @brief Completes without sending a response. */
@@ -340,7 +340,7 @@ class process_call_reply : public zpt::events::process {
   public:
     using zpt::events::process::process;
     /** @brief Destructor. */
-    ~process_call_reply();
+    ~process_call_reply() = default;
     /** @brief Returns false (reply processing is never blocked). */
     auto blocked() const -> bool;
     /** @brief Delivers the reply to the call context. */
