@@ -22,12 +22,14 @@
 
 #include <zapata/streams/event_stream.h>
 
-zpt::event_stream::event_stream() { this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK); }
+zpt::event_stream::event_stream() {
+    this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
+    this->__uri = std::format("events://fd@{}", this->__fd);
+}
 
 zpt::event_stream::~event_stream() {}
 
 auto zpt::event_stream::operator=(int _fd) -> zpt::event_stream& {
-    this->__fd = _fd;
     return (*this);
 }
 

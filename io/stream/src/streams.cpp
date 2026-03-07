@@ -190,6 +190,8 @@ auto zpt::polling::poll() -> zpt::polling& {
               static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr)->shared_from_this();
             _epoll_events[_k].data.ptr = nullptr;
 
+            zlog("Event on " << _stream->uri() << ": " << _epoll_events[_k].events, zpt::trace);
+
             if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                 ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
                 ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||

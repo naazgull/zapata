@@ -67,7 +67,7 @@ class engine {
   private:
     zpt::json __configuration;
     std::vector<zpt::events::resolver> __resolvers;
-    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
 };
 } // namespace transports
 
@@ -82,8 +82,8 @@ namespace events {
 class transport_event_init : public zpt::event_initialization {
   public:
     zpt::events::dispatcher::weak_ptr __dispatcher; ///< Event dispatcher
-    zpt::polling::ptr __polling;                    ///< I/O polling instance
-    zpt::stream __stream;                           ///< Source stream
+    zpt::polling::ptr __polling{ nullptr };                    ///< I/O polling instance
+    zpt::stream __stream{ nullptr };                           ///< Source stream
 };
 
 /**
@@ -122,8 +122,8 @@ class receive {
 
   protected:
     zpt::transports::engine& __engine;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
 };
 
 /**
@@ -161,9 +161,9 @@ class send {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
-    zpt::message __to_send;
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
+    zpt::message __to_send{ nullptr };
 };
 
 /**
@@ -235,10 +235,10 @@ class process {
     /** @brief Executes the message processing logic. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
-  private:
-    zpt::events::dispatcher::ptr __dispatcher;
-    zpt::polling::ptr __polling;
-    zpt::stream __stream;
+  protected:
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::stream __stream{ nullptr };
     zpt::message __received{ nullptr };
     zpt::message __to_send{ nullptr };
     zpt::call_context::ptr __context{ nullptr };
@@ -265,7 +265,7 @@ class discard : public zpt::events::process {
   public:
     using zpt::events::process::process;
     /** @brief Destructor. */
-    ~discard() = default;
+    ~discard();
     /** @brief Returns false (discard events are never blocked). */
     auto blocked() const -> bool;
     /** @brief Completes without sending a response. */
@@ -340,7 +340,7 @@ class process_call_reply : public zpt::events::process {
   public:
     using zpt::events::process::process;
     /** @brief Destructor. */
-    ~process_call_reply() = default;
+    ~process_call_reply();
     /** @brief Returns false (reply processing is never blocked). */
     auto blocked() const -> bool;
     /** @brief Delivers the reply to the call context. */
