@@ -146,7 +146,7 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
-    if (_stream->__muted) { return (*this); }
+    if (this->__shutdown.load() || _stream->__muted) { return (*this); }
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
@@ -155,7 +155,7 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
-    if (!_stream->__muted) { return (*this); }
+    if (this->__shutdown.load() || !_stream->__muted) { return (*this); }
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
