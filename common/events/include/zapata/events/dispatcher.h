@@ -95,6 +95,7 @@ enum state {
 class dispatcher : public std::enable_shared_from_this<dispatcher> {
   public:
     using ptr = std::shared_ptr<dispatcher>;
+    using weak_ptr = std::weak_ptr<dispatcher>;
 
     /**
      * @brief Constructs a dispatcher.

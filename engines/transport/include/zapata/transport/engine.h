@@ -81,9 +81,9 @@ namespace events {
  */
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher; ///< Event dispatcher
-    zpt::polling::ptr __polling;               ///< I/O polling instance
-    zpt::stream __stream;                      ///< Source stream
+    zpt::events::dispatcher::weak_ptr __dispatcher; ///< Event dispatcher
+    zpt::polling::ptr __polling;                    ///< I/O polling instance
+    zpt::stream __stream;                           ///< Source stream
 };
 
 /**
@@ -377,7 +377,7 @@ zpt::events::call<T>::~call() {}
 template<ProcessOperation T>
 auto zpt::events::call<T>::initialize(zpt::event_initialization& _init) -> void {
     auto _transport_init = reinterpret_cast<zpt::events::transport_event_init&>(_init);
-    this->__dispatcher = _transport_init.__dispatcher;
+    this->__dispatcher = _transport_init.__dispatcher.lock();
     this->__polling = _transport_init.__polling;
 }
 
