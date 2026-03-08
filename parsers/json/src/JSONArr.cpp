@@ -30,7 +30,7 @@ zpt::JSONArrT::JSONArrT() {}
 
 zpt::JSONArrT::~JSONArrT() {}
 
-auto zpt::JSONArrT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONArrT& {
+auto zpt::JSONArrT::push(zpt::allocator<zpt::JSONElementT>::shared_pointer _value) -> JSONArrT& {
     this->__underlying.push_back(zpt::json{ std::move(_value) });
     return (*this);
 }
@@ -353,7 +353,7 @@ auto zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONArrT
 
 /*JSON POINTER TO ARRAY*/
 zpt::JSONArr::JSONArr()
-  : __underlying{ std::make_shared<zpt::JSONArrT>() } {}
+  : __underlying{ zpt::allocate_shared<zpt::JSONArrT>() } {}
 
 zpt::JSONArr::JSONArr(const JSONArr& _rhs) { (*this) = _rhs; }
 

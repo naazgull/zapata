@@ -74,6 +74,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <zapata/allocator.h>
 #include <zapata/base/expect.h>
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
@@ -266,7 +267,7 @@ class json {
     /** @brief Constructs a null JSON value. */
     json(std::nullptr_t _rhs);
     /** @brief Constructs from a unique pointer to a JSON element. */
-    json(std::unique_ptr<zpt::JSONElementT> _target);
+    json(zpt::allocator<zpt::JSONElementT>::shared_pointer _target);
     /**
      * @brief Constructs from an initializer list.
      *
@@ -805,7 +806,7 @@ class JSONObjT {
     /** @brief Pushes a key (next push must be a value). */
     virtual auto push(std::string const& _name) -> zpt::JSONObjT&;
     /** @brief Pushes a value for the pending key. */
-    virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT&;
+    virtual auto push(zpt::allocator<zpt::JSONElementT>::shared_pointer _value) -> JSONObjT&;
     virtual auto push(zpt::json const& _value) -> zpt::JSONObjT&;
 
     /** @brief Removes element by index or key. */
@@ -973,7 +974,7 @@ class JSONArrT {
     /** @name Modification */
     ///@{
     /** @brief Appends a value to the array. */
-    virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> zpt::JSONArrT&;
+    virtual auto push(zpt::allocator<zpt::JSONElementT>::shared_pointer _value) -> zpt::JSONArrT&;
     virtual auto push(zpt::json const& _value) -> zpt::JSONArrT&;
 
     /** @brief Removes element by index. */
@@ -1921,7 +1922,7 @@ zpt::pretty::pretty(T _rhs) {
 /// Class `zpt::json` methods
 template<typename T>
 zpt::json::json(T const& _rhs)
-  : __underlying{ new zpt::JSONElementT{ _rhs } } {}
+  : __underlying{ zpt::allocate_shared<zpt::JSONElementT>(_rhs) } {}
 template<typename T>
 auto zpt::json::operator=(T const& _rhs) -> zpt::json& {
     (*this->__underlying.get()) = _rhs;
@@ -1979,47 +1980,47 @@ auto zpt::json::pretty(T _e) -> std::string {
 template<typename T>
 auto zpt::json::string(T _e) -> zpt::json {
     std::string _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::integer(T _e) -> zpt::json {
     long long int _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::uinteger(T _e) -> zpt::json {
     unsigned int _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::floating(T _e) -> zpt::json {
     double _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::ulong(T _e) -> zpt::json {
     size_t _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::boolean(T _e) -> zpt::json {
     bool _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::date(T _e) -> zpt::json {
     zpt::timestamp_t _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::lambda(T _e) -> zpt::json {
     zpt::lambda _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 template<typename T>
 auto zpt::json::regex(T _e) -> zpt::json {
     zpt::regex _v(_e);
-    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+    return zpt::json{ zpt::allocate_shared<zpt::JSONElementT>(_v) };
 }
 
 /// Class `zpt::JSONObjT` methods

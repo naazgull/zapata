@@ -191,7 +191,7 @@ void consumer() {
 zpt::lf::queue<std::vector<char>> buffer_queue(256);
 
 // Producer: build and enqueue without an extra copy
-auto buf = std::make_unique<std::vector<char>>(4096);
+auto buf = zpt::allocate_unique<std::vector<char>>(4096);
 fill_buffer(*buf);
 buffer_queue.push(std::move(buf));
 

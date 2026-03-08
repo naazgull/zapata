@@ -21,8 +21,8 @@
 */
 
 #include <algorithm>
-#include <zapata/uuid.h>
 #include <zapata/mysqlx/connector.h>
+#include <zapata/uuid.h>
 
 auto zpt::storage::mysqlx::mysql_deinit::operator()(MYSQL* _to_dispose) const -> void {
     mysql_close(_to_dispose);

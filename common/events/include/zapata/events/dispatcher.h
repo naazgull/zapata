@@ -43,7 +43,7 @@ namespace zpt {
 /** @brief Forward declaration of abstract event interface. */
 class abstract_event;
 /** @brief Shared pointer type for events. */
-using event = std::unique_ptr<zpt::abstract_event>;
+using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 
 /**
  * @brief Base class for event initialization data.
@@ -202,7 +202,7 @@ class abstract_event {
     /** @brief Executes the event operation. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
-using event = std::unique_ptr<zpt::abstract_event>;
+using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 
 /**
  * @brief Type-erasing wrapper for Operation types.
@@ -340,12 +340,12 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zp
 
 template<zpt::events::Operation T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::make_unique<zpt::event_t<T>>(_operator);
+    return zpt::allocate_unique<zpt::event_t<T>>(_operator);
 }
 
 template<zpt::events::Operation T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::make_unique<zpt::event_t<T>>(std::forward<Args>(_args)...);
+    return zpt::allocate_unique<zpt::event_t<T>>(std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>

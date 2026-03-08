@@ -82,8 +82,8 @@ namespace events {
 class transport_event_init : public zpt::event_initialization {
   public:
     zpt::events::dispatcher::weak_ptr __dispatcher; ///< Event dispatcher
-    zpt::polling::ptr __polling{ nullptr };                    ///< I/O polling instance
-    zpt::stream __stream{ nullptr };                           ///< Source stream
+    zpt::polling::ptr __polling{ nullptr };         ///< I/O polling instance
+    zpt::stream __stream{ nullptr };                ///< Source stream
 };
 
 /**
@@ -353,7 +353,7 @@ class process_call_reply : public zpt::events::process {
  * @param _config Optional configuration (used only on first call).
  * @return Reference to the global transport engine.
  */
-auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
+auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine&;
 
 template<ProcessOperation T = zpt::events::process_call_reply>
 auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
@@ -452,7 +452,7 @@ auto zpt::events::call<T>::call_internally() -> call& {
     expect(_transport->has_capability(zpt::transport_capability::SYNCHRONOUS),
            "`call` only makes sense for synchronous protocols");
 
-    auto _stream = std::make_shared<zpt::event_stream>();
+    auto _stream = zpt::allocate_shared<zpt::event_stream>();
     _stream->transport("self");
 
     this->__to_send->headers()["Content-Type"] = "application/json";
@@ -487,7 +487,7 @@ auto zpt::events::call<T>::send_externally() -> call& {
 template<ProcessOperation T>
 auto zpt::make_call(zpt::events::resolver _resolver, zpt::message _to_send)
   -> zpt::call_context::ptr {
-    auto _context = std::make_shared<zpt::call_context>();
+    auto _context = zpt::allocate_shared<zpt::call_context>();
     zpt::TRANSPORT_ENGINE() //
       .dispatcher()
       ->trigger<zpt::events::call<T>>(_resolver, _context, _to_send);

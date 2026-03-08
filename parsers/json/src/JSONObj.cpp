@@ -40,7 +40,7 @@ auto zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
     return (*this);
 }
 
-auto zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
+auto zpt::JSONObjT::push(zpt::allocator<zpt::JSONElementT>::shared_pointer _value) -> JSONObjT& {
     expect(this->__name.length() != 0, "you must pass a field name first");
     zpt::json _ref{ std::move(_value) };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
@@ -389,7 +389,7 @@ auto zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) const -> zpt::JSO
 
 /*JSON POINTER TO OBJECT*/
 zpt::JSONObj::JSONObj()
-  : __underlying{ std::make_shared<JSONObjT>() } {}
+  : __underlying{ zpt::allocate_shared<JSONObjT>() } {}
 
 zpt::JSONObj::JSONObj(const JSONObj& _rhs) { (*this) = _rhs; }
 

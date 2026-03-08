@@ -39,6 +39,7 @@
 #include <memory>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
+#include <zapata/allocator.h>
 #include <zapata/locks/spin_mutex.h>
 #include <zapata/text/convert.h>
 
@@ -87,9 +88,9 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     /** @brief Default constructor. */
     basic_stream() = default;
     /** @brief Constructs from an existing stream. */
-    basic_stream(std::ios& _rhs);
+    // basic_stream(std::ios& _rhs);
     /** @brief Constructs from a unique pointer to a stream. */
-    basic_stream(std::unique_ptr<std::iostream> _underlying);
+    basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying);
     basic_stream(basic_stream const& _rhs) = delete;
     basic_stream(basic_stream&& _rhs) = delete;
     /** @brief Destructor. Closes the stream. */
@@ -137,7 +138,7 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto persistent() -> bool;
 
   protected:
-    std::unique_ptr<std::iostream> __underlying{ nullptr };
+    zpt::allocator<std::iostream>::unique_pointer __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
     std::string __uri{ "" };
@@ -301,7 +302,7 @@ auto zpt::basic_stream::set_peer(std::string const& _address, unsigned int _port
 
 template<typename T, typename... Args>
 auto zpt::make_stream(Args... _args) -> zpt::stream {
-    zpt::stream _to_return{ new zpt::basic_stream{ std::make_unique<T>(_args...) } };
+    zpt::stream _to_return{ new zpt::basic_stream{ zpt::allocate_unique<T>(_args...) } };
     if constexpr (std::is_convertible<T, int>::value) {
         (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));
     }

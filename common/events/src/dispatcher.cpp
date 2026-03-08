@@ -130,6 +130,6 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
 
 auto zpt::DISPATCHER(long int _consumers, long int _producers) -> zpt::events::dispatcher::ptr {
     static zpt::events::dispatcher::ptr _global =
-      std::make_shared<zpt::events::dispatcher>("globald", _consumers, _producers);
+      zpt::allocate_shared<zpt::events::dispatcher>("globald", _consumers, _producers);
     return _global;
 }

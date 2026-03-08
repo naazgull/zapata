@@ -30,7 +30,7 @@ class A {
 
 auto main(int, char*[]) -> int {
     {
-        zpt::mem::pool _pool{ 64 };
+        zpt::mem::pool _pool{ 0 };
         for (size_t _idx = 0; _idx != 100; ++_idx) {
             std::shared_ptr<A> _ptr = std::allocate_shared<A>(zpt::allocator<A>{ _pool });
             std::cout << "Allocate object holding '" << _ptr->__member << "'" << std::endl;

@@ -274,7 +274,7 @@ auto zpt::events::process::catch_error(zpt::failed_expectation const& _e,
 
 zpt::transports::engine::engine(zpt::json _config)
   : __configuration{ _config }
-  , __dispatcher{ std::make_shared<zpt::events::dispatcher>(
+  , __dispatcher{ zpt::allocate_shared<zpt::events::dispatcher>(
       "transport",
       _config("limits")("max_consumer_threads")->ok()
         ? _config("limits")("max_consumer_threads")->integer()
@@ -306,7 +306,7 @@ zpt::transports::engine::engine(zpt::json _config)
 #endif
           return true;
       });
-    auto _event_init = std::make_shared<zpt::events::transport_event_init>();
+    auto _event_init = zpt::allocate_shared<zpt::events::transport_event_init>();
     _event_init->__polling = zpt::STREAM_POLLING();
     _event_init->__dispatcher = this->__dispatcher;
     this

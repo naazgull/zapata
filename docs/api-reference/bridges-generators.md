@@ -527,13 +527,13 @@ concept BasicASTElement = requires(T _t) {
 #include <zapata/ast.h>
 
 // Create a module with a header file
-auto file = std::make_shared<zpt::ast::basic_file>("my_class.h");
+auto file = zpt::allocate_shared<zpt::ast::basic_file>("my_class.h");
 
 // Create a class
-auto cls = std::make_shared<zpt::ast::cpp_class>("MyClass", "BaseClass");
+auto cls = zpt::allocate_shared<zpt::ast::cpp_class>("MyClass", "BaseClass");
 
 // Add a public method
-auto method = std::make_shared<zpt::ast::cpp_function>(
+auto method = zpt::allocate_shared<zpt::ast::cpp_function>(
     "process",
     "void",
     zpt::ast::VIRTUAL | zpt::ast::OVERRIDE
@@ -543,7 +543,7 @@ auto method = std::make_shared<zpt::ast::cpp_function>(
 method->add<zpt::ast::cpp_variable>("input", "std::string const&", zpt::ast::PARAMETER);
 
 // Add method body
-auto body = std::make_shared<zpt::ast::cpp_code_block>();
+auto body = zpt::allocate_shared<zpt::ast::cpp_code_block>();
 body->add<zpt::ast::cpp_instruction>("std::cout << input << std::endl");
 method->add(body);
 

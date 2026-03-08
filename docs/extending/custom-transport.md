@@ -48,7 +48,7 @@ public:
 
 ```cpp
 // In your plugin initialization
-zpt::network::layer::add("myproto", std::make_shared<myproto::transport>());
+zpt::network::layer::add("myproto", zpt::allocate_shared<myproto::transport>());
 ```
 
 ## Step 3: Configure
