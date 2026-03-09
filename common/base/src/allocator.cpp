@@ -1,12 +1,12 @@
 #include <zapata/allocator.h>
 
-auto zpt::MEM_POOL(std::uint64_t _max_mem) -> zpt::mem::pool& {
-    static zpt::mem::pool _global{ _max_mem };
+auto zpt::MEM_POOL() -> zpt::mem::pool& {
+    static zpt::mem::pool _global;
     return _global;
 }
 
-zpt::mem::pool::pool(size_t _max_memory)
-  : __max_size{ _max_memory }
+zpt::mem::pool::pool()
+  : __max_size{ 0 }
   , __allocated_size{ 0 } {}
 
 zpt::mem::pool::~pool() {}
@@ -29,6 +29,13 @@ auto zpt::mem::pool::allocate(size_t _n) -> pointer_type {
 auto zpt::mem::pool::deallocate(pointer_type _ptr, size_t _n) -> void {
     this->__allocated_size->fetch_add(-_n);
     ::free(_ptr);
+}
+
+auto zpt::mem::pool::max_size(size_t _max_memory) -> pool& {
+    if (_max_memory > this->max_size() && _max_memory > this->allocated_size()) {
+        this->__max_size->store(_max_memory);
+    }
+    return (*this);
 }
 
 auto zpt::mem::pool::max_size() const -> size_t { return this->__max_size->load(); }

@@ -30,7 +30,7 @@ class A {
 
 auto main(int, char*[]) -> int {
     {
-        zpt::mem::pool _pool{ 0 };
+        zpt::mem::pool _pool;
         for (size_t _idx = 0; _idx != 100; ++_idx) {
             std::shared_ptr<A> _ptr = std::allocate_shared<A>(zpt::allocator<A>{ _pool });
             std::cout << "Allocate object holding '" << _ptr->__member << "'" << std::endl;
@@ -38,7 +38,8 @@ auto main(int, char*[]) -> int {
     }
     {
         try {
-            zpt::mem::pool _pool{ sizeof(A) };
+            zpt::mem::pool _pool;
+            _pool.max_size(sizeof(A));
             for (size_t _idx = 0; _idx != 100; ++_idx) {
                 std::shared_ptr<A> _ptr = std::allocate_shared<A>(zpt::allocator<A>{ _pool });
             }
@@ -51,7 +52,8 @@ auto main(int, char*[]) -> int {
         }
     }
     {
-        zpt::mem::pool _pool{ 1024 * 1024 * 1024 };
+        zpt::mem::pool _pool;
+        _pool.max_size(1024 * 1024 * 1024);
         {
             std::vector<A, zpt::allocator<A>> _v{ zpt::allocator<A>{ _pool } };
             for (size_t _idx = 0; _idx != 100; ++_idx) {

@@ -78,7 +78,7 @@ enum state {
  * any thread and will be processed by available consumers.
  *
  * @par Lifecycle
- * 1. Create dispatcher with `zpt::DISPATCHER(n_consumers, n_producers)`
+ * 1. Create dispatcher with `zpt::DISPATCHER(n_consumers, max_queue_size)`
  * 2. Register event handlers or initialization data
  * 3. Call `start_consumers()` to begin processing
  * 4. Trigger events with `trigger<T>(args...)`
@@ -104,7 +104,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      * @param _max_queue_size Maximum number of elements allowed in the queue (resource management
      *                        cap).
      */
-    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size);
+    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
     /** @brief Destructor. Stops consumers if running. */
     virtual ~dispatcher();
 
@@ -270,10 +270,11 @@ auto make_event(Args&&... _args) -> zpt::event;
 /**
  * @brief Factory function to create a dispatcher.
  * @param _consumers Number of consumer threads.
- * @param _producers Maximum producer threads for queue sizing.
+ * @param _max_queue_size Maximum size for event queue.
  * @return Shared pointer to the dispatcher.
  */
-auto DISPATCHER(long int _consumers = 0, long int _producers = 0) -> zpt::events::dispatcher::ptr;
+auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
+  -> zpt::events::dispatcher::ptr;
 
 /**
  * @brief Casts an event to access its underlying Operation.

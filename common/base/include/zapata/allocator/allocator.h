@@ -58,10 +58,9 @@ class pool {
     using pointer_type = void*; ///< Generic pointer type.
 
     /**
-     * @brief Creates a pool with the specified maximum memory.
-     * @param _max_memory Maximum bytes this pool can allocate.
+     * @brief Creates a pool with unbounded memory limit.
      */
-    pool(size_t _max_memory);
+    pool();
 
     virtual ~pool();
 
@@ -80,6 +79,12 @@ class pool {
      */
     auto deallocate(pointer_type _ptr, size_t _n) -> void;
 
+    /**
+     * @brief Sets the new limit for total memory allocation.
+     * @param _max_memory The new limit.
+     * @return This instance's reference, for chaining purposes.
+     */
+    auto max_size(size_t _max_memory) -> pool&;
     /**
      * @brief Returns the maximum pool size.
      * @return Maximum bytes this pool can allocate.
@@ -108,10 +113,9 @@ class pool {
 
 /**
  * @brief Returns the global memory pool singleton.
- * @param _max_mem If non-zero on first call, sets the pool's maximum size.
  * @return Reference to the global memory pool.
  */
-auto MEM_POOL(std::uint64_t _max_mem = 0) -> zpt::mem::pool&;
+auto MEM_POOL() -> zpt::mem::pool&;
 
 /**
  * @brief STL-compatible allocator backed by a memory pool.

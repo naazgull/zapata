@@ -71,17 +71,13 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
                _config("dispatcher")("limits")("max_consumer_threads")->ok()
                  ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
                  : 1LL);
-    auto _producers = std::max(1LL,
-                               _config("transport")("limits")("max_consumer_threads")->ok()
-                                 ? _config("transport")("limits")("max_consumer_threads")->integer()
-                                 : 1LL);
-
-    zpt::MEM_POOL(_config("dispatcher")("limits")("max_memory")->ok()
-                    ? _config("dispatcher")("limits")("max_memory")->integer()
-                    : 0);
+    zpt::MEM_POOL() //
+      .max_size(_config("dispatcher")("limits")("max_memory")->ok()
+                  ? _config("dispatcher")("limits")("max_memory")->integer()
+                  : 0);
 
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
-    zpt::DISPATCHER(_consumers, _producers) //
+    zpt::DISPATCHER(_consumers, 10000) //
       ->start_consumers(_consumers);
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::system_event_type::BOOTING);
