@@ -87,8 +87,6 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
 
     /** @brief Default constructor. */
     basic_stream() = default;
-    /** @brief Constructs from an existing stream. */
-    // basic_stream(std::ios& _rhs);
     /** @brief Constructs from a unique pointer to a stream. */
     basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying);
     basic_stream(basic_stream const& _rhs) = delete;

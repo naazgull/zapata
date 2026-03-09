@@ -35,7 +35,7 @@ zpt::JSONRegex::JSONRegex(JSONRegex&& _rhs) { (*this) = _rhs; }
 
 zpt::JSONRegex::JSONRegex(std::string const& _target)
   : __underlying_original{ _target }
-  , __underlying{ zpt::allocate_shared<std::regex>(_target) } {}
+  , __underlying(zpt::allocate_shared<std::regex>(_target)) {}
 
 zpt::JSONRegex::~JSONRegex() {}
 

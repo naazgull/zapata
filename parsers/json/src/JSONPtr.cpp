@@ -55,7 +55,7 @@ zpt::pretty::operator std::string() { return this->__underlying; }
 
 /*JSON POINTER TO ELEMENT*/
 zpt::json::json()
-  : __underlying{ zpt::allocate_shared<zpt::JSONElementT>() } {}
+  : __underlying(zpt::allocate_shared<zpt::JSONElementT>()) {}
 
 zpt::json::json(std::nullptr_t)
   : zpt::json(zpt::JSUndefined) {}
@@ -65,7 +65,7 @@ zpt::json::json(const zpt::json& _rhs) { (*this) = _rhs; }
 zpt::json::json(zpt::json&& _rhs) { (*this) = _rhs; }
 
 zpt::json::json(zpt::allocator<zpt::JSONElementT>::shared_pointer _target)
-  : __underlying{ std::move(_target) } {}
+  : __underlying(std::move(_target)) {}
 
 zpt::json::json(std::initializer_list<zpt::json> _init) { (*this) = _init; }
 

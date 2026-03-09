@@ -29,13 +29,6 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
 
-// zpt::basic_stream::basic_stream(std::ios& _rhs)
-//   : __underlying{ zpt::allocate_unique<std::stringstream>() }
-//   , __fd{ -1 } {
-//     this->__underlying->rdbuf(_rhs.rdbuf());
-//     this->__underlying->exceptions(std::ios_base::failbit);
-// }
-
 zpt::basic_stream::basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying)
   : __underlying{ std::move(_underlying) }
   , __fd{ -1 } {
@@ -179,6 +172,10 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
+#ifdef ALLOCATOR_DEBUG_MODE
+    zpt::mem::print_still_allocated();
+    zpt::mem::start_tracking();
+#endif
     this->mute(_stream);
     for (auto& d : this->__delegates) {
         if (d(this->shared_from_this(), _stream)) { return (*this); }

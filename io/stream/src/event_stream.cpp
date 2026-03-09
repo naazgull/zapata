@@ -24,7 +24,7 @@
 
 zpt::event_stream::event_stream() {
     this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
-    this->__uri = std::format("events://fd@{}", this->__fd);
+    this->__uri = std::format("self://fd@{}", this->__fd);
 }
 
 zpt::event_stream::~event_stream() {}

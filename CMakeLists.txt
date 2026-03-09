@@ -10,6 +10,8 @@ option(WITH_UBSAN "Enable undefined-behavior sanitizer" OFF)
 option(WITH_TSAN "Enable thread sanitizer" OFF)
 option(WITH_EXCEPTION_PROPAGATION
   "Whether or not to catch exceptions (debugging)" OFF)
+option(WITH_ALLOCATOR_DEBUGGING
+  "Enable allocator debugging by keeping the list of allocated chunks (debugging)" OFF)
 
 if(WITH_ASAN AND WITH_TSAN)
   message(FATAL_ERROR "Can't use address-sanitizer along with thread-sanitizer")
@@ -36,6 +38,9 @@ IF(WITH_TSAN)
 ENDIF()
 IF(WITH_EXCEPTION_PROPAGATION)
   add_compile_definitions(PROPAGATE_EXCEPTION)
+ENDIF()
+IF(WITH_ALLOCATOR_DEBUGGING)
+  add_compile_definitions(ALLOCATOR_DEBUG_MODE)
 ENDIF()
 
 list(APPEND CMAKE_INSTALL_RPATH
@@ -147,3 +152,5 @@ cmake_print_variables(CMAKE_C_FLAGS)
 cmake_print_variables(CMAKE_CXX_LINK_FLAGS)
 cmake_print_variables(WITH_ASAN)
 cmake_print_variables(WITH_UBSAN)
+cmake_print_variables(WITH_EXCEPTION_PROPAGATION)
+cmake_print_variables(WITH_ALLOCATOR_DEBUGGING)
