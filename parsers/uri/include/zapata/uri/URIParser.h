@@ -49,8 +49,10 @@ class URIParser : public URITokenizer {
     virtual ~URIParser();
 
     /** @brief Sets the JSON root node to populate during parsing. */
-    void switchRoots(zpt::json& _root);
+    auto switchRoots(zpt::json& _root) -> void;
     /** @brief Switches the input/output streams. */
-    void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    auto switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout) -> void;
+    /** @brief Clears the internal structures. */
+    auto clear() -> void;
 };
 } // namespace zpt
