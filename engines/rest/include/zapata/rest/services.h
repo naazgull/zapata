@@ -60,6 +60,14 @@ class minion_hello : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
+class minion_state : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~minion_state() = default;
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
+};
+
 /**
  * @brief Event operation for listing registered services.
  *
@@ -79,6 +87,6 @@ class services_list : public zpt::events::process {
 namespace services {
 /** @brief Broadcasts service registration to connected nodes. */
 auto broadcast(std::string const& _path, zpt::json const& _config) -> void;
-}
+} // namespace services
 } // namespace rest
 } // namespace zpt

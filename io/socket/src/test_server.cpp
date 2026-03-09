@@ -2,18 +2,18 @@
 
 auto main(int argc, char* argv[]) -> int {
     if (argc > 2) {
-        std::unique_ptr<zpt::serversocketstream> _ssock{ nullptr };
+        zpt::allocator<zpt::serversocketstream>::unique_pointer _ssock{ nullptr };
         std::string _type{ argv[1] };
         if (_type == "-t") {
             std::istringstream _iss;
             _iss.str(std::string{ argv[2] });
             std::uint16_t _port{ 0 };
             _iss >> _port;
-            _ssock = std::make_unique<zpt::serversocketstream>(_port);
+            _ssock = zpt::allocate_unique<zpt::serversocketstream>(_port);
         }
         else if (_type == "-u") {
             std::string _path{ argv[2] };
-            _ssock = std::make_unique<zpt::serversocketstream>(_path);
+            _ssock = zpt::allocate_unique<zpt::serversocketstream>(_path);
         }
 
         do {

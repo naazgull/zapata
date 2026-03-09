@@ -259,12 +259,12 @@ auto operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
 
 template<typename T, typename... Args>
 auto zpt::make_message(Args... _args) -> zpt::message {
-    return std::make_shared<T>(std::forward<Args>(_args)...);
+    return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>
 auto zpt::allocate_message(Args... _args) -> zpt::message {
-    return std::make_shared<T>(std::forward<Args>(_args)...);
+    return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
     // return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
     //                                std::forward<Args>(_args)...);
 }

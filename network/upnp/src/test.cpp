@@ -41,7 +41,7 @@ auto main(int _argc, char* _argv[]) -> int {
               _config("bind")->string(), _config("port")->integer(), zpt::NO_SSL, IPPROTO_UDP);
             _stream->transport("upnp");
 
-            zpt::polling::ptr _polling = std::make_shared<zpt::polling>();
+            zpt::polling::ptr _polling = zpt::allocate_shared<zpt::polling>();
             _polling //
               ->register_delegate(
                 [&_transport](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {

@@ -270,13 +270,13 @@ int main() {
         });
 
     // Start the transport engine
-    auto& engine = zpt::TRANSPORT_ENGINE(config);
-    engine.add_resolver(resolver);
+    auto engine = zpt::TRANSPORT_ENGINE(config);
+    engine->add_resolver(resolver);
 
     boot.load();
 
     // Run until shutdown
-    engine.dispatcher()->trap();
+    engine->dispatcher()->trap();
 }
 ```
 

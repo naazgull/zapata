@@ -235,7 +235,7 @@ Constructs the underlying Operation with forwarded arguments.
 ### `zpt::DISPATCHER`
 
 ```cpp
-auto DISPATCHER(long int _consumers = 0, long int _producers = 0)
+auto DISPATCHER(long int _consumers = 0, long int _max_queue_size = 10000)
     -> zpt::events::dispatcher::ptr;
 ```
 

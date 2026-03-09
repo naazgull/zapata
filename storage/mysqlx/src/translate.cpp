@@ -29,7 +29,7 @@ zpt::storage::mysqlx::result_set_metadata::result_set_metadata(MYSQL_STMT* _stat
         this->__metadata = mysql_stmt_result_metadata(_statement);
         if (this->__metadata != nullptr) {
             this->__column_count = mysql_num_fields(this->__metadata);
-            this->__bind = std::make_unique<MYSQL_BIND[]>(this->__column_count);
+            this->__bind = zpt::allocate_array<MYSQL_BIND>(this->__column_count);
 
             for (size_t _idx = 0; _idx != this->__column_count; ++_idx) {
                 auto _col = mysql_fetch_field_direct(this->__metadata, _idx);

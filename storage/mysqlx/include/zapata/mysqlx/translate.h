@@ -44,7 +44,7 @@ namespace mysqlx {
  */
 class result_set_metadata {
   public:
-    std::unique_ptr<MYSQL_BIND[]> __bind{ nullptr };
+    zpt::allocator<MYSQL_BIND>::array_pointer __bind{ nullptr };
     size_t __column_count{ 0 };
 
     result_set_metadata(MYSQL_STMT* _statement);

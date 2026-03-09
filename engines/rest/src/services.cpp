@@ -102,6 +102,29 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
     return zpt::events::abort;
 }
 
+auto zpt::rest::minion_state::blocked() const -> bool { return false; }
+
+auto zpt::rest::minion_state::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+  -> zpt::events::state {
+    if (this->received()->performative() == zpt::Post ||
+        this->received()->performative() == zpt::Get) {
+        this //
+          ->to_send()
+          ->status(200)
+          .body() = { "memory",
+                      zpt::json::parse_json_str(zpt::MEM_POOL().to_string()),
+                      "dispatchers",
+                      { zpt::array, _dispatcher->get_state(), zpt::DISPATCHER()->get_state() } };
+        return zpt::events::finish;
+    }
+
+    this //
+      ->to_send()
+      ->status(405)
+      .body() = { "message", "Only GET allowed to use with `/services`" };
+    return zpt::events::abort;
+}
+
 auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
 auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])

@@ -126,6 +126,6 @@ auto zpt::system_events::resolver_t::clear() -> resolver_t& {
 
 auto zpt::SYSTEM_EVENTS_RESOLVER() -> zpt::system_events::resolver {
     static zpt::system_events::resolver _global =
-      std::make_shared<zpt::system_events::resolver_t>();
+      zpt::allocate_shared<zpt::system_events::resolver_t>();
     return _global;
 }

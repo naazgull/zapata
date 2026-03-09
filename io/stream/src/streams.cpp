@@ -29,15 +29,15 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
 
-zpt::basic_stream::basic_stream(std::ios& _rhs)
-  : __underlying{ std::make_unique<std::stringstream>() }
-  , __fd{ -1 } {
-    this->__underlying->rdbuf(_rhs.rdbuf());
-    this->__underlying->exceptions(std::ios_base::failbit);
-}
+// zpt::basic_stream::basic_stream(std::ios& _rhs)
+//   : __underlying{ zpt::allocate_unique<std::stringstream>() }
+//   , __fd{ -1 } {
+//     this->__underlying->rdbuf(_rhs.rdbuf());
+//     this->__underlying->exceptions(std::ios_base::failbit);
+// }
 
-zpt::basic_stream::basic_stream(std::unique_ptr<std::iostream> _underlying)
-  : __underlying{ _underlying.release() }
+zpt::basic_stream::basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying)
+  : __underlying{ std::move(_underlying) }
   , __fd{ -1 } {
     this->__underlying->exceptions(std::ios_base::failbit);
 }
@@ -235,6 +235,6 @@ auto zpt::polling::shutdown() -> zpt::polling& {
 auto zpt::polling::is_in_shutdown() const -> bool { return this->__shutdown.load(); }
 
 auto zpt::STREAM_POLLING() -> zpt::polling::ptr {
-    static zpt::polling::ptr _global = std::make_shared<zpt::polling>();
+    static zpt::polling::ptr _global = zpt::allocate_shared<zpt::polling>();
     return _global;
 }

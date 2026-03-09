@@ -62,7 +62,7 @@ namespace rest {
  *     });
  *
  * // Add to transport engine
- * zpt::TRANSPORT_ENGINE(config).add_resolver(resolver);
+ * zpt::TRANSPORT_ENGINE(config)->add_resolver(resolver);
  * @endcode
  */
 class resolver_t : public zpt::events::resolver_t {

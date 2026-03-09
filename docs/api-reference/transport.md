@@ -1,19 +1,19 @@
-# Transport API Reference
+#Transport API Reference
 
 This document provides the API reference for Zapata's transport layer.
 
 ## Headers
 
 ```cpp
-#include <zapata/transport.h>              // Core transport abstractions
-#include <zapata/transport/engine.h>       // Transport engine
-#include <zapata/net/transport/http.h>     // HTTP transport
-#include <zapata/net/transport/tcp.h>      // TCP transport
+#include <zapata/net/transport/http.h>      // HTTP transport
+#include <zapata/net/transport/local.h>     // Unix socket / file transports
+#include <zapata/net/transport/pipe.h>      // Named pipe transport
+#include <zapata/net/transport/self.h>      // In-process transport
+#include <zapata/net/transport/tcp.h>       // TCP transport
+#include <zapata/net/transport/upnp.h>      // UPnP/SSDP transport
 #include <zapata/net/transport/websocket.h> // WebSocket transport
-#include <zapata/net/transport/local.h>    // Unix socket / file transports
-#include <zapata/net/transport/pipe.h>     // Named pipe transport
-#include <zapata/net/transport/self.h>     // In-process transport
-#include <zapata/net/transport/upnp.h>     // UPnP/SSDP transport
+#include <zapata/transport.h>               // Core transport abstractions
+#include <zapata/transport/engine.h>        // Transport engine
 ```
 
 ---
@@ -45,12 +45,12 @@ Abstract base class for protocol transports.
 virtual auto has_capability(std::uint64_t _capability) const -> bool = 0;
 ```
 
-Checks if the transport has a specific capability.
+  Checks if the transport has a specific capability.
 
----
+  -- -
 
-```cpp
-virtual auto make_request() const -> zpt::message = 0;
+```cpp virtual auto
+  make_request() const -> zpt::message = 0;
 ```
 
 Creates a new request message for this transport.
@@ -62,21 +62,23 @@ virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
 virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
 ```
 
-Creates a reply message, optionally based on a request.
+  Creates a reply message,
+  optionally based on a request.
 
----
+  -- -
 
-```cpp
-virtual auto process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
+```cpp virtual auto
+  process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
 virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message = 0;
 ```
 
-Parses incoming requests/replies from a stream.
+  Parses incoming requests /
+  replies from a stream.
 
----
+  -- -
 
-```cpp
-auto receive(zpt::stream _stream) const -> zpt::message;
+```cpp auto
+  receive(zpt::stream _stream) const -> zpt::message;
 auto send(zpt::stream _stream, zpt::message _to_send) const -> void;
 ```
 
@@ -90,40 +92,41 @@ High-level methods for receiving/sending messages (final).
 using transport = std::shared_ptr<basic_transport>;
 ```
 
-Shared pointer to a transport.
+  Shared pointer to a transport
+    .
 
----
+  -- -
 
-## Class: `zpt::network::layer`
+  ##Class
+  : `zpt::network::layer`
 
-Transport registry with content negotiation.
+  Transport registry with content negotiation.
 
-### Type Aliases
+  ## #Type Aliases
 
-```cpp
-using translate_from_func = std::function<zpt::json(std::istream&)>;
+```cpp using translate_from_func = std::function<zpt::json(std::istream&)>;
 using translate_to_func = std::function<std::string(std::ostream&, zpt::json)>;
 ```
 
-### Constructor
+  ## #Constructor
 
 ```cpp
-layer(zpt::json _global_config);
+  layer(zpt::json _global_config);
 ```
 
-### Transport Management
+  ## #Transport Management
 
-```cpp
-auto add(std::string const& _scheme, zpt::transport _transport) -> layer&;
+```cpp auto
+  add(std::string const& _scheme, zpt::transport _transport) -> layer&;
 auto get(std::string const& _scheme) const -> const zpt::transport;
 auto remove(std::string const& _scheme) -> layer&;
 auto clear() -> layer&;
 ```
 
-### Resolution
+  ## #Resolution
 
-```cpp
-auto resolve(std::string _uri) const -> zpt::transport;
+```cpp auto
+  resolve(std::string _uri) const -> zpt::transport;
 ```
 
 Returns the transport for a URI based on its scheme.
@@ -135,10 +138,9 @@ auto translate(std::istream& _io, std::string _mime = "*/*") const -> zpt::json;
 auto translate(std::ostream& _io, std::string _mime, zpt::json _content) const -> std::string;
 ```
 
-Translates content based on MIME type. Supported types:
-- `application/json` - JSON serialization
-- `application/xml` / `text/xml` - XML serialization
-- `*/*` / `text/plain` - Raw text
+    Translates content based on MIME type.Supported types : - `application /
+    json` -
+  JSON serialization - `application / xml` / `text / xml` - XML serialization - `*/*` / `text/plain` - Raw text
 
 ### Iteration
 
@@ -195,7 +197,7 @@ auto shutdown() -> engine&;
 ### `zpt::TRANSPORT_ENGINE`
 
 ```cpp
-auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine&;
+auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine::ptr;
 ```
 
 Returns the global transport engine instance.
@@ -222,7 +224,7 @@ class transport_event_init : public zpt::event_initialization {
 Event for receiving messages from streams.
 
 ```cpp
-receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
+receive(zpt::transports::engine::ptr _engine, zpt::polling::ptr _polling, zpt::stream _stream);
 ```
 
 ### Class: `zpt::events::send`
@@ -396,9 +398,9 @@ UPnP/SSDP device discovery via multicast UDP.
 ### Registering Transports
 
 ```cpp
-#include <zapata/transport.h>
 #include <zapata/net/transport/http.h>
 #include <zapata/net/transport/websocket.h>
+#include <zapata/transport.h>
 
 auto config = zpt::json::object();
 auto& layer = zpt::TRANSPORT_LAYER(config);
@@ -413,17 +415,17 @@ layer.add("http", zpt::make_transport<zpt::net::transport::http>())
 ```cpp
 #include <zapata/transport/engine.h>
 
-auto& engine = zpt::TRANSPORT_ENGINE(config);
+auto engine = zpt::TRANSPORT_ENGINE(config);
 
 // Add a resolver for routing messages
-engine.add_resolver(my_resolver);
+engine->add_resolver(my_resolver);
 
 // Start accepting connections
 auto& server = zpt::HTTP_SERVER_SOCKET(8080);
 auto polling = zpt::STREAM_POLLING();
 
 polling->register_delegate([&](zpt::polling::ptr p, zpt::stream s) {
-    engine.dispatcher()->trigger<zpt::events::receive>(engine, p, s);
+    engine->dispatcher()->trigger<zpt::events::receive>(engine, p, s);
     return true;
 });
 
@@ -476,8 +478,8 @@ request->uri()["port"] = 80;
 request->uri()["path"] = "/v1/users";
 
 // Trigger call with response handler
-auto& engine = zpt::TRANSPORT_ENGINE();
-engine.dispatcher()->trigger<zpt::events::call<MyResponseHandler>>(resolver, request);
+auto engine = zpt::TRANSPORT_ENGINE();
+engine->dispatcher()->trigger<zpt::events::call<MyResponseHandler>>(resolver, request);
 ```
 
 ---

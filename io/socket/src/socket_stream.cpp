@@ -61,13 +61,13 @@ auto zpt::is_multicast_address(std::string const& _ip) -> bool {
 }
 
 zpt::serversocketstream::serversocketstream()
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>() } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>() } {}
 
 zpt::serversocketstream::serversocketstream(std::uint16_t _port)
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_port) } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_port) } {}
 
 zpt::serversocketstream::serversocketstream(std::string const& _path)
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_path) } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_path) } {}
 
 zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs) { (*this) = _rhs; }
 
@@ -94,13 +94,13 @@ auto zpt::serversocketstream::operator*() -> zpt::basic_serversocketstream<char>
 }
 
 zpt::wserversocketstream::wserversocketstream()
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
 
 zpt::wserversocketstream::wserversocketstream(std::uint16_t _port)
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
 
 zpt::wserversocketstream::wserversocketstream(std::string const& _path)
-  : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}
 
 zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _rhs) {
     (*this) = _rhs;

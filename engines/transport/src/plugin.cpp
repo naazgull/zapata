@@ -37,5 +37,5 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Stopped multi-transport engine", zpt::info);
-    zpt::TRANSPORT_ENGINE().shutdown();
+    zpt::TRANSPORT_ENGINE()->shutdown();
 }

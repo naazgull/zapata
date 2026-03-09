@@ -73,21 +73,21 @@ class my_other_operator {
 };
 
 auto main(int, char**) -> int {
-    zpt::events::dispatcher _dispatcher{ "test", 10, 1 };
+    auto _dispatcher = std::make_shared<zpt::events::dispatcher>("test", 10, 100);
 
     _dispatcher //
-      .start_consumers()
+      ->start_consumers()
       .trigger<my_operator>("some string", 1)
       .trigger<my_other_operator>(1);
 
     std::this_thread::sleep_for(std::chrono::duration<int>{ 10 });
     _dispatcher //
-      .stop_consumers();
+      ->stop_consumers();
 
     zlog("Stopping for 2s and restarting threads", zpt::info);
     std::this_thread::sleep_for(std::chrono::duration<int>{ 2 });
     _dispatcher //
-      .start_consumers();
+      ->start_consumers();
 
     std::this_thread::sleep_for(std::chrono::duration<int>{ 10 });
 }

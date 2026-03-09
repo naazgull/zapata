@@ -201,13 +201,13 @@ class basic_socketstream : public std::basic_iostream<Char> {
     /** @brief Default constructor (unconnected). */
     basic_socketstream();
     /** @brief Wraps an existing TCP socket with address info. */
-    basic_socketstream(int s, zpt::sockaddrin_t& _address, bool _ssl, short _protocol);
+    basic_socketstream(int s, zpt::sockaddrin_t const& _address, bool _ssl, short _protocol);
     /** @brief Connects to a remote host. */
     basic_socketstream(std::string const& _host, std::uint16_t _port, bool _ssl, short _protocol);
     /** @brief Creates a UDP client socket. */
     basic_socketstream(bool _ssl, short _protocol);
     /** @brief Wraps an existing Unix domain socket. */
-    basic_socketstream(int s, zpt::sockaddrun_t& _address);
+    basic_socketstream(int s, zpt::sockaddrun_t const& _address);
     /** @brief Connects to a Unix domain socket by path. */
     basic_socketstream(std::string const& _path);
     basic_socketstream(const basic_socketstream&) = delete;
@@ -738,7 +738,7 @@ zpt::basic_socketstream<Char>::basic_socketstream()
 
 template<typename Char>
 zpt::basic_socketstream<Char>::basic_socketstream(int s,
-                                                  zpt::sockaddrin_t& _address,
+                                                  zpt::sockaddrin_t const& _address,
                                                   bool _ssl,
                                                   short _protocol)
   : __stream_type(&__buf)
@@ -773,7 +773,7 @@ zpt::basic_socketstream<Char>::basic_socketstream(bool _ssl, short _protocol)
 }
 
 template<typename Char>
-zpt::basic_socketstream<Char>::basic_socketstream(int s, zpt::sockaddrun_t& _address)
+zpt::basic_socketstream<Char>::basic_socketstream(int s, zpt::sockaddrun_t const& _address)
   : __stream_type(&__buf)
   , __is_error(false) {
     this->__buf.set_socket(s);

@@ -18,7 +18,7 @@ auto main(int _argc, char* _argv[]) -> int {
     auto& boot = zpt::BOOT_ENGINE();
 
     // Store connected clients
-    auto clients = std::make_shared<std::vector<zpt::json>>();
+    auto clients = zpt::allocate_shared<std::vector<zpt::json>>();
 
     // Handle incoming chat messages
     boot.add_handler(zpt::Post, "/ws/chat",

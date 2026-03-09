@@ -152,6 +152,6 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
 }
 
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::events::resolver {
-    static zpt::events::resolver _global = std::make_shared<zpt::rest::resolver_t>(_config);
+    static zpt::events::resolver _global = zpt::allocate_shared<zpt::rest::resolver_t>(_config);
     return _global;
 }

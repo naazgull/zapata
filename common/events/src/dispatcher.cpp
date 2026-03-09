@@ -105,6 +105,12 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
 
 auto zpt::events::dispatcher::is_in_shutdown() -> bool { return this->__shutdown->load(); }
 
+auto zpt::events::dispatcher::get_state() const -> zpt::json {
+    return { "name",    this->__name,
+             "workers", static_cast<size_t>(this->__max_consumers),
+             "queue",   { "capacity", this->__queue.capacity(), "size", this->__queue.size() } };
+}
+
 auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::timer<float> _timer{ 0.005f };
     auto _name = std::format("{}@{}", this->__name, _consumer_nr);
@@ -128,8 +134,8 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zlog(_name << " stopping", zpt::trace);
 }
 
-auto zpt::DISPATCHER(long int _consumers, long int _producers) -> zpt::events::dispatcher::ptr {
+auto zpt::DISPATCHER(long int _consumers, size_t _max_queue_size) -> zpt::events::dispatcher::ptr {
     static zpt::events::dispatcher::ptr _global =
-      std::make_shared<zpt::events::dispatcher>("globald", _consumers, _producers);
+      zpt::allocate_shared<zpt::events::dispatcher>("globald", _consumers, _max_queue_size);
     return _global;
 }

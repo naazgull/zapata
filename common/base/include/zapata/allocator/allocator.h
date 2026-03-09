@@ -32,6 +32,8 @@
 
 #include <atomic>
 #include <cassert>
+#include <format>
+#include <functional>
 #include <map>
 #include <memory>
 #include <stddef.h>
@@ -56,10 +58,9 @@ class pool {
     using pointer_type = void*; ///< Generic pointer type.
 
     /**
-     * @brief Creates a pool with the specified maximum memory.
-     * @param _max_memory Maximum bytes this pool can allocate.
+     * @brief Creates a pool with unbounded memory limit.
      */
-    pool(size_t _max_memory);
+    pool();
 
     virtual ~pool();
 
@@ -79,6 +80,12 @@ class pool {
     auto deallocate(pointer_type _ptr, size_t _n) -> void;
 
     /**
+     * @brief Sets the new limit for total memory allocation.
+     * @param _max_memory The new limit.
+     * @return This instance's reference, for chaining purposes.
+     */
+    auto max_size(size_t _max_memory) -> pool&;
+    /**
      * @brief Returns the maximum pool size.
      * @return Maximum bytes this pool can allocate.
      */
@@ -90,6 +97,13 @@ class pool {
      */
     auto allocated_size() const -> size_t;
 
+    auto to_string() const -> std::string;
+
+    friend auto operator<<(std::ostream& _out, zpt::mem::pool& _in) -> std::ostream& {
+        _out << _in.to_string();
+        return _out;
+    }
+
   private:
     zpt::padded_atomic<size_t> __max_size{ 0 };       ///< Maximum allowed allocation.
     zpt::padded_atomic<size_t> __allocated_size{ 0 }; ///< Current allocation.
@@ -99,10 +113,9 @@ class pool {
 
 /**
  * @brief Returns the global memory pool singleton.
- * @param _max_mem If non-zero on first call, sets the pool's maximum size.
  * @return Reference to the global memory pool.
  */
-auto MEM_POOL(std::uint64_t _max_mem = 0) -> zpt::mem::pool&;
+auto MEM_POOL() -> zpt::mem::pool&;
 
 /**
  * @brief STL-compatible allocator backed by a memory pool.
@@ -130,6 +143,9 @@ class allocator {
     using void_pointer = void*;
     using const_void_pointer = void const*;
     using size_type = size_t;
+    using unique_pointer = std::unique_ptr<T, std::function<void(void*)>>;
+    using array_pointer = std::unique_ptr<T[], std::function<void(void*)>>;
+    using shared_pointer = std::shared_ptr<T>;
 
     zpt::mem::pool& __pool; ///< Reference to the backing memory pool.
 
@@ -204,6 +220,12 @@ class allocator {
     auto destroy(pointer p) -> void;
 };
 
+template<typename T, typename... Args>
+auto allocate_shared(Args... _args) -> zpt::allocator<T>::shared_pointer;
+template<typename T, typename... Args>
+auto allocate_unique(Args... _args) -> zpt::allocator<T>::unique_pointer;
+template<typename T>
+auto allocate_array(size_t _size) -> zpt::allocator<T>::array_ponter;
 } // namespace zpt
 
 template<class T>
@@ -261,4 +283,42 @@ template<typename T>
 auto zpt::allocator<T>::destroy(pointer p) -> void {
     expect(p != nullptr, "can't destroy an object instance from unallocated memory");
     p->~T();
+}
+
+template<typename T, typename... Args>
+auto zpt::allocate_shared(Args... _args) -> zpt::allocator<T>::shared_pointer {
+    return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
+                                   std::forward<Args>(_args)...);
+}
+
+template<typename T, typename... Args>
+auto zpt::allocate_unique(Args... _args) -> zpt::allocator<T>::unique_pointer {
+    auto _deleter = [](void* _p) {
+        zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
+        auto _allocated = static_cast<T*>(_p);
+        _allocator.destroy(_allocated);
+        _allocator.deallocate(_allocated, 1);
+    };
+
+    zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
+    auto _allocated = _allocator.allocate(1);
+    _allocator.construct(_allocated, std::forward<Args>(_args)...);
+
+    return { _allocated, _deleter };
+}
+
+template<typename T>
+auto zpt::allocate_array(size_t _n_elements) -> zpt::allocator<T>::array_pointer {
+    auto _deleter = [](void* _p, size_t _n) {
+        zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
+        auto _allocated = static_cast<T*>(_p);
+        for (size_t _idx = 0; _idx != _n; ++_idx) { _allocator.destroy(&_allocated[_idx]); }
+        _allocator.deallocate(_allocated, _n);
+    };
+
+    zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
+    auto _allocated = _allocator.allocate(_n_elements);
+    for (size_t _idx = 0; _idx != _n_elements; ++_idx) { _allocator.construct(&_allocated[_idx]); }
+
+    return { _allocated, std::bind(_deleter, std::placeholders::_1, _n_elements) };
 }

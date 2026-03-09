@@ -36,6 +36,7 @@
 #include <memory>
 #include <zapata/allocator.h>
 #include <zapata/base.h>
+#include <zapata/json.h>
 #include <zapata/lockfree.h>
 
 namespace zpt {
@@ -43,7 +44,7 @@ namespace zpt {
 /** @brief Forward declaration of abstract event interface. */
 class abstract_event;
 /** @brief Shared pointer type for events. */
-using event = std::unique_ptr<zpt::abstract_event>;
+using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 
 /**
  * @brief Base class for event initialization data.
@@ -78,7 +79,7 @@ enum state {
  * any thread and will be processed by available consumers.
  *
  * @par Lifecycle
- * 1. Create dispatcher with `zpt::DISPATCHER(n_consumers, n_producers)`
+ * 1. Create dispatcher with `zpt::DISPATCHER(n_consumers, max_queue_size)`
  * 2. Register event handlers or initialization data
  * 3. Call `start_consumers()` to begin processing
  * 4. Trigger events with `trigger<T>(args...)`
@@ -104,7 +105,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      * @param _max_queue_size Maximum number of elements allowed in the queue (resource management
      *                        cap).
      */
-    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size);
+    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
     /** @brief Destructor. Stops consumers if running. */
     virtual ~dispatcher();
 
@@ -130,6 +131,8 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto trap() -> dispatcher&;
     /** @brief Checks if shutdown has been initiated. */
     auto is_in_shutdown() -> bool;
+    /** @brief Retrieves the dispatcher's internal state. */
+    auto get_state() const -> zpt::json;
 
   public:
     zpt::lf::queue<zpt::abstract_event> __queue;
@@ -202,7 +205,7 @@ class abstract_event {
     /** @brief Executes the event operation. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
-using event = std::unique_ptr<zpt::abstract_event>;
+using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 
 /**
  * @brief Type-erasing wrapper for Operation types.
@@ -270,10 +273,11 @@ auto make_event(Args&&... _args) -> zpt::event;
 /**
  * @brief Factory function to create a dispatcher.
  * @param _consumers Number of consumer threads.
- * @param _producers Maximum producer threads for queue sizing.
+ * @param _max_queue_size Maximum size for event queue.
  * @return Shared pointer to the dispatcher.
  */
-auto DISPATCHER(long int _consumers = 0, long int _producers = 0) -> zpt::events::dispatcher::ptr;
+auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
+  -> zpt::events::dispatcher::ptr;
 
 /**
  * @brief Casts an event to access its underlying Operation.
@@ -340,12 +344,12 @@ auto zpt::event_t<T>::operator()(zpt::events::dispatcher::ptr _dispatcher) -> zp
 
 template<zpt::events::Operation T>
 auto zpt::make_event(T _operator) -> zpt::event {
-    return std::make_unique<zpt::event_t<T>>(_operator);
+    return zpt::allocate_unique<zpt::event_t<T>>(_operator);
 }
 
 template<zpt::events::Operation T, typename... Args>
 auto zpt::make_event(Args&&... _args) -> zpt::event {
-    return std::make_unique<zpt::event_t<T>>(std::forward<Args>(_args)...);
+    return zpt::allocate_unique<zpt::event_t<T>>(std::forward<Args>(_args)...);
 }
 
 template<typename T, typename... Args>

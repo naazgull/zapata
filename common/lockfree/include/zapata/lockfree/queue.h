@@ -38,6 +38,7 @@
 
 #pragma once
 
+#include <zapata/allocator.h>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/sentry.h>
 #include <zapata/exceptions/exceptions.h>
@@ -90,7 +91,7 @@ template<typename T>
 class queue {
   public:
     using size_type = size_t;
-    using ptr = std::unique_ptr<T>;
+    using ptr = zpt::allocator<T>::unique_pointer;
 
     /**
      * @brief Constructs a bounded queue with the given fixed capacity.
@@ -128,6 +129,8 @@ class queue {
      */
     auto pop() -> ptr;
 
+    /** @brief Returns the queue maximum number of elements. */
+    auto capacity() const -> size_t;
     /** @brief Returns approximate element count. */
     auto size() const -> size_t;
 
@@ -154,7 +157,7 @@ class queue {
     }
 
   private:
-    std::unique_ptr<ptr[]> __elements{ nullptr };
+    zpt::allocator<ptr>::array_pointer __elements{ nullptr };
     zpt::padded_atomic<__uint128_t> __boundaries{ 0 };
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
     size_t __capacity{ 0 };
@@ -167,13 +170,13 @@ class queue {
 
 template<typename T>
 zpt::lf::queue<T>::queue(size_t _max_queue_size)
-  : __elements{ std::make_unique<ptr[]>(_max_queue_size) }
+  : __elements{ zpt::allocate_array<ptr>(_max_queue_size) }
   , __boundaries{ 0 }
   , __capacity{ _max_queue_size } {}
 
 template<typename T>
 auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
-    return this->push(std::make_unique<T>(_value));
+    return this->push(zpt::allocate_unique<T>(_value));
 }
 
 template<typename T>
@@ -218,6 +221,11 @@ auto zpt::lf::queue<T>::pop() -> ptr {
         std::this_thread::yield();
     }
     throw NoMoreElementsException("no element to pop");
+}
+
+template<typename T>
+auto zpt::lf::queue<T>::capacity() const -> size_t {
+    return this->__capacity;
 }
 
 template<typename T>

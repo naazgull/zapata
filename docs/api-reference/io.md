@@ -565,7 +565,7 @@ std::string msg;
 #include <zapata/streams.h>
 
 auto poll = zpt::STREAM_POLLING();
-auto signal = std::make_shared<zpt::event_stream>();
+auto signal = zpt::allocate_shared<zpt::event_stream>();
 
 poll->register_delegate([](zpt::polling::ptr p, zpt::stream s) {
     std::any data;
