@@ -278,9 +278,6 @@ zpt::transports::engine::engine(zpt::json _config)
       "transport",
       _config("limits")("max_consumer_threads")->ok()
         ? _config("limits")("max_consumer_threads")->integer()
-        : 1,
-      _config("limits")("max_consumer_threads")->ok()
-        ? _config("limits")("max_consumer_threads")->integer()
         : 1) } {
     zpt::STREAM_POLLING() //
       ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {

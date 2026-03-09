@@ -129,6 +129,8 @@ class queue {
      */
     auto pop() -> ptr;
 
+    /** @brief Returns the queue maximum number of elements. */
+    auto capacity() const -> size_t;
     /** @brief Returns approximate element count. */
     auto size() const -> size_t;
 
@@ -219,6 +221,11 @@ auto zpt::lf::queue<T>::pop() -> ptr {
         std::this_thread::yield();
     }
     throw NoMoreElementsException("no element to pop");
+}
+
+template<typename T>
+auto zpt::lf::queue<T>::capacity() const -> size_t {
+    return this->__capacity;
 }
 
 template<typename T>

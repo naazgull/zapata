@@ -36,6 +36,7 @@
 #include <memory>
 #include <zapata/allocator.h>
 #include <zapata/base.h>
+#include <zapata/json.h>
 #include <zapata/lockfree.h>
 
 namespace zpt {
@@ -130,6 +131,8 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto trap() -> dispatcher&;
     /** @brief Checks if shutdown has been initiated. */
     auto is_in_shutdown() -> bool;
+    /** @brief Retrieves the dispatcher's internal state. */
+    auto get_state() const -> zpt::json;
 
   public:
     zpt::lf::queue<zpt::abstract_event> __queue;
