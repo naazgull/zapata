@@ -9,7 +9,13 @@ zpt::mem::pool::pool()
   : __max_size{ 0 }
   , __allocated_size{ 0 } {}
 
-zpt::mem::pool::~pool() {}
+zpt::mem::pool::~pool() {
+    if (this->allocated_size() != 0) {
+        zlog(this->allocated_size()
+               << " bytes of memory still accessible upon memory pool disposal",
+             zpt::warning);
+    }
+}
 
 auto zpt::mem::pool::allocate(size_t _n) -> pointer_type {
     while (true) {
@@ -46,3 +52,30 @@ auto zpt::mem::pool::to_string() const -> std::string {
     return std::format(
       "{{ \"max\": {}, \"allocated\": {} }}", this->max_size(), this->allocated_size());
 }
+
+#ifdef ALLOCATOR_DEBUG_MODE
+auto zpt::mem::start_tracking() -> void {
+    std::unique_lock guard{ zpt::mem::__allocated_mutex };
+    zpt::mem::__allocated.clear();
+}
+
+auto zpt::mem::print_still_allocated() -> void {
+    std::shared_lock guard{ zpt::mem::__allocated_mutex };
+    for (auto const& [_address, _class] : zpt::mem::__allocated) {
+        std::cout << _class << " @ 0x" << std::hex << _address << std::dec << "\n";
+    }
+    std::cout << std::flush;
+}
+
+auto zpt::mem::store(void* _ptr, std::string const& _name) -> void {
+    std::unique_lock _guard{ zpt::mem::__allocated_mutex };
+    zpt::mem::__allocated.insert(
+      std::make_pair(reinterpret_cast<std::uint64_t>(_ptr), zpt::demangle(_name)));
+}
+
+auto zpt::mem::remove(void* _ptr) -> void {
+    std::unique_lock _guard{ zpt::mem::__allocated_mutex };
+    zpt::mem::__allocated.erase(reinterpret_cast<std::uint64_t>(_ptr));
+}
+
+#endif

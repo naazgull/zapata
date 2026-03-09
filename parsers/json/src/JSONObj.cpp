@@ -389,7 +389,7 @@ auto zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) const -> zpt::JSO
 
 /*JSON POINTER TO OBJECT*/
 zpt::JSONObj::JSONObj()
-  : __underlying{ zpt::allocate_shared<JSONObjT>() } {}
+  : __underlying(zpt::allocate_shared<JSONObjT>()) {}
 
 zpt::JSONObj::JSONObj(const JSONObj& _rhs) { (*this) = _rhs; }
 

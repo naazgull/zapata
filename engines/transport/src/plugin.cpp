@@ -28,8 +28,8 @@
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zpt::TRANSPORT_ENGINE(_plugin.config());
     zlog("Started multi-transport engine ("
-           << (_plugin.config()("limits")("max_consumer_threads")->ok()
-                 ? _plugin.config()("limits")("max_consumer_threads")->integer()
+           << (_plugin.config()("limits")("max_workers")->ok()
+                 ? _plugin.config()("limits")("max_workers")->integer()
                  : 1)
            << " threads)",
          zpt::info);

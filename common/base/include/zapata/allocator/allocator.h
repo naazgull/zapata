@@ -36,10 +36,13 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <stddef.h>
 #include <vector>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/expect.h>
+#include <zapata/locks/spin_mutex.h>
+#include <zapata/text/convert.h>
 
 namespace zpt {
 namespace mem {
@@ -108,6 +111,16 @@ class pool {
     zpt::padded_atomic<size_t> __max_size{ 0 };       ///< Maximum allowed allocation.
     zpt::padded_atomic<size_t> __allocated_size{ 0 }; ///< Current allocation.
 };
+
+#ifdef ALLOCATOR_DEBUG_MODE
+inline std::map<std::uint64_t, std::string> __allocated;
+inline zpt::locks::spin_mutex __allocated_mutex;
+
+auto start_tracking() -> void;
+auto print_still_allocated() -> void;
+auto store(void* _ptr, std::string const& _name) -> void;
+auto remove(void* _ptr) -> void;
+#endif
 
 } // namespace mem
 
@@ -254,7 +267,11 @@ zpt::allocator<T>::allocator(zpt::allocator<T> const& _rhs)
 template<typename T>
 auto zpt::allocator<T>::allocate(size_type _n) -> pointer {
     try {
-        return reinterpret_cast<pointer>(this->__pool.allocate(sizeof(T) * _n));
+        auto _to_return = reinterpret_cast<pointer>(this->__pool.allocate(sizeof(T) * _n));
+#ifdef ALLOCATOR_DEBUG_MODE
+        zpt::mem::store(_to_return, typeid(T).name());
+#endif
+        return _to_return;
     }
     catch (zpt::failed_expectation const& _e) {
     }
@@ -263,6 +280,9 @@ auto zpt::allocator<T>::allocate(size_type _n) -> pointer {
 
 template<typename T>
 auto zpt::allocator<T>::deallocate(pointer _to_deallocate, size_type _n) -> void {
+#ifdef ALLOCATOR_DEBUG_MODE
+    zpt::mem::remove(_to_deallocate);
+#endif
     this->__pool.deallocate(reinterpret_cast<zpt::mem::pool::pointer_type>(_to_deallocate),
                             sizeof(T) * _n);
 }

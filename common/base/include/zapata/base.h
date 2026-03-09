@@ -66,3 +66,43 @@
 #include <zapata/text/convert.h>
 #include <zapata/text/html.h>
 #include <zapata/text/manip.h>
+
+#define has_method(m)                                                                              \
+    template<class T>                                                                              \
+    constexpr auto has_##m() -> bool {                                                             \
+        constexpr bool has = requires(T& t) { t.m(); };                                            \
+        if constexpr (has)                                                                         \
+            x return true;                                                                         \
+        else                                                                                       \
+            return false;                                                                          \
+    }
+
+#define has_method_1(m, C1)                                                                        \
+    template<class T>                                                                              \
+    constexpr auto has_##m() -> bool {                                                             \
+        constexpr bool has = requires(T& t, C1 p1) { t.m(p1); };                                   \
+        if constexpr (has)                                                                         \
+            return true;                                                                           \
+        else                                                                                       \
+            return false;                                                                          \
+    }
+
+#define has_method_2(m, C1, C2)                                                                    \
+    template<class T>                                                                              \
+    constexpr auto has_##m() -> bool {                                                             \
+        constexpr bool has = requires(T& t, C1 p1, C2 p2) { t.m(p1, p2); };                        \
+        if constexpr (has)                                                                         \
+            return true;                                                                           \
+        else                                                                                       \
+            return false;                                                                          \
+    }
+
+#define has_method_3(m, C1, C2, C3)                                                                \
+    template<class T>                                                                              \
+    constexpr auto has_##m() -> bool {                                                             \
+        constexpr bool has = requires(T& t, C1 p1, C2 p2, C3 p3) { t.m(p1, p2, p3); };             \
+        if constexpr (has)                                                                         \
+            return true;                                                                           \
+        else                                                                                       \
+            return false;                                                                          \
+    }
