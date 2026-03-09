@@ -41,7 +41,7 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 }
 } // namespace
 
-zpt::events::receive::receive(zpt::transports::engine& _engine,
+zpt::events::receive::receive(zpt::transports::engine::ptr _engine,
                               zpt::polling::ptr _polling,
                               zpt::stream _stream)
   : __engine{ _engine }
@@ -95,7 +95,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
             !_dispatcher->is_in_shutdown()) {
 
             auto _events =
-              this->__engine.resolve(_received, [this, _dispatcher](zpt::event& _event) {
+              this->__engine->resolve(_received, [this, _dispatcher](zpt::event& _event) {
                   zpt::events::transport_event_init _init;
                   _init.__dispatcher = _dispatcher;
                   _init.__polling = this->__polling;
@@ -287,7 +287,8 @@ zpt::transports::engine::engine(zpt::json _config)
 #ifndef PROPAGATE_EXCEPTION
           try {
 #endif
-              this->__dispatcher->trigger<zpt::events::receive>(*this, _poll, _stream);
+              this->__dispatcher->trigger<zpt::events::receive>(
+                this->shared_from_this(), _poll, _stream);
               return true;
 #ifndef PROPAGATE_EXCEPTION
           }
@@ -359,7 +360,7 @@ auto zpt::events::process_call_reply::operator()(zpt::events::dispatcher::ptr _d
     return zpt::events::finish;
 }
 
-auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine& {
-    static zpt::transports::engine _global{ _config };
+auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine::ptr {
+    static auto _global = std::make_shared<zpt::transports::engine>(_config);
     return _global;
 }

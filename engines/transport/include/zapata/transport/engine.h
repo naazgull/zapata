@@ -40,15 +40,17 @@ namespace transports {
  *
  * @par Example
  * @code
- * auto& engine = zpt::TRANSPORT_ENGINE(config);
- * engine.add_resolver(my_resolver);
+ * auto engine = zpt::TRANSPORT_ENGINE(config);
+ * engine->add_resolver(my_resolver);
  *
  * // Engine runs in background, processing incoming connections
- * engine.dispatcher()->trap();  // Wait for shutdown
+ * engine->dispatcher()->trap();  // Wait for shutdown
  * @endcode
  */
-class engine {
+class engine : public std::enable_shared_from_this<engine> {
   public:
+    using ptr = std::shared_ptr<engine>;
+
     /** @brief Constructs an engine with the given configuration. */
     engine(zpt::json _config);
     /** @brief Destructor. */
@@ -95,7 +97,7 @@ class transport_event_init : public zpt::event_initialization {
 class receive {
   public:
     /** @brief Constructs a receive event for the given engine, polling instance, and stream. */
-    receive(zpt::transports::engine& _engine, zpt::polling::ptr _polling, zpt::stream _stream);
+    receive(zpt::transports::engine::ptr _engine, zpt::polling::ptr _polling, zpt::stream _stream);
     receive(zpt::events::receive const& _rhs) = delete;
     receive(zpt::events::receive&& _rhs) = delete;
     /** @brief Destructor. */
@@ -121,7 +123,7 @@ class receive {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::transports::engine& __engine;
+    zpt::transports::engine::ptr __engine;
     zpt::polling::ptr __polling{ nullptr };
     zpt::stream __stream{ nullptr };
 };
@@ -353,7 +355,7 @@ class process_call_reply : public zpt::events::process {
  * @param _config Optional configuration (used only on first call).
  * @return Reference to the global transport engine.
  */
-auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine&;
+auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine::ptr;
 
 template<ProcessOperation T = zpt::events::process_call_reply>
 auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
@@ -489,7 +491,7 @@ auto zpt::make_call(zpt::events::resolver _resolver, zpt::message _to_send)
   -> zpt::call_context::ptr {
     auto _context = zpt::allocate_shared<zpt::call_context>();
     zpt::TRANSPORT_ENGINE() //
-      .dispatcher()
+      ->dispatcher()
       ->trigger<zpt::events::call<T>>(_resolver, _context, _to_send);
     return _context;
 }

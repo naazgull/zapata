@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     _engine->on("GET", "/hello/{name}",
         [](zpt::performative _performative,
            zpt::json _envelope,
-           zpt::rest::engine& _engine) -> zpt::json {
+           zpt::rest::engine::ptr _engine) -> zpt::json {
             auto _name = _envelope["params"]["name"];
             return { "message", std::string("Hello, ") + _name->string() };
         });

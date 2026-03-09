@@ -302,7 +302,8 @@ auto zpt::basic_stream::set_peer(std::string const& _address, unsigned int _port
 
 template<typename T, typename... Args>
 auto zpt::make_stream(Args... _args) -> zpt::stream {
-    zpt::stream _to_return{ new zpt::basic_stream{ zpt::allocate_unique<T>(_args...) } };
+    zpt::stream _to_return{ new zpt::basic_stream{
+      zpt::allocate_unique<T>(std::forward<Args>(_args)...) } };
     if constexpr (std::is_convertible<T, int>::value) {
         (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));
     }

@@ -29,7 +29,7 @@
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zpt::TRANSPORT_ENGINE() //
-      .add_resolver(zpt::REST_RESOLVER(_config));
+      ->add_resolver(zpt::REST_RESOLVER(_config));
 
     if (_config("rest")("prefix")->ok()) {
         _config["rest"]["prefix_path_len"] =

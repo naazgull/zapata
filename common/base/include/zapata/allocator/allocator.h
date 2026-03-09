@@ -296,12 +296,13 @@ auto zpt::allocate_unique(Args... _args) -> zpt::allocator<T>::unique_pointer {
     auto _deleter = [](void* _p) {
         zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
         auto _allocated = static_cast<T*>(_p);
+        _allocator.destroy(_allocated);
         _allocator.deallocate(_allocated, 1);
     };
 
     zpt::allocator<T> _allocator{ zpt::MEM_POOL() };
     auto _allocated = _allocator.allocate(1);
-    _allocator.construct(_allocated, _args...);
+    _allocator.construct(_allocated, std::forward<Args>(_args)...);
 
     return { _allocated, _deleter };
 }
