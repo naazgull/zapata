@@ -37,6 +37,7 @@ auto zpt::event_stream::read_without_io(std::any& _out) -> zpt::event_stream& {
     _out = this->__content;
     std::uint64_t _val;
     eventfd_read(this->__fd, &_val);
+    ++this->__reads;
     return (*this);
 }
 
@@ -46,4 +47,4 @@ auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stre
     return (*this);
 }
 
-auto zpt::event_stream::persistent() -> bool { return false; }
+auto zpt::event_stream::persistent() -> bool { return this->__reads != 2; }

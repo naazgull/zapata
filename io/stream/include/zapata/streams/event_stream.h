@@ -67,5 +67,6 @@ class event_stream : public basic_stream {
 
   private:
     std::any __content;
+    unsigned short __reads{ 0 };
 };
 } // namespace zpt
