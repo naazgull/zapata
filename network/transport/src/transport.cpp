@@ -43,7 +43,7 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
         }
     }
     else { _to_return = this->process_incoming_request(_stream); }
-    zlog("Received '" << _stream->transport() << "' message: \n" << _to_return, zpt::trace);
+    zlog("Received message via '" << _stream->uri() << "': \n" << _to_return, zpt::trace);
     return _to_return;
 }
 
@@ -57,7 +57,7 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                  _stream->state() == zpt::stream_state::ERRORING_OUT,
                "Stream not in a valid state for sending");
     }
-    zlog("Sending '" << _stream->transport() << "' message: \n" << _to_send, zpt::trace);
+    zlog("Sending message via '" << _stream->uri() << "' : \n" << _to_send, zpt::trace);
 
     _stream->write<zpt::message>(_to_send);
 
