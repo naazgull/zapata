@@ -100,8 +100,10 @@ class pool {
      */
     auto allocated_size() const -> size_t;
 
+    /** @brief Returns a human-readable string with pool statistics. */
     auto to_string() const -> std::string;
 
+    /** @brief Stream insertion operator for pool statistics. */
     friend auto operator<<(std::ostream& _out, zpt::mem::pool& _in) -> std::ostream& {
         _out << _in.to_string();
         return _out;
@@ -113,12 +115,25 @@ class pool {
 };
 
 #ifdef ALLOCATOR_DEBUG_MODE
+/** @brief Map of live allocations, keyed by address, value is demangled type name. */
 inline std::map<std::uint64_t, std::string> __allocated;
+/** @brief Mutex protecting @ref __allocated. */
 inline zpt::locks::spin_mutex __allocated_mutex;
 
+/** @brief Begins recording all pool allocations. */
 auto start_tracking() -> void;
+/** @brief Logs all allocations that have not yet been deallocated. */
 auto print_still_allocated() -> void;
+/**
+ * @brief Records a new allocation in the debug map.
+ * @param _ptr Allocated pointer.
+ * @param _name Demangled type name for the allocation.
+ */
 auto store(void* _ptr, std::string const& _name) -> void;
+/**
+ * @brief Removes a pointer from the debug map on deallocation.
+ * @param _ptr Pointer being deallocated.
+ */
 auto remove(void* _ptr) -> void;
 #endif
 
@@ -156,8 +171,11 @@ class allocator {
     using void_pointer = void*;
     using const_void_pointer = void const*;
     using size_type = size_t;
+    /** @brief Pool-tracked unique_ptr with a custom pool-aware deleter. */
     using unique_pointer = std::unique_ptr<T, std::function<void(void*)>>;
+    /** @brief Pool-tracked unique_ptr for arrays with a custom pool-aware deleter. */
     using array_pointer = std::unique_ptr<T[], std::function<void(void*)>>;
+    /** @brief Standard shared_ptr; pool tracking is handled by the rebound allocator. */
     using shared_pointer = std::shared_ptr<T>;
 
     zpt::mem::pool& __pool; ///< Reference to the backing memory pool.
@@ -233,12 +251,34 @@ class allocator {
     auto destroy(pointer p) -> void;
 };
 
+/**
+ * @brief Constructs a pool-tracked shared_ptr using `std::allocate_shared`.
+ * @tparam T Type to construct.
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Pool-tracked shared_ptr<T>; pool is credited when the last reference drops.
+ */
 template<typename T, typename... Args>
 auto allocate_shared(Args... _args) -> zpt::allocator<T>::shared_pointer;
+
+/**
+ * @brief Constructs a pool-tracked unique_ptr with a custom pool-aware deleter.
+ * @tparam T Type to construct.
+ * @tparam Args Constructor argument types.
+ * @param _args Arguments forwarded to T's constructor.
+ * @return Pool-tracked unique_ptr<T>; pool is credited when the pointer is destroyed.
+ */
 template<typename T, typename... Args>
 auto allocate_unique(Args... _args) -> zpt::allocator<T>::unique_pointer;
+
+/**
+ * @brief Allocates and default-constructs a pool-tracked array.
+ * @tparam T Element type.
+ * @param _size Number of elements to allocate.
+ * @return Pool-tracked unique_ptr<T[]>; pool is credited when the pointer is destroyed.
+ */
 template<typename T>
-auto allocate_array(size_t _size) -> zpt::allocator<T>::array_ponter;
+auto allocate_array(size_t _size) -> zpt::allocator<T>::array_pointer;
 } // namespace zpt
 
 template<class T>

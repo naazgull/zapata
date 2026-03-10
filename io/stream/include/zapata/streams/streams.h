@@ -212,8 +212,11 @@ class polling : public std::enable_shared_from_this<polling> {
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
 
+    /** @brief Registers a stream with epoll (called by listen_on). */
     auto insert(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Removes a stream from epoll and the polled map. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Dispatches a ready stream to all registered delegates. */
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
 
