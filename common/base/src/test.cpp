@@ -28,7 +28,7 @@ class A {
     std::string __member{ "xpto xpto xpto xpto" };
 };
 
-auto main(int, char*[]) -> int {
+auto test_memory_pool() {
     {
         zpt::mem::pool _pool;
         for (size_t _idx = 0; _idx != 100; ++_idx) {
@@ -64,4 +64,30 @@ auto main(int, char*[]) -> int {
         }
         std::cout << "Remaining " << _pool.allocated_size() << " bytes" << std::endl;
     }
+}
+
+auto test_base64() -> void {
+    std::vector<unsigned char> _in;
+    _in.push_back(0);
+    _in.push_back(1);
+    _in.push_back(2);
+    _in.push_back(3);
+    _in.push_back(4);
+    _in.push_back(5);
+    _in.push_back(6);
+    std::string _out1;
+    zpt::base64::encode(_in, _out1);
+    std::cout << _out1 << std::endl;
+
+    std::vector<unsigned char> _out2;
+    zpt::base64::decode(_out1, _out2);
+    for (size_t _idx = 0; _idx != _out2.size(); ++_idx) {
+        std::cout << static_cast<int>(_out2[_idx]) << std::endl;
+    }
+}
+
+auto main(int, char*[]) -> int {
+    test_memory_pool();
+    test_base64();
+    return 0;
 }
