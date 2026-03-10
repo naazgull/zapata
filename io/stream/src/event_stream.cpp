@@ -22,6 +22,8 @@
 
 #include <zapata/streams/event_stream.h>
 
+constexpr unsigned short FINAL_REPLY_RECEIVED{ 2 };
+
 zpt::event_stream::event_stream() {
     this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
     this->__uri = std::format("self://fd@{}", this->__fd);
@@ -47,4 +49,4 @@ auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stre
     return (*this);
 }
 
-auto zpt::event_stream::persistent() -> bool { return this->__reads != 2; }
+auto zpt::event_stream::persistent() -> bool { return this->__reads != FINAL_REPLY_RECEIVED; }

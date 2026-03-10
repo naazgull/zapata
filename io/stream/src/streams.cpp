@@ -130,7 +130,7 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     if (!_stream->__muted) { return (*this); }
-    if (!_stream->persistent() && _stream->state() == zpt::stream_state::IDLE) {
+    if (!_stream->persistent()) {
         this->erase(_stream);
         return (*this);
     }
