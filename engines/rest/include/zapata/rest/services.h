@@ -60,11 +60,20 @@ class minion_hello : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
+/**
+ * @brief Event operation for handling worker state query requests.
+ *
+ * Responds to state requests with current memory pool and queue
+ * diagnostics for the worker.
+ */
 class minion_state : public zpt::events::process {
   public:
     using zpt::events::process::process;
+    /** @brief Destructor. */
     ~minion_state() = default;
+    /** @brief Returns false (state queries are never blocked). */
     auto blocked() const -> bool;
+    /** @brief Responds with current worker diagnostics. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 

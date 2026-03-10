@@ -67,6 +67,10 @@
 #include <zapata/text/html.h>
 #include <zapata/text/manip.h>
 
+/**
+ * @brief Generates a `has_<m>()` trait function that checks for a zero-argument method `m`.
+ * @param m Method name to check.
+ */
 #define has_method(m)                                                                              \
     template<class T>                                                                              \
     constexpr auto has_##m() -> bool {                                                             \
@@ -77,6 +81,11 @@
             return false;                                                                          \
     }
 
+/**
+ * @brief Generates a `has_<m>()` trait function that checks for a one-argument method `m(C1)`.
+ * @param m  Method name to check.
+ * @param C1 Type of the first argument.
+ */
 #define has_method_1(m, C1)                                                                        \
     template<class T>                                                                              \
     constexpr auto has_##m() -> bool {                                                             \
@@ -87,6 +96,12 @@
             return false;                                                                          \
     }
 
+/**
+ * @brief Generates a `has_<m>()` trait function that checks for a two-argument method `m(C1, C2)`.
+ * @param m  Method name to check.
+ * @param C1 Type of the first argument.
+ * @param C2 Type of the second argument.
+ */
 #define has_method_2(m, C1, C2)                                                                    \
     template<class T>                                                                              \
     constexpr auto has_##m() -> bool {                                                             \
@@ -97,6 +112,14 @@
             return false;                                                                          \
     }
 
+/**
+ * @brief Generates a `has_<m>()` trait function that checks for a three-argument method
+ *        `m(C1, C2, C3)`.
+ * @param m  Method name to check.
+ * @param C1 Type of the first argument.
+ * @param C2 Type of the second argument.
+ * @param C3 Type of the third argument.
+ */
 #define has_method_3(m, C1, C2, C3)                                                                \
     template<class T>                                                                              \
     constexpr auto has_##m() -> bool {                                                             \
