@@ -125,6 +125,12 @@ class uuid {
     auto to_string() const -> std::string;
 
     /**
+     * @brief Converts the UUID to a 22 byte base-64 encoded string.
+     * @return UUID in URL safe 22 bytes base-64 encoded string.
+     */
+    auto to_base64_string() const -> std::string;
+
+    /**
      * @brief Converts the UUID to the textual representation of the underlying 128-bit integer.
      * @return UUID as the textual representation of the underlying 128-bit integer.
      */
@@ -136,6 +142,13 @@ class uuid {
      * @return Reference to this UUID.
      */
     auto from_string(std::string const& _str) -> uuid&;
+
+    /**
+     * @brief Parses a UUID from a 22 byte base-64 encoded string.
+     * @param _str UUID string to parse.
+     * @return Reference to this UUID.
+     */
+    auto from_base64_string(std::string const& _str) -> uuid&;
 
     /**
      * @brief Writes the UUID to an output stream.

@@ -22,6 +22,7 @@
 
 #include <zapata/allocator.h>
 #include <zapata/base.h>
+#include <zapata/uuid.h>
 
 class A {
   public:
@@ -86,8 +87,24 @@ auto test_base64() -> void {
     }
 }
 
+auto test_uuid() -> void {
+    zpt::uuid _uuid;
+
+    auto _36_byte = _uuid.to_string();
+    zpt::uuid _parsed{ _36_byte };
+    std::cout << _uuid << " == " << _parsed << std::endl;
+    expect(_uuid == _parsed, "UUIDs are the same");
+
+    auto _22_byte = _uuid.to_base64_string();
+    _parsed.from_base64_string(_22_byte);
+    std::cout << _22_byte << std::endl;
+    std::cout << _uuid << " == " << _parsed << std::endl;
+    expect(_uuid == _parsed, "UUIDs are the same");
+}
+
 auto main(int, char*[]) -> int {
     test_memory_pool();
     test_base64();
+    test_uuid();
     return 0;
 }

@@ -191,6 +191,8 @@ void encode(std::istream& _in, std::ostream& _out);
 void decode(std::istream& _in, std::ostream& _out);
 auto encode(std::vector<unsigned char> const& _in, std::string& _out) -> void;
 auto decode(std::string const& _in, std::vector<unsigned char>& _out) -> void;
+auto url_encode(std::vector<unsigned char> const& _in, std::string& _out, bool _pad = true) -> void;
+auto url_decode(std::string const& _in, std::vector<unsigned char>& _out) -> void;
 /** @brief Encodes to URL-safe Base64 (in-place). */
 void url_encode(std::string& _out);
 /** @brief Decodes URL-safe Base64 (in-place). */
