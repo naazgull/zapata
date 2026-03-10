@@ -72,6 +72,15 @@ auto zpt::uuid::to_string() const -> std::string {
     return _oss.str();
 }
 
+auto zpt::uuid::to_base64_string() const -> std::string {
+    std::vector<unsigned char> _in;
+    _in.resize(16);
+    std::memcpy(_in.data(), &this->__base, sizeof(__uint128_t));
+    std::string _out;
+    zpt::base64::url_encode(_in, _out, false /*don't pad*/);
+    return _out;
+}
+
 auto zpt::uuid::to_128bit_string() const -> std::string {
     auto _to_convert = this->__base;
     if (_to_convert == 0) return "0";
@@ -87,6 +96,13 @@ auto zpt::uuid::from_string(std::string const& _str) -> uuid& {
     std::istringstream _iss;
     _iss.str(_str);
     return this->from_stream(_iss);
+}
+
+auto zpt::uuid::from_base64_string(std::string const& _in) -> uuid& {
+    std::vector<unsigned char> _out;
+    zpt::base64::url_decode(_in, _out);
+    std::memcpy(&this->__base, _out.data(), _out.size());
+    return (*this);
 }
 
 auto zpt::uuid::to_stream(std::ostream& _out) const -> uuid const& {
