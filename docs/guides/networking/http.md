@@ -57,7 +57,7 @@ auto keep_alive = request->keep_alive();  // Connection: keep-alive?
 auto reply = zpt::make_message<zpt::http::basic_reply>();
 reply->status(200);
 reply->version("1.1");
-reply->headers()["Content-Type"] = "application/json";
+reply->headers("Content-Type", "application/json");
 reply->body() = zpt::json{ "message", "OK" };
 
 output_stream << *reply;

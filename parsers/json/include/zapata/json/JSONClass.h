@@ -316,8 +316,6 @@ class json {
     auto stringify(std::string& _out) const -> zpt::json const&;
     /** @brief Returns the JSON string representation. */
     auto stringify() const -> std::string;
-    /** @brief Returns the length of the serialized string. */
-    auto string_length() const -> size_t;
 
     /** @brief Returns an iterator to the first element. */
     auto begin() -> zpt::json::iterator;
@@ -791,8 +789,6 @@ class JSONObjT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONObjT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONObjT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONObjT const&;
-    /** @brief Returns length of serialized string. */
-    virtual auto string_length() const -> size_t;
 
     /** @brief Serializes to formatted JSON with indentation. */
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
@@ -961,8 +957,6 @@ class JSONArrT {
     virtual auto stringify(std::ostream& _out) -> zpt::JSONArrT&;
     virtual auto stringify(std::string& _out) const -> zpt::JSONArrT const&;
     virtual auto stringify(std::ostream& _out) const -> zpt::JSONArrT const&;
-    /** @brief Returns length of serialized string. */
-    virtual auto string_length() const -> size_t;
 
     /** @brief Serializes to formatted JSON with indentation. */
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
@@ -1823,8 +1817,6 @@ class JSONElementT {
     virtual auto stringify(std::ostream& _out) const -> JSONElementT const&;
     /** @brief Returns compact JSON string representation. */
     virtual auto stringify() const -> std::string;
-    /** @brief Returns length of serialized JSON string. */
-    virtual auto string_length() const -> size_t;
 
     /** @brief Serializes to formatted JSON with indentation. */
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> JSONElementT&;

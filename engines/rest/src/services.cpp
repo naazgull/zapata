@@ -147,10 +147,9 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
     auto _message = _transport->make_request();
     _message //
       ->performative(zpt::Notify)
-      .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path));
-
-    _message->headers()["X-My-Location"] = zpt::get_default_uri();
-    _message->headers()["X-My-ID"] = zpt::IDENTITY()("_id");
+      .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path))
+      .header("X-My-Location", zpt::get_default_uri())
+      .header("X-My-ID", zpt::IDENTITY()("_id"));
 
     auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
     _stream //

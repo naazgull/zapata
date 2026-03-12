@@ -23,7 +23,7 @@
  * auto msg = zpt::make_message<zpt::json_message>();
  * msg->performative(zpt::Get);
  * msg->uri("/api/users");
- * msg->headers()["Accept"] = "application/json";
+ * msg->headers("Accept", "application/json");
  * @endcode
  *
  * @see zpt::basic_message

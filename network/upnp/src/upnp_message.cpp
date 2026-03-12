@@ -30,28 +30,6 @@
 #include <zapata/uri.h>
 #include <zapata/uuid.h>
 
-// zpt::upnp::basic_request::basic_request() {
-//     this->__underlying["performative"] = zpt::ontology::to_str(zpt::Notify);
-//     zpt::init(static_cast<zpt::http::basic_request&>(*this));
-// }
-
-// zpt::upnp::basic_request::basic_request(zpt::message _request, bool)
-//   : basic_request{} {
-//     auto _req_headers = _request.headers();
-//     auto _headers = zpt::json::object();
-//     _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
-//     _headers["Cache-Control"] =
-//       _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-//     _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
-//                                       ? _req_headers("X-Conversation-ID")->string()
-//                                       : zpt::uuid{}.to_string();
-//     _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0";
-
-//     this->__underlying           //
-//       << "uri" << _request.uri() //
-//       << "headers" << _headers;
-// }
-
 auto zpt::upnp::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     auto _uri = this->__underlying("uri");
     _out << this->__underlying("performative")->string() << " " << zpt::uri::path::to_string(_uri)
@@ -98,28 +76,6 @@ auto zpt::upnp::basic_request::from_stream(std::istream& _in) -> zpt::basic_mess
     return (*this);
 }
 
-// zpt::upnp::basic_reply::basic_reply() {
-//     this->__underlying["performative"] = zpt::ontology::to_str(zpt::Reply);
-//     zpt::init(static_cast<zpt::http::basic_reply&>(*this));
-// }
-
-// zpt::upnp::basic_reply::basic_reply(zpt::message _request, bool)
-//   : basic_reply{} {
-//     auto _req_headers = _request.headers();
-//     auto _headers = zpt::json::object();
-//     _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
-//     _headers["Cache-Control"] =
-//       _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-//     _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok()
-//                                       ? _req_headers("X-Conversation-ID")->string()
-//                                       : zpt::uuid{}.to_string();
-//     _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1";
-
-//     this->__underlying           //
-//       << "uri" << _request.uri() //
-//       << "headers" << _headers;
-// }
-
 auto zpt::upnp::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
                             ? static_cast<int>(this->__underlying("status"))
@@ -137,8 +93,8 @@ auto zpt::upnp::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_m
 
     if (this->__underlying("body")->ok()) {
         if (this->__underlying("headers")("Content-Type") == "application/json") {
-            _out << "Content-Length: " << this->__underlying("body")->string_length() << CRLF
-                 << CRLF << this->__underlying("body");
+            auto _body = this->__underlying("body")->stringify();
+            _out << "Content-Length: " << _body.length() << CRLF << CRLF << _body;
         }
         else {
             _out << "Content-Length: " << this->__underlying("body")->string().length() << CRLF

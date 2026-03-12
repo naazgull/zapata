@@ -80,7 +80,7 @@ auto receive(zpt::message _message) -> void override {
     // Your protocol data → zpt::message
     _message->performative(zpt::Get);
     _message->uri("/api/resource");
-    _message->headers()["X-Custom"] = "value";
+    _message->headers("X-Custom", "value");
     _message->body() = zpt::json{ "data", parsed_data };
 }
 

@@ -85,7 +85,6 @@ template<typename T> json(T const& _rhs);         // From any type
 | `stringify(ostream&) -> json&` | Write compact JSON |
 | `stringify(string&) -> json&` | Write to string |
 | `stringify() -> string` | Return JSON string |
-| `string_length() -> size_t` | Length of JSON string |
 
 #### Iteration
 

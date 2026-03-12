@@ -329,18 +329,6 @@ auto zpt::JSONObjT::stringify(std::ostream& _out) const -> zpt::JSONObjT const& 
     return (*this);
 }
 
-auto zpt::JSONObjT::string_length() const -> size_t {
-    size_t _count{ 1 };
-    auto _first = true;
-    for (auto _element : this->__underlying) {
-        if (!_first) { ++_count; }
-        _first = false;
-        _count += 3 + _element.first.length() + _element.second->string_length();
-    }
-    ++_count;
-    return _count;
-}
-
 auto zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONObjT& {
     static_cast<zpt::JSONObjT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
