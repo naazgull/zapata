@@ -130,6 +130,7 @@ auto zpt::init(zpt::http::basic_request& _req) -> void {
     strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
     _req.performative(zpt::Get);
+    _req.header("Accept", "*/*");
     _req.header("User-Agent", "zapata");
     _req.header("Date", std::string(_buffer_date));
     _req.header("Content-Type", "application/json");
