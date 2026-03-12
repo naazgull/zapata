@@ -73,8 +73,8 @@ auto tostr(std::string& s, unsigned int i) -> void;
 auto tostr(std::string& s, size_t i) -> void;
 auto tostr(std::string& s, long i) -> void;
 auto tostr(std::string& s, long long i) -> void;
-auto tostr(std::string& s, float i, int precision = 3) -> void;
-auto tostr(std::string& s, double i, int precision = 3) -> void;
+auto tostr(std::string& s, float i, int precision = 0) -> void;
+auto tostr(std::string& s, double i, int precision = 0) -> void;
 auto tostr(std::string& s, char i) -> void;
 auto tostr(std::string& s, time_t i, const char* f) -> void;
 
@@ -87,8 +87,8 @@ auto tostr(unsigned int i) -> std::string;
 auto tostr(size_t i) -> std::string;
 auto tostr(long i) -> std::string;
 auto tostr(long long i) -> std::string;
-auto tostr(float i, int precision = 3) -> std::string;
-auto tostr(double i, int precision = 3) -> std::string;
+auto tostr(float i, int precision = 0) -> std::string;
+auto tostr(double i, int precision = 0) -> std::string;
 auto tostr(char i) -> std::string;
 auto tostr(time_t i, const char* f) -> std::string;
 
