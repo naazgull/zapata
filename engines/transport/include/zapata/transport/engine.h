@@ -457,7 +457,7 @@ auto zpt::events::call<T>::call_internally() -> call& {
     auto _stream = zpt::allocate_shared<zpt::event_stream>();
     _stream->transport("self");
 
-    this->__to_send->headers()["Content-Type"] = "application/json";
+    this->__to_send->header("Content-Type", "application/json");
     _transport->send(_stream, this->__to_send);
 
     this->__polling->listen_on(_stream);
@@ -478,7 +478,7 @@ auto zpt::events::call<T>::send_externally() -> call& {
       _uri("domain")->string(), _uri("port")->integer(), zpt::NO_SSL, IPPROTO_TCP);
     _stream->transport(_scheme);
 
-    this->__to_send->headers()["Content-Type"] = "application/json";
+    this->__to_send->header("Content-Type", "application/json");
     _transport->send(_stream, this->__to_send);
 
     this->__polling->listen_on(_stream);

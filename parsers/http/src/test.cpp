@@ -45,13 +45,15 @@ auto main(int argc, char* argv[]) -> int {
                 _ifs.open(argv[2]);
                 zpt::json _data;
                 _ifs >> _data;
-                _reply->headers()["Content-Type"] = "application/json";
-                _reply->body() = _data;
+                _reply //
+                  ->header("Content-Type", "application/json")
+                  .body() = _data;
             }
             else {
                 std::string _body{ "<h1>HELLO WORLD!</h1>" };
-                _reply->headers()["Content-Type"] = "text/html";
-                _reply->body() = _body;
+                _reply //
+                  ->header("Content-Type", "text/html")
+                  .body() = _body;
             }
             (*_csock) << _reply << std::flush;
             auto _t2 = std::chrono::high_resolution_clock::now();

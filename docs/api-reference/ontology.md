@@ -177,14 +177,14 @@ auto msg = zpt::make_message<zpt::json_message>();
 // Configure as a GET request
 msg->performative(zpt::Get);
 msg->uri("/api/users/123");
-msg->headers()["Accept"] = "application/json";
-msg->headers()["Authorization"] = "Bearer token123";
+msg->headers("Accept", "application/json");
+msg->headers("Authorization", "Bearer token123");
 
 // Create a response
 auto reply = zpt::make_message<zpt::json_message>();
 reply->performative(zpt::Reply);
 reply->status(200);
-reply->headers()["Content-Type"] = "application/json";
+reply->headers("Content-Type", "application/json");
 reply->body() = zpt::json{
     "id", 123,
     "name", "John Doe",

@@ -681,6 +681,14 @@ class basic_message : public zpt::basic_message {
     virtual auto headers() -> zpt::json& override;
     /** @brief Returns headers (const). */
     virtual auto headers() const -> zpt::json const override;
+    /**
+     * @brief Adds or updates a header.
+     * @param _name Header name.
+     * @param _value Header value.
+     * @return Reference for chaining.
+     */
+    virtual auto header(std::string const& _name, std::string const& _value)
+      -> zpt::basic_message& override;
     /** @brief Returns reference to body. */
     virtual auto body() -> zpt::json& override;
     /** @brief Returns body (const). */
@@ -708,13 +716,6 @@ class basic_message : public zpt::basic_message {
      * @return Reference for chaining.
      */
     virtual auto body(std::string const& _body) -> zpt::basic_message&;
-    /**
-     * @brief Adds or updates a header.
-     * @param _name Header name.
-     * @param _value Header value.
-     * @return Reference for chaining.
-     */
-    virtual auto header(std::string const& _name, std::string const& _value) -> zpt::basic_message&;
 
   protected:
     zpt::json __underlying; ///< Internal JSON storage for message data

@@ -163,7 +163,7 @@ auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events:
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
-    this->__to_send->headers()["Content-Type"] = "application/json";
+    this->__to_send->header("Content-Type", "application/json");
     _transport->send(this->__stream, this->__to_send);
     return zpt::events::finish;
 }

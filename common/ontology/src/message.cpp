@@ -119,6 +119,12 @@ auto zpt::json_message::headers() -> zpt::json& { return this->__underlying["hea
 
 auto zpt::json_message::headers() const -> zpt::json const { return this->__underlying("headers"); }
 
+auto zpt::json_message::header(std::string const& _name, std::string const& _value)
+  -> zpt::basic_message& {
+    this->__underlying["headers"][_name] = _value;
+    return (*this);
+}
+
 auto zpt::json_message::body() -> zpt::json& { return this->__underlying["body"]; }
 
 auto zpt::json_message::body() const -> zpt::json const { return this->__underlying("body"); }
