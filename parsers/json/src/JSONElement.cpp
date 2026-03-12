@@ -1463,7 +1463,7 @@ auto zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT
             break;
         }
         case zpt::JSDouble: {
-            _out << std::fixed << std::setprecision(3) << this->floating();
+            _out << std::fixed << this->floating();
             break;
         }
         case zpt::JSBoolean: {
@@ -1552,53 +1552,6 @@ auto zpt::JSONElementT::stringify() const -> std::string {
     return _out;
 }
 
-auto zpt::JSONElementT::string_length() const -> size_t {
-    switch (this->__underlying.index()) {
-        case zpt::JSObject: {
-            return this->object()->string_length();
-        }
-        case zpt::JSArray: {
-            return this->array()->string_length();
-        }
-        case zpt::JSString: {
-            std::string _str{ this->string() };
-            zpt::json::to_unicode(_str);
-            return 2 + _str.length();
-        }
-        case zpt::JSInteger: {
-            std::ostringstream _oss;
-            _oss << this->integer() << std::flush;
-            return _oss.str().length();
-        }
-        case zpt::JSDouble: {
-            std::ostringstream _oss;
-            _oss << std::fixed << std::setprecision(3) << this->floating() << std::flush;
-            return _oss.str().length();
-        }
-        case zpt::JSBoolean: {
-            return (this->boolean() ? 4 : 5);
-        }
-        case zpt::JSUndefined:
-        case zpt::JSNil: {
-            return 4;
-        }
-        case zpt::JSDate: {
-            return 29;
-        }
-        case zpt::JSLambda: {
-            std::ostringstream _oss;
-            _oss << this->lambda()->signature() << std::flush;
-            return _oss.str().length();
-        }
-        case zpt::JSRegex: {
-            std::ostringstream _oss;
-            _oss << "/" << this->regex().to_string() << "/" << std::flush;
-            return _oss.str().length();
-        }
-    }
-    return 0;
-}
-
 auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
@@ -1630,7 +1583,7 @@ auto zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSON
             break;
         }
         case zpt::JSDouble: {
-            _out << std::fixed << std::setprecision(3) << this->floating();
+            _out << std::fixed << this->floating();
             break;
         }
         case zpt::JSBoolean: {
