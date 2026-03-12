@@ -1,5 +1,4 @@
 #include <arpa/inet.h>
-#include <iostream>
 #include <netdb.h>
 #include <string>
 #include <sys/socket.h>
@@ -13,22 +12,18 @@ auto zpt::http::retrieve(zpt::message _to_send) -> zpt::message {
 
     auto _scheme = _to_send->uri()("scheme")->string();
     auto _use_ssl = (_scheme == "https");
-    auto _ips = zpt::http::resolve(_to_send->uri()("domain")->string());
+    auto _domain = _to_send->uri()("domain")->string();
 
-    for (auto [_, __, _ip] : _ips("ipv4")) {
-        auto _stream = zpt::make_stream<zpt::socketstream>(
-          _ip->string(), _use_ssl ? 443 : 80, _use_ssl, IPPROTO_TCP);
+    auto _stream = zpt::make_stream<zpt::socketstream>(
+      _domain, _use_ssl ? 443 : 80, _use_ssl, IPPROTO_TCP);
 
-        _stream //
-          ->write<zpt::message>(_to_send);
+    _stream //
+      ->write<zpt::message>(_to_send);
 
-        auto _reply = zpt::allocate_message<zpt::http::basic_reply>();
-        (*_stream) >> std::noskipws >> _reply;
+    auto _reply = zpt::allocate_message<zpt::http::basic_reply>();
+    (*_stream) >> std::noskipws >> _reply;
 
-        if (_reply->status() == 421) { continue; }
-        return _reply;
-    }
-    expect(false, "couldn't retrieve target document with the following IPs: " << _ips);
+    return _reply;
 }
 
 auto zpt::http::resolve(std::string const& _domain) -> zpt::json {
