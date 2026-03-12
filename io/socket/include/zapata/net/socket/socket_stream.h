@@ -982,7 +982,19 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ip() -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    _in_address.sin_addr.s_addr = inet_addr(this->__buf.host().data());
+    in_addr_t _addr = inet_addr(this->__buf.host().data());
+    if (_addr == INADDR_NONE) {
+        addrinfo _hints{};
+        _hints.ai_family = AF_INET;
+        _hints.ai_socktype = SOCK_STREAM;
+        addrinfo* _results = nullptr;
+        if (getaddrinfo(this->__buf.host().data(), nullptr, &_hints, &_results) == 0 &&
+            _results != nullptr) {
+            _addr = reinterpret_cast<sockaddr_in*>(_results->ai_addr)->sin_addr.s_addr;
+            freeaddrinfo(_results);
+        }
+    }
+    _in_address.sin_addr.s_addr = _addr;
 
     auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd, &this->__buf.address(), sizeof this->__buf.address()) < 0) {
@@ -1034,7 +1046,19 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    _in_address.sin_addr.s_addr = inet_addr(this->__buf.host().data());
+    in_addr_t _addr = inet_addr(this->__buf.host().data());
+    if (_addr == INADDR_NONE) {
+        addrinfo _hints{};
+        _hints.ai_family = AF_INET;
+        _hints.ai_socktype = SOCK_STREAM;
+        addrinfo* _results = nullptr;
+        if (getaddrinfo(this->__buf.host().data(), nullptr, &_hints, &_results) == 0 &&
+            _results != nullptr) {
+            _addr = reinterpret_cast<sockaddr_in*>(_results->ai_addr)->sin_addr.s_addr;
+            freeaddrinfo(_results);
+        }
+    }
+    _in_address.sin_addr.s_addr = _addr;
 
     auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd,
