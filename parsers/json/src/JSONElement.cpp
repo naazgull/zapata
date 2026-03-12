@@ -1463,7 +1463,7 @@ auto zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT
             break;
         }
         case zpt::JSDouble: {
-            _out << std::fixed << this->floating();
+            _out << std::format("{}", this->floating());
             break;
         }
         case zpt::JSBoolean: {
@@ -1514,7 +1514,7 @@ auto zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const
             break;
         }
         case zpt::JSDouble: {
-            zpt::tostr(_out, this->floating());
+            _out.append(std::format("{}", this->floating()));
             break;
         }
         case zpt::JSBoolean: {
