@@ -32,8 +32,8 @@ auto zpt::base64::r_encode(std::string const& _in) -> std::string {
 
 void zpt::base64::encode(std::string& _out) {
     std::istringstream in;
-    char buff1[3];
-    char buff2[4];
+    char buff1[3] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     in.str(_out);
@@ -73,8 +73,8 @@ auto zpt::base64::r_decode(std::string const& _in) -> std::string {
 void zpt::base64::decode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     in.str(_out);
@@ -105,8 +105,8 @@ void zpt::base64::decode(std::string& _out) {
 }
 
 void zpt::base64::encode(std::istream& _in, std::ostream& _out) {
-    char buff1[3];
-    char buff2[4];
+    char buff1[3] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     while (_in.readsome(&buff1[i++], 1))
@@ -133,8 +133,8 @@ void zpt::base64::encode(std::istream& _in, std::ostream& _out) {
 }
 
 void zpt::base64::decode(std::istream& _in, std::ostream& _out) {
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     while (_in.readsome(&buff2[i], 1) && buff2[i] != '=') {
@@ -162,8 +162,8 @@ void zpt::base64::decode(std::istream& _in, std::ostream& _out) {
 }
 
 auto zpt::base64::encode(std::vector<unsigned char> const& _in, std::string& _out) -> void {
-    char buff1[3];
-    char buff2[4];
+    char buff1[3] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     for (size_t k = 0; k != _in.size(); ++k) {
@@ -195,8 +195,8 @@ auto zpt::base64::encode(std::vector<unsigned char> const& _in, std::string& _ou
 }
 
 auto zpt::base64::decode(std::string const& _in, std::vector<unsigned char>& _out) -> void {
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     for (size_t k = 0; k != _in.length(); ++k) {
@@ -228,8 +228,8 @@ auto zpt::base64::decode(std::string const& _in, std::vector<unsigned char>& _ou
 
 auto zpt::base64::url_encode(std::vector<unsigned char> const& _in, std::string& _out, bool _pad)
   -> void {
-    char buff1[3];
-    char buff2[4];
+    char buff1[3] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     for (size_t k = 0; k != _in.size(); ++k) {
@@ -263,8 +263,8 @@ auto zpt::base64::url_encode(std::vector<unsigned char> const& _in, std::string&
 }
 
 auto zpt::base64::url_decode(std::string const& _in, std::vector<unsigned char>& _out) -> void {
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     for (size_t k = 0; k != _in.length(); ++k) {
@@ -303,8 +303,8 @@ auto zpt::base64::r_url_encode(std::string const& _in) -> std::string {
 void zpt::base64::url_encode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     in.str(_out);
@@ -344,8 +344,8 @@ auto zpt::base64::r_url_decode(std::string const& _in) -> std::string {
 void zpt::base64::url_decode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
-    char buff1[4];
-    char buff2[4];
+    char buff1[4] = { 0 };
+    char buff2[4] = { 0 };
     size_t i = 0, j;
 
     while (in.readsome(&buff2[i], 1) && buff2[i] != '=') {
