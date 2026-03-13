@@ -70,7 +70,8 @@ auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_m
     }
 
     if (this->__underlying("body")->ok()) {
-        if (this->__underlying("headers")("Content-Type") == "application/json") {
+        if (this->__underlying("headers")("Content-Type")->stringify().find("application/json") !=
+            std::string::npos) {
             auto _body = this->__underlying("body")->stringify();
             _out << "Content-Length: " << _body.length() << CRLF << CRLF << _body;
         }
