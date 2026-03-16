@@ -188,9 +188,27 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) const -> zpt::sto
 
 auto zpt::storage::mysqlx::collection::count() -> size_t {
     auto _statement = std::format("select count(1) from `{}`", this->__table);
-    expect(0 == mysql_query(this->__mysql.get(), _statement.data()),
+
+    mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
+                             zpt::storage::mysqlx::mysql_stmt_end{} };
+    expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
+           std::format(
+             "failed to prepare statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    expect(0 == mysql_stmt_execute(_to_exec.get()),
            std::format(
              "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+
+    result_set_metadata _metadata{ _to_exec.get() };
+
+    mysql_stmt_bind_result(_to_exec.get(), _metadata.__bind.get());
+    mysql_stmt_store_result(_to_exec.get());
+
+    int _status = mysql_stmt_fetch(_to_exec.get());
+    if (_status == MYSQL_NO_DATA) { return 0; }
+
+    auto _result = zpt::storage::mysqlx::to_json(_to_exec.get(), _metadata);
+    zlog(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " << _result, zpt::debug);
+
     return 0;
 }
 
