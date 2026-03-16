@@ -848,7 +848,7 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = { \"items\", "
-                                       "_result, \"size\", _result->size() }")
+                                       "_result, \"size\", _collection->count() }")
       .add<zpt::ast::cpp_instruction>("zpt::storage::reply_find(this->to_send()->body(), _params)");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
