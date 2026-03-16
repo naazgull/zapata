@@ -209,7 +209,7 @@ auto zpt::storage::mysqlx::collection::count() -> size_t {
     auto _result = zpt::storage::mysqlx::to_json(_to_exec.get(), _metadata);
     zlog(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " << _result, zpt::debug);
 
-    return 0;
+    return _result("count(1)")->ok() ? _result("count(1)")->integer() : 0;
 }
 
 auto zpt::storage::mysqlx::collection::table() const -> std::string const& { return this->__table; }
