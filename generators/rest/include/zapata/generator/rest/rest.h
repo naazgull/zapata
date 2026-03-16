@@ -129,7 +129,9 @@ class unit {
     auto generate_redirect(zpt::ast::basic_file::ptr _cpp_file, zpt::json _def, zpt::json _path)
       -> void;
 
-    auto add_db_configuration(zpt::ast::basic_code_block::ptr _block, zpt::json _def) -> void;
+    auto add_db_configuration(zpt::ast::basic_code_block::ptr _block,
+                              zpt::json _def,
+                              bool _with_collection = true) -> void;
     auto add_parameters_and_validation(zpt::ast::basic_code_block::ptr _block,
                                        zpt::json _def,
                                        zpt::json _path) -> void;

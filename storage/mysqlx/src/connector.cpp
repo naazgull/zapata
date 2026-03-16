@@ -107,6 +107,8 @@ auto zpt::storage::mysqlx::session::is_open() const -> bool { return this->__mys
 auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
     expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
            std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
+    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
+           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 

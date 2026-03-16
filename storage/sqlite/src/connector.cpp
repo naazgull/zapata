@@ -255,10 +255,9 @@ auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
-      "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(
-      sqlite3_step(_stmt),
-      "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
+      "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
+    sqlite_expect(sqlite3_step(_stmt),
+                  "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
     return this;
@@ -309,10 +308,9 @@ auto zpt::storage::sqlite::collection::count() -> size_t {
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
-      "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(
-      sqlite3_step(_stmt),
-      "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
+      "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
+    sqlite_expect(sqlite3_step(_stmt),
+                  "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
     zpt::json _count = zpt::storage::sqlite::from_db_doc(_stmt);
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
@@ -340,7 +338,7 @@ auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> voi
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
-      "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
+      "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
     this->__prepared.push_back(
       sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
 }
