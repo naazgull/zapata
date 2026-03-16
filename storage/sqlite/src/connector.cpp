@@ -300,9 +300,13 @@ auto zpt::storage::sqlite::collection::find(zpt::json _search) const -> zpt::sto
     return zpt::make_action<zpt::storage::sqlite::action_find>(*this, _search);
 }
 
-auto zpt::storage::sqlite::collection::count() -> size_t {
+auto zpt::storage::sqlite::collection::count(zpt::json _search) -> size_t {
     std::ostringstream _oss;
     _oss << "select count(*) from \"" << this->__collection_name << "\"" << std::flush;
+    if (_search->ok() && _search->string().length() != 0) {
+        _oss << " where " << _search->string();
+    }
+
     std::string _to_execute{ _oss.str() };
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(

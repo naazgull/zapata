@@ -175,7 +175,7 @@ class collection : public zpt::storage::collection::type {
     /** @brief Creates a SELECT action with the given search criteria. */
     virtual auto find(zpt::json _search) const -> zpt::storage::action override;
     /** @brief Returns the total number of rows in the table. */
-    virtual auto count() -> size_t override;
+    virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
 
     /** @brief Returns the table name. */
     auto table() const -> std::string const&;

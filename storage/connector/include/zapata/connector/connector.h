@@ -250,7 +250,7 @@ class collection {
         /** @brief Creates a find action with search criteria. */
         virtual auto find(zpt::json _search) const -> zpt::storage::action = 0;
         /** @brief Returns the total count of documents. */
-        virtual auto count() -> size_t = 0;
+        virtual auto count(zpt::json _search = zpt::undefined) -> size_t = 0;
     };
 
     /** @brief Default constructor (null collection). */

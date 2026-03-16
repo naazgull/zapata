@@ -186,8 +186,12 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) const -> zpt::sto
     return zpt::make_action<zpt::storage::mysqlx::action_find>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::count() -> size_t {
-    auto _statement = std::format("select count(1) from `{}`", this->__table);
+auto zpt::storage::mysqlx::collection::count(zpt::json _search) -> size_t {
+    auto _statement = std::format("select count(1) from `{}`{}",
+                                  this->__table,
+                                  (_search->ok() && _search->string().length() != 0
+                                     ? std::format(" where {}", _search->string())
+                                     : ""));
 
     mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
                              zpt::storage::mysqlx::mysql_stmt_end{} };
@@ -207,8 +211,6 @@ auto zpt::storage::mysqlx::collection::count() -> size_t {
     if (_status == MYSQL_NO_DATA) { return 0; }
 
     auto _result = zpt::storage::mysqlx::to_json(_to_exec.get(), _metadata);
-    zlog(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " << _result, zpt::debug);
-
     return _result("count(1)")->ok() ? _result("count(1)")->integer() : 0;
 }
 

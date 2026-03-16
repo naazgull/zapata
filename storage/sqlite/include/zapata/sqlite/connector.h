@@ -169,7 +169,7 @@ class collection : public zpt::storage::collection::type {
     /** @brief Returns a SELECT action builder for rows matching the given search criteria. */
     virtual auto find(zpt::json _search) const -> zpt::storage::action override;
     /** @brief Returns the total number of rows in the SQLite table. */
-    virtual auto count() -> size_t override;
+    virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
 
   private:
     sqlite3_ptr __underlying{ nullptr };
