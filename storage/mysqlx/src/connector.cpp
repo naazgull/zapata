@@ -680,17 +680,17 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     _oss << std::vformat(zpt::storage::mysqlx::to_query(this->__fields, this->__underlying),
                          std::make_format_args(this->__table));
 
-    if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
-    if (this->__suffix["offset"]->ok()) { _oss << " offset " << this->__suffix["offset"]; }
     if (this->__suffix["order by"]->ok()) {
         _oss << " order by ";
         bool _first{ true };
         for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << _field << " " << _direction->string();
+            _oss << "`" << _field << "` " << _direction->string();
         }
     }
+    if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
+    if (this->__suffix["offset"]->ok()) { _oss << " offset " << this->__suffix["offset"]; }
 
     _oss << ";" << std::flush;
     auto _sql = _oss.str();
