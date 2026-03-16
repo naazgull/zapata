@@ -688,11 +688,11 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
         for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << _field << " " << _direction;
+            _oss << _field << " " << _direction->string();
         }
     }
 
-    _oss << std::flush;
+    _oss << ";" << std::flush;
     auto _sql = _oss.str();
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
