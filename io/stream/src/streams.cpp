@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <malloc.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/streams/streams.h>
 
@@ -181,6 +182,7 @@ auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
         if (d(this->shared_from_this(), _stream)) { return (*this); }
     }
     this->unmute(_stream);
+    malloc_trim(0);
     return (*this);
 }
 
