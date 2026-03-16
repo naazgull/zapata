@@ -8,8 +8,6 @@
 #include <zapata/net/socket/socket_stream.h>
 
 auto zpt::http::retrieve(zpt::message _to_send) -> zpt::message {
-    _to_send->header("Content-Type", "application/json");
-
     auto _scheme = _to_send->uri()("scheme")->string();
     auto _use_ssl = (_scheme == "https");
     auto _domain = _to_send->uri()("domain")->string();
