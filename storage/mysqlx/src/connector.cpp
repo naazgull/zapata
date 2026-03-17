@@ -107,6 +107,8 @@ auto zpt::storage::mysqlx::session::is_open() const -> bool { return this->__mys
 auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
     expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
            std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
+    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
+           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
@@ -184,12 +186,32 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) const -> zpt::sto
     return zpt::make_action<zpt::storage::mysqlx::action_find>(*this, _search);
 }
 
-auto zpt::storage::mysqlx::collection::count() -> size_t {
-    auto _statement = std::format("select count(1) from `{}`", this->__table);
-    expect(0 == mysql_query(this->__mysql.get(), _statement.data()),
+auto zpt::storage::mysqlx::collection::count(zpt::json _search) -> size_t {
+    auto _statement = std::format("select count(1) from `{}`{}",
+                                  this->__table,
+                                  (_search->ok() && _search->string().length() != 0
+                                     ? std::format(" where {}", _search->string())
+                                     : ""));
+
+    mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
+                             zpt::storage::mysqlx::mysql_stmt_end{} };
+    expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
+           std::format(
+             "failed to prepare statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    expect(0 == mysql_stmt_execute(_to_exec.get()),
            std::format(
              "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
-    return 0;
+
+    result_set_metadata _metadata{ _to_exec.get() };
+
+    mysql_stmt_bind_result(_to_exec.get(), _metadata.__bind.get());
+    mysql_stmt_store_result(_to_exec.get());
+
+    int _status = mysql_stmt_fetch(_to_exec.get());
+    if (_status == MYSQL_NO_DATA) { return 0; }
+
+    auto _result = zpt::storage::mysqlx::to_json(_to_exec.get(), _metadata);
+    return _result("count(1)")->ok() ? _result("count(1)")->integer() : 0;
 }
 
 auto zpt::storage::mysqlx::collection::table() const -> std::string const& { return this->__table; }
@@ -678,19 +700,19 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     _oss << std::vformat(zpt::storage::mysqlx::to_query(this->__fields, this->__underlying),
                          std::make_format_args(this->__table));
 
-    if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
-    if (this->__suffix["offset"]->ok()) { _oss << " offset " << this->__suffix["offset"]; }
     if (this->__suffix["order by"]->ok()) {
         _oss << " order by ";
         bool _first{ true };
         for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << _field << " " << _direction;
+            _oss << "`" << _field << "` " << _direction->string();
         }
     }
+    if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
+    if (this->__suffix["offset"]->ok()) { _oss << " offset " << this->__suffix["offset"]; }
 
-    _oss << std::flush;
+    _oss << ";" << std::flush;
     auto _sql = _oss.str();
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),

@@ -395,8 +395,15 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
         if (_to_find("order_by")->ok()) {
             auto _sort = zpt::split(_to_find("order_by")->string(), ",");
             for (auto [_, __, _expr] : _sort) {
+                auto _name = _expr->string();
+                bool _asc{ true };
+                if (_name[0] == '-') {
+                    _asc = false;
+                    _name = _name.substr(1);
+                }
+                else if (_name[0] == '+') { _name = _name.substr(1); }
                 _find //
-                  ->sort(_expr);
+                  ->sort(_name, _asc);
             }
         }
         return _find;
@@ -430,8 +437,15 @@ auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::jso
         if (_to_remove("order_by")->ok()) {
             auto _sort = zpt::split(_to_remove("order_by")->string(), ",");
             for (auto [_, __, _expr] : _sort) {
+                auto _name = _expr->string();
+                bool _asc{ true };
+                if (_name[0] == '-') {
+                    _asc = false;
+                    _name = _name.substr(1);
+                }
+                else if (_name[0] == '+') { _name = _name.substr(1); }
                 _remove //
-                  ->sort(_expr);
+                  ->sort(_name, _asc);
             }
         }
         return _remove;

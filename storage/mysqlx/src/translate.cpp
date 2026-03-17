@@ -341,9 +341,10 @@ auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std
     else { _oss << "*"; }
     _oss << " from `{}`";
 
-    if (_filter->ok()) { _oss << " where " << _filter->string(); }
+    if (_filter->ok() && _filter->string().length() != 0) {
+        _oss << " where " << _filter->string();
+    }
 
-    _oss << ";" << std::flush;
     return _oss.str();
 }
 
