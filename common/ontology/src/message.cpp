@@ -121,7 +121,7 @@ auto zpt::json_message::headers() const -> zpt::json const { return this->__unde
 
 auto zpt::json_message::header(std::string const& _name, std::string const& _value)
   -> zpt::basic_message& {
-    this->__underlying["headers"][_name] = _value;
+    this->__underlying["headers"][zpt::r_prettify_header_name(_name)] = _value;
     return (*this);
 }
 
