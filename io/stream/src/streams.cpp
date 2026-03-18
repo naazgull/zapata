@@ -164,11 +164,11 @@ auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
 auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
-    _stream->shutdown();
     {
         std::unique_lock _sentry{ this->__poll_lock };
         this->__polled_streams.erase(this->__polled_streams.find(_fd));
     }
+    _stream->shutdown();
     return (*this);
 }
 
