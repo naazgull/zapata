@@ -42,8 +42,7 @@ auto zpt::net::transport::tcp::make_reply(bool _with_allocator) const -> zpt::me
 }
 
 auto zpt::net::transport::tcp::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return =
-      zpt::make_message<zpt::json_message>(_request, true);
+    auto _to_return = zpt::make_message<zpt::json_message>(_request, true);
     return _to_return;
 }
 
@@ -61,7 +60,8 @@ auto zpt::net::transport::tcp::process_incoming_reply(zpt::stream _stream) const
     return _message;
 }
 
-auto zpt::TCP_SERVER_SOCKET(std::uint16_t _port) -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _port };
+auto zpt::TCP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
+  -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ _address, _port };
     return _global;
 }

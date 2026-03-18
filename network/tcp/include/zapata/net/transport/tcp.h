@@ -68,5 +68,6 @@ class tcp : public zpt::basic_transport {
  * @brief Returns the global TCP server socket.
  * @param _port Port to bind (0 for configured default).
  */
-auto TCP_SERVER_SOCKET(std::uint16_t _port = 0) -> zpt::serversocketstream&;
+auto TCP_SERVER_SOCKET(std::string const& _address = "0.0.0.0", std::uint16_t _port = 0)
+  -> zpt::serversocketstream&;
 } // namespace zpt

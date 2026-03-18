@@ -123,8 +123,7 @@ auto zpt::net::transport::websocket::make_reply(bool _with_allocator) const -> z
 }
 
 auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return =
-      zpt::make_message<zpt::json_message>(_request, true);
+    auto _to_return = zpt::make_message<zpt::json_message>(_request, true);
     return _to_return;
 }
 
@@ -144,7 +143,8 @@ auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream)
     return _message;
 }
 
-auto zpt::WEBSOCKET_SERVER_SOCKET(std::uint16_t _port) -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _port };
+auto zpt::WEBSOCKET_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
+  -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ _address, _port };
     return _global;
 }
