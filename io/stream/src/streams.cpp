@@ -136,14 +136,14 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
 
+    _stream->__muted = false;
+
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = _stream.get();
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
-
-    _stream->__muted = false;
     return (*this);
 }
 
