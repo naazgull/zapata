@@ -60,11 +60,29 @@ auto zpt::is_multicast_address(std::string const& _ip) -> bool {
     return _ip_range >= 224 && _ip_range <= 239;
 }
 
+auto zpt::bind_to_address(zpt::sockaddrin_t& _to_bind, std::string const& _address) -> bool {
+    in_addr_t _addr = inet_addr(_address.c_str());
+    if (_addr == INADDR_NONE) {
+        addrinfo _hints{};
+        _hints.ai_family = AF_INET;
+        _hints.ai_socktype = SOCK_STREAM;
+        addrinfo* _results = nullptr;
+        if (getaddrinfo(_address.c_str(), nullptr, &_hints, &_results) == 0 &&
+            _results != nullptr) {
+            _addr = reinterpret_cast<sockaddr_in*>(_results->ai_addr)->sin_addr.s_addr;
+            freeaddrinfo(_results);
+        }
+        else { return false; }
+    }
+    _to_bind.sin_addr.s_addr = _addr;
+    return true;
+}
+
 zpt::serversocketstream::serversocketstream()
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>() } {}
 
-zpt::serversocketstream::serversocketstream(std::uint16_t _port)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_port) } {}
+zpt::serversocketstream::serversocketstream(std::string const& _address, std::uint16_t _port)
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_address, _port) } {}
 
 zpt::serversocketstream::serversocketstream(std::string const& _path)
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_path) } {}
@@ -96,8 +114,8 @@ auto zpt::serversocketstream::operator*() -> zpt::basic_serversocketstream<char>
 zpt::wserversocketstream::wserversocketstream()
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
 
-zpt::wserversocketstream::wserversocketstream(std::uint16_t _port)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
+zpt::wserversocketstream::wserversocketstream(std::string const& _address, std::uint16_t _port)
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_address, _port) } {}
 
 zpt::wserversocketstream::wserversocketstream(std::string const& _path)
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}

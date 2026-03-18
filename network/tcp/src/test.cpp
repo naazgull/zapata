@@ -35,7 +35,7 @@ auto main(int argc, char* argv[]) -> int {
 
         if (_type == "server") {
 
-            zpt::serversocketstream _ssock{ _port };
+            zpt::serversocketstream _ssock{ "0.0.0.0", _port };
             do {
                 auto _stream = _ssock->accept();
                 _stream->transport("tcp");

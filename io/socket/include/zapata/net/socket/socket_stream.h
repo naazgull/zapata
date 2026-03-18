@@ -76,6 +76,7 @@ auto ssl_error_print(SSL* _ssl, int _ret) -> std::string;
 auto ssl_error_print(unsigned long _error = 0) -> std::string;
 /** @brief Tests if an IP address is a multicast address. */
 auto is_multicast_address(std::string const& _ip) -> bool;
+auto bind_to_address(zpt::sockaddrin_t& _to_bind, std::string const& _address) -> bool;
 
 /**
  * @brief Stream buffer backed by a network socket.
@@ -317,7 +318,7 @@ class basic_serversocketstream {
     /** @brief Default constructor (unbound). */
     basic_serversocketstream();
     /** @brief Binds to a TCP port. */
-    basic_serversocketstream(std::uint16_t _port);
+    basic_serversocketstream(std::string const& _address, std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
     basic_serversocketstream(std::string const& _path);
     virtual ~basic_serversocketstream();
@@ -333,7 +334,7 @@ class basic_serversocketstream {
      * @param _port Port number to bind to.
      * @return True on success.
      */
-    auto bind(std::uint16_t _port) -> bool;
+    auto bind(std::string const& _address, std::uint16_t _port) -> bool;
     /**
      * @brief Binds to a Unix domain socket path and starts listening.
      * @param _path Filesystem path for the socket.
@@ -364,7 +365,7 @@ class serversocketstream {
   public:
     serversocketstream();
     /** @brief Binds to a TCP port. */
-    serversocketstream(std::uint16_t _port);
+    serversocketstream(std::string const& _address, std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
     serversocketstream(std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
@@ -392,7 +393,7 @@ class wserversocketstream {
   public:
     wserversocketstream();
     /** @brief Binds to a TCP port. */
-    wserversocketstream(std::uint16_t _port);
+    wserversocketstream(std::string const& _address, std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
     wserversocketstream(std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
@@ -982,19 +983,7 @@ auto zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ip() -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    in_addr_t _addr = inet_addr(this->__buf.host().data());
-    if (_addr == INADDR_NONE) {
-        addrinfo _hints{};
-        _hints.ai_family = AF_INET;
-        _hints.ai_socktype = SOCK_STREAM;
-        addrinfo* _results = nullptr;
-        if (getaddrinfo(this->__buf.host().data(), nullptr, &_hints, &_results) == 0 &&
-            _results != nullptr) {
-            _addr = reinterpret_cast<sockaddr_in*>(_results->ai_addr)->sin_addr.s_addr;
-            freeaddrinfo(_results);
-        }
-    }
-    _in_address.sin_addr.s_addr = _addr;
+    zpt::bind_to_address(_in_address, this->__buf.host());
 
     auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd, &this->__buf.address(), sizeof this->__buf.address()) < 0) {
@@ -1046,19 +1035,7 @@ auto zpt::basic_socketstream<Char>::open_udp() -> bool {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(this->__buf.address());
-    in_addr_t _addr = inet_addr(this->__buf.host().data());
-    if (_addr == INADDR_NONE) {
-        addrinfo _hints{};
-        _hints.ai_family = AF_INET;
-        _hints.ai_socktype = SOCK_STREAM;
-        addrinfo* _results = nullptr;
-        if (getaddrinfo(this->__buf.host().data(), nullptr, &_hints, &_results) == 0 &&
-            _results != nullptr) {
-            _addr = reinterpret_cast<sockaddr_in*>(_results->ai_addr)->sin_addr.s_addr;
-            freeaddrinfo(_results);
-        }
-    }
-    _in_address.sin_addr.s_addr = _addr;
+    zpt::bind_to_address(_in_address, this->__buf.host());
 
     auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd,
@@ -1118,9 +1095,10 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream()
   : __sockfd{ 0 } {}
 
 template<typename Char>
-zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::uint16_t _port)
+zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _address,
+                                                              std::uint16_t _port)
   : __sockfd{ 0 } {
-    this->bind(_port);
+    this->bind(_address, _port);
 }
 
 template<typename Char>
@@ -1155,7 +1133,8 @@ auto zpt::basic_serversocketstream<Char>::ready() -> bool {
 }
 
 template<typename Char>
-auto zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
+auto zpt::basic_serversocketstream<Char>::bind(std::string const& _address, std::uint16_t _port)
+  -> bool {
     this->__port = _port;
     this->__protocol = IPPROTO_TCP;
     this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -1173,8 +1152,14 @@ auto zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
     struct sockaddr_in _serv_addr;
     bzero((char*)&_serv_addr, sizeof _serv_addr);
     _serv_addr.sin_family = AF_INET;
-    _serv_addr.sin_addr.s_addr = INADDR_ANY;
     _serv_addr.sin_port = htons(_port);
+    if (!zpt::bind_to_address(_serv_addr, _address)) {
+        ::shutdown(this->__sockfd, SHUT_RDWR);
+        ::close(this->__sockfd);
+        this->__sockfd = 0;
+        return false;
+    }
+
     if (::bind(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_serv_addr), sizeof _serv_addr) <
         0) {
         ::shutdown(this->__sockfd, SHUT_RDWR);

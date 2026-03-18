@@ -54,7 +54,7 @@ auto main(int argc, char* argv[]) -> int {
         _iss >> _port;
 
         zpt::transport _transport{ new some_protocol{} };
-        zpt::serversocketstream _ssock{ _port };
+        zpt::serversocketstream _ssock{ "0.0.0.0", _port };
         do {
             auto _stream = _ssock->accept();
             auto _t1 = std::chrono::high_resolution_clock::now();

@@ -122,14 +122,6 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
         expect(_port.length() != 0,
                std::format("Transport {} must have defined listening port or path", _scheme));
 
-        if (_host.find("${") == 0) {
-            _host.assign(_host.substr(2, _host.length() - 3));
-            if (_host == "any") { _host.assign(zpt::net::getip()); }
-            else { _host.assign(zpt::net::getip(_host)); }
-
-            this->__configuration[_scheme]["bind"] = _host;
-        }
-
         this->__configuration["transport"]["addresses"]
           << std::format("{}://{}{}", _scheme, _host, _port);
     }

@@ -9,7 +9,7 @@ auto main(int argc, char* argv[]) -> int {
             _iss.str(std::string{ argv[2] });
             std::uint16_t _port{ 0 };
             _iss >> _port;
-            _ssock = zpt::allocate_unique<zpt::serversocketstream>(_port);
+            _ssock = zpt::allocate_unique<zpt::serversocketstream>("0.0.0.0", _port);
         }
         else if (_type == "-u") {
             std::string _path{ argv[2] };
