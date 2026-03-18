@@ -118,7 +118,7 @@ auto zpt::http::basic_message::body(std::string const& _body) -> zpt::basic_mess
 
 auto zpt::http::basic_message::header(std::string const& _name, std::string const& _value)
   -> zpt::basic_message& {
-    this->__underlying["headers"][_name] = _value;
+    this->__underlying["headers"][zpt::r_prettify_header_name(_name)] = _value;
     return (*this);
 }
 
