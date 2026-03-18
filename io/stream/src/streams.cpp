@@ -151,13 +151,13 @@ auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = _stream.get();
-    auto _fd = static_cast<int>(*_stream);
-    epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
-    _stream->__muted = false;
     {
         std::unique_lock _sentry{ this->__poll_lock };
         this->__polled_streams[static_cast<int>(*_stream)] = _stream;
     }
+    _stream->__muted = false;
+    auto _fd = static_cast<int>(*_stream);
+    epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
     return (*this);
 }
 
