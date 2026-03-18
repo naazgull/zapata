@@ -156,7 +156,7 @@ auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     _stream->__muted = false;
     {
         std::unique_lock _sentry{ this->__poll_lock };
-        this->__polled_streams.emplace(static_cast<int>(*_stream), _stream);
+        this->__polled_streams[static_cast<int>(*_stream)] = _stream;
     }
     return (*this);
 }
