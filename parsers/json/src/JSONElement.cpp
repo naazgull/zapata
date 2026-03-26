@@ -634,46 +634,16 @@ auto zpt::JSONElementT::operator=(void* _rhs) -> JSONElementT& {
 zpt::JSONElementT::operator std::string() {
     std::string _out;
     switch (this->type()) {
-        case zpt::JSObject: {
-            this->object()->stringify(_out);
-            break;
-        }
-        case zpt::JSArray: {
-            this->array()->stringify(_out);
-            break;
-        }
         case zpt::JSString: {
             _out.assign(this->string().data());
-            break;
-        }
-        case zpt::JSInteger: {
-            zpt::tostr(_out, this->integer());
-            break;
-        }
-        case zpt::JSDouble: {
-            zpt::tostr(_out, this->floating());
-            break;
-        }
-        case zpt::JSBoolean: {
-            zpt::tostr(_out, this->boolean());
-            break;
-        }
-        case zpt::JSUndefined:
-        case zpt::JSNil: {
-            _out.assign("");
             break;
         }
         case zpt::JSDate: {
             _out.assign(zpt::timestamp(this->date()));
             break;
         }
-        case zpt::JSLambda: {
-            _out.assign(this->lambda()->signature());
-            break;
-        }
-        case zpt::JSRegex: {
-            _out.assign(std::string("/") + this->regex().to_string() + std::string("/"));
-            break;
+        default: {
+            this->stringify(_out);
         }
     }
     return _out;
