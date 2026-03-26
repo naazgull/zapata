@@ -86,7 +86,7 @@ class connection : public zpt::storage::connection::type {
     /** @brief Closes the SQLite connection and releases associated resources. */
     virtual auto close() -> zpt::storage::connection::type* override;
     /** @brief Creates and returns a new SQLite session for this connection. */
-    virtual auto session() const -> zpt::storage::session override;
+    virtual auto session() -> zpt::storage::session override;
     /** @brief Returns the configuration options used for this connection. */
     virtual auto options() const -> zpt::json;
 

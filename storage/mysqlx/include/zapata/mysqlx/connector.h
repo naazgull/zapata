@@ -92,7 +92,7 @@ class connection : public zpt::storage::connection::type {
     /** @brief Closes the MySQL connection. */
     virtual auto close() -> zpt::storage::connection::type* override;
     /** @brief Creates a new session from this connection. */
-    virtual auto session() const -> zpt::storage::session override;
+    virtual auto session() -> zpt::storage::session override;
     /** @brief Returns the connection configuration options. */
     virtual auto options() const -> zpt::json;
 

@@ -607,7 +607,11 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
         auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false");
+        if (_def("post")("requestBody")("zpt:redirect")->ok()) {
+            _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
+              "return this->context() != nullptr && !this->context()->is_replied()");
+        }
+        else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
         _cpp_blocked->add(_cpp_blocked_body);
         _cpp_file->add(_cpp_blocked);
 
@@ -618,7 +622,10 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         _cpp_authorized->add(_cpp_authorized_body);
         _cpp_file->add(_cpp_authorized);
 
-        this->generate_process_request(_cpp_file, _def, _path);
+        if (_def("post")("requestBody")("zpt:redirect")->ok()) {
+            this->generate_redirect(_cpp_file, _def, _path);
+        }
+        else { this->generate_process_request(_cpp_file, _def, _path); }
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
@@ -1102,8 +1109,9 @@ auto zpt::gen::rest::unit::generate_process_request(zpt::ast::basic_file::ptr _c
 auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file,
                                              zpt::json _def,
                                              zpt::json _path) -> void {
+    auto _performative = _def("*")->ok() ? "*" : "post";
     auto _class_method_prefix =
-      std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
+      std::format("{}::{}::", this->__namespace, _def(_performative)("operationId")->string());
 
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}process_request", _class_method_prefix), "zpt::events::state");
@@ -1114,15 +1122,15 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
                                       "_config(\"rest\")(\"prefix\")->string() : \"\"");
     this->add_parameters_and_validation(_if_block, _def, _path);
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _try_body //
-      ->add<zpt::ast::cpp_instruction>(std::format(
-        "auto _redirect_to{{ \"{}\" }}", _def("*")("requestBody")("zpt:redirect")->string()))
+      ->add<zpt::ast::cpp_instruction>(
+        std::format("auto _redirect_to{{ \"{}\" }}",
+                    _def(_performative)("requestBody")("zpt:redirect")->string()))
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(\"tcp\")->make_request()")
       .add<zpt::ast::cpp_instruction>(

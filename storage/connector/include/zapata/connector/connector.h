@@ -90,7 +90,7 @@ class connection {
         /** @brief Closes the connection. */
         virtual auto close() -> zpt::storage::connection::type* = 0;
         /** @brief Creates a new session. */
-        virtual auto session() const -> zpt::storage::session = 0;
+        virtual auto session() -> zpt::storage::session = 0;
     };
 
     /** @brief Default constructor (null connection). */
