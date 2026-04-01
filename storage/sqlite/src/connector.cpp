@@ -174,7 +174,7 @@ auto zpt::storage::sqlite::connection::open(zpt::json _options) -> zpt::storage:
 
 auto zpt::storage::sqlite::connection::close() -> zpt::storage::connection::type* { return this; }
 
-auto zpt::storage::sqlite::connection::session() const -> zpt::storage::session {
+auto zpt::storage::sqlite::connection::session() -> zpt::storage::session {
     return zpt::make_session<zpt::storage::sqlite::session>(*this);
 }
 

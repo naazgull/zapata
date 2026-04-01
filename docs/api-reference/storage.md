@@ -47,7 +47,7 @@ Abstract implementation interface.
 ```cpp
 virtual auto open(zpt::json _options) -> type* = 0;
 virtual auto close() -> type* = 0;
-virtual auto session() const -> zpt::storage::session = 0;
+virtual auto session() -> zpt::storage::session = 0;
 ```
 
 ### Methods

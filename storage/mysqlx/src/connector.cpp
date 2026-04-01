@@ -86,7 +86,8 @@ auto zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type
     return this;
 }
 
-auto zpt::storage::mysqlx::connection::session() const -> zpt::storage::session {
+auto zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
+    if (mysql_ping(this->__mysql.get()) != 0) { this->open(this->__options); }
     return zpt::make_session<zpt::storage::mysqlx::session>(*this);
 }
 
