@@ -13,4 +13,3 @@ pest_derive = "2"
 [lib]
 name = "zapata_common"
 path = "./lib.rs"
-
