@@ -6,6 +6,10 @@ edition.workspace = true
 [lints]
 workspace = true
 
+[dependencies]
+pest = "2"
+pest_derive = "2"
+
 [lib]
 name = "zapata_common"
 path = "./lib.rs"
