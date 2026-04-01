@@ -1,0 +1,1 @@
+/home/pf/Develop/zapata/bindings/rust/target/debug/libzapata_common.rlib: /home/pf/Develop/zapata/bindings/rust/common/json/parser.rs /home/pf/Develop/zapata/bindings/rust/common/json.rs /home/pf/Develop/zapata/bindings/rust/common/lib.rs

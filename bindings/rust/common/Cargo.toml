@@ -1,0 +1,12 @@
+[package]
+name = "zapata-common"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+name = "zapata_common"
+path = "./lib.rs"
+

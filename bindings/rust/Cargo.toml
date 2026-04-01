@@ -1,0 +1,15 @@
+[workspace]
+resolver = "3"
+members = ["common"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2024"
+
+[workspace.lints.rust]
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
