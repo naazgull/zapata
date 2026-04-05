@@ -642,6 +642,10 @@ zpt::JSONElementT::operator std::string() {
             _out.assign(zpt::timestamp(this->date()));
             break;
         }
+        case zpt::JSUndefined:
+        case zpt::JSNil: {
+            break;
+        }
         default: {
             this->stringify(_out);
         }
