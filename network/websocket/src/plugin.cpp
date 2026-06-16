@@ -25,6 +25,8 @@
 #include <zapata/net/websocket.h>
 #include <zapata/startup.h>
 
+static zpt::padded_atomic<bool> _has_exited{ false };
+
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
@@ -36,27 +38,33 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
           _config("bind")->string(),
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
 
-        _plugin.add_thread([=]() mutable -> void {
+        _plugin.add_thread([&]() mutable -> void {
             zpt::set_thread_name("ws@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started WebSocket transport on port " << _config("port"), zpt::info);
 
-            try {
-                do {
+            do {
+                try {
                     auto _client = _server_sock->accept();
                     _client->transport("ws");
                     _polling->listen_on(std::move(_client));
-                } while (true);
-            }
-            catch (zpt::failed_expectation const& _e) {
-            }
+                }
+                catch (zpt::ClosedException const& _e) {
+                    expect(_plugin.is_shutdown_ongoing(),
+                           "WebSocket server socket closed but plugin not shutding down");
+                }
+            } while (!_plugin.is_shutdown_ongoing());
             zlog("Stopped WebSocket transport on port " << _config("port"), zpt::info);
+            _has_exited->store(true);
         });
     }
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
+    if (_config("port")->ok()) {
+        zpt::WEBSOCKET_SERVER_SOCKET()->close();
+        while (!_has_exited->load()) { std::this_thread::yield(); }
+    }
     zpt::TRANSPORT_LAYER().remove("ws");
-    if (_config("port")->ok()) { zpt::WEBSOCKET_SERVER_SOCKET()->close(); }
 }

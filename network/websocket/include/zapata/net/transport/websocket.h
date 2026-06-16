@@ -43,14 +43,13 @@ namespace zpt {
 namespace net {
 namespace ws {
 /** @brief Performs WebSocket handshake on a stream. */
-auto handshake(zpt::stream& _stream) -> void;
+auto handshake(zpt::stream _stream) -> void;
 /** @brief Reads a WebSocket frame, returns (payload, opcode). */
-auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
+auto read(zpt::stream _stream) -> std::tuple<std::string, int>;
 /** @brief Writes data as a WebSocket text frame. */
-auto write(zpt::stream& _stream, std::string const& _in) -> void;
+auto write(zpt::stream _stream, std::string const& _in) -> void;
 } // namespace ws
 namespace transport {
-
 /**
  * @brief WebSocket transport implementation.
  *
