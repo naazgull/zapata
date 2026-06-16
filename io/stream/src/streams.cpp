@@ -172,6 +172,13 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
+auto zpt::polling::get(int _stream_id) -> zpt::stream {
+    std::shared_lock _sentry{ this->__poll_lock };
+    auto _found = this->__polled_streams.find(_stream_id);
+    expect(_found != this->__polled_streams.end(), "no such stream");
+    return _found->second;
+}
+
 auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
 #ifdef ALLOCATOR_DEBUG_MODE
     zpt::mem::print_still_allocated();

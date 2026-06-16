@@ -25,7 +25,7 @@
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/websocket.h>
 
-auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
+auto zpt::net::ws::handshake(zpt::stream _stream) -> void {
     std::string _key;
     std::string _line;
     do {
@@ -45,7 +45,7 @@ auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
                << std::flush;
 }
 
-auto zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
+auto zpt::net::ws::read(zpt::stream _stream) -> std::tuple<std::string, int> {
     std::string _out;
     unsigned char _hdr = 0;
     (*_stream) >> std::noskipws >> _hdr;
@@ -96,7 +96,7 @@ auto zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     return std::make_tuple(_out, _op_code);
 }
 
-auto zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
+auto zpt::net::ws::write(zpt::stream _stream, std::string const& _in) -> void {
     int _len = _in.length();
 
     (*_stream) << (unsigned char)0x81;
@@ -109,6 +109,11 @@ auto zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
     for (int _i = 0; _i != 4; _i++) { (*_stream) << (unsigned char)0x00; }
 
     (*_stream) << _in << std::flush;
+}
+
+auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::PERSISTENT;
+    return (_capabilities & _capability) == _capability;
 }
 
 auto zpt::net::transport::websocket::make_request() const -> zpt::message {
@@ -129,17 +134,19 @@ auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> 
 
 auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream->transport() == "websocket", "Stream underlying transport isn't 'websocket'");
+    expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
+    _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
     return _message;
 }
 
 auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream->transport() == "websocket", "Stream underlying transport isn't 'websocket'");
+    expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
+    _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
     return _message;
 }
 

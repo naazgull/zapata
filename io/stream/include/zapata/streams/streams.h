@@ -214,6 +214,8 @@ class polling : public std::enable_shared_from_this<polling> {
 
     /** @brief Registers a stream with epoll (called by listen_on). */
     auto insert(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Retrieves the stream associated with the given identifier. */
+    auto get(int _stream_id) -> zpt::stream;
     /** @brief Removes a stream from epoll and the polled map. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
     /** @brief Dispatches a ready stream to all registered delegates. */

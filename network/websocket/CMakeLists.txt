@@ -61,10 +61,9 @@ add_dependencies(zapata-net-websocket-plugin
   zapata-io-socket
   zapata-lockfree
   zapata-net-transport
-  zapata-net-tcp
+  zapata-net-websocket
   zapata-parser-json
   zapata-parser-uri
-  zapata-net-websocket
 )
 target_sources(zapata-net-websocket-plugin
   PRIVATE
@@ -95,9 +94,9 @@ target_link_libraries(zapata-net-websocket-plugin
     zapata-io-stream
     zapata-io-socket
     zapata-net-transport
+    zapata-net-websocket
     zapata-parser-json
     zapata-parser-uri
-    zapata-net-websocket
 )
 set_target_properties(zapata-net-websocket-plugin
   PROPERTIES
