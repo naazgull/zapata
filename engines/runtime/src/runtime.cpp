@@ -66,11 +66,10 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     if (_config("log")("target")->ok()) {
         zpt::log_fd = new std::ofstream{ _config("log")("target")->string() };
     }
-    auto _consumers =
-      std::max(1LL,
-               _config("dispatcher")("limits")("max_workers")->ok()
-                 ? _config("dispatcher")("limits")("max_workers")->integer()
-                 : 1LL);
+    auto _consumers = std::max(1LL,
+                               _config("dispatcher")("limits")("max_workers")->ok()
+                                 ? _config("dispatcher")("limits")("max_workers")->integer()
+                                 : 1LL);
     zpt::MEM_POOL() //
       .max_size(_config("resources")("limits")("max_heap_allocation")->ok()
                   ? _config("resources")("limits")("max_heap_allocation")->integer()

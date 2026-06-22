@@ -83,6 +83,38 @@ auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
     return true;
 }
 
+auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
+    auto _upgrade = _received->headers()("Upgrade");
+    if (_upgrade->ok()) {
+        auto _value = _upgrade->string();
+        auto _transport = zpt::TRANSPORT_LAYER() //
+                            .get(this->__stream->transport());
+        auto _reply = _transport->make_reply(false);
+        _reply //
+          ->status(101)
+          .header("Upgrade", _value)
+          .header("Connection", "upgrade");
+
+        if (_value == "websocket") {
+            _value = "ws";
+
+            std::string _key;
+            if (_received->headers()("Sec-WebSocket-Key")->ok()) {
+                _key.assign(_received->headers()("Sec-WebSocket-Key")->string());
+            }
+            _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+            _reply->header("Sec-WebSocket-Accept",
+                           zpt::base64::r_encode(zpt::crypto::sha1_bytes(_key)));
+        }
+
+        _transport->send(this->__stream, _reply);
+        this->__stream->transport(_value);
+
+        return true;
+    }
+    return false;
+}
+
 auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
   -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
@@ -93,6 +125,11 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         auto _received = _transport->receive(this->__stream);
         if (!_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
+
+            if (this->check_upgrade(_received)) {
+                this->__polling->unmute(this->__stream);
+                return zpt::events::finish;
+            }
 
             auto _events =
               this->__engine->resolve(_received, [this, _dispatcher](zpt::event& _event) {
@@ -276,9 +313,7 @@ zpt::transports::engine::engine(zpt::json _config)
   : __configuration{ _config }
   , __dispatcher{ zpt::allocate_shared<zpt::events::dispatcher>(
       "transport",
-      _config("limits")("max_workers")->ok()
-        ? _config("limits")("max_workers")->integer()
-        : 1) } {
+      _config("limits")("max_workers")->ok() ? _config("limits")("max_workers")->integer() : 1) } {
     zpt::STREAM_POLLING() //
       ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
 #ifndef PROPAGATE_EXCEPTION

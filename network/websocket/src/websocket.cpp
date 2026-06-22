@@ -22,93 +22,144 @@
 
 #include <zapata/base.h>
 #include <zapata/globals/globals.h>
+#include <zapata/http.h>
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/websocket.h>
 
-auto zpt::net::ws::handshake(zpt::stream _stream) -> void {
-    std::string _key;
-    std::string _line;
-    do {
-        std::getline(**_stream, _line);
-        zpt::trim(_line);
-        if (_line.find("Sec-WebSocket-Key:") != std::string::npos) {
-            _key.assign(_line.substr(19));
-        }
-    } while (_line != "");
-
-    _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-    _key.assign(zpt::crypto::sha1(_key));
-    zpt::base64::encode(_key);
-
-    (*_stream) << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF
-               << "Connection: Upgrade" << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF
-               << std::flush;
+namespace {
+auto ntohll(uint64_t val) -> std::uint64_t {
+    return ((val & 0x00000000000000FFULL) << 56) | ((val & 0x000000000000FF00ULL) << 40) |
+           ((val & 0x0000000000FF0000ULL) << 24) | ((val & 0x00000000FF000000ULL) << 8) |
+           ((val & 0x000000FF00000000ULL) >> 8) | ((val & 0x0000FF0000000000ULL) >> 24) |
+           ((val & 0x00FF000000000000ULL) >> 40) | ((val & 0xFF00000000000000ULL) >> 56);
 }
 
-auto zpt::net::ws::read(zpt::stream _stream) -> std::tuple<std::string, int> {
-    std::string _out;
-    unsigned char _hdr = 0;
-    (*_stream) >> std::noskipws >> _hdr;
+auto htonll(uint64_t val) -> std::uint64_t { return ntohll(val); }
+} // namespace
 
-    int _op_code = _hdr & 0x0F;
-    (*_stream) >> std::noskipws >> _hdr;
-    bool _mask = _hdr & 0x80;
-    std::string _masking;
-    std::string _masked;
+using request_type = zpt::ws_message;
+using reply_type = zpt::ws_message;
 
-    int _len = _hdr & 0x7F;
+auto zpt::ws_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
+    std::ostringstream _oss;
+    zpt::json_message::to_stream(_oss);
+    zpt::net::ws::write(_out, _oss.str(), false); // No masking for server messages
+    return (*this);
+}
+
+auto zpt::ws_message::from_stream(std::istream& _in) -> zpt::basic_message& {
+    auto [_message, _op] = zpt::net::ws::read(_in);
+    std::cerr << "[WS MSG] op=" << _op << " msg='" << _message << "' len=" << _message.length() << std::endl;
+    std::istringstream _iss;
+    _iss.str(_message);
+    zpt::json_message::from_stream(_iss);
+    return (*this);
+}
+
+auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
+    // Read frame header (2 bytes)
+    std::uint8_t _header[2] = { 0, 0 };
+    _stream.read(reinterpret_cast<char*>(&_header), 2);
+
+    std::uint8_t _op_code = _header[0] & 0x0F;
+    bool _mask = (_header[1] & 0x80) != 0;
+    std::uint64_t _len = _header[1] & 0x7F;
+
+    std::cerr << "[WS] header[0]=0x" << std::hex << (int)_header[0] << " header[1]=0x" << (int)_header[1]
+              << " op=" << (int)_op_code << " mask=" << _mask << " len=" << std::dec << _len << std::endl;
+
+    // Extended payload length
     if (_len == 126) {
-        (*_stream) >> std::noskipws >> _hdr;
-        _len = (int)_hdr;
-        _len <<= 8;
-        (*_stream) >> std::noskipws >> _hdr;
-        _len += (int)_hdr;
+        std::uint8_t _ext[2] = { 0, 0 };
+        _stream.read(reinterpret_cast<char*>(&_ext), 2);
+        _len = (static_cast<std::uint64_t>(_ext[0]) << 8) | _ext[1];
     }
     else if (_len == 127) {
-        (*_stream) >> std::noskipws >> _hdr;
-        _len = (int)_hdr;
-        for (int _i = 0; _i < 7; _i++) {
-            _len <<= 8;
-            (*_stream) >> std::noskipws >> _hdr;
-            _len += (int)_hdr;
+        std::uint8_t _ext[8];
+        _stream.read(reinterpret_cast<char*>(&_ext), 8);
+        for (int _i = 0; _i < 8; _i++) {
+            _len = (_len << 8) | _ext[_i];
         }
     }
 
+    std::cerr << "[WS] final len=" << _len << " mask=" << _mask << std::endl;
+
+    // Read masking key (4 raw bytes)
+    std::uint8_t _mkey[4] = { 0, 0, 0, 0 };
     if (_mask) {
-        for (int _i = 0; _i < 4; _i++) {
-            (*_stream) >> std::noskipws >> _hdr;
-            _masking.push_back((char)_hdr);
+        _stream.read(reinterpret_cast<char*>(&_mkey), 4);
+    }
+
+    // Read payload data
+    std::string _raw(static_cast<size_t>(_len), '\0');
+    if (_len > 0) {
+        _stream.read(&_raw[0], static_cast<std::streamsize>(_len));
+    }
+
+    std::cerr << "[WS] raw=";
+    for (size_t _i = 0; _i < _raw.size(); _i++) {
+        std::cerr << std::hex << (int)(unsigned char)_raw[_i] << " ";
+    }
+    std::cerr << std::dec << std::endl;
+
+    // Apply masking if needed
+    if (_mask && _len > 0) {
+        for (std::uint64_t _i = 0; _i < _len; _i++) {
+            _raw[static_cast<size_t>(_i)] ^= _mkey[_i % 4];
         }
     }
 
-    for (int _i = 0; _i != _len; _i++) {
-        (*_stream) >> std::noskipws >> _hdr;
-        _masked.push_back((char)_hdr);
-    }
+    std::cerr << "[WS] decoded=" << _raw << std::endl;
 
-    if (_mask) {
-        for (size_t _i = 0; _i < _masked.length(); _i++) {
-            _out.push_back(_masked[_i] ^ _masking[_i % 4]);
-        }
-    }
-    else { _out.assign(_masked); }
-
-    return std::make_tuple(_out, _op_code);
+    return std::make_tuple(std::move(_raw), _op_code);
 }
 
-auto zpt::net::ws::write(zpt::stream _stream, std::string const& _in) -> void {
-    int _len = _in.length();
+auto zpt::net::ws::write(std::ostream& _stream, std::string const& _in, bool _mask) -> void {
+    std::uint64_t _len = static_cast<std::uint64_t>(_in.length());
+    std::cerr << "[WS WRITE] len=" << _len << " mask=" << _mask << " data=" << _in << std::endl;
 
-    (*_stream) << (unsigned char)0x81;
-    if (_len > 125) {
-        (*_stream) << (unsigned char)0xFE;
-        (*_stream) << ((unsigned char)(_len >> 8));
-        (*_stream) << ((unsigned char)(_len & 0xFF));
+    // First byte: FIN=1 + TEXT opcode=1
+    std::uint8_t _header[2];
+    _header[0] = 0x80 | 0x01; // FIN + TEXT
+
+    if (_len <= 125) {
+        _header[1] = static_cast<std::uint8_t>(_len | (_mask ? 0x80 : 0));
+        _stream.write(reinterpret_cast<char*>(&_header), 2);
     }
-    else { (*_stream) << (unsigned char)(0x80 | ((unsigned char)_len)); }
-    for (int _i = 0; _i != 4; _i++) { (*_stream) << (unsigned char)0x00; }
+    else if (_len <= 65535) {
+        _header[1] = static_cast<std::uint8_t>(126 | (_mask ? 0x80 : 0));
+        _stream.write(reinterpret_cast<char*>(&_header), 2);
+        std::uint16_t _ext = htons(static_cast<std::uint16_t>(_len));
+        _stream.write(reinterpret_cast<char*>(&_ext), 2);
+    }
+    else {
+        _header[1] = static_cast<std::uint8_t>(127 | (_mask ? 0x80 : 0));
+        _stream.write(reinterpret_cast<char*>(&_header), 2);
+        std::uint8_t _ext[8];
+        for (int _i = 7; _i >= 0; _i--) {
+            _ext[7 - _i] = static_cast<std::uint8_t>(_len >> (_i * 8));
+        }
+        _stream.write(reinterpret_cast<char*>(&_ext), 8);
+    }
 
-    (*_stream) << _in << std::flush;
+    // Write masking key and payload
+    if (_mask) {
+        std::uint8_t _mkey[4] = { 0, 0, 0, 0 };
+        _stream.write(reinterpret_cast<char*>(&_mkey), 4);
+
+        // Write masked payload
+        std::string _masked;
+        _masked.resize(_len);
+        for (std::uint64_t _i = 0; _i < _len; _i++) {
+            _masked[static_cast<size_t>(_i)] = _in[static_cast<size_t>(_i)] ^ static_cast<char>(_mkey[_i % 4]);
+        }
+        _stream.write(_masked.data(), static_cast<std::streamsize>(_masked.length()));
+    }
+    else {
+        _stream.write(_in.data(), static_cast<std::streamsize>(_in.length()));
+    }
+
+    _stream.flush();
 }
 
 auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) const -> bool {
@@ -117,25 +168,25 @@ auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) c
 }
 
 auto zpt::net::transport::websocket::make_request() const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::json_message>();
+    auto _to_return = zpt::allocate_message<request_type>();
     return _to_return;
 }
 
 auto zpt::net::transport::websocket::make_reply(bool _with_allocator) const -> zpt::message {
-    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::json_message>()
-                                      : zpt::make_message<zpt::json_message>();
+    auto _to_return =
+      _with_allocator ? zpt::allocate_message<reply_type>() : zpt::make_message<reply_type>();
     return _to_return;
 }
 
 auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::json_message>(_request, true);
+    auto _to_return = zpt::make_message<reply_type>(_request, true);
     return _to_return;
 }
 
 auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
+    auto _message = zpt::allocate_message<request_type>();
     (*_stream) >> std::noskipws >> _message;
     _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
     return _message;
@@ -143,11 +194,7 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
 
 auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
-    (*_stream) >> std::noskipws >> _message;
-    _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
-    return _message;
+    return this->process_incoming_request(_stream);
 }
 
 auto zpt::WEBSOCKET_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)

@@ -119,6 +119,8 @@ class receive {
     /** @brief Handles expectation failures during receive. Returns false. */
     auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
+    /** @brief Checks whether or not a transport upgrade has been requested. */
+    auto check_upgrade(zpt::message _received) -> bool;
     /** @brief Reads a message from the stream and triggers processing events. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 

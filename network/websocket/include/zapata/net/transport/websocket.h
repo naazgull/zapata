@@ -40,14 +40,30 @@
 #include <zapata/transport.h>
 
 namespace zpt {
+/**
+ * @brief WebSocket message implementation.
+ *
+ * Stores message data as JSON internally and sends the content as JSON, framed for the WebSocket
+ * protocol.
+ */
+class ws_message : public json_message {
+  public:
+    using zpt::json_message::json_message;
+    /** @brief Destructor. */
+    virtual ~ws_message() = default;
+
+    /** @brief Serializes message to output stream as JSON framed for WebSocket protocol. */
+    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    /** @brief Deserializes message from input stream. */
+    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+};
+
 namespace net {
 namespace ws {
-/** @brief Performs WebSocket handshake on a stream. */
-auto handshake(zpt::stream _stream) -> void;
 /** @brief Reads a WebSocket frame, returns (payload, opcode). */
-auto read(zpt::stream _stream) -> std::tuple<std::string, int>;
+auto read(std::istream& _stream) -> std::tuple<std::string, int>;
 /** @brief Writes data as a WebSocket text frame. */
-auto write(zpt::stream _stream, std::string const& _in) -> void;
+auto write(std::ostream& _stream, std::string const& _in, bool _mask = false) -> void;
 } // namespace ws
 namespace transport {
 /**

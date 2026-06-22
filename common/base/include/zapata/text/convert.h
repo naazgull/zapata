@@ -200,6 +200,8 @@ void url_decode(std::string& _out);
 
 /** @brief Returns Base64 encoded copy. */
 auto r_encode(std::string const& _in) -> std::string;
+/** @brief Returns Base64 encoded copy. */
+auto r_encode(std::vector<unsigned char> const& _in) -> std::string;
 /** @brief Returns Base64 decoded copy. */
 auto r_decode(std::string const& _in) -> std::string;
 /** @brief Returns URL-safe Base64 encoded copy. */

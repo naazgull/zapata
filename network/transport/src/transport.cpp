@@ -95,9 +95,9 @@ zpt::network::layer::layer(zpt::json _global_config)
 
 auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
   -> zpt::network::layer& {
-    expect(_scheme == "self" || this->__configuration(_scheme)->ok(),
+    expect(_scheme == "self" || _scheme == "ws" || this->__configuration(_scheme)->ok(),
            "Configuration value '" << _scheme << "' is mandatory");
-    expect(_scheme == "self" || this->__configuration(_scheme)("bind")->ok() ||
+    expect(_scheme == "self" || _scheme == "ws" || this->__configuration(_scheme)("bind")->ok() ||
              this->__configuration(_scheme)("path")->ok(),
            "Configuration value '" << _scheme << ".(bind|path)' is mandatory");
 

@@ -148,8 +148,8 @@ set_target_properties(zapata-engine-rest-plugin
     LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
-add_library(zapata-rest-example SHARED)
-add_dependencies(zapata-rest-example
+add_library(zapata-example-rest-provider SHARED)
+add_dependencies(zapata-example-rest-provider
   zapata-base
   zapata-engine-startup
   zapata-engine-transport
@@ -166,11 +166,11 @@ add_dependencies(zapata-rest-example
   zapata-parser-http
   zapata-common-catalog
 )
-target_sources(zapata-rest-example
+target_sources(zapata-example-rest-provider
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/provider.cpp
 )
-target_include_directories(zapata-rest-example
+target_include_directories(zapata-example-rest-provider
   PRIVATE
     zapata-base
     zapata-engine-startup
@@ -190,7 +190,7 @@ target_include_directories(zapata-rest-example
     zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
 )
-target_link_libraries(zapata-rest-example
+target_link_libraries(zapata-example-rest-provider
   PRIVATE
     zapata-base
     zapata-engine-startup
@@ -211,7 +211,7 @@ target_link_libraries(zapata-rest-example
     zapata-engine-transport
     zapata-common-catalog
 )
-set_target_properties(zapata-rest-example
+set_target_properties(zapata-example-rest-provider
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -219,8 +219,8 @@ set_target_properties(zapata-rest-example
     LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
-add_library(zapata-rest-client-example SHARED)
-add_dependencies(zapata-rest-client-example
+add_library(zapata-example-rest-consumer SHARED)
+add_dependencies(zapata-example-rest-consumer
   zapata-base
   zapata-engine-startup
   zapata-engine-transport
@@ -237,11 +237,11 @@ add_dependencies(zapata-rest-client-example
   zapata-parser-http
   zapata-common-catalog
 )
-target_sources(zapata-rest-client-example
+target_sources(zapata-example-rest-consumer
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_client.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/consumer.cpp
 )
-target_include_directories(zapata-rest-client-example
+target_include_directories(zapata-example-rest-consumer
   PRIVATE
     zapata-base
     zapata-engine-startup
@@ -261,7 +261,7 @@ target_include_directories(zapata-rest-client-example
     zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
 )
-target_link_libraries(zapata-rest-client-example
+target_link_libraries(zapata-example-rest-consumer
   PRIVATE
     zapata-base
     zapata-engine-startup
@@ -282,7 +282,7 @@ target_link_libraries(zapata-rest-client-example
     zapata-engine-transport
     zapata-common-catalog
 )
-set_target_properties(zapata-rest-client-example
+set_target_properties(zapata-example-rest-consumer
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -291,7 +291,12 @@ set_target_properties(zapata-rest-client-example
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-engine-rest zapata-engine-rest-plugin zapata-rest-example zapata-rest-client-example
+install(
+  TARGETS
+    zapata-engine-rest
+    zapata-engine-rest-plugin
+    zapata-example-rest-provider
+    zapata-example-rest-consumer
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace zpt::crypto {
 
@@ -63,25 +64,26 @@ class SHA1 {
      * @brief Constructs and initializes a SHA1 hasher.
      */
     SHA1();
-
     /**
      * @brief Updates the hash with a string.
      * @param s String data to hash.
      */
     void update(const std::string& s);
-
     /**
      * @brief Updates the hash with data from a stream.
      * @param is Input stream to read from.
      */
     void update(std::istream& is);
-
     /**
-     * @brief Finalizes and returns the hash.
+     * @brief Finalizes and returns the hash hex representation.
      * @return Hexadecimal string representation of the 160-bit hash.
      */
     std::string finalize();
-
+    /**
+     * @brief Finalizes and returns the hash.
+     * @return The raw bytes for the hash.
+     */
+    std::vector<unsigned char> finalize_bytes();
     /**
      * @brief Computes SHA-1 hash of a file.
      * @param filename Path to the file.
@@ -90,8 +92,8 @@ class SHA1 {
     static std::string from_file(const std::string& filename);
 
   private:
-    static constexpr unsigned int DIGEST_INTS = 5;  ///< 32-bit integers per digest.
-    static constexpr unsigned int BLOCK_INTS = 16;  ///< 32-bit integers per block.
+    static constexpr unsigned int DIGEST_INTS = 5;              ///< 32-bit integers per digest.
+    static constexpr unsigned int BLOCK_INTS = 16;              ///< 32-bit integers per block.
     static constexpr unsigned int BLOCK_BYTES = BLOCK_INTS * 4; ///< Bytes per block.
 
     std::uint32_t digest[DIGEST_INTS]; ///< Current hash state.
@@ -115,5 +117,15 @@ class SHA1 {
  * @endcode
  */
 std::string sha1(const std::string& string);
-
+/**
+ * @brief Computes SHA-1 hash of a string.
+ * @param string The string to hash.
+ * @return Raw bytes for the hash.
+ *
+ * @par Example Usage
+ * @code
+ * auto hash = zpt::crypto::sha1("Hello, World!");
+ * @endcode
+ */
+std::vector<unsigned char> sha1_bytes(const std::string& string);
 } // namespace zpt::crypto

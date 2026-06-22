@@ -107,6 +107,43 @@ std::string zpt::crypto::SHA1::finalize() {
     return result.str();
 }
 
+std::vector<unsigned char> zpt::crypto::SHA1::finalize_bytes() {
+    /* Total number of hashed bits */
+    std::uint64_t total_bits = (transforms * BLOCK_BYTES + buffer.size()) * 8;
+
+    /* Padding */
+    buffer += static_cast<char>(0x80);
+    unsigned int orig_size = buffer.size();
+    while (buffer.size() < BLOCK_BYTES) { buffer += (char)0x00; }
+
+    std::uint32_t block[BLOCK_INTS];
+    buffer_to_block(buffer, block);
+
+    if (orig_size > BLOCK_BYTES - 8) {
+        transform(block);
+        for (unsigned int i = 0; i < BLOCK_INTS - 2; i++) { block[i] = 0; }
+    }
+
+    /* Append total_bits, split this std::uint64_t into two std::uint32_t */
+    block[BLOCK_INTS - 1] = total_bits;
+    block[BLOCK_INTS - 2] = (total_bits >> 32);
+    transform(block);
+
+    std::vector<unsigned char> _result;
+    for (size_t _idx = 0; _idx != DIGEST_INTS; ++_idx) {
+        auto _i = digest[_idx];
+        _result.push_back(static_cast<unsigned char>(_i >> 24));
+        _result.push_back(static_cast<unsigned char>((_i << 8) >> 24));
+        _result.push_back(static_cast<unsigned char>((_i << 16) >> 24));
+        _result.push_back(static_cast<unsigned char>((_i << 24) >> 24));
+    }
+
+    /* Reset for next run */
+    reset();
+
+    return _result;
+}
+
 std::string zpt::crypto::SHA1::from_file(const std::string& filename) {
     std::ifstream stream(filename.c_str(), std::ios::binary);
     SHA1 checksum;
@@ -251,4 +288,10 @@ std::string zpt::crypto::sha1(const std::string& string) {
     SHA1 checksum;
     checksum.update(string);
     return checksum.finalize();
+}
+
+std::vector<unsigned char> zpt::crypto::sha1_bytes(const std::string& string) {
+    SHA1 checksum;
+    checksum.update(string);
+    return checksum.finalize_bytes();
 }
