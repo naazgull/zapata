@@ -22,12 +22,12 @@
 
 #pragma once
 
-#include <zapata/http/HTTPLexer.h>
+#include <zapata/http/Re2cHTTPLexer.h>
 #include <zapata/http/HTTPObj.h>
 
 namespace zpt {
 
-class HTTPTokenizerLexer : public HTTPLexer {
+class HTTPTokenizerLexer : public Re2cHTTPLexer {
   public:
     HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~HTTPTokenizerLexer();
@@ -43,6 +43,15 @@ class HTTPTokenizerLexer : public HTTPLexer {
     auto status() -> void;
 
     auto add() -> void;
+
+    /**
+     * @brief Flushes any pending body/chunked content and leaves the lexer.
+     *
+     * Called once by the grammar after `headers` reduces. Factors out the
+     * duplicated end-of-message block that appeared identically in both
+     * alternatives of HTTP.b's `exp` rule.
+     */
+    auto finishMessage() -> void;
 
     std::string __header_name;
     zpt::http::basic_request* __root_req{ nullptr };

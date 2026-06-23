@@ -23,21 +23,34 @@
 #include <zapata/http/HTTPTokenizerLexer.h>
 
 zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream& _in, std::ostream& _out)
-  : zpt::HTTPLexer(_in, _out) {}
+  : zpt::Re2cHTTPLexer(_in, _out) {}
 
 zpt::HTTPTokenizerLexer::~HTTPTokenizerLexer() {}
 
 auto zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_request& _root) -> void {
     this->__root_req = &_root;
-    this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
+    this->begin(zpt::re2c_cond::INITIAL);
 }
 
 auto zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_reply& _root) -> void {
     this->__root_rep = &_root;
-    this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
+    this->begin(zpt::re2c_cond::INITIAL);
 }
 
 auto zpt::HTTPTokenizerLexer::justLeave() -> void { this->leave(-1); }
+
+auto zpt::HTTPTokenizerLexer::finishMessage() -> void {
+    if (this->d_content_length != 0) {
+        this->body();
+        this->d_content_length = 0;
+    }
+    else if (this->d_chunked.length() != 0) {
+        this->body();
+        this->d_chunked_length = -1;
+        this->d_chunked.assign("");
+    }
+    this->justLeave();
+}
 
 auto zpt::HTTPTokenizerLexer::init(int _in_type) -> void {
     this->d_chunked_body = false;
