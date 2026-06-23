@@ -85,8 +85,6 @@ zpt::json_message::json_message(zpt::message _request, bool)
       << "uri" << _request->uri();
 }
 
-zpt::json_message::~json_message() {}
-
 auto zpt::json_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());
 }

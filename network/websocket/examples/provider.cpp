@@ -21,15 +21,37 @@
 */
 
 #include <iostream>
-#include <zapata/net/socket.h>
-#include <zapata/net/websocket.h>
+#include <zapata/ontology.h>
+#include <zapata/rest.h>
+#include <zapata/rest/services.h>
 #include <zapata/startup.h>
+#include <zapata/transport.h>
 
-static zpt::padded_atomic<bool> _has_exited{ false };
+class ws_example_endpoint : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~ws_example_endpoint() = default;
+
+    auto blocked() const -> bool { return false; }
+
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
+      -> zpt::events::state {
+        this
+          ->to_send() //
+          ->status(200)
+          .body() = { "echo", this->received()->body() };
+        return zpt::events::finish;
+    }
+};
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zpt::TRANSPORT_LAYER() //
-      .add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+    zlog("Registering listeners for module 'ws_test'", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->add<ws_example_endpoint>("/ws/echo");
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("ws"); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zlog("Unloading module 'ws_test'", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->remove<ws_example_endpoint>("/ws/echo");
+}

@@ -9,46 +9,49 @@ add_dependencies(zapata-net-websocket
   zapata-io-stream
   zapata-io-socket
   zapata-net-transport
+  zapata-parser-http
   zapata-parser-json
   zapata-parser-uri
 )
 target_sources(zapata-net-websocket
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket.cpp
   INTERFACE
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/websocket.h
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/transport/websocket.h
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/websocket.h
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/transport/websocket.h
 )
 target_include_directories(zapata-net-websocket
   PRIVATE
-    zapata-base
-    zapata-globals
-    zapata-io-stream
-    zapata-io-socket
-    zapata-parser-json
-    zapata-parser-uri
-    zapata-net-transport
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  zapata-base
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-parser-http
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-net-transport
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-websocket
   PRIVATE
-    zapata-base
-    zapata-globals
-    zapata-io-stream
-    zapata-io-socket
-    zapata-parser-json
-    zapata-parser-uri
-    zapata-net-transport
+  zapata-base
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-parser-http
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-net-transport
 )
 set_target_properties(zapata-net-websocket
   PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
-    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
-    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-net-websocket.so
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+  COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+  LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+  LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-net-websocket.so
 )
 
 add_library(zapata-net-websocket-plugin SHARED)
@@ -62,54 +65,132 @@ add_dependencies(zapata-net-websocket-plugin
   zapata-lockfree
   zapata-net-transport
   zapata-net-websocket
+  zapata-parser-http
   zapata-parser-json
   zapata-parser-uri
 )
 target_sources(zapata-net-websocket-plugin
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-websocket-plugin
   PRIVATE
-    zapata-base
-    zapata-engine-startup
-    zapata-events
-    zapata-globals
-    zapata-io-stream
-    zapata-io-socket
-    zapata-lockfree
-    zapata-net-transport
-    zapata-parser-json
-    zapata-parser-uri
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-parser-http
+  zapata-parser-json
+  zapata-parser-uri
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-websocket-plugin
   PRIVATE
-    zapata-base
-    zapata-engine-startup
-    zapata-events
-    zapata-globals
-    zapata-io-stream
-    zapata-io-socket
-    zapata-net-transport
-    zapata-net-websocket
-    zapata-parser-json
-    zapata-parser-uri
+  zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-net-transport
+  zapata-net-websocket
+  zapata-parser-http
+  zapata-parser-json
+  zapata-parser-uri
 )
 set_target_properties(zapata-net-websocket-plugin
   PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
-    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+  COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+  LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+)
+
+add_library(zapata-example-ws-provider SHARED)
+add_dependencies(zapata-example-ws-provider
+  zapata-base
+  zapata-engine-startup
+  zapata-engine-transport
+  zapata-engine-rest
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-common-catalog
+)
+target_sources(zapata-example-ws-provider
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/examples/provider.cpp
+)
+target_include_directories(zapata-example-ws-provider
+  PRIVATE
+  zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-engine-transport
+  zapata-storage-sqlite
+  zapata-storage-connector
+  zapata-common-catalog
+  ${ENGINE_REST_INCLUDE_DIR}
+)
+target_link_libraries(zapata-example-ws-provider
+  PRIVATE
+  zapata-base
+  zapata-engine-startup
+  zapata-engine-rest
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-storage-connector
+  ${SQLite3_LIBRARIES}
+  zapata-storage-sqlite
+  zapata-engine-transport
+  zapata-common-catalog
+)
+set_target_properties(zapata-example-ws-provider
+  PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+  COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+  LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-websocket zapata-net-websocket-plugin
+install(
+  TARGETS
+    zapata-net-websocket
+    zapata-net-websocket-plugin
+    zapata-example-ws-provider
   LIBRARY
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

@@ -25,9 +25,11 @@
 #include <zapata/text/convert.h>
 
 auto zpt::base64::r_encode(std::string const& _in) -> std::string {
-    std::string _out(_in.data());
-    zpt::base64::encode(_out);
-    return _out;
+    std::istringstream _iss;
+    std::ostringstream _oss;
+    _iss.str(_in);
+    zpt::base64::encode(_iss, _oss);
+    return _oss.str();
 }
 
 void zpt::base64::encode(std::string& _out) {
@@ -159,6 +161,12 @@ void zpt::base64::decode(std::istream& _in, std::ostream& _out) {
 
         for (j = 0; j < (i - 1); j++) _out << (char)buff1[j];
     }
+}
+
+auto zpt::base64::r_encode(std::vector<unsigned char> const& _in) -> std::string {
+    std::string _out;
+    zpt::base64::encode(_in, _out);
+    return _out;
 }
 
 auto zpt::base64::encode(std::vector<unsigned char> const& _in, std::string& _out) -> void {

@@ -57,13 +57,6 @@ namespace zpt {
  */
 class basic_message {
   public:
-    // /** @brief Default constructor. */
-    // basic_message() = default;
-    // /** @brief Constructs a reply message from a request. */
-    // basic_message(basic_message const& _req, bool);
-    // /** @brief Destructor. */
-    // virtual ~basic_message() = default;
-
     /** @brief Returns the request method (GET, POST, etc.). */
     virtual auto performative() const -> zpt::performative = 0;
     /** @brief Returns the response status code. */
@@ -178,58 +171,53 @@ class json_message : public basic_message {
     /** @brief Constructs a JSON reply from an existing request. */
     json_message(zpt::message _req, bool);
     /** @brief Destructor. */
-    virtual ~json_message();
+    virtual ~json_message() = default;
 
     /** @brief Returns the request method. */
-    auto performative() const -> zpt::performative override;
+    virtual auto performative() const -> zpt::performative override;
     /** @brief Returns the response status code. */
-    auto status() const -> zpt::status override;
+    virtual auto status() const -> zpt::status override;
     /** @brief Returns mutable reference to URI. */
-    auto uri() -> zpt::json& override;
+    virtual auto uri() -> zpt::json& override;
     /** @brief Returns the URI (const). */
-    auto uri() const -> zpt::json const override;
+    virtual auto uri() const -> zpt::json const override;
     /** @brief Returns protocol version. */
-    auto version() const -> std::string override;
+    virtual auto version() const -> std::string override;
     /** @brief Returns URI scheme. */
-    auto scheme() const -> std::string override;
+    virtual auto scheme() const -> std::string override;
     /** @brief Returns the resource path. */
-    auto resource() const -> zpt::json const override;
+    virtual auto resource() const -> zpt::json const override;
     /** @brief Returns query parameters. */
-    auto parameters() const -> zpt::json const override;
+    virtual auto parameters() const -> zpt::json const override;
     /** @brief Returns mutable reference to headers. */
-    auto headers() -> zpt::json& override;
+    virtual auto headers() -> zpt::json& override;
     /** @brief Returns headers (const). */
-    auto headers() const -> zpt::json const override;
-    /**
-     * @brief Adds or updates a header.
-     * @param _name Header name.
-     * @param _value Header value.
-     * @return Reference for chaining.
-     */
-    auto header(std::string const& _name, std::string const& _value)
+    virtual auto headers() const -> zpt::json const override;
+    /** @brief Adds or updates a header. */
+    virtual auto header(std::string const& _name, std::string const& _value)
       -> zpt::basic_message& override;
     /** @brief Returns mutable reference to body. */
-    auto body() -> zpt::json& override;
+    virtual auto body() -> zpt::json& override;
     /** @brief Returns body (const). */
-    auto body() const -> zpt::json const override;
+    virtual auto body() const -> zpt::json const override;
     /** @brief Returns true if connection should persist. */
-    auto keep_alive() const -> bool override;
+    virtual auto keep_alive() const -> bool override;
     /** @brief Returns Content-Type header value. */
-    auto content_type() const -> std::string override;
+    virtual auto content_type() const -> std::string override;
     /** @brief Serializes message to output stream as JSON. */
-    auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
     /** @brief Deserializes message from input stream. */
-    auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+    virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
     /** @brief Sets the request method. */
-    auto performative(zpt::performative _performative) -> zpt::basic_message& override;
+    virtual auto performative(zpt::performative _performative) -> zpt::basic_message& override;
     /** @brief Sets the response status code. */
-    auto status(zpt::status _status) -> zpt::basic_message& override;
+    virtual auto status(zpt::status _status) -> zpt::basic_message& override;
     /** @brief Sets the URI from a string. */
-    auto uri(std::string const& _uri) -> zpt::basic_message& override;
+    virtual auto uri(std::string const& _uri) -> zpt::basic_message& override;
     /** @brief Sets the protocol version. */
-    auto version(std::string const& _version) -> zpt::basic_message& override;
+    virtual auto version(std::string const& _version) -> zpt::basic_message& override;
     /** @brief Returns true if message is empty/uninitialized. */
-    auto empty() const -> bool override;
+    virtual auto empty() const -> bool override;
     /** @brief Appends a value to the underlying JSON. */
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
