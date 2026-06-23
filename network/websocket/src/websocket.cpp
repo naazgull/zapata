@@ -26,17 +26,6 @@
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/websocket.h>
 
-namespace {
-auto ntohll(uint64_t val) -> std::uint64_t {
-    return ((val & 0x00000000000000FFULL) << 56) | ((val & 0x000000000000FF00ULL) << 40) |
-           ((val & 0x0000000000FF0000ULL) << 24) | ((val & 0x00000000FF000000ULL) << 8) |
-           ((val & 0x000000FF00000000ULL) >> 8) | ((val & 0x0000FF0000000000ULL) >> 24) |
-           ((val & 0x00FF000000000000ULL) >> 40) | ((val & 0xFF00000000000000ULL) >> 56);
-}
-
-auto htonll(uint64_t val) -> std::uint64_t { return ntohll(val); }
-} // namespace
-
 using request_type = zpt::ws_message;
 using reply_type = zpt::ws_message;
 
@@ -49,7 +38,6 @@ auto zpt::ws_message::to_stream(std::ostream& _out) const -> zpt::basic_message 
 
 auto zpt::ws_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     auto [_message, _op] = zpt::net::ws::read(_in);
-    std::cerr << "[WS MSG] op=" << _op << " msg='" << _message << "' len=" << _message.length() << std::endl;
     std::istringstream _iss;
     _iss.str(_message);
     zpt::json_message::from_stream(_iss);
@@ -65,9 +53,6 @@ auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
     bool _mask = (_header[1] & 0x80) != 0;
     std::uint64_t _len = _header[1] & 0x7F;
 
-    std::cerr << "[WS] header[0]=0x" << std::hex << (int)_header[0] << " header[1]=0x" << (int)_header[1]
-              << " op=" << (int)_op_code << " mask=" << _mask << " len=" << std::dec << _len << std::endl;
-
     // Extended payload length
     if (_len == 126) {
         std::uint8_t _ext[2] = { 0, 0 };
@@ -82,8 +67,6 @@ auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
         }
     }
 
-    std::cerr << "[WS] final len=" << _len << " mask=" << _mask << std::endl;
-
     // Read masking key (4 raw bytes)
     std::uint8_t _mkey[4] = { 0, 0, 0, 0 };
     if (_mask) {
@@ -96,12 +79,6 @@ auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
         _stream.read(&_raw[0], static_cast<std::streamsize>(_len));
     }
 
-    std::cerr << "[WS] raw=";
-    for (size_t _i = 0; _i < _raw.size(); _i++) {
-        std::cerr << std::hex << (int)(unsigned char)_raw[_i] << " ";
-    }
-    std::cerr << std::dec << std::endl;
-
     // Apply masking if needed
     if (_mask && _len > 0) {
         for (std::uint64_t _i = 0; _i < _len; _i++) {
@@ -109,15 +86,11 @@ auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
         }
     }
 
-    std::cerr << "[WS] decoded=" << _raw << std::endl;
-
     return std::make_tuple(std::move(_raw), _op_code);
 }
 
 auto zpt::net::ws::write(std::ostream& _stream, std::string const& _in, bool _mask) -> void {
     std::uint64_t _len = static_cast<std::uint64_t>(_in.length());
-    std::cerr << "[WS WRITE] len=" << _len << " mask=" << _mask << " data=" << _in << std::endl;
-
     // First byte: FIN=1 + TEXT opcode=1
     std::uint8_t _header[2];
     _header[0] = 0x80 | 0x01; // FIN + TEXT
