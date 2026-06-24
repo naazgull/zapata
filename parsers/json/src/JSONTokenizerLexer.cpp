@@ -34,7 +34,7 @@ void zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
     this->begin(zpt::re2c_json_cond::INITIAL);
 }
 
-auto zpt::JSONTokenizerLexer::justLeave() -> void { this->leave(-1); }
+auto zpt::JSONTokenizerLexer::justLeave() -> void { this->leave(0); }
 
 void zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     try {

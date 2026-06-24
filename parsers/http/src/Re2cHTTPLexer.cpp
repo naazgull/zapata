@@ -62,6 +62,7 @@ auto zpt::Re2cHTTPLexer::resetBuffer() -> void {
 auto zpt::Re2cHTTPLexer::switchStreams(std::istream& _in, std::ostream& _out) -> void {
     this->__in = &_in;
     this->__out = &_out;
+    this->__in->clear();
     this->resetBuffer();
     this->__condition = zpt::re2c_cond::INITIAL;
     this->__matched.clear();

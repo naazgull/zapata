@@ -37,7 +37,7 @@ auto zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_reply& _root) -> void
     this->begin(zpt::re2c_cond::INITIAL);
 }
 
-auto zpt::HTTPTokenizerLexer::justLeave() -> void { this->leave(-1); }
+auto zpt::HTTPTokenizerLexer::justLeave() -> void { this->leave(0); }
 
 auto zpt::HTTPTokenizerLexer::finishMessage() -> void {
     if (this->d_content_length != 0) {

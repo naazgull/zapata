@@ -260,13 +260,11 @@ value :
 
 %%
 
-int yylex(YYSTYPE* yylval, zpt::JSONTokenizerLexer* ctx) {
-    (void) yylval;
+int yylex(YYSTYPE*, zpt::JSONTokenizerLexer* ctx) {
     return ctx->lex();
 }
 
 void yyerror(zpt::JSONTokenizerLexer* ctx, char const* msg) {
-    (void) msg;
     throw zpt::SyntaxErrorException(std::string("JSON: Syntax error in line ") +
-                                     std::to_string(ctx->lineNr()));
+                                     std::to_string(ctx->lineNr()) + std::string{msg});
 }

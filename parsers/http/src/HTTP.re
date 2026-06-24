@@ -247,7 +247,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
             // historical trailing-byte bug: the original flexc++ rule only
             // matched one line-ending, then speculatively peeked a second
             // raw byte via get_() to decide whether headers were done, and
-            // one of its branches (the no-body case, leave(-1) immediately)
+            // one of its branches (the no-body case, leave(0) immediately)
             // consumed that peeked byte without a matching pushback or
             // second get_(), leaving it stuck in the stream. Here, no peek
             // exists - the DFA's longest-match already accounts for both
@@ -261,7 +261,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
                 this->begin(zpt::re2c_cond::plain_body);
             }
             else {
-                this->leave(-1);
+                this->leave(0);
             }
             return CR_LF;
         }
@@ -377,7 +377,7 @@ auto zpt::Re2cHTTPLexer::lexPlainBody() -> int {
     // one-byte-at-a-time `.|\n` accumulation rule.
     std::string _body = this->readRaw(this->d_content_length);
     this->setMatched(_body);
-    this->leave(-1);
+    this->leave(0);
     return 0;
 }
 
@@ -403,7 +403,7 @@ auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
                     if (this->d_chunked_trailer.length() == 0) {
                         this->setMatched(this->d_chunked);
                         this->readRaw(2); // discard the final blank-line CRLF
-                        this->leave(-1);
+                        this->leave(0);
                     }
                     else {
                         // Wait for one more line (the trailer's value, to be
@@ -426,7 +426,7 @@ auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
                 this->d_chunked_length = -1;
                 this->setMatched(this->d_chunked);
                 this->readRaw(2); // discard the final blank-line CRLF
-                this->leave(-1);
+                this->leave(0);
             }
             return 0;
         }

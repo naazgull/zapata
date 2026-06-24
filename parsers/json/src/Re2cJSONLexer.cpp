@@ -62,6 +62,7 @@ auto zpt::Re2cJSONLexer::resetBuffer() -> void {
 auto zpt::Re2cJSONLexer::switchStreams(std::istream& _in, std::ostream& _out) -> void {
     this->__in = &_in;
     this->__out = &_out;
+    this->__in->clear();
     this->resetBuffer();
     this->__condition = zpt::re2c_json_cond::INITIAL;
     this->__matched.clear();
@@ -193,7 +194,7 @@ auto zpt::Re2cJSONLexer::leave(int _retValue) -> void {
 }
 
 auto zpt::Re2cJSONLexer::leaveIfComplete() -> void {
-    if (this->d_paren_count == 0) { this->leave(-1); }
+    if (this->d_paren_count == 0) { this->leave(0); }
 }
 
 auto zpt::Re2cJSONLexer::lex() -> int {

@@ -152,7 +152,7 @@ class Re2cJSONLexer {
     auto captureMatch() -> void;
 
     /**
-     * @brief Calls leave(-1) iff the just-returned terminal completed the
+     * @brief Calls leave(0) iff the just-returned terminal completed the
      * top-level JSON value (d_paren_count back to 0).
      *
      * Bison's LALR parser needs one token of lookahead after the final
