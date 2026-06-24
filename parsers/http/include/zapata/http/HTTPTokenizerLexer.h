@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/http/Re2cHTTPLexer.h>
 #include <zapata/http/HTTPObj.h>
+#include <zapata/http/Re2cHTTPLexer.h>
 
 namespace zpt {
 

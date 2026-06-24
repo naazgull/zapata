@@ -82,7 +82,7 @@ namespace zpt::crypto {
  */
 class SHA256 {
   protected:
-    static const std::uint32_t sha256_k[];  ///< Round constants.
+    static const std::uint32_t sha256_k[];                           ///< Round constants.
     static constexpr unsigned int SHA224_256_BLOCK_SIZE = (512 / 8); ///< Block size in bytes.
 
   public:
@@ -121,10 +121,10 @@ class SHA256 {
      */
     void transform(const unsigned char* message, unsigned int block_nb);
 
-    unsigned int m_tot_len;  ///< Total message length.
-    unsigned int m_len;      ///< Current block length.
+    unsigned int m_tot_len;                           ///< Total message length.
+    unsigned int m_len;                               ///< Current block length.
     unsigned char m_block[2 * SHA224_256_BLOCK_SIZE]; ///< Message block buffer.
-    std::uint32_t m_h[8];    ///< Hash state.
+    std::uint32_t m_h[8];                             ///< Hash state.
 };
 
 /**

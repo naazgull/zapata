@@ -23,10 +23,10 @@
 #pragma once
 
 #include <zapata/json/JSONClass.h>
-#include <zapata/json/JSONLexer.h>
+#include <zapata/json/Re2cJSONLexer.h>
 
 namespace zpt {
-class JSONTokenizerLexer : public JSONLexer {
+class JSONTokenizerLexer : public Re2cJSONLexer {
   public:
     zpt::JSONElementT* __root{ nullptr };
     zpt::JSONType __root_type;

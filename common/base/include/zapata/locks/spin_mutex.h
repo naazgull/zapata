@@ -53,8 +53,8 @@ class spin_mutex {
   public:
     friend class T;
 
-    static constexpr bool shared{ true };      ///< Constant for shared lock mode.
-    static constexpr bool exclusive{ false };  ///< Constant for exclusive lock mode.
+    static constexpr bool shared{ true };     ///< Constant for shared lock mode.
+    static constexpr bool exclusive{ false }; ///< Constant for exclusive lock mode.
 
     /** @brief Default constructor. */
     spin_mutex() = default;
@@ -107,7 +107,7 @@ class spin_mutex {
     auto unlock_shared() -> zpt::locks::spin_mutex&;
 
   private:
-    zpt::padded_atomic<long> __shared_access{ 0 };    ///< Count of shared lock holders.
+    zpt::padded_atomic<long> __shared_access{ 0 };        ///< Count of shared lock holders.
     zpt::padded_atomic<bool> __exclusive_access{ false }; ///< Exclusive lock flag.
 
     /** @brief Spins until shared lock can be acquired. */

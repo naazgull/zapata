@@ -28,7 +28,8 @@
  *     bool blocked() const { return false; }
  *     bool catch_error(std::exception const&, zpt::events::dispatcher::ptr) { return false; }
  *     bool catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) { return false; }
- *     bool catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) { return false; }
+ *     bool catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) { return
+ * false; }
  *
  *     zpt::events::state operator()(zpt::events::dispatcher::ptr d) {
  *         // Process event...

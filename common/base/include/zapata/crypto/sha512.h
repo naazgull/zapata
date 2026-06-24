@@ -82,7 +82,7 @@ namespace zpt::crypto {
  */
 class SHA512 {
   protected:
-    static const std::uint64_t sha512_k[];  ///< Round constants.
+    static const std::uint64_t sha512_k[];                            ///< Round constants.
     static constexpr unsigned int SHA384_512_BLOCK_SIZE = (1024 / 8); ///< Block size in bytes.
 
   public:
@@ -109,10 +109,10 @@ class SHA512 {
 
   protected:
     void transform(const unsigned char* message, unsigned int block_nb);
-    unsigned int m_tot_len;  ///< Total message length.
-    unsigned int m_len;      ///< Current block length.
+    unsigned int m_tot_len;                           ///< Total message length.
+    unsigned int m_len;                               ///< Current block length.
     unsigned char m_block[2 * SHA384_512_BLOCK_SIZE]; ///< Message block buffer.
-    std::uint64_t m_h[8];    ///< Hash state.
+    std::uint64_t m_h[8];                             ///< Hash state.
 };
 
 /**

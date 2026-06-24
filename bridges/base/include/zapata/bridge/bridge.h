@@ -78,8 +78,8 @@ class integration {
 template<typename C, typename O>
 class bridge : public zpt::programming::integration {
   public:
-    using class_type = C;    ///< The concrete bridge type
-    using object_type = O;   ///< The language's native object type
+    using class_type = C;  ///< The concrete bridge type
+    using object_type = O; ///< The language's native object type
 
     bridge() = default;
     bridge(bridge<C, O> const& _rhs) = delete;
