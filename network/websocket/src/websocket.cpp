@@ -62,22 +62,16 @@ auto zpt::net::ws::read(std::istream& _stream) -> std::tuple<std::string, int> {
     else if (_len == 127) {
         std::uint8_t _ext[8];
         _stream.read(reinterpret_cast<char*>(&_ext), 8);
-        for (int _i = 0; _i < 8; _i++) {
-            _len = (_len << 8) | _ext[_i];
-        }
+        for (int _i = 0; _i < 8; _i++) { _len = (_len << 8) | _ext[_i]; }
     }
 
     // Read masking key (4 raw bytes)
     std::uint8_t _mkey[4] = { 0, 0, 0, 0 };
-    if (_mask) {
-        _stream.read(reinterpret_cast<char*>(&_mkey), 4);
-    }
+    if (_mask) { _stream.read(reinterpret_cast<char*>(&_mkey), 4); }
 
     // Read payload data
     std::string _raw(static_cast<size_t>(_len), '\0');
-    if (_len > 0) {
-        _stream.read(&_raw[0], static_cast<std::streamsize>(_len));
-    }
+    if (_len > 0) { _stream.read(&_raw[0], static_cast<std::streamsize>(_len)); }
 
     // Apply masking if needed
     if (_mask && _len > 0) {
@@ -124,13 +118,12 @@ auto zpt::net::ws::write(std::ostream& _stream, std::string const& _in, bool _ma
         std::string _masked;
         _masked.resize(_len);
         for (std::uint64_t _i = 0; _i < _len; _i++) {
-            _masked[static_cast<size_t>(_i)] = _in[static_cast<size_t>(_i)] ^ static_cast<char>(_mkey[_i % 4]);
+            _masked[static_cast<size_t>(_i)] =
+              _in[static_cast<size_t>(_i)] ^ static_cast<char>(_mkey[_i % 4]);
         }
         _stream.write(_masked.data(), static_cast<std::streamsize>(_masked.length()));
     }
-    else {
-        _stream.write(_in.data(), static_cast<std::streamsize>(_in.length()));
-    }
+    else { _stream.write(_in.data(), static_cast<std::streamsize>(_in.length())); }
 
     _stream.flush();
 }

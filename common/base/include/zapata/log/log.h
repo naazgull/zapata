@@ -69,12 +69,12 @@
 
 namespace zpt {
 
-extern short int log_lvl;                    ///< Current log level threshold.
-extern std::ostream* log_fd;                 ///< Output stream for log messages.
-extern long log_pid;                         ///< Process ID for log messages.
+extern short int log_lvl;                      ///< Current log level threshold.
+extern std::ostream* log_fd;                   ///< Output stream for log messages.
+extern long log_pid;                           ///< Process ID for log messages.
 extern std::unique_ptr<std::string> log_pname; ///< Process name for log messages.
-extern short log_format;                     ///< Log output format.
-extern const char* log_lvl_names[];          ///< Human-readable log level names.
+extern short log_format;                       ///< Log output format.
+extern const char* log_lvl_names[];            ///< Human-readable log level names.
 
 /**
  * @brief Log severity levels.
@@ -83,16 +83,16 @@ extern const char* log_lvl_names[];          ///< Human-readable log level names
  * levels for fine-grained debugging.
  */
 enum LogLevel {
-    emergency = 0,  ///< System is unusable.
-    alert = 1,      ///< Action must be taken immediately.
-    critical = 2,   ///< Critical conditions.
-    error = 3,      ///< Error conditions.
-    warning = 4,    ///< Warning conditions.
-    notice = 5,     ///< Normal but significant condition.
-    info = 6,       ///< Informational messages.
-    debug = 7,      ///< Debug-level messages.
-    trace = 8,      ///< Fine-grained tracing.
-    verbose = 9     ///< Most verbose output.
+    emergency = 0, ///< System is unusable.
+    alert = 1,     ///< Action must be taken immediately.
+    critical = 2,  ///< Critical conditions.
+    error = 3,     ///< Error conditions.
+    warning = 4,   ///< Warning conditions.
+    notice = 5,    ///< Normal but significant condition.
+    info = 6,      ///< Informational messages.
+    debug = 7,     ///< Debug-level messages.
+    trace = 8,     ///< Fine-grained tracing.
+    verbose = 9    ///< Most verbose output.
 };
 
 /**
@@ -188,8 +188,8 @@ class timer {
     auto sleep_for(T _upper_limit) -> T;
 
   private:
-    T __sleep_tics{ 0 };                ///< Current sleep duration.
-    T __step{ 0 };                      ///< Duration increment per call.
+    T __sleep_tics{ 0 };                    ///< Current sleep duration.
+    T __step{ 0 };                          ///< Duration increment per call.
     unsigned int __non_waiting_cycles{ 0 }; ///< Non-sleeping cycles remaining.
 };
 

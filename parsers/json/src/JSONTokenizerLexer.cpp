@@ -23,7 +23,7 @@
 #include <zapata/json/JSONTokenizerLexer.h>
 
 zpt::JSONTokenizerLexer::JSONTokenizerLexer(std::istream& _in, std::ostream& _out)
-  : zpt::JSONLexer(_in, _out) {
+  : zpt::Re2cJSONLexer(_in, _out) {
     this->__root = this->__parent = nullptr;
 }
 
@@ -31,7 +31,7 @@ zpt::JSONTokenizerLexer::~JSONTokenizerLexer() {}
 
 void zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
     this->__root = this->__parent = &(*_root);
-    this->begin(zpt::JSONLexerBase::StartCondition_::INITIAL);
+    this->begin(zpt::re2c_json_cond::INITIAL);
 }
 
 auto zpt::JSONTokenizerLexer::justLeave() -> void { this->leave(-1); }

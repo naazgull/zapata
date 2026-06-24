@@ -32,6 +32,12 @@
  * HTTPTokenizerLexer::finishMessage().
  */
 
+%code requires {
+namespace zpt {
+class HTTPTokenizerLexer;
+}
+}
+
 %{
 #include <zapata/http/HTTPTokenizerLexer.h>
 

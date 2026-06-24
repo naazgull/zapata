@@ -30,8 +30,8 @@
  * message - no more, no less).
  */
 
-#include <zapata/http.h>
 #include <iostream>
+#include <zapata/http.h>
 
 namespace {
 int failures = 0;
@@ -70,8 +70,7 @@ auto test_post_with_body() -> void {
          << "Host: example.com\r\n"
          << "Content-Length: " << _body.length() << "\r\n"
          << "\r\n"
-         << _body
-         << "NEXTMSG";
+         << _body << "NEXTMSG";
     std::istringstream _iss;
     _iss.str(_oss.str());
     auto _req = zpt::allocate_message<zpt::http::basic_request>();
@@ -114,7 +113,8 @@ auto test_no_body_reply_at_stream_eof() -> void {
     // exact shape of the original bug report (a WebSocket upgrade reply),
     // and the case that requires yyfill()'s zero-padding-at-EOF to match.
     std::istringstream _iss;
-    _iss.str("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: upgrade\r\n\r\n");
+    _iss.str(
+      "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: upgrade\r\n\r\n");
     auto _rep = zpt::allocate_message<zpt::http::basic_reply>();
     _iss >> std::noskipws >> _rep;
 

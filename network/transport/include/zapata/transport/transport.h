@@ -54,8 +54,8 @@ namespace zpt {
  * @brief Transport capability flags.
  */
 enum transport_capability {
-    SYNCHRONOUS = 1,  ///< Transport supports request-response pattern
-    PERSISTENT = 2    ///< Transport maintains persistent connections
+    SYNCHRONOUS = 1, ///< Transport supports request-response pattern
+    PERSISTENT = 2   ///< Transport maintains persistent connections
 };
 
 /**

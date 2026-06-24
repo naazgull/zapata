@@ -62,7 +62,7 @@ namespace email {
  * @return JSON object with "local" and "domain" fields.
  */
 auto parse(std::string const& _email) -> zpt::json;
-}
+} // namespace email
 
 /** @brief Converts a parsed URI JSON object back to a URI string. */
 auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;

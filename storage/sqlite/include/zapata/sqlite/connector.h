@@ -58,7 +58,7 @@ struct finalize_statement {
     void operator()(sqlite3_stmt* _statement) const { sqlite3_finalize(_statement); }
 };
 
-using sqlite3_ptr = std::shared_ptr<sqlite3>;       ///< Managed SQLite database handle.
+using sqlite3_ptr = std::shared_ptr<sqlite3>;           ///< Managed SQLite database handle.
 using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>; ///< Managed SQLite statement handle.
 
 /** @brief Tests if a SQLite return code indicates an error. */
@@ -104,7 +104,8 @@ class session : public zpt::storage::session::type {
   public:
     friend class database;
 
-    /** @brief Constructs a session by opening all database files listed in the connection options. */
+    /** @brief Constructs a session by opening all database files listed in the connection options.
+     */
     session(zpt::storage::sqlite::connection const& _connection);
     session(zpt::storage::sqlite::session const& _rhs) = delete;
     session(zpt::storage::sqlite::session&& _rhs) = delete;

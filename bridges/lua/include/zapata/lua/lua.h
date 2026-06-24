@@ -89,9 +89,9 @@ namespace lua {
  */
 class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object> {
   public:
-    using underlying_type = lua_State*;  ///< Raw Lua state pointer
-    using callback_type = std::function<void(underlying_type)>;  ///< C++ callback for Lua
-    using lambda_type = std::function<int(underlying_type)>;     ///< Lambda as Lua C function
+    using underlying_type = lua_State*;                         ///< Raw Lua state pointer
+    using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Lua
+    using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Lua C function
 
     bridge();
     bridge(bridge&& _rhs) = delete;
