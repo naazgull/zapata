@@ -22,7 +22,8 @@
 
 /**
  * @file FunctionalParser.h
- * @brief Parser for functional-style expressions (bisonc++/flexc++ generated).
+ * @brief Parser for functional-style expressions (re2c/bison replacement for
+ * the generated flexc++/bisonc++ FunctionalLexer/FunctionalTokenizerBase).
  */
 
 #pragma once
@@ -34,7 +35,7 @@ namespace zpt {
 /**
  * @brief Functional expression parser.
  *
- * Wrapper around the bisonc++/flexc++ generated parser for functional
+ * Wrapper around the re2c/bison generated parser for functional
  * expressions. Parses input into a JSON AST.
  */
 class FunctionalParser : public FunctionalTokenizer {
