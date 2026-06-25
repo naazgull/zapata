@@ -22,7 +22,7 @@
 
 /**
  * @file URIParser.h
- * @brief URI parser (bisonc++/flexc++ generated).
+ * @brief URI parser (re2c/bison replacement for the generated flexc++/bisonc++ URILexer/URITokenizerBase).
  *
  * Parses URI strings into structured JSON components (scheme, host,
  * path, query parameters, fragment).
@@ -39,7 +39,7 @@ namespace zpt {
 /**
  * @brief URI parser.
  *
- * Wrapper around the bisonc++/flexc++ generated parser for URIs.
+ * Wrapper around the re2c/bison generated parser for URIs.
  * Parses URI strings into structured JSON.
  */
 class URIParser : public URITokenizer {

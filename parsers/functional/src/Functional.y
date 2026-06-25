@@ -20,20 +20,80 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/**
- * @file functional.h
- * @brief Aggregate header for the functional expression parser.
- *
- * Provides a parser for functional-style expressions, converting them
- * to JSON representations.
- *
- * @see zpt::functional::parse
- */
+%code requires {
+namespace zpt {
+class FunctionalTokenizerLexer;
+}
+}
 
-#pragma once
-
-#include <zapata/functional/FunctionalParser.h>
-#include <zapata/functional/FunctionalTokenizer.h>
+%{
+#include <zapata/exceptions/SyntaxErrorException.h>
 #include <zapata/functional/FunctionalTokenizerLexer.h>
-#include <zapata/functional/Re2cFunctionalLexer.h>
-#include <zapata/functional/functional.h>
+
+#define YYSTYPE int
+
+int yylex(YYSTYPE* yylval, zpt::FunctionalTokenizerLexer* ctx);
+void yyerror(zpt::FunctionalTokenizerLexer* ctx, char const* msg);
+%}
+
+%define api.pure full
+%define api.value.type {int}
+%param { zpt::FunctionalTokenizerLexer* ctx }
+
+%token STRING NUMBER VARIABLE LPAREN RPAREN COMMA
+
+%%
+
+exp :
+    token params
+;
+
+params :
+    %empty
+|
+    LPAREN param_list RPAREN
+;
+
+param_list :
+    %empty
+|
+    exp
+    {
+        ctx->add_param();
+    }
+    param_list
+|
+    COMMA exp
+    {
+        ctx->add_param();
+    }
+    param_list
+;
+
+token :
+    STRING
+    {
+        ctx->set_string();
+    }
+|
+    NUMBER
+    {
+        ctx->set_number();
+    }
+|
+    VARIABLE
+    {
+        ctx->set_variable();
+    }
+;
+
+%%
+
+int yylex(YYSTYPE*, zpt::FunctionalTokenizerLexer* ctx) {
+    return ctx->lex();
+}
+
+void yyerror(zpt::FunctionalTokenizerLexer* ctx, char const* msg) {
+    throw zpt::SyntaxErrorException(std::string("Functional: Syntax error in line ") +
+                                     std::to_string(ctx->lineNr()) + std::string{msg});
+}
