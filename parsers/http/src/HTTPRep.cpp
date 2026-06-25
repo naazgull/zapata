@@ -54,6 +54,12 @@ zpt::http::basic_reply::basic_reply(zpt::message _request, bool)
 
 zpt::http::basic_reply::~basic_reply() {}
 
+auto zpt::http::basic_reply::clone() const -> zpt::message {
+    auto _other = std::make_shared<zpt::http::basic_reply>();
+    _other->__underlying = this->__underlying->clone();
+    return _other;
+}
+
 auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
                             ? static_cast<int>(this->__underlying("status"))

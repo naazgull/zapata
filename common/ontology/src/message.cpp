@@ -85,6 +85,12 @@ zpt::json_message::json_message(zpt::message _request, bool)
       << "uri" << _request->uri();
 }
 
+auto zpt::json_message::clone() const -> zpt::message {
+    auto _other = std::make_shared<zpt::json_message>();
+    _other->__underlying = this->__underlying->clone();
+    return _other;
+}
+
 auto zpt::json_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());
 }

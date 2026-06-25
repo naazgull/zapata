@@ -96,6 +96,13 @@ auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
 
 auto zpt::basic_stream::persistent() -> bool { return true; }
 
+auto zpt::basic_stream::metadata(std::any _metadata) -> basic_stream& {
+    this->__metadata = _metadata;
+    return (*this);
+}
+
+auto zpt::basic_stream::metadata() const -> std::any const& { return this->__metadata; }
+
 zpt::polling::polling()
   : __epoll_fd{ epoll_create(1) } {}
 

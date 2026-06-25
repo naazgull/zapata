@@ -134,6 +134,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto uri() -> std::string&;
     virtual auto state() -> stream_state&;
     virtual auto persistent() -> bool;
+    virtual auto metadata(std::any _metadata) -> basic_stream&;
+    virtual auto metadata() const -> std::any const&;
 
   protected:
     zpt::allocator<std::iostream>::unique_pointer __underlying{ nullptr };
@@ -141,6 +143,7 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     std::string __transport{ "" };
     std::string __uri{ "" };
     zpt::stream_state __state{ zpt::stream_state::IDLE };
+    std::any __metadata;
     bool __muted{ true };
 
     auto extract_uri() -> void;
