@@ -166,7 +166,6 @@ auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> 
 auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
-    auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
     try {
         auto _message = zpt::allocate_message<request_type>();
         (*_stream) >> std::noskipws >> _message;
@@ -174,7 +173,10 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
         return _message;
     }
     catch (::non_json_message const& _e) {
-        _message->body() = _e.__original;
+        auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
+        _message //
+          ->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)))
+          .body() = _e.__original;
         return _message;
     }
 }
