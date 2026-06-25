@@ -57,6 +57,8 @@ namespace zpt {
  */
 class basic_message {
   public:
+    /** @brief Retrieves a clone of this message. */
+    virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
     /** @brief Returns the request method (GET, POST, etc.). */
     virtual auto performative() const -> zpt::performative = 0;
     /** @brief Returns the response status code. */
@@ -173,6 +175,8 @@ class json_message : public basic_message {
     /** @brief Destructor. */
     virtual ~json_message() = default;
 
+    /** @brief Retrieves a clone of this message. */
+    virtual auto clone() const -> zpt::message override;
     /** @brief Returns the request method. */
     virtual auto performative() const -> zpt::performative override;
     /** @brief Returns the response status code. */
@@ -222,7 +226,7 @@ class json_message : public basic_message {
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 
-  private:
+  protected:
     zpt::json __underlying;
 };
 

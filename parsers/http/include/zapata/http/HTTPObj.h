@@ -749,6 +749,8 @@ class basic_request : public zpt::http::basic_message {
     /** @brief Destructor. */
     virtual ~basic_request();
 
+    /** @brief Retrieves a clone of this message. */
+    virtual auto clone() const -> zpt::message override;
     /** @brief Serializes the request to an output stream. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
     /** @brief Parses a request from an input stream. */
@@ -785,6 +787,8 @@ class basic_reply : public zpt::http::basic_message {
     /** @brief Destructor. */
     virtual ~basic_reply();
 
+    /** @brief Retrieves a clone of this message. */
+    virtual auto clone() const -> zpt::message override;
     /** @brief Serializes the response to an output stream. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
     /** @brief Parses a response from an input stream. */

@@ -56,6 +56,12 @@ zpt::http::basic_request::basic_request(zpt::message _request, bool)
 
 zpt::http::basic_request::~basic_request() {}
 
+auto zpt::http::basic_request::clone() const -> zpt::message {
+    auto _other = std::make_shared<zpt::http::basic_request>();
+    _other->__underlying = this->__underlying->clone();
+    return _other;
+}
+
 auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     auto _uri = this->__underlying("uri");
     _out << this->__underlying("performative")->string() << " " << zpt::uri::path::to_string(_uri)

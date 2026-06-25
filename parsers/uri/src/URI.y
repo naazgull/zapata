@@ -119,7 +119,7 @@ user :
 ;
 
 port :
-
+    %empty
 |
     DOUBLE_DOT STRING
     {
@@ -137,7 +137,7 @@ port :
 ;
 
 path :
-
+    %empty
 |
     SLASH
     {
@@ -200,7 +200,7 @@ path :
 ;
 
 params :
-
+    %empty
 |
     QMARK paramslist
 ;
@@ -233,7 +233,7 @@ paramslist :
 ;
 
 paramvalue :
-
+    %empty
     {
         auto __name = static_cast<std::string>((**ctx)["__aux"]);
         if ((*ctx)->type() == zpt::JSObject) {
@@ -257,7 +257,7 @@ paramvalue :
 ;
 
 anchor :
-
+    %empty
 |
     CARDINAL STRING
     {

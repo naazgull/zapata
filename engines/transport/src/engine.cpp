@@ -108,7 +108,16 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
         }
 
         _transport->send(this->__stream, _reply);
-        this->__stream->transport(_value);
+        auto _metadata = _received->clone();
+        _metadata //
+          ->headers()
+          ->object()
+          ->pop("Connection")
+          .pop("Upgrade");
+        this
+          ->__stream //
+          ->transport(_value)
+          .metadata(std::make_any<zpt::message>(_metadata));
 
         return true;
     }
@@ -149,7 +158,8 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                       this->__polling, this->__stream, _to_send);
                 }
                 else {
-                    zlog("Couldn't find a callback for '" << _received->uri() << "'", zpt::error);
+                    zlog("Couldn't find a callback for '" << _received->resource() << "'",
+                         zpt::error);
                     this->__polling->unmute(this->__stream);
                 }
             }

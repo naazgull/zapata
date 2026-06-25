@@ -29,6 +29,15 @@
 using request_type = zpt::ws_message;
 using reply_type = zpt::ws_message;
 
+namespace {
+class non_json_message : public std::exception {
+  public:
+    zpt::json __original;
+    non_json_message(zpt::json _original)
+      : __original{ _original } {}
+};
+} // namespace
+
 auto zpt::ws_message::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     std::ostringstream _oss;
     zpt::json_message::to_stream(_oss);
@@ -38,9 +47,14 @@ auto zpt::ws_message::to_stream(std::ostream& _out) const -> zpt::basic_message 
 
 auto zpt::ws_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     auto [_message, _op] = zpt::net::ws::read(_in);
-    std::istringstream _iss;
-    _iss.str(_message);
-    zpt::json_message::from_stream(_iss);
+    try {
+        auto _content = zpt::json::parse_json_str(_message);
+        if (_content("body")->ok() && _content("uri")->ok()) { this->__underlying = _content; }
+        else { throw ::non_json_message{ _content }; }
+    }
+    catch (...) {
+        throw ::non_json_message{ _message };
+    }
     return (*this);
 }
 
@@ -152,10 +166,17 @@ auto zpt::net::transport::websocket::make_reply(zpt::message _request) const -> 
 auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
-    auto _message = zpt::allocate_message<request_type>();
-    (*_stream) >> std::noskipws >> _message;
-    _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
-    return _message;
+    auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
+    try {
+        auto _message = zpt::allocate_message<request_type>();
+        (*_stream) >> std::noskipws >> _message;
+        _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
+        return _message;
+    }
+    catch (::non_json_message const& _e) {
+        _message->body() = _e.__original;
+        return _message;
+    }
 }
 
 auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
