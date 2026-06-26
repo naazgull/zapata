@@ -2,6 +2,13 @@ set(IO_SOCKET_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(OpenSSL QUIET)
+
+if(NOT OPENSSL_FOUND)
+  message(STATUS "zapata-io-socket skipped: OpenSSL not found")
+  return()
+endif()
+
 add_library(zapata-io-socket SHARED)
 add_dependencies(zapata-io-socket
   zapata-base
@@ -24,8 +31,8 @@ target_include_directories(zapata-io-socket
 )
 target_link_libraries(zapata-io-socket
   PUBLIC
-    ssl
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
     zapata-base
     zapata-io-stream
 )
@@ -66,8 +73,8 @@ target_include_directories(zapata_example_io_socket_client
 )
 target_link_libraries(zapata_example_io_socket_client
   PRIVATE
-    ssl
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket
@@ -96,8 +103,8 @@ target_include_directories(zapata_example_io_socket_server
 )
 target_link_libraries(zapata_example_io_socket_server
   PRIVATE
-    ssl
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket

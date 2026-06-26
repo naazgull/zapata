@@ -2,6 +2,13 @@ set(NETWORK_UPNP_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(OpenSSL QUIET)
+
+if(NOT OPENSSL_FOUND)
+  message(STATUS "zapata-net-upnp skipped: OpenSSL not found")
+  return()
+endif()
+
 add_library(zapata-net-upnp SHARED)
 add_dependencies(zapata-net-upnp
   zapata-base
@@ -147,8 +154,8 @@ target_include_directories(zapata_example_upnp_transport
 )
 target_link_libraries(zapata_example_upnp_transport
   PRIVATE
-    ssl
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket

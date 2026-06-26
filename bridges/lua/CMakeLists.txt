@@ -2,6 +2,13 @@ set(BRIDGE_LUA_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(Lua 5.4 QUIET)
+
+if(NOT Lua_FOUND)
+  message(STATUS "zapata-bridge-lua skipped: Lua 5.4 not found")
+  return()
+endif()
+
 add_library(zapata-bridge-lua SHARED)
 add_dependencies(zapata-bridge-lua
   zapata-base

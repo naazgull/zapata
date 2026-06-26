@@ -2,6 +2,13 @@ set(NETWORK_HTTP_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(OpenSSL QUIET)
+
+if(NOT OPENSSL_FOUND)
+  message(STATUS "zapata-net-http skipped: OpenSSL not found")
+  return()
+endif()
+
 add_library(zapata-net-http SHARED)
 add_dependencies(zapata-net-http
   zapata-base
@@ -144,7 +151,7 @@ target_include_directories(zapata_example_http_retrieve
 )
 target_link_libraries(zapata_example_http_retrieve
   PRIVATE
-    ssl
+    OpenSSL::SSL
     zapata-base
     zapata-net-http
     zapata-net-transport
