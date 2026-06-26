@@ -56,8 +56,8 @@ install(DIRECTORY ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_storage_connector)
-add_dependencies(zapata_test_storage_connector
+add_executable(zapata_example_storage_connector)
+add_dependencies(zapata_example_storage_connector
   zapata-base
   zapata-globals
   zapata-ontology
@@ -65,11 +65,11 @@ add_dependencies(zapata_test_storage_connector
   zapata-parser-functional
   zapata-storage-connector
 )
-target_sources(zapata_test_storage_connector
+target_sources(zapata_example_storage_connector
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/storage_connector.cpp
 )
-target_include_directories(zapata_test_storage_connector
+target_include_directories(zapata_example_storage_connector
   PRIVATE
     zapata-base
     zapata-globals
@@ -78,7 +78,7 @@ target_include_directories(zapata_test_storage_connector
     zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_storage_connector
+target_link_libraries(zapata_example_storage_connector
   PRIVATE
     zapata-base
     zapata-globals
@@ -88,7 +88,7 @@ target_link_libraries(zapata_test_storage_connector
     zapata-storage-connector
 )
 
-set_target_properties(zapata_test_storage_connector
+set_target_properties(zapata_example_storage_connector
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

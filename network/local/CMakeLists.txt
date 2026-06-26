@@ -117,19 +117,19 @@ install(DIRECTORY ${NETWORK_LOCAL_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_local_transport)
-add_dependencies(zapata_test_local_transport
+add_executable(zapata_example_local_transport)
+add_dependencies(zapata_example_local_transport
   zapata-base
   zapata-parser-json
   zapata-parser-uri
   zapata-net-transport
   zapata-net-local
 )
-target_sources(zapata_test_local_transport
+target_sources(zapata_example_local_transport
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/local_transport.cpp
 )
-target_include_directories(zapata_test_local_transport
+target_include_directories(zapata_example_local_transport
   PRIVATE
     zapata-base
     zapata-io-stream
@@ -139,7 +139,7 @@ target_include_directories(zapata_test_local_transport
     zapata-net-transport
     ${NETWORK_LOCAL_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_local_transport
+target_link_libraries(zapata_example_local_transport
   PRIVATE
     ssl
     crypto
@@ -151,7 +151,7 @@ target_link_libraries(zapata_test_local_transport
     zapata-net-transport
     zapata-net-local
 )
-set_target_properties(zapata_test_local_transport
+set_target_properties(zapata_example_local_transport
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

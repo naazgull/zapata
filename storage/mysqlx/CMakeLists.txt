@@ -55,19 +55,19 @@ install(DIRECTORY ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_storage_mysqlx)
-add_dependencies(zapata_test_storage_mysqlx
+add_executable(zapata_example_storage_mysqlx)
+add_dependencies(zapata_example_storage_mysqlx
   zapata-base
   zapata-parser-json
   zapata-parser-functional
   zapata-storage-connector
   zapata-storage-mysqlx
 )
-target_sources(zapata_test_storage_mysqlx
+target_sources(zapata_example_storage_mysqlx
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/mysqlx.cpp
 )
-target_include_directories(zapata_test_storage_mysqlx
+target_include_directories(zapata_example_storage_mysqlx
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -75,7 +75,7 @@ target_include_directories(zapata_test_storage_mysqlx
     zapata-storage-connector
     ${STORAGE_MYSQLX_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_storage_mysqlx
+target_link_libraries(zapata_example_storage_mysqlx
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -84,7 +84,7 @@ target_link_libraries(zapata_test_storage_mysqlx
     mysqlclient
     zapata-storage-mysqlx
 )
-set_target_properties(zapata_test_storage_mysqlx
+set_target_properties(zapata_example_storage_mysqlx
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

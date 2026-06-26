@@ -56,26 +56,26 @@ install(DIRECTORY ${COMMON_EVENTS_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_common_events)
-add_dependencies(zapata_test_common_events
+add_executable(zapata_example_common_events)
+add_dependencies(zapata_example_common_events
   zapata-base
   zapata-lockfree
   zapata-ontology
   zapata-parser-json
   zapata-events
 )
-target_sources(zapata_test_common_events
+target_sources(zapata_example_common_events
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/events.cpp
 )
-target_include_directories(zapata_test_common_events
+target_include_directories(zapata_example_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
     zapata-ontology
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_common_events
+target_link_libraries(zapata_example_common_events
   PRIVATE
     zapata-base
     zapata-lockfree
@@ -83,7 +83,7 @@ target_link_libraries(zapata_test_common_events
     zapata-parser-json
     zapata-events
 )
-set_target_properties(zapata_test_common_events
+set_target_properties(zapata_example_common_events
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

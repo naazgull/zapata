@@ -46,29 +46,29 @@ install(DIRECTORY ${COMMON_EVENTS_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_io_pipe)
-add_dependencies(zapata_test_io_pipe
+add_executable(zapata_example_io_pipe)
+add_dependencies(zapata_example_io_pipe
   zapata-base
   zapata-io-stream
   zapata-io-pipe
 )
-target_sources(zapata_test_io_pipe
+target_sources(zapata_example_io_pipe
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/pipe.cpp
 )
-target_include_directories(zapata_test_io_pipe
+target_include_directories(zapata_example_io_pipe
   PRIVATE
     zapata-base
     zapata-io-stream
     ${IO_PIPE_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_io_pipe
+target_link_libraries(zapata_example_io_pipe
   PRIVATE
     zapata-base
     zapata-io-stream
     zapata-io-pipe
 )
-set_target_properties(zapata_test_io_pipe
+set_target_properties(zapata_example_io_pipe
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

@@ -98,18 +98,18 @@ install(DIRECTORY ${BRIDGE_LUA_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_bridge_lua)
-add_dependencies(zapata_test_bridge_lua
+add_executable(zapata_example_bridge_lua)
+add_dependencies(zapata_example_bridge_lua
   zapata-base
   zapata-parser-json
   zapata-bridge-base
   zapata-bridge-lua
 )
-target_sources(zapata_test_bridge_lua
+target_sources(zapata_example_bridge_lua
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/lua_bridge.cpp
 )
-target_include_directories(zapata_test_bridge_lua
+target_include_directories(zapata_example_bridge_lua
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -117,7 +117,7 @@ target_include_directories(zapata_test_bridge_lua
     zapata-bridge-lua
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_bridge_lua
+target_link_libraries(zapata_example_bridge_lua
   PUBLIC
     lua5.4
     zapata-base
@@ -126,7 +126,7 @@ target_link_libraries(zapata_test_bridge_lua
     zapata-bridge-lua
     ${LUA_LIBRARIES}
 )
-set_target_properties(zapata_test_bridge_lua
+set_target_properties(zapata_example_bridge_lua
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

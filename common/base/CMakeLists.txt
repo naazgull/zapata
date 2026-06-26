@@ -103,23 +103,23 @@ install(DIRECTORY ${COMMON_BASE_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_common_base)
-add_dependencies(zapata_test_common_base
+add_executable(zapata_example_common_base)
+add_dependencies(zapata_example_common_base
   zapata-base
 )
-target_sources(zapata_test_common_base
+target_sources(zapata_example_common_base
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/base.cpp
 )
-target_include_directories(zapata_test_common_base
-  PRIVATE
-    zapata-base
-)
-target_link_libraries(zapata_test_common_base
+target_include_directories(zapata_example_common_base
   PRIVATE
     zapata-base
 )
-set_target_properties(zapata_test_common_base
+target_link_libraries(zapata_example_common_base
+  PRIVATE
+    zapata-base
+)
+set_target_properties(zapata_example_common_base
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
