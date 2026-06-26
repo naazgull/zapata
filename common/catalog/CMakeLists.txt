@@ -55,18 +55,18 @@ install(DIRECTORY ${COMMON_CATALOG_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_common_catalog)
-add_dependencies(zapata_test_common_catalog
+add_executable(zapata_example_common_catalog)
+add_dependencies(zapata_example_common_catalog
     zapata-base
     zapata-parser-json
     zapata-storage-sqlite
     zapata-common-catalog
 )
-target_sources(zapata_test_common_catalog
+target_sources(zapata_example_common_catalog
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/catalog.cpp
 )
-target_include_directories(zapata_test_common_catalog
+target_include_directories(zapata_example_common_catalog
  PRIVATE
     zapata-base
     zapata-parser-json
@@ -74,7 +74,7 @@ target_include_directories(zapata_test_common_catalog
     zapata-storage-connector
     ${COMMON_CATALOG_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_common_catalog
+target_link_libraries(zapata_example_common_catalog
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -83,7 +83,7 @@ target_link_libraries(zapata_test_common_catalog
     zapata-storage-sqlite
     zapata-common-catalog
 )
-set_target_properties(zapata_test_common_catalog
+set_target_properties(zapata_example_common_catalog
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

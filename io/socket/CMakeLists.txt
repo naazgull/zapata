@@ -48,23 +48,23 @@ install(DIRECTORY ${IO_SOCKET_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_io_socket_client)
-add_dependencies(zapata_test_io_socket_client
+add_executable(zapata_example_io_socket_client)
+add_dependencies(zapata_example_io_socket_client
   zapata-base
   zapata-io-stream
   zapata-io-socket
 )
-target_sources(zapata_test_io_socket_client
+target_sources(zapata_example_io_socket_client
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_client.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/socket_client.cpp
 )
-target_include_directories(zapata_test_io_socket_client
+target_include_directories(zapata_example_io_socket_client
   PRIVATE
     zapata-base
     zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_io_socket_client
+target_link_libraries(zapata_example_io_socket_client
   PRIVATE
     ssl
     crypto
@@ -72,29 +72,29 @@ target_link_libraries(zapata_test_io_socket_client
     zapata-io-stream
     zapata-io-socket
 )
-set_target_properties(zapata_test_io_socket_client
+set_target_properties(zapata_example_io_socket_client
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
-add_executable(zapata_test_io_socket_server)
-add_dependencies(zapata_test_io_socket_server
+add_executable(zapata_example_io_socket_server)
+add_dependencies(zapata_example_io_socket_server
   zapata-base
   zapata-io-stream
   zapata-io-socket
 )
-target_sources(zapata_test_io_socket_server
+target_sources(zapata_example_io_socket_server
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test_server.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/socket_server.cpp
 )
-target_include_directories(zapata_test_io_socket_server
+target_include_directories(zapata_example_io_socket_server
   PRIVATE
     zapata-base
     zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_io_socket_server
+target_link_libraries(zapata_example_io_socket_server
   PRIVATE
     ssl
     crypto
@@ -102,7 +102,7 @@ target_link_libraries(zapata_test_io_socket_server
     zapata-io-stream
     zapata-io-socket
 )
-set_target_properties(zapata_test_io_socket_server
+set_target_properties(zapata_example_io_socket_server
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

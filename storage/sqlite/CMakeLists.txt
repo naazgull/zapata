@@ -53,19 +53,19 @@ install(DIRECTORY ${STORAGE_SQLITE_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_storage_sqlite)
-add_dependencies(zapata_test_storage_sqlite
+add_executable(zapata_example_storage_sqlite)
+add_dependencies(zapata_example_storage_sqlite
   zapata-base
   zapata-parser-json
   zapata-parser-functional
   zapata-storage-connector
   zapata-storage-sqlite
 )
-target_sources(zapata_test_storage_sqlite
+target_sources(zapata_example_storage_sqlite
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/sqlite.cpp
 )
-target_include_directories(zapata_test_storage_sqlite
+target_include_directories(zapata_example_storage_sqlite
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -73,7 +73,7 @@ target_include_directories(zapata_test_storage_sqlite
     zapata-storage-connector
     ${STORAGE_SQLITE_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_storage_sqlite
+target_link_libraries(zapata_example_storage_sqlite
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -82,7 +82,7 @@ target_link_libraries(zapata_test_storage_sqlite
     zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
 )
-set_target_properties(zapata_test_storage_sqlite
+set_target_properties(zapata_example_storage_sqlite
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

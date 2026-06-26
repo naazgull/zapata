@@ -94,18 +94,18 @@ install(DIRECTORY ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_bridge_prolog)
-add_dependencies(zapata_test_bridge_prolog
+add_executable(zapata_example_bridge_prolog)
+add_dependencies(zapata_example_bridge_prolog
   zapata-base
   zapata-parser-json
   zapata-bridge-base
   zapata-bridge-prolog
 )
-target_sources(zapata_test_bridge_prolog
+target_sources(zapata_example_bridge_prolog
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/prolog_bridge.cpp
 )
-target_include_directories(zapata_test_bridge_prolog
+target_include_directories(zapata_example_bridge_prolog
   PRIVATE
     zapata-base
     zapata-parser-json
@@ -113,14 +113,14 @@ target_include_directories(zapata_test_bridge_prolog
     zapata-bridge-prolog
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_bridge_prolog
+target_link_libraries(zapata_example_bridge_prolog
   PRIVATE
     zapata-base
     zapata-parser-json
     zapata-bridge-base
     zapata-bridge-prolog
 )
-set_target_properties(zapata_test_bridge_prolog
+set_target_properties(zapata_example_bridge_prolog
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

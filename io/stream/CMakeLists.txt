@@ -46,27 +46,27 @@ install(DIRECTORY ${IO_STREAM_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_io_stream)
-add_dependencies(zapata_test_io_stream
+add_executable(zapata_example_io_stream)
+add_dependencies(zapata_example_io_stream
   zapata-base
   zapata-io-stream
 )
-target_sources(zapata_test_io_stream
+target_sources(zapata_example_io_stream
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/stream.cpp
 )
-target_include_directories(zapata_test_io_stream
+target_include_directories(zapata_example_io_stream
   PRIVATE
     zapata-base
     ${IO_STREAM_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_io_stream
+target_link_libraries(zapata_example_io_stream
   PRIVATE
     systemd
     zapata-base
     zapata-io-stream
 )
-set_target_properties(zapata_test_io_stream
+set_target_properties(zapata_example_io_stream
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

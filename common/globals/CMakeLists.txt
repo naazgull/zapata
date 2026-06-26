@@ -45,27 +45,27 @@ install(DIRECTORY ${COMMON_GLOBALS_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_common_globals)
-add_dependencies(zapata_test_common_globals
+add_executable(zapata_example_common_globals)
+add_dependencies(zapata_example_common_globals
   zapata-base
   zapata-globals
 )
-target_sources(zapata_test_common_globals
+target_sources(zapata_example_common_globals
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/globals.cpp
 )
-target_include_directories(zapata_test_common_globals
+target_include_directories(zapata_example_common_globals
   PRIVATE
     zapata-base
     ${COMMON_GLOBALS_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_common_globals
+target_link_libraries(zapata_example_common_globals
   PRIVATE
     zapata-base
     zapata-globals
 )
 
-set_target_properties(zapata_test_common_globals
+set_target_properties(zapata_example_common_globals
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

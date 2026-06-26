@@ -121,19 +121,19 @@ install(DIRECTORY ${NETWORK_HTTP_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_http_retrieve)
-add_dependencies(zapata_test_http_retrieve
+add_executable(zapata_example_http_retrieve)
+add_dependencies(zapata_example_http_retrieve
   zapata-base
   zapata-net-http
   zapata-net-transport
   zapata-parser-http
   zapata-parser-json
 )
-target_sources(zapata_test_http_retrieve
+target_sources(zapata_example_http_retrieve
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/http_retrieve.cpp
 )
-target_include_directories(zapata_test_http_retrieve
+target_include_directories(zapata_example_http_retrieve
   PRIVATE
     zapata-base
     zapata-net-http
@@ -142,7 +142,7 @@ target_include_directories(zapata_test_http_retrieve
     zapata-parser-json
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_http_retrieve
+target_link_libraries(zapata_example_http_retrieve
   PRIVATE
     ssl
     zapata-base
@@ -151,7 +151,7 @@ target_link_libraries(zapata_test_http_retrieve
     zapata-parser-http
     zapata-parser-json
 )
-set_target_properties(zapata_test_http_retrieve
+set_target_properties(zapata_example_http_retrieve
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

@@ -45,27 +45,27 @@ install(DIRECTORY ${GENERATOR_AST_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_ast)
-add_dependencies(zapata_test_ast
+add_executable(zapata_example_ast)
+add_dependencies(zapata_example_ast
   zapata-base
   zapata-generator-ast
 )
-target_sources(zapata_test_ast
+target_sources(zapata_example_ast
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/ast.cpp
 )
-target_include_directories(zapata_test_ast
+target_include_directories(zapata_example_ast
   PRIVATE
     zapata-base
     zapata-generator-ast
     ${GENERATOR_AST_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_ast
+target_link_libraries(zapata_example_ast
   PRIVATE
     zapata-base
     zapata-generator-ast
 )
-set_target_properties(zapata_test_ast
+set_target_properties(zapata_example_ast
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

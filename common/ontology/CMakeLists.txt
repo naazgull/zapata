@@ -57,8 +57,8 @@ install(DIRECTORY ${COMMON_ONTOLOGY_INCLUDE_DIR}/zapata
   FILES_MATCHING PATTERN "*.h"
 )
 
-add_executable(zapata_test_common_ontology)
-add_dependencies(zapata_test_common_ontology
+add_executable(zapata_example_common_ontology)
+add_dependencies(zapata_example_common_ontology
   zapata-base
   zapata-globals
   zapata-lockfree
@@ -66,11 +66,11 @@ add_dependencies(zapata_test_common_ontology
   zapata-parser-uri
   zapata-ontology
 )
-target_sources(zapata_test_common_ontology
+target_sources(zapata_example_common_ontology
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/ontology.cpp
 )
-target_include_directories(zapata_test_common_ontology
+target_include_directories(zapata_example_common_ontology
   PRIVATE
     zapata-base
     zapata-globals
@@ -79,7 +79,7 @@ target_include_directories(zapata_test_common_ontology
     zapata-parser-uri
     ${COMMON_ONTOLOGY_INCLUDE_DIR}
 )
-target_link_libraries(zapata_test_common_ontology
+target_link_libraries(zapata_example_common_ontology
   PRIVATE
     zapata-base
     zapata-globals
@@ -88,7 +88,7 @@ target_link_libraries(zapata_test_common_ontology
     zapata-parser-uri
     zapata-ontology
 )
-set_target_properties(zapata_test_common_ontology
+set_target_properties(zapata_example_common_ontology
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
