@@ -24,7 +24,7 @@
  * @file lua.h
  * @brief Lua scripting language bridge.
  *
- * Integrates Lua 5.4 with the Zapata framework, allowing Lua scripts
+ * Integrates Lua with the Zapata framework, allowing Lua scripts
  * to be called from C++ and vice versa.
  *
  * @see zpt::lua::bridge

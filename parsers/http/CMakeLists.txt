@@ -5,6 +5,13 @@ set(PARSERS_HTTP_INCLUDE_DIR
 find_program(RE2C_EXECUTABLE re2c REQUIRED)
 find_program(BISON_EXECUTABLE bison REQUIRED)
 
+find_package(OpenSSL QUIET)
+
+if(NOT OPENSSL_FOUND)
+  message(STATUS "zapata-parser-http skipped: OpenSSL not found")
+  return()
+endif()
+
 set(HTTP_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${HTTP_GEN_DIR})
 
@@ -134,7 +141,7 @@ target_include_directories(zapata_example_http_server
 )
 target_link_libraries(zapata_example_http_server
   PRIVATE
-    ssl
+    OpenSSL::SSL
     zapata-base
     zapata-io-socket
     zapata-io-stream
@@ -174,7 +181,7 @@ target_include_directories(zapata_example_http_parser
 )
 target_link_libraries(zapata_example_http_parser
   PRIVATE
-    ssl
+    OpenSSL::SSL
     zapata-base
     zapata-io-socket
     zapata-io-stream

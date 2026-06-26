@@ -73,16 +73,6 @@ else()
   add_compile_options(-O3)
 endif()
 
-find_package(Lua 5.4)
-find_package(OpenSSL)
-find_package(SQLite3)
-
-include_directories(
-  SYSTEM
-    ${LUA_INCLUDE_DIR}
-    ${SQLite3_INCLUDE_DIRS}
-)
-
 add_subdirectory(bridges/base)
 add_subdirectory(bridges/lua)
 add_subdirectory(bridges/prolog)

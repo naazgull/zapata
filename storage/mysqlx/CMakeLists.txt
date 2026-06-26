@@ -2,6 +2,13 @@ set(STORAGE_MYSQLX_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_library(MYSQLCLIENT_LIBRARIES mysqlclient)
+
+if(NOT MYSQLCLIENT_LIBRARIES)
+  message(STATUS "zapata-storage-mysqlx skipped: libmysqlclient not found")
+  return()
+endif()
+
 add_library(zapata-storage-mysqlx SHARED)
 add_dependencies(zapata-storage-mysqlx
   zapata-base
@@ -34,7 +41,7 @@ target_link_libraries(zapata-storage-mysqlx
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    mysqlclient
+    ${MYSQLCLIENT_LIBRARIES}
 )
 set_target_properties(zapata-storage-mysqlx
   PROPERTIES
@@ -81,7 +88,7 @@ target_link_libraries(zapata_example_storage_mysqlx
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    mysqlclient
+    ${MYSQLCLIENT_LIBRARIES}
     zapata-storage-mysqlx
 )
 set_target_properties(zapata_example_storage_mysqlx

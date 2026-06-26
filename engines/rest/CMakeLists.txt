@@ -2,6 +2,13 @@ set(ENGINE_REST_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(SQLite3 QUIET)
+
+if(NOT SQLite3_FOUND)
+  message(STATUS "zapata-engine-rest skipped: SQLite3 not found")
+  return()
+endif()
+
 add_library(zapata-engine-rest SHARED)
 add_dependencies(zapata-engine-rest
   zapata-base

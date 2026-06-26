@@ -1,14 +1,14 @@
 # Lua Integration
 
-Zapata provides a Lua 5.4 scripting bridge for extending applications with dynamic scripting.
+Zapata provides a Lua scripting bridge for extending applications with dynamic scripting.
 
 ## Prerequisites
 
-Install Lua 5.4:
+Install Lua:
 
 ```bash
 # Debian/Ubuntu
-sudo apt install liblua5.4-dev
+sudo apt install liblua-dev
 
 # Arch Linux
 sudo pacman -S lua

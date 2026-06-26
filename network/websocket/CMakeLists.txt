@@ -2,6 +2,13 @@ set(NETWORK_WEBSOCKET_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(SQLite3 QUIET)
+
+if(NOT SQLite3_FOUND)
+  message(STATUS "zapata-net-websocket skipped: SQLite3 not found")
+  return()
+endif()
+
 add_library(zapata-net-websocket SHARED)
 add_dependencies(zapata-net-websocket
   zapata-base

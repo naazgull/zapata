@@ -2,6 +2,13 @@ set(STORAGE_SQLITE_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(SQLite3 QUIET)
+
+if(NOT SQLite3_FOUND)
+  message(STATUS "zapata-storage-sqlite skipped: SQLite3 not found")
+  return()
+endif()
+
 add_library(zapata-storage-sqlite SHARED)
 add_dependencies(zapata-storage-sqlite
   zapata-base

@@ -2,6 +2,15 @@ set(COMMON_BASE_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(OpenSSL QUIET)
+find_library(MAGIC_LIBRARIES magic)
+find_library(UUID_LIBRARIES uuid)
+
+if(NOT (OPENSSL_FOUND AND MAGIC_LIBRARIES AND UUID_LIBRARIES))
+  message(STATUS "zapata-base skipped: missing deps (OpenSSL=${OPENSSL_FOUND}, magic=${MAGIC_LIBRARIES}, uuid=${UUID_LIBRARIES})")
+  return()
+endif()
+
 add_library(zapata-base SHARED)
 target_sources(zapata-base
   PRIVATE
@@ -79,10 +88,10 @@ target_include_directories(zapata-base
 )
 target_link_libraries(zapata-base
   PUBLIC
-    magic
-    uuid
-    ssl
-    crypto
+    ${MAGIC_LIBRARIES}
+    ${UUID_LIBRARIES}
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 set_target_properties(zapata-base
   PROPERTIES

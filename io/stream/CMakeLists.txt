@@ -2,6 +2,13 @@ set(IO_STREAM_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_library(SYSTEMD_LIBRARIES systemd)
+
+if(NOT SYSTEMD_LIBRARIES)
+  message(STATUS "zapata-io-stream skipped: libsystemd not found")
+  return()
+endif()
+
 add_library(zapata-io-stream SHARED)
 add_dependencies(zapata-io-stream
   zapata-base
@@ -24,7 +31,7 @@ target_include_directories(zapata-io-stream
 )
 target_link_libraries(zapata-io-stream
   PRIVATE
-    systemd
+    ${SYSTEMD_LIBRARIES}
     zapata-base
 )
 set_target_properties(zapata-io-stream
@@ -62,7 +69,7 @@ target_include_directories(zapata_example_io_stream
 )
 target_link_libraries(zapata_example_io_stream
   PRIVATE
-    systemd
+    ${SYSTEMD_LIBRARIES}
     zapata-base
     zapata-io-stream
 )

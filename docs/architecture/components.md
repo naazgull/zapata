@@ -66,7 +66,7 @@ Zapata organizes its modules into categories. Each produces one or more shared l
 | Module | Library | Dependencies | Purpose |
 |--------|---------|-------------|---------|
 | base | `libzapata-bridge-base` | base, parser-json | CRTP bridge template |
-| lua | `libzapata-bridge-lua` | bridge-base, Lua 5.4 | Lua scripting |
+| lua | `libzapata-bridge-lua` | bridge-base, Lua | Lua scripting |
 
 ### Generators (`generators/`)
 

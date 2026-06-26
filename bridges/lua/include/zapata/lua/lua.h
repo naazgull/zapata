@@ -24,7 +24,7 @@
  * @file lua.h
  * @brief Lua bridge implementation.
  *
- * Provides bidirectional integration between C++ and Lua 5.4.
+ * Provides bidirectional integration between C++ and Lua.
  * Supports loading Lua modules, calling Lua functions from C++,
  * and registering C++ callbacks for Lua to call.
  *
@@ -71,7 +71,7 @@ namespace lua {
 /**
  * @brief Lua scripting language bridge.
  *
- * Integrates Lua 5.4 with Zapata, providing:
+ * Integrates Lua with Zapata, providing:
  * - Loading Lua scripts from files
  * - Calling Lua functions from C++
  * - Registering C++ callbacks callable from Lua

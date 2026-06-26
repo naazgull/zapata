@@ -2,6 +2,13 @@ set(NETWORK_LOCAL_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(OpenSSL QUIET)
+
+if(NOT OPENSSL_FOUND)
+  message(STATUS "zapata-net-local skipped: OpenSSL not found")
+  return()
+endif()
+
 add_library(zapata-net-local SHARED)
 add_dependencies(zapata-net-local
   zapata-base
@@ -141,8 +148,8 @@ target_include_directories(zapata_example_local_transport
 )
 target_link_libraries(zapata_example_local_transport
   PRIVATE
-    ssl
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket

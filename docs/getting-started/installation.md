@@ -28,7 +28,7 @@ Zapata requires a C++20 compatible compiler:
 |------------|---------|-------------------------|----------------|
 | SQLite3 | SQLite database | `libsqlite3-dev` | `sqlite` |
 | MySQL Client | MySQL database | `libmysqlclient-dev` | `mariadb-libs` |
-| Lua 5.4 | Lua scripting | `liblua5.4-dev` | `lua` |
+| Lua | Lua scripting | `liblua` | `lua` |
 | libmagic | MIME type detection | `libmagic-dev` | `file` |
 | libuuid | UUID generation | `uuid-dev` | `util-linux-libs` |
 | systemd | Journal integration | `libsystemd-dev` | `systemd-libs` |

@@ -82,7 +82,7 @@ Zapata is a RESTful API development framework for C++20. It provides a complete 
 - OpenSSL
 - SQLite3 (optional)
 - MySQL client library (optional)
-- Lua 5.4 (optional)
+- Lua (optional)
 
 ## License
 
