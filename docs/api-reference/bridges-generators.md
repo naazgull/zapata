@@ -7,7 +7,7 @@ The bridges and generators modules provide language integration and code generat
 | Module | Header | Description |
 |--------|--------|-------------|
 | bridges/base | `<zapata/bridge.h>` | CRTP base template for language bridges |
-| bridges/lua | `<zapata/lua.h>` | Lua 5.4 scripting integration |
+| bridges/lua | `<zapata/lua.h>` | Lua scripting integration |
 | generators/ast | `<zapata/ast.h>` | AST-based code generation |
 
 ---
@@ -83,7 +83,7 @@ The derived class `C` must implement:
 
 **Header:** `<zapata/lua.h>`
 
-Provides bidirectional integration between C++ and Lua 5.4.
+Provides bidirectional integration between C++ and Lua.
 
 #### zpt::lua_object
 

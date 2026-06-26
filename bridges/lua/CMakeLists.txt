@@ -2,10 +2,10 @@ set(BRIDGE_LUA_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_package(Lua 5.4 QUIET)
+find_package(Lua QUIET)
 
 if(NOT Lua_FOUND)
-  message(STATUS "zapata-bridge-lua skipped: Lua 5.4 not found")
+  message(STATUS "zapata-bridge-lua skipped: Lua not found")
   return()
 endif()
 
@@ -33,7 +33,6 @@ target_include_directories(zapata-bridge-lua
 )
 target_link_libraries(zapata-bridge-lua
   PUBLIC
-    lua5.4
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -77,7 +76,6 @@ target_include_directories(zapata-bridge-lua-plugin
 )
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
-    lua5.4
     zapata-base
     zapata-parser-json
     zapata-events
@@ -126,7 +124,6 @@ target_include_directories(zapata_example_bridge_lua
 )
 target_link_libraries(zapata_example_bridge_lua
   PUBLIC
-    lua5.4
     zapata-base
     zapata-parser-json
     zapata-bridge-base

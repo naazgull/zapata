@@ -80,6 +80,7 @@ auto zpt::lua_object::get() -> lua_State* { return this->__underlying; }
 
 zpt::lua::bridge::bridge()
   : __underlying{ luaL_newstate() } {
+    expect(this->__underlying != nullptr, "Lua failed to initialize state");
     luaL_openlibs(this->__underlying);
 }
 
@@ -312,6 +313,7 @@ zpt::lua::bridge::bridge(bridge const& _rhs)
   : __underlying{ luaL_newstate() }
   , __builtin_to_load{ _rhs.__builtin_to_load }
   , __external_to_load{ _rhs.__external_to_load } {
+    expect(this->__underlying != nullptr, "Lua failed to initialize state");
     luaL_openlibs(this->__underlying);
     this->initialize();
 }

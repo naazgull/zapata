@@ -27,7 +27,7 @@ Zapata provides a complete ecosystem for building high-performance HTTP services
 Optional dependencies:
 - SQLite3
 - MySQL client library
-- Lua 5.4
+- Lua
 - libmagic
 
 ## Building
