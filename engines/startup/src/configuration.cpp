@@ -41,4 +41,14 @@ auto zpt::startup::configuration::load(zpt::json _parameters, zpt::json& _output
     }
     zpt::conf::dirs(_output);
     zpt::conf::env(_output);
+
+    for (auto [_, __, _value] : _parameters("--")) {
+        auto _pair = _value->string();
+        auto _idx = _pair.find(":");
+        if (_idx == std::string::npos) { continue; }
+
+        auto _path = _pair.substr(0, _idx);
+        auto _to_set = zpt::json::parse_json_str(_pair.substr(_idx + 1));
+        _output->set_path(_path, _to_set);
+    }
 }
