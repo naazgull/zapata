@@ -24,6 +24,16 @@
 
 zpt::lua::bridge _bridge;
 
+std::string _script = R"(
+    function fact (n)
+      if n == 0 then
+        return 1
+      else
+        return n * fact(n-1)
+      end
+    end
+)";
+
 auto to_c(lua_State* _state) -> int {
     zlog(lua_gettop(_state), zpt::debug);
     auto& _instance = _bridge.thread_instance();
@@ -43,17 +53,24 @@ auto init_x(lua_State* _state) -> void {
 }
 
 auto main(int, char**) -> int {
-    _bridge                                                            //
-      .add_module(init_x, { "module", "builtin" })                     //
-      .add_module("/home/pf/Void/test1.lua", { "module", "builtin2" }) //
-      .add_module("/home/pf/Void/test2.lua", { "module", "builtin3" });
+    std::filesystem::path _module =
+      std::filesystem::temp_directory_path() / "zapata_test_lua_module1.lua";
+    std::ofstream _ofs;
+    _ofs.open(_module);
+    _ofs << _script << std::flush;
+    _ofs.close();
+
+    _bridge                                        //
+      .add_module(init_x, { "module", "builtin" }) //
+      .add_module(_module.string(), { "module", "builtin2" });
 
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "fact" },
+                                            zpt::json{ zpt::array, 10 }),
              zpt::info);
-        _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_c" }, zpt::undefined),
+             zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
                                             zpt::json{ zpt::array, 1, "testing", false }),
              zpt::info);
@@ -61,12 +78,13 @@ auto main(int, char**) -> int {
 
     std::thread _thread2{ [&]() -> void {
         std::cout << "Thread2:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "fact" },
+                                            zpt::json{ zpt::array, 20 }),
              zpt::info);
-        _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_c" }, zpt::undefined),
+             zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
+                                            zpt::json{ zpt::array, "something" }),
              zpt::info);
     } };
 
