@@ -9,6 +9,11 @@ if(NOT Lua_FOUND)
   return()
 endif()
 
+include_directories(
+  SYSTEM
+    ${LUA_INCLUDE_DIR}
+)
+
 add_library(zapata-bridge-lua SHARED)
 add_dependencies(zapata-bridge-lua
   zapata-base
