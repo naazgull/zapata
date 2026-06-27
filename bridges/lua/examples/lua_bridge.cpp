@@ -35,10 +35,8 @@ std::string _script = R"(
 )";
 
 auto to_c(lua_State* _state) -> int {
-    auto _n_params = lua_gettop(_state);
     auto& _instance = _bridge.thread_instance();
-    zpt::json _json;
-    if (_n_params != 0) { _json = _instance.object_to_json(_state); }
+    zpt::json _json = _instance.object_to_json(_state);
     zlog(_json, zpt::debug);
     _instance.json_to_object({ "a", _json, "b", { zpt::array, 1, 2, 3, 4, 10 } });
     return 1;
@@ -73,9 +71,15 @@ auto main(int, char**) -> int {
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
                                             zpt::undefined),
              zpt::info);
-        zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
-             zpt::info);
+        zlog(
+          _bridge.thread_instance().call(
+            zpt::json{ "module", "builtin", "function", "to_c" },
+            zpt::json{ zpt::array,
+                       zpt::json{ "c", 1, "d", zpt::json{ "e", zpt::json{ zpt::array, 1, 2, 3 } } },
+                       1,
+                       "testing",
+                       false }),
+          zpt::info);
     } };
 
     std::thread _thread2{ [&]() -> void {

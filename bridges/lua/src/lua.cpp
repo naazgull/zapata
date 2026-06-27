@@ -251,6 +251,10 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
             else { lua_pushstring(_return, _to_convert->string().data()); }
             break;
         }
+        case zpt::JSRegex: {
+            lua_pushstring(_return, static_cast<std::string>(_to_convert).data());
+            break;
+        }
         case zpt::JSDate: {
             lua_pushinteger(_return, (zpt::timestamp_t)_to_convert);
             break;
@@ -270,11 +274,9 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
         case zpt::JSLambda: {
             break;
         }
-        case zpt::JSNil: {
+        case zpt::JSNil:
+        case zpt::JSUndefined: {
             lua_pushnil(_return);
-            break;
-        }
-        default: {
             break;
         }
     }
