@@ -122,6 +122,30 @@ auto test_no_body_reply_at_stream_eof() -> void {
     check(remaining(_iss).empty(), "no_body_reply: nothing left in the stream");
 }
 
+auto test_chunked_reply() -> void {
+    // Simulates a typical llama.cpp non-streaming reply:
+    // HTTP/1.1 200 with Transfer-Encoding: chunked and no Content-Length.
+    std::ostringstream _oss;
+    _oss << "HTTP/1.1 200 OK\r\n"
+         << "Content-Type: application/json\r\n"
+         << "Transfer-Encoding: chunked\r\n"
+         << "\r\n"
+         << "7\r\n"
+         << "{\"a\":1}\r\n"
+         << "0\r\n"
+         << "\r\n"
+         << "AFTER";
+    std::istringstream _iss;
+    _iss.str(_oss.str());
+    auto _rep = zpt::allocate_message<zpt::http::basic_reply>();
+    _iss >> std::noskipws >> _rep;
+
+    check(static_cast<int>(_rep->status()) == 200, "chunked_reply: status is 200");
+    check(static_cast<std::string>(_rep->body()) == "{\"a\":1}",
+          "chunked_reply: body matches decoded chunk data");
+    check(remaining(_iss) == "AFTER", "chunked_reply: exactly the trailing bytes remain");
+}
+
 auto test_consecutive_messages_on_one_stream() -> void {
     // Two back-to-back requests on the same stream, as would happen on a
     // persistent (keep-alive) connection - the second from_stream() call
@@ -147,6 +171,7 @@ auto main() -> int {
     test_simple_get();
     test_post_with_body();
     test_chunked_body_with_trailer();
+    test_chunked_reply();
     test_no_body_reply_at_stream_eof();
     test_consecutive_messages_on_one_stream();
 

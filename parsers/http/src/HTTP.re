@@ -187,7 +187,7 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
-        [^\r\n* ]+ {
+        [^\r\n\x00* ]+ {
             this->captureMatch();
             return URL;
         }
@@ -214,7 +214,7 @@ auto zpt::Re2cHTTPLexer::lexReply() -> int {
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
-        [^\r\n ] {
+        [^\r\n\x00 ] {
             // Seeds matched() with this one character, then arms more() so
             // statustext's upcoming STRING rule appends to it instead of
             // replacing it - order matters: captureMatch() must run before
@@ -273,7 +273,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
             this->captureMatch();
             return CR_LF;
         }
-        ([^:\n\r]+) {
+        ([^:\n\r\x00]+) {
             this->captureMatch();
             std::string _m(this->matched());
             std::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
@@ -294,7 +294,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
 
 auto zpt::Re2cHTTPLexer::lexHeaderval() -> int {
     /*!re2c
-        [^\n\r]+ {
+        [^\n\r\x00]+ {
             this->captureMatch();
             this->begin(zpt::re2c_cond::headers);
             return STRING;
@@ -310,7 +310,7 @@ auto zpt::Re2cHTTPLexer::lexStatustext() -> int {
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
-        [^\r\n]+ {
+        [^\r\n\x00]+ {
             // If reached directly from lexReply's one-character transition
             // rule, captureMatch() here appends to the single character
             // already captured there (more() was armed by that rule).
@@ -327,7 +327,7 @@ auto zpt::Re2cHTTPLexer::lexContentLengthVal() -> int {
             this->captureMatch();
             return COLON;
         }
-        [^:\n\r]+ {
+        [^:\n\r\x00]+ {
             this->captureMatch();
             std::string _s(this->matched());
             zpt::fromstr(_s, &this->d_content_length);
@@ -344,9 +344,9 @@ auto zpt::Re2cHTTPLexer::lexTransferEncodingVal() -> int {
             this->captureMatch();
             return COLON;
         }
-        [^:\n\r]+ {
+        [^:\n\r\x00]+ {
             this->captureMatch();
-            this->d_chunked_body = (this->matched() == std::string(" chunked"));
+            this->d_chunked_body = (this->matched().find(std::string("chunked")) != std::string::npos);
             this->begin(zpt::re2c_cond::headers);
             return STRING;
         }
@@ -360,7 +360,7 @@ auto zpt::Re2cHTTPLexer::lexTrailerVal() -> int {
             this->captureMatch();
             return COLON;
         }
-        [^:\n\r]+ {
+        [^:\n\r\x00]+ {
             this->captureMatch();
             this->d_chunked_trailer = this->matched();
             this->begin(zpt::re2c_cond::headers);
@@ -383,7 +383,7 @@ auto zpt::Re2cHTTPLexer::lexPlainBody() -> int {
 
 auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
     /*!re2c
-        [^\r\n]* "\r\n" {
+        [^\r\n\x00]* "\r\n" {
             // Matches one full text line up to and including its line
             // ending: either a chunk-size line (hex digit run, optionally
             // followed by chunk-extensions that are not stripped, matching
