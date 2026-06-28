@@ -2,12 +2,17 @@ set(STORAGE_PGSQL_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_library(PQ_LIBRARIES pq)
+find_package(PostgreSQL 18 QUIET)
 
-if(NOT PQ_LIBRARIES)
+if(NOT PostgreSQL_FOUND)
   message(STATUS "zapata-storage-pgsql skipped: libpq not found")
   return()
 endif()
+
+include_directories(
+  SYSTEM
+    ${PostgreSQL_INCLUDE_DIRS}
+)
 
 add_library(zapata-storage-pgsql SHARED)
 add_dependencies(zapata-storage-pgsql
@@ -41,7 +46,7 @@ target_link_libraries(zapata-storage-pgsql
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${PQ_LIBRARIES}
+    ${PostgreSQL_LIBRARIES}
 )
 set_target_properties(zapata-storage-pgsql
   PROPERTIES
@@ -88,7 +93,7 @@ target_link_libraries(zapata_example_storage_pgsql
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${PQ_LIBRARIES}
+    ${PostgreSQL_LIBRARIES}
     zapata-storage-pgsql
 )
 set_target_properties(zapata_example_storage_pgsql
