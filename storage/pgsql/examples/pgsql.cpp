@@ -1,7 +1,8 @@
 #include <zapata/pgsql.h>
 
 auto main(int, char**) -> int {
-    zpt::json _config{ { "storage", { "pgsql", { "user", "zpt", "host", "127.0.0.1" } } } };
+    zpt::json _config{ { "storage",
+                         { "pgsql", { "user", "zpt", "host", "127.0.0.1", "db", "postgres" } } } };
     auto _connection = zpt::make_connection<zpt::storage::pgsql::connection>(_config);
     auto _session = _connection->session();
     _session->sql("create schema if not exists test");

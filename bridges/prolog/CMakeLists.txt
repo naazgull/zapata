@@ -2,7 +2,7 @@ set(BRIDGE_PROLOG_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_package(SWIPL QUIET)
+find_package(SWIPL 10 QUIET)
 
 if(NOT SWIPL_FOUND)
   message(STATUS "zapata-bridge-prolog skipped: SWI-Prolog not found")

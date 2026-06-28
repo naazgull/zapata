@@ -45,8 +45,7 @@ int main() {
     {
         auto _j = zpt::functional::parse("gt(integer(0.1, \"zpto\"))");
         check(static_cast<std::string>(_j["functor"]) == "gt", "gt(...) functor parses");
-        check(_j["params"]->ok() && _j["params"]->size() == 1,
-              "gt(...) has one param");
+        check(_j["params"]->ok() && _j["params"]->size() == 1, "gt(...) has one param");
         auto _inner = _j["params"][0];
         check(static_cast<std::string>(_inner["functor"]) == "integer",
               "nested integer(...) functor parses");
@@ -73,8 +72,7 @@ int main() {
         check(_j["params"]->size() == 2, "ge(...) has two params");
         check(static_cast<std::string>(_j["params"][0]["functor"]) == "integer",
               "first param functor parses");
-        check(_j["params"][0]["params"]->size() == 2,
-              "integer(...) has two params");
+        check(_j["params"][0]["params"]->size() == 2, "integer(...) has two params");
         check(static_cast<std::string>(_j["params"][1]["functor"]) == "float",
               "second param functor parses");
         check(_j["params"][1]["params"]->size() == 3, "float(...) has three params");

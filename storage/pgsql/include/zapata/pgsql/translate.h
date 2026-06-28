@@ -71,9 +71,8 @@ class result_set_metadata {
 };
 
 /** @brief Converts a PostgreSQL result row to JSON using column metadata. */
-auto to_json(PGresult* _result,
-             zpt::storage::pgsql::result_set_metadata const& _cols,
-             int _row = 0) -> zpt::json;
+auto to_json(PGresult* _result, zpt::storage::pgsql::result_set_metadata const& _cols, int _row = 0)
+  -> zpt::json;
 /** @brief Converts a PostgreSQL result row to JSON (convenience overload). */
 auto to_json(PGresult* _result, int _row = 0) -> zpt::json;
 /** @brief Generates a SELECT SQL query from JSON field/filter descriptions. */
@@ -102,8 +101,6 @@ auto zpt::storage::pgsql::result_set_metadata::get_integer(PGresult* _result,
                                                            int _row,
                                                            int _column) const -> T {
     auto* str = PQgetvalue(_result, _row, _column);
-    if (!str || PQgetisnull(_result, _row, _column)) {
-        return T{0};
-    }
-    return static_cast<T>(std::stoll(std::string{str}));
+    if (!str || PQgetisnull(_result, _row, _column)) { return T{ 0 }; }
+    return static_cast<T>(std::stoll(std::string{ str }));
 }

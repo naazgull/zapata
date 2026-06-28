@@ -23,17 +23,15 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 #include <zapata/pgsql/translate.h>
 
 // ---- result_set_metadata (lightweight, for PGresult columns) ----
 
 zpt::storage::pgsql::result_set_metadata::result_set_metadata(PGresult* _result)
   : __metadata{ _result } {
-    if (_result != nullptr) {
-        this->__column_count = PQnfields(_result);
-    }
+    if (_result != nullptr) { this->__column_count = PQnfields(_result); }
 }
 
 zpt::storage::pgsql::result_set_metadata::result_set_metadata(result_set_metadata&& rhs)
@@ -48,14 +46,15 @@ auto zpt::storage::pgsql::result_set_metadata::operator=(result_set_metadata&& r
 }
 
 auto zpt::storage::pgsql::result_set_metadata::name(size_t _column) const -> std::string {
-    return std::string{PQfname(this->__metadata, static_cast<int>(_column))};
+    return std::string{ PQfname(this->__metadata, static_cast<int>(_column)) };
 }
 
 auto zpt::storage::pgsql::result_set_metadata::type(size_t _column) const -> Oid {
     return PQftype(this->__metadata, static_cast<int>(_column));
 }
 
-auto zpt::storage::pgsql::result_set_metadata::tableoid([[maybe_unused]] size_t _column) const -> Oid {
+auto zpt::storage::pgsql::result_set_metadata::tableoid([[maybe_unused]] size_t _column) const
+  -> Oid {
     // libpq 13+ has PQftablecollation; older versions have PQftableoid.
     // This function is only needed for type introspection and not used in core paths.
     return 0;
@@ -80,14 +79,15 @@ auto zpt::storage::pgsql::result_set_metadata::get_string(PGresult* _result,
 
 // ---- to_json: convert PGresult row to JSON object ----
 
-auto zpt::storage::pgsql::to_json(PGresult* _result,
-                                  [[maybe_unused]] zpt::storage::pgsql::result_set_metadata const& _cols,
-                                  int _row) -> zpt::json {
+auto zpt::storage::pgsql::to_json(
+  PGresult* _result,
+  [[maybe_unused]] zpt::storage::pgsql::result_set_metadata const& _cols,
+  int _row) -> zpt::json {
     auto _record = zpt::json::object();
     int _ncols = PQnfields(_result);
 
     for (int _col_idx = 0; _col_idx < _ncols; ++_col_idx) {
-        auto _name = std::string{PQfname(_result, _col_idx)};
+        auto _name = std::string{ PQfname(_result, _col_idx) };
 
         if (PQgetisnull(_result, _row, _col_idx)) {
             _record[_name] = zpt::undefined;
@@ -108,7 +108,8 @@ auto zpt::storage::pgsql::to_json(PGresult* _result,
         }
 
         // String-like types
-        if (_type == 25 || _type == 1043 || _type == 1009 || _type == 17) { // text, varchar, name, bytea
+        if (_type == 25 || _type == 1043 || _type == 1009 ||
+            _type == 17) { // text, varchar, name, bytea
             _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
             continue;
         }
@@ -280,27 +281,25 @@ auto zpt::storage::pgsql::to_delete(zpt::json _pattern) -> std::string {
 }
 
 auto zpt::storage::pgsql::to_assignment_list(zpt::json _to_convert,
-                                              std::ostream& _out,
-                                              std::string_view _separator) -> void {
+                                             std::ostream& _out,
+                                             std::string_view _separator) -> void {
     bool _first{ true };
     for (auto const& [_, _key, _value] : _to_convert) {
         if (!_first) { _out << _separator; }
         _first = false;
-        _out << "\"" << static_cast<std::string>(_key)
-             << "\" = " << quote(_value);
+        _out << "\"" << static_cast<std::string>(_key) << "\" = " << quote(_value);
     }
 }
 
 // ---- quoting ----
 
-auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_quote) -> std::string {
+auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_quote)
+  -> std::string {
     bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
                   _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
                   _to_quote->type() == zpt::JSObject;
 
-    if (!_to_quote->ok()) {
-        return "NULL";
-    }
+    if (!_to_quote->ok()) { return "NULL"; }
 
     std::string _str = static_cast<std::string>(_to_quote);
 
@@ -313,12 +312,8 @@ auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_qu
     std::ostringstream _oss;
     _oss << "'";
     for (char _c : _str) {
-        if (_c == '\'') {
-            _oss << "''";
-        }
-        else {
-            _oss << _c;
-        }
+        if (_c == '\'') { _oss << "''"; }
+        else { _oss << _c; }
     }
     _oss << "'";
 

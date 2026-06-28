@@ -22,7 +22,8 @@
 
 /**
  * @file URIParser.h
- * @brief URI parser (re2c/bison replacement for the generated flexc++/bisonc++ URILexer/URITokenizerBase).
+ * @brief URI parser (re2c/bison replacement for the generated flexc++/bisonc++
+ * URILexer/URITokenizerBase).
  *
  * Parses URI strings into structured JSON components (scheme, host,
  * path, query parameters, fragment).

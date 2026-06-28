@@ -96,15 +96,13 @@ int main() {
                     "user info + host + path + params");
 
     // Placeholder in params value
-    check_roundtrip(
-      "http://pf@na.zgul.me/api/2.0/users/"
-      "me?a=2&b=3&c=&d={.ge(integer(0,2),float(1,2,3)).}",
-      "placeholder function in param value");
+    check_roundtrip("http://pf@na.zgul.me/api/2.0/users/"
+                    "me?a=2&b=3&c=&d={.ge(integer(0,2),float(1,2,3)).}",
+                    "placeholder function in param value");
 
-    check_roundtrip(
-      "http://pf@na.zgul.me/api/2.0/users/"
-      "me?a=2&b=3&c=&d=integer(0,2)&e={.ge(integer(0,2),float(1,2,3)).}",
-      "multiple params with placeholder");
+    check_roundtrip("http://pf@na.zgul.me/api/2.0/users/"
+                    "me?a=2&b=3&c=&d=integer(0,2)&e={.ge(integer(0,2),float(1,2,3)).}",
+                    "multiple params with placeholder");
 
     // FTP with user info
     check_roundtrip("ftp://pf@na.zgul.me/files/movies", "ftp with user info");
@@ -113,8 +111,7 @@ int main() {
     check_roundtrip("#some_point_in_doc", "anchor only");
 
     // Placeholder in query param
-    check_roundtrip("http://localhost:8080/users?name={.lower(u).}",
-                    "placeholder in query param");
+    check_roundtrip("http://localhost:8080/users?name={.lower(u).}", "placeholder in query param");
 
     std::cout << "all tests passed" << std::endl;
     return 0;

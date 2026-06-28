@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <zapata/uri/Re2cURILexer.h>
 #include <zapata/json/JSONClass.h>
+#include <zapata/uri/Re2cURILexer.h>
 
 namespace zpt {
 
