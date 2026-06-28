@@ -27,17 +27,13 @@
 // ---- PGconn deleter ----
 
 auto zpt::storage::pgsql::pgsql_conn_deinit::operator()(PGconn* _conn) const -> void {
-    if (_conn != nullptr) {
-        PQfinish(_conn);
-    }
+    if (_conn != nullptr) { PQfinish(_conn); }
 }
 
 // ---- PGresult deleter ----
 
 auto zpt::storage::pgsql::pgsql_result_deinit::operator()(PGresult* _res) const -> void {
-    if (_res != nullptr) {
-        PQclear(_res);
-    }
+    if (_res != nullptr) { PQclear(_res); }
 }
 
 // ---- Library (no-op: libpq is lazy-initialized per connection) ----
@@ -75,9 +71,11 @@ auto zpt::storage::pgsql::connection::open(zpt::json _options) -> zpt::storage::
     if (!_pass.empty()) { _connstr << " password='" << _pass << "'"; }
     if (!_db.empty()) { _connstr << " dbname='" << _db << "'"; }
 
+    std::cout << _connstr.str() << std::endl;
+
     auto* _pg = PQconnectdb(_connstr.str().c_str());
     if (PQstatus(_pg) != CONNECTION_OK) {
-        auto _err = std::string{PQerrorMessage(_pg)};
+        auto _err = std::string{ PQerrorMessage(_pg) };
         PQfinish(_pg);
         expect(false, std::format("Unable to connect to PostgreSQL: {}", _err));
     }
@@ -92,9 +90,7 @@ auto zpt::storage::pgsql::connection::close() -> zpt::storage::connection::type*
 }
 
 auto zpt::storage::pgsql::connection::session() -> zpt::storage::session {
-    if (PQstatus(this->__pgsql.get()) != CONNECTION_OK) {
-        this->open(this->__options);
-    }
+    if (PQstatus(this->__pgsql.get()) != CONNECTION_OK) { this->open(this->__options); }
     return zpt::make_session<zpt::storage::pgsql::session>(*this);
 }
 
@@ -110,8 +106,7 @@ zpt::storage::pgsql::session::session(zpt::storage::pgsql::connection const& _co
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
     expect(_ok,
-           std::format("Transaction failed to start: {}",
-                       PQerrorMessage(this->__pgsql.get())));
+           std::format("Transaction failed to start: {}", PQerrorMessage(this->__pgsql.get())));
 }
 
 zpt::storage::pgsql::session::~session() { this->rollback(); }
@@ -130,8 +125,7 @@ auto zpt::storage::pgsql::session::commit() -> zpt::storage::session::type* {
     _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
     expect(_ok,
-           std::format("Transaction failed to start: {}",
-                       PQerrorMessage(this->__pgsql.get())));
+           std::format("Transaction failed to start: {}", PQerrorMessage(this->__pgsql.get())));
     return this;
 }
 
@@ -141,7 +135,7 @@ auto zpt::storage::pgsql::session::rollback() -> zpt::storage::session::type* {
     PQclear(_res);
     // If we're already in a broken state, PQexec may fail — that's OK
     if (PQresultStatus(_res) == PGRES_FATAL_ERROR &&
-        std::string{PQerrorMessage(this->__pgsql.get())}.find("no transaction in progress") !=
+        std::string{ PQerrorMessage(this->__pgsql.get()) }.find("no transaction in progress") !=
           std::string::npos) {
         PQclear(_res);
         return this;
@@ -153,10 +147,9 @@ auto zpt::storage::pgsql::session::rollback() -> zpt::storage::session::type* {
 auto zpt::storage::pgsql::session::sql(std::string const& _statement)
   -> zpt::storage::session::type* {
     auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK ||
-               PQresultStatus(_res) == PGRES_TUPLES_OK;
+    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
     if (!_ok) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("SQL failed: {} — {}", _err, _statement));
     }
@@ -231,22 +224,18 @@ auto zpt::storage::pgsql::collection::count(zpt::json _search) -> size_t {
     auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
     auto _status = PQresultStatus(_res);
     if (_status != PGRES_TUPLES_OK) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("count failed: {} — {}", _err, _statement));
     }
 
     size_t _count = 0;
-    if (PQntuples(_res) > 0) {
-        _count = std::stoul(PQgetvalue(_res, 0, 0));
-    }
+    if (PQntuples(_res) > 0) { _count = std::stoul(PQgetvalue(_res, 0, 0)); }
     PQclear(_res);
     return _count;
 }
 
-auto zpt::storage::pgsql::collection::table() const -> std::string const& {
-    return this->__table;
-}
+auto zpt::storage::pgsql::collection::table() const -> std::string const& { return this->__table; }
 
 auto zpt::storage::pgsql::collection::pgsql() const -> pgsql_ptr { return this->__pgsql; }
 
@@ -321,13 +310,9 @@ auto zpt::storage::pgsql::action_add::fields(zpt::json) -> zpt::storage::action:
     return this;
 }
 
-auto zpt::storage::pgsql::action_add::offset(size_t) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::pgsql::action_add::offset(size_t) -> zpt::storage::action::type* { return this; }
 
-auto zpt::storage::pgsql::action_add::limit(size_t) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::pgsql::action_add::limit(size_t) -> zpt::storage::action::type* { return this; }
 
 auto zpt::storage::pgsql::action_add::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
@@ -348,7 +333,7 @@ auto zpt::storage::pgsql::action_add::execute() -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     if (!_ok) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("INSERT failed: {} — {}", _err, _sql));
     }
@@ -411,8 +396,7 @@ auto zpt::storage::pgsql::action_modify::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::pgsql::action_modify::patch(zpt::json _document)
-  -> zpt::storage::action::type* {
+auto zpt::storage::pgsql::action_modify::patch(zpt::json _document) -> zpt::storage::action::type* {
     this->__underlying += _document;
     return this;
 }
@@ -458,7 +442,7 @@ auto zpt::storage::pgsql::action_modify::execute() -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     if (!_ok) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("UPDATE failed: {} — {}", _err, _sql));
     }
@@ -555,7 +539,7 @@ auto zpt::storage::pgsql::action_remove::execute() -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     if (!_ok) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("DELETE failed: {} — {}", _err, _sql));
     }
@@ -647,7 +631,7 @@ auto zpt::storage::pgsql::action_replace::execute() -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     if (!_ok) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("UPSERT failed: {} — {}", _err, _sql));
     }
@@ -767,7 +751,7 @@ auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _status = PQresultStatus(_res);
     if (_status != PGRES_TUPLES_OK && _status != PGRES_COMMAND_OK) {
-        auto _err = std::string{PQerrorMessage(this->__pgsql.get())};
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
         PQclear(_res);
         expect(false, std::format("SELECT failed: {} — {}", _err, _sql));
     }
@@ -827,9 +811,7 @@ auto zpt::storage::pgsql::result::generated_id() -> zpt::json { return this->__g
 auto zpt::storage::pgsql::result::count() const -> size_t {
     auto* _res = this->__result.get();
     if (_res == nullptr) { return 0; }
-    if (this->__is_doc_result) {
-        return static_cast<size_t>(PQntuples(_res));
-    }
+    if (this->__is_doc_result) { return static_cast<size_t>(PQntuples(_res)); }
     auto* _tag = PQcmdTuples(_res);
     if (_tag) { return std::stoul(_tag); }
     return 0;

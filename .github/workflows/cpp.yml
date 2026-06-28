@@ -15,7 +15,7 @@ jobs:
     - name: Update OS (APT)
       run: sudo apt update && sudo apt -y upgrade
     - name: Install dependencies (APT)
-      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev uuid-dev g++ cmake liblmdb-dev libsqlite3-dev lua5.4 liblua5.4-dev libmysqlclient-dev re2c bison swi-prolog
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev uuid-dev g++ cmake liblmdb-dev libsqlite3-dev lua5.4 liblua5.4-dev libmysqlclient-dev re2c bison swi-prolog postgresql
     - name: Configure
       run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
     - name: Build
