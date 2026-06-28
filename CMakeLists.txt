@@ -109,11 +109,11 @@ add_subdirectory(parsers/uri)
 add_subdirectory(storage/connector)
 add_subdirectory(storage/mysqlx)
 add_subdirectory(storage/sqlite)
+# add_subdirectory(storage/pgsql)
 # add_subdirectory(network/mqtt)
 # add_subdirectory(network/smtp)
 # add_subdirectory(storage/couchdb)
 # add_subdirectory(storage/mongodb)
-# add_subdirectory(storage/postgresql)
 # add_subdirectory(storage/redis)
 
 # ------------------------------------------------------------------------
