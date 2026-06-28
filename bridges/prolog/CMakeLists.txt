@@ -2,6 +2,13 @@ set(BRIDGE_PROLOG_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(SWIPL QUIET)
+
+if(NOT SWIPL_FOUND)
+  message(STATUS "zapata-bridge-prolog skipped: SWI-Prolog not found")
+  return()
+endif()
+
 add_library(zapata-bridge-prolog SHARED)
 add_dependencies(zapata-bridge-prolog
   zapata-base
@@ -20,15 +27,18 @@ target_include_directories(zapata-bridge-prolog
     zapata-base
     zapata-parser-json
     zapata-bridge-base
+    swipl::libswipl
     ${BRIDGE_PROLOG_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
+target_compile_definitions(zapata-bridge-prolog PRIVATE SWICPP=1)
 target_link_libraries(zapata-bridge-prolog
   PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
+    swipl::libswipl
 )
 set_target_properties(zapata-bridge-prolog
   PROPERTIES
@@ -75,6 +85,7 @@ target_link_libraries(zapata-bridge-prolog-plugin
     zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-prolog
+    swipl::libswipl
 )
 set_target_properties(zapata-bridge-prolog-plugin
   PROPERTIES
@@ -119,6 +130,7 @@ target_link_libraries(zapata_example_bridge_prolog
     zapata-parser-json
     zapata-bridge-base
     zapata-bridge-prolog
+    swipl::libswipl
 )
 set_target_properties(zapata_example_bridge_prolog
   PROPERTIES
