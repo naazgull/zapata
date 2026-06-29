@@ -169,10 +169,7 @@ auto zpt::storage::pgsql::session::pgsql() const -> pgsql_ptr { return this->__p
 zpt::storage::pgsql::database::database(zpt::storage::pgsql::session const& _session,
                                         std::string const& _db)
   : __pgsql{ _session.pgsql() }
-  , __database{ _db } {
-    // For PostgreSQL, we just store the database name.
-    // Actual "USE" is implicit via the connection string.
-}
+  , __schema{ _db } {}
 
 auto zpt::storage::pgsql::database::sql(std::string const&) -> zpt::storage::database::type* {
     expect(false, "database `sql` method not implemented for PostgreSQL, use session's");
@@ -184,6 +181,8 @@ auto zpt::storage::pgsql::database::collection(std::string const& _collection) c
     return zpt::make_collection<zpt::storage::pgsql::collection>(*this, _collection);
 }
 
+auto zpt::storage::pgsql::database::schema() const -> std::string const& { return this->__schema; }
+
 auto zpt::storage::pgsql::database::pgsql() const -> pgsql_ptr { return this->__pgsql; }
 
 // ---- Collection ----
@@ -191,7 +190,8 @@ auto zpt::storage::pgsql::database::pgsql() const -> pgsql_ptr { return this->__
 zpt::storage::pgsql::collection::collection(zpt::storage::pgsql::database const& _database,
                                             std::string const& _collection)
   : __pgsql{ _database.pgsql() }
-  , __table{ _collection } {}
+  , __table{ _collection }
+  , __schema{ _database.schema() } {}
 
 auto zpt::storage::pgsql::collection::add(zpt::json _document) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::pgsql::action_add>(*this, _document);
@@ -237,13 +237,18 @@ auto zpt::storage::pgsql::collection::count(zpt::json _search) -> size_t {
 
 auto zpt::storage::pgsql::collection::table() const -> std::string const& { return this->__table; }
 
+auto zpt::storage::pgsql::collection::schema() const -> std::string const& {
+    return this->__schema;
+}
+
 auto zpt::storage::pgsql::collection::pgsql() const -> pgsql_ptr { return this->__pgsql; }
 
 // ---- Action (base) ----
 
 zpt::storage::pgsql::action::action(zpt::storage::pgsql::collection const& _collection)
   : __pgsql{ _collection.pgsql() }
-  , __table{ _collection.table() } {}
+  , __table{ _collection.table() }
+  , __schema{ _collection.schema() } {}
 
 auto zpt::storage::pgsql::action::result() const -> pgsql_result_ptr { return this->__result; }
 
@@ -325,7 +330,7 @@ auto zpt::storage::pgsql::action_add::execute() -> zpt::storage::result {
         _record << "_id" << _id;
         this->__generated_ids << _id;
         _oss << std::vformat(zpt::storage::pgsql::to_insert(_record),
-                             std::make_format_args(this->__table));
+                             std::make_format_args(this->__schema, this->__table));
     }
     _oss << std::flush;
     auto _sql = _oss.str();
@@ -435,7 +440,7 @@ auto zpt::storage::pgsql::action_modify::execute() -> zpt::storage::result {
 
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_update(this->__underlying, this->__filter),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
 
@@ -532,7 +537,7 @@ auto zpt::storage::pgsql::action_remove::execute() -> zpt::storage::result {
 
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_delete(this->__filter),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
 
@@ -624,7 +629,7 @@ auto zpt::storage::pgsql::action_replace::bind(zpt::json) -> zpt::storage::actio
 auto zpt::storage::pgsql::action_replace::execute() -> zpt::storage::result {
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_upsert(this->__underlying),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
 
@@ -731,7 +736,7 @@ auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
 
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_query(this->__fields, this->__underlying),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(this->__schema, this->__table));
 
     if (this->__suffix["order by"]->ok()) {
         _oss << " ORDER BY ";
