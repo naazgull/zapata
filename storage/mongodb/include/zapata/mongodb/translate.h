@@ -29,7 +29,6 @@
 
 #pragma once
 
-#include <libpq-fe.h>
 #include <zapata/json.h>
 
 namespace zpt {

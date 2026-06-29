@@ -22,10 +22,10 @@
 
 /**
  * @file connector.h
- * @brief PostgreSQL storage connector implementation using the libpq C API.
+ * @brief MongoDB storage connector implementation using the libpq C API.
  *
- * Implements the storage abstraction layer for PostgreSQL databases using
- * the PostgreSQL libpq client library. Provides the full connector hierarchy:
+ * Implements the storage abstraction layer for MongoDB databases using
+ * the MongoDB libpq client library. Provides the full connector hierarchy:
  * connection, session, database, collection, action, and result types.
  *
  * @see zpt::storage::connection
@@ -34,7 +34,6 @@
 
 #pragma once
 
-#include <libpq-fe.h>
 #include <zapata/connector.h>
 #include <zapata/json.h>
 #include <zapata/mongodb/translate.h>
@@ -49,8 +48,8 @@ class collection;
 class action;
 class result;
 
-using mongodb_ptr = std::shared_ptr<PGconn>;
-using mongodb_result_ptr = std::shared_ptr<PGresult>;
+using mongodb_ptr = std::shared_ptr<>;
+using mongodb_result_ptr = std::shared_ptr<>;
 
 /** @brief Deleter for PGconn handles used with shared_ptr. */
 struct mongodb_conn_deinit {
@@ -62,19 +61,19 @@ struct mongodb_result_deinit {
     auto operator()(PGresult*) const -> void;
 };
 
-/** @brief RAII wrapper for PostgreSQL library initialization/cleanup. */
+/** @brief RAII wrapper for MongoDB library initialization/cleanup. */
 class library {
   public:
-    /** @brief Initializes the PostgreSQL client library (no-op, libpq is lazy). */
+    /** @brief Initializes the MongoDB client library (no-op, libpq is lazy). */
     library();
-    /** @brief Finalizes the PostgreSQL client library (no-op, libpq is lazy). */
+    /** @brief Finalizes the MongoDB client library (no-op, libpq is lazy). */
     virtual ~library();
 };
 
-/** @brief Returns the global PostgreSQL library instance (initializes on first call). */
+/** @brief Returns the global MongoDB library instance (initializes on first call). */
 auto init() -> library&;
 
-/** @brief PostgreSQL connection implementation. */
+/** @brief MongoDB connection implementation. */
 class connection : public zpt::storage::connection::type {
   public:
     /** @brief Constructs a connection with options (host, user, password, port, db). */
@@ -82,9 +81,9 @@ class connection : public zpt::storage::connection::type {
     /** @brief Destructor. */
     virtual ~connection() override = default;
 
-    /** @brief Opens or re-opens the PostgreSQL connection with the given options. */
+    /** @brief Opens or re-opens the MongoDB connection with the given options. */
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
-    /** @brief Closes the PostgreSQL connection. */
+    /** @brief Closes the MongoDB connection. */
     virtual auto close() -> zpt::storage::connection::type* override;
     /** @brief Creates a new session from this connection. */
     virtual auto session() -> zpt::storage::session override;
@@ -100,20 +99,20 @@ class connection : public zpt::storage::connection::type {
 };
 
 /**
- * @brief PostgreSQL session implementation.
+ * @brief MongoDB session implementation.
  *
  * Wraps a PGconn connection handle and provides transaction control
  * and database selection.
  */
 class session : public zpt::storage::session::type {
   public:
-    /** @brief Constructs a session from the given PostgreSQL connection. */
+    /** @brief Constructs a session from the given MongoDB connection. */
     session(zpt::storage::mongodb::connection const& _connection);
     session(zpt::storage::mongodb::session const& _rhs) = delete;
     session(zpt::storage::mongodb::session&& _rhs) = delete;
     /** @brief Destructor; ends the session thread. */
     virtual ~session() override;
-    /** @brief Returns true if the underlying PostgreSQL connection is active. */
+    /** @brief Returns true if the underlying MongoDB connection is active. */
     virtual auto is_open() const -> bool override;
     /** @brief Commits the current transaction. */
     virtual auto commit() -> zpt::storage::session::type* override;
@@ -130,7 +129,7 @@ class session : public zpt::storage::session::type {
   private:
     mongodb_ptr __mongodb{ nullptr };
 };
-/** @brief PostgreSQL database implementation (represents a schema/database). */
+/** @brief MongoDB database implementation (represents a schema/database). */
 class database : public zpt::storage::database::type {
   public:
     /** @brief Constructs a database handle for the given schema name. */
@@ -153,7 +152,7 @@ class database : public zpt::storage::database::type {
     mongodb_ptr __mongodb{ nullptr };
     std::string __schema;
 };
-/** @brief PostgreSQL collection implementation (represents a database table). */
+/** @brief MongoDB collection implementation (represents a database table). */
 class collection : public zpt::storage::collection::type {
   public:
     /** @brief Constructs a collection handle for the given table within a database. */
@@ -186,7 +185,7 @@ class collection : public zpt::storage::collection::type {
     std::string __table;
     std::string __schema;
 };
-/** @brief Base class for PostgreSQL action operations (manages result sets). */
+/** @brief Base class for MongoDB action operations (manages result sets). */
 class action : public zpt::storage::action::type {
   public:
     /** @brief Constructs an action bound to the given collection. */
@@ -196,7 +195,7 @@ class action : public zpt::storage::action::type {
 
     /** @brief Returns the result set from the last execution. */
     auto result() const -> mongodb_result_ptr;
-    /** @brief Returns the PostgreSQL connection handle. */
+    /** @brief Returns the MongoDB connection handle. */
     auto mongodb() const -> mongodb_ptr;
 
   protected:
@@ -205,7 +204,7 @@ class action : public zpt::storage::action::type {
     std::string __table;
     std::string __schema;
 };
-/** @brief PostgreSQL INSERT action builder. */
+/** @brief MongoDB INSERT action builder. */
 class action_add : public zpt::storage::mongodb::action {
   public:
     /** @brief Constructs an INSERT action for the given document. */
@@ -250,7 +249,7 @@ class action_add : public zpt::storage::mongodb::action {
     zpt::json __underlying{ nullptr };
     zpt::json __generated_ids{ nullptr };
 };
-/** @brief PostgreSQL UPDATE action builder. */
+/** @brief MongoDB UPDATE action builder. */
 class action_modify : public zpt::storage::mongodb::action {
   public:
     /** @brief Constructs an UPDATE action with the given search criteria. */
@@ -294,7 +293,7 @@ class action_modify : public zpt::storage::mongodb::action {
     zpt::json __filter{ nullptr };
     zpt::json __bind{ nullptr };
 };
-/** @brief PostgreSQL DELETE action builder. */
+/** @brief MongoDB DELETE action builder. */
 class action_remove : public zpt::storage::mongodb::action {
   public:
     /** @brief Constructs a DELETE action targeting rows that match the given search criteria. */
@@ -337,7 +336,7 @@ class action_remove : public zpt::storage::mongodb::action {
     zpt::json __filter{ nullptr };
     zpt::json __bind{ nullptr };
 };
-/** @brief PostgreSQL REPLACE action builder. */
+/** @brief MongoDB REPLACE action builder. */
 class action_replace : public zpt::storage::mongodb::action {
   public:
     /** @brief Constructs a REPLACE action for the document with the given ID. */
@@ -375,13 +374,13 @@ class action_replace : public zpt::storage::mongodb::action {
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
     /** @brief Binds named parameter values into the prepared REPLACE statement. */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the PostgreSQL REPLACE statement and returns the result. */
+    /** @brief Executes the MongoDB REPLACE statement and returns the result. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
     zpt::json __underlying{ nullptr };
 };
-/** @brief PostgreSQL SELECT action builder with filtering, sorting, and pagination. */
+/** @brief MongoDB SELECT action builder with filtering, sorting, and pagination. */
 class action_find : public zpt::storage::mongodb::action {
   public:
     /** @brief Constructs a SELECT action that returns all rows in the collection. */
@@ -428,7 +427,7 @@ class action_find : public zpt::storage::mongodb::action {
     zpt::json __bind{ nullptr };
     zpt::json __suffix{ nullptr };
 };
-/** @brief PostgreSQL query result set. */
+/** @brief MongoDB query result set. */
 class result : public zpt::storage::result::type {
   public:
     /** @brief Constructs a result from a generic action (executes the statement). */
@@ -443,7 +442,7 @@ class result : public zpt::storage::result::type {
     result(zpt::storage::mongodb::action_replace& _action);
     /** @brief Constructs a result from a SELECT action, holding the result set. */
     result(zpt::storage::mongodb::action_find& _action);
-    /** @brief Destructor; frees the PostgreSQL result set. */
+    /** @brief Destructor; frees the MongoDB result set. */
     virtual ~result() override;
     /** @brief Fetches up to @p _amount rows as a JSON array (0 = all). */
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
