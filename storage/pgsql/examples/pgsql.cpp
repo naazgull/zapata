@@ -1,8 +1,7 @@
 #include <zapata/pgsql.h>
 
 auto main(int, char**) -> int {
-    zpt::json _config{ { "storage",
-                         { "pgsql", { "user", "zpt", "host", "127.0.0.1", "db", "postgres" } } } };
+    zpt::json _config{ { "storage", { "pgsql", { "user", "zpt", "host", "127.0.0.1" } } } };
     auto _connection = zpt::make_connection<zpt::storage::pgsql::connection>(_config);
     auto _session = _connection->session();
     _session->sql("create schema if not exists test");
@@ -20,18 +19,18 @@ auto main(int, char**) -> int {
 
     std::cout << _ids << std::endl;
     std::cout << _collection //
-                   ->find(std::format("_id = \"{}\"", _ids(0)->string()))
+                   ->find(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
                    ->execute()
                    ->fetch()
               << std::endl;
 
     _collection //
-      ->modify(std::format("_id = \"{}\"", _ids(0)->string()))
+      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
       ->set("name", "Zé Povinho 'or with {}'")
       ->execute();
 
     _collection //
-      ->modify(std::format("_id = \"{}\"", _ids(0)->string()))
+      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
       ->patch({ "name", "Pixie", "address", "Neverland or a placeholder like '{}'" })
       ->execute();
 

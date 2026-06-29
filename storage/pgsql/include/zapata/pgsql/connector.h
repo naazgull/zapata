@@ -144,12 +144,14 @@ class database : public zpt::storage::database::type {
     /** @brief Returns a collection (table) handle for the given name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
 
+    /** @brief Retrieves the name of the schema used for the operations. */
+    auto schema() const -> std::string const&;
     /** @brief Returns the underlying PGconn handle. */
     auto pgsql() const -> pgsql_ptr;
 
   private:
     pgsql_ptr __pgsql{ nullptr };
-    std::string __database;
+    std::string __schema;
 };
 /** @brief PostgreSQL collection implementation (represents a database table). */
 class collection : public zpt::storage::collection::type {
@@ -174,12 +176,15 @@ class collection : public zpt::storage::collection::type {
 
     /** @brief Returns the table name. */
     auto table() const -> std::string const&;
+    /** @brief Retrieves the name of the schema used for the operations. */
+    auto schema() const -> std::string const&;
     /** @brief Returns the underlying PGconn handle. */
     auto pgsql() const -> pgsql_ptr;
 
   private:
     pgsql_ptr __pgsql{ nullptr };
     std::string __table;
+    std::string __schema;
 };
 /** @brief Base class for PostgreSQL action operations (manages result sets). */
 class action : public zpt::storage::action::type {
@@ -198,6 +203,7 @@ class action : public zpt::storage::action::type {
     pgsql_ptr __pgsql{ nullptr };
     pgsql_result_ptr __result{ nullptr };
     std::string __table;
+    std::string __schema;
 };
 /** @brief PostgreSQL INSERT action builder. */
 class action_add : public zpt::storage::pgsql::action {

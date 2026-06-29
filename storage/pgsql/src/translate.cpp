@@ -182,7 +182,7 @@ auto zpt::storage::pgsql::to_query(zpt::json _fields, zpt::json _filter) -> std:
         }
     }
     else { _oss << "*"; }
-    _oss << " FROM \"{}\"";
+    _oss << " FROM \"{}\".\"{}\"";
 
     if (_filter->ok() && _filter->string().length() != 0) {
         _oss << " WHERE " << _filter->string();
@@ -195,7 +195,7 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
     std::ostringstream _oss;
 
     // Collect column names and values
-    _oss << "INSERT INTO \"{}\" (";
+    _oss << "INSERT INTO \"{}\".\"{}\" (";
     bool _first{ true };
     for (auto const& [_, _key, _value] : _to_insert) {
         if (!_first) { _oss << ", "; }
@@ -217,7 +217,7 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
 auto zpt::storage::pgsql::to_update(zpt::json _to_update, zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "UPDATE \"{}\" SET ";
+    _oss << "UPDATE \"{}\".\"{}\" SET ";
     to_assignment_list(_to_update, _oss, ", ");
     if (_pattern->ok() && _pattern->string().length() != 0) {
         _oss << " WHERE " << _pattern->string();
@@ -239,7 +239,7 @@ auto zpt::storage::pgsql::to_upsert(zpt::json _to_upsert) -> std::string {
         _first = false;
     }
 
-    _oss << "INSERT INTO \"{}\" (";
+    _oss << "INSERT INTO \"{}\".\"{}\" (";
     _first = true;
     for (auto const& _k : _keys) {
         if (!_first) { _oss << ", "; }
@@ -271,7 +271,7 @@ auto zpt::storage::pgsql::to_upsert(zpt::json _to_upsert) -> std::string {
 auto zpt::storage::pgsql::to_delete(zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "DELETE FROM \"{}\"";
+    _oss << "DELETE FROM \"{}\".\"{}\"";
     if (_pattern->ok() && _pattern->string().length() != 0) {
         _oss << " WHERE " << _pattern->string();
     }
@@ -308,14 +308,13 @@ auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_qu
         return _str;
     }
 
-    // Use PQescapeStringConn if we have a connection, otherwise manual escaping
     std::ostringstream _oss;
-    _oss << "'";
-    for (char _c : _str) {
-        if (_c == '\'') { _oss << "''"; }
-        else { _oss << _c; }
-    }
-    _oss << "'";
+    _oss << (_needs ? "'" : "")
+         << (_to_quote->ok() ? zpt::r_replace_multiple(static_cast<std::string>(_to_quote),
+                                                       { "'", "{", "}" },
+                                                       { "''", "{{", "}}" })
+                             : "NULL")
+         << (_needs ? "'" : "") << std::flush;
 
     return _oss.str();
 }
