@@ -21,85 +21,55 @@
 */
 /**
  * @file translate.h
- * @brief PostgreSQL result set handling and SQL query generation.
+ * @brief MongoDB result handling and BSON/JSON translation utilities.
  *
- * Provides utilities for converting between PostgreSQL result sets and JSON,
- * and for generating SQL statements from JSON query descriptions.
+ * Provides utilities for converting between bsoncxx documents and zpt::json,
+ * and for building BSON filter, update, projection, and sort documents.
  */
 
 #pragma once
 
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/document/value.hpp>
+#include <bsoncxx/document/view.hpp>
 #include <zapata/json.h>
 
 namespace zpt {
 namespace storage {
 namespace mongodb {
 
+/** @brief Converts a zpt::json object to a bsoncxx document value. */
+auto to_bson(zpt::json _doc) -> bsoncxx::document::value;
+
+/** @brief Converts a bsoncxx document view to a zpt::json object. */
+auto from_bson(bsoncxx::document::view _doc) -> zpt::json;
+
 /**
- * @brief Metadata for a PostgreSQL result set.
+ * @brief Converts a zpt::json filter to a bsoncxx document value.
  *
- * Wraps column metadata for a query result set. Handles
- * column-level data retrieval and JSON conversion.
+ * An undefined or non-object filter produces an empty document (match all).
  */
-class result_set_metadata {
-  public:
-    result_set_metadata(PGresult* _result);
-    result_set_metadata(result_set_metadata&& _rhs);
-    ~result_set_metadata();
+auto to_filter(zpt::json _filter) -> bsoncxx::document::value;
 
-    result_set_metadata(result_set_metadata const&) = delete;
-    auto operator=(result_set_metadata const&) -> result_set_metadata& = delete;
+/**
+ * @brief Converts a zpt::json update object to a MongoDB update document.
+ *
+ * Defined values go into `$set`, undefined values go into `$unset`.
+ */
+auto to_update_doc(zpt::json _to_update) -> bsoncxx::document::value;
 
-    auto operator=(result_set_metadata&& _rhs) -> result_set_metadata&;
-    auto name(size_t _column) const -> std::string;
-    auto type(size_t _column) const -> Oid;
-    auto tableoid(size_t _column) const -> Oid;
-    auto column_size(size_t _column) const -> int16_t;
-    auto is_binary(size_t _column) const -> bool;
-    auto column_count() const -> int { return this->__column_count; }
+/** @brief Converts a zpt::json field list to a MongoDB projection document. */
+auto to_projection(zpt::json _fields) -> bsoncxx::document::value;
 
-    /** @brief Retrieves a string value from the result at the given column. */
-    auto get_string(PGresult* _result, int _row, int _column) const -> std::string;
-    /** @brief Retrieves an integer value from the result at the given column. */
-    template<typename T>
-    auto get_integer(PGresult* _result, int _row, int _column) const -> T;
+/** @brief Converts a zpt::json sort spec to a MongoDB sort document. */
+auto to_sort(zpt::json _sort) -> bsoncxx::document::value;
 
-  private:
-    PGresult* __metadata{ nullptr };
-    int __column_count{ 0 };
-};
+/** @brief Appends a single zpt::json value into a bsoncxx document builder under key. */
+auto append_value(bsoncxx::builder::basic::document& _doc,
+                  std::string const& _key,
+                  zpt::json _value) -> void;
 
-/** @brief Converts a PostgreSQL result row to JSON using column metadata. */
-auto to_json(PGresult* _result, zpt::storage::mongodb::result_set_metadata const& _cols, int _row = 0)
-  -> zpt::json;
-/** @brief Converts a PostgreSQL result row to JSON (convenience overload). */
-auto to_json(PGresult* _result, int _row = 0) -> zpt::json;
-/** @brief Generates a SELECT SQL query from JSON field/filter descriptions. */
-auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
-/** @brief Generates an INSERT SQL statement from a JSON document. */
-auto to_insert(zpt::json _to_insert) -> std::string;
-/** @brief Generates an UPDATE SQL statement from JSON update/pattern descriptions. */
-auto to_update(zpt::json _to_update, zpt::json _pattern) -> std::string;
-/** @brief Generates a PostgreSQL UPSERT (REPLACE) statement from a JSON document. */
-auto to_upsert(zpt::json _to_upsert) -> std::string;
-/** @brief Generates a DELETE SQL statement from a JSON filter pattern. */
-auto to_delete(zpt::json _pattern) -> std::string;
-/** @brief Writes a comma-separated assignment list (col=val) to the stream. */
-auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
-  -> void;
-/** @brief Escapes a value for use in a PostgreSQL SQL string literal. */
-auto quote(PGconn* _conn, zpt::json _to_quote) -> std::string;
-/** @brief Escapes a value for use in a PostgreSQL SQL string literal (no conn). */
-auto quote(zpt::json _to_quote) -> std::string;
 } // namespace mongodb
 } // namespace storage
 } // namespace zpt
-
-template<typename T>
-auto zpt::storage::mongodb::result_set_metadata::get_integer(PGresult* _result,
-                                                           int _row,
-                                                           int _column) const -> T {
-    auto* str = PQgetvalue(_result, _row, _column);
-    if (!str || PQgetisnull(_result, _row, _column)) { return T{ 0 }; }
-    return static_cast<T>(std::stoll(std::string{ str }));
-}

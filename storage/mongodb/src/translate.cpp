@@ -20,305 +20,246 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <cctype>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <sstream>
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/types.hpp>
 #include <zapata/mongodb/translate.h>
 
-// ---- result_set_metadata (lightweight, for PGresult columns) ----
+using namespace bsoncxx::builder::basic;
 
-zpt::storage::mongodb::result_set_metadata::result_set_metadata(PGresult* _result)
-  : __metadata{ _result } {
-    if (_result != nullptr) { this->__column_count = PQnfields(_result); }
+// ---- append_value ----
+
+auto zpt::storage::mongodb::append_value(bsoncxx::builder::basic::document& _doc,
+                                         std::string const& _key,
+                                         zpt::json _value) -> void {
+    switch (_value->type()) {
+        case zpt::JSString:
+        case zpt::JSDate:
+        case zpt::JSRegex: {
+            _doc.append(kvp(_key, static_cast<std::string>(_value)));
+            break;
+        }
+        case zpt::JSInteger: {
+            _doc.append(kvp(_key, bsoncxx::types::b_int64{ _value->integer() }));
+            break;
+        }
+        case zpt::JSDouble: {
+            _doc.append(kvp(_key, _value->floating()));
+            break;
+        }
+        case zpt::JSBoolean: {
+            _doc.append(kvp(_key, _value->boolean()));
+            break;
+        }
+        case zpt::JSObject: {
+            _doc.append(kvp(_key, to_bson(_value)));
+            break;
+        }
+        case zpt::JSArray: {
+            _doc.append(kvp(_key, [&_value](sub_array _arr) {
+                for (auto const& [_, __, _v] : _value) {
+                    switch (_v->type()) {
+                        case zpt::JSString:
+                        case zpt::JSDate:
+                        case zpt::JSRegex: {
+                            _arr.append(static_cast<std::string>(_v));
+                            break;
+                        }
+                        case zpt::JSInteger: {
+                            _arr.append(bsoncxx::types::b_int64{ _v->integer() });
+                            break;
+                        }
+                        case zpt::JSDouble: {
+                            _arr.append(_v->floating());
+                            break;
+                        }
+                        case zpt::JSBoolean: {
+                            _arr.append(_v->boolean());
+                            break;
+                        }
+                        case zpt::JSObject: {
+                            bsoncxx::builder::basic::document _sub;
+                            for (auto const& [_i, _k, _vv] : _v) {
+                                append_value(_sub, static_cast<std::string>(_k), _vv);
+                            }
+                            _arr.append(_sub.extract());
+                            break;
+                        }
+                        default: {
+                            _arr.append(bsoncxx::types::b_null{});
+                            break;
+                        }
+                    }
+                }
+            }));
+            break;
+        }
+        default: {
+            _doc.append(kvp(_key, bsoncxx::types::b_null{}));
+            break;
+        }
+    }
 }
 
-zpt::storage::mongodb::result_set_metadata::result_set_metadata(result_set_metadata&& rhs)
-  : __column_count{ rhs.__column_count } {}
+// ---- to_bson ----
 
-zpt::storage::mongodb::result_set_metadata::~result_set_metadata() {}
-
-auto zpt::storage::mongodb::result_set_metadata::operator=(result_set_metadata&& rhs)
-  -> result_set_metadata& {
-    this->__column_count = rhs.__column_count;
-    return (*this);
+auto zpt::storage::mongodb::to_bson(zpt::json _doc) -> bsoncxx::document::value {
+    bsoncxx::builder::basic::document _builder;
+    if (_doc->ok() && _doc->type() == zpt::JSObject) {
+        for (auto const& [_, _key, _value] : _doc) {
+            append_value(_builder, static_cast<std::string>(_key), _value);
+        }
+    }
+    return _builder.extract();
 }
 
-auto zpt::storage::mongodb::result_set_metadata::name(size_t _column) const -> std::string {
-    return std::string{ PQfname(this->__metadata, static_cast<int>(_column)) };
-}
+// ---- from_bson ----
 
-auto zpt::storage::mongodb::result_set_metadata::type(size_t _column) const -> Oid {
-    return PQftype(this->__metadata, static_cast<int>(_column));
-}
-
-auto zpt::storage::mongodb::result_set_metadata::tableoid([[maybe_unused]] size_t _column) const
-  -> Oid {
-    // libpq 13+ has PQftablecollation; older versions have PQftableoid.
-    // This function is only needed for type introspection and not used in core paths.
-    return 0;
-}
-
-auto zpt::storage::mongodb::result_set_metadata::column_size(size_t _column) const -> int16_t {
-    return PQfsize(this->__metadata, static_cast<int>(_column));
-}
-
-auto zpt::storage::mongodb::result_set_metadata::is_binary(size_t _column) const -> bool {
-    return PQfformat(this->__metadata, static_cast<int>(_column)) == 1;
-}
-
-auto zpt::storage::mongodb::result_set_metadata::get_string(PGresult* _result,
-                                                          int _row,
-                                                          int _column) const -> std::string {
-    if (PQgetisnull(_result, _row, _column)) { return {}; }
-    auto* _val = PQgetvalue(_result, _row, _column);
-    int _len = PQgetlength(_result, _row, _column);
-    return std::string{ _val, static_cast<size_t>(_len) };
-}
-
-// ---- to_json: convert PGresult row to JSON object ----
-
-auto zpt::storage::mongodb::to_json(
-  PGresult* _result,
-  [[maybe_unused]] zpt::storage::mongodb::result_set_metadata const& _cols,
-  int _row) -> zpt::json {
+auto zpt::storage::mongodb::from_bson(bsoncxx::document::view _doc) -> zpt::json {
     auto _record = zpt::json::object();
-    int _ncols = PQnfields(_result);
 
-    for (int _col_idx = 0; _col_idx < _ncols; ++_col_idx) {
-        auto _name = std::string{ PQfname(_result, _col_idx) };
+    for (auto const& _elem : _doc) {
+        std::string _key{ _elem.key() };
 
-        if (PQgetisnull(_result, _row, _col_idx)) {
-            _record[_name] = zpt::undefined;
-            continue;
+        switch (_elem.type()) {
+            case bsoncxx::type::k_string: {
+                _record[_key] = std::string{ _elem.get_string().value };
+                break;
+            }
+            case bsoncxx::type::k_int32: {
+                _record[_key] = static_cast<long long>(_elem.get_int32().value);
+                break;
+            }
+            case bsoncxx::type::k_int64: {
+                _record[_key] = static_cast<long long>(_elem.get_int64().value);
+                break;
+            }
+            case bsoncxx::type::k_double: {
+                _record[_key] = _elem.get_double().value;
+                break;
+            }
+            case bsoncxx::type::k_bool: {
+                _record[_key] = _elem.get_bool().value;
+                break;
+            }
+            case bsoncxx::type::k_document: {
+                _record[_key] = from_bson(_elem.get_document().value);
+                break;
+            }
+            case bsoncxx::type::k_array: {
+                auto _arr = zpt::json::array();
+                for (auto const& _item : _elem.get_array().value) {
+                    switch (_item.type()) {
+                        case bsoncxx::type::k_string: {
+                            _arr << std::string{ _item.get_string().value };
+                            break;
+                        }
+                        case bsoncxx::type::k_int32: {
+                            _arr << static_cast<long long>(_item.get_int32().value);
+                            break;
+                        }
+                        case bsoncxx::type::k_int64: {
+                            _arr << static_cast<long long>(_item.get_int64().value);
+                            break;
+                        }
+                        case bsoncxx::type::k_double: {
+                            _arr << _item.get_double().value;
+                            break;
+                        }
+                        case bsoncxx::type::k_bool: {
+                            _arr << _item.get_bool().value;
+                            break;
+                        }
+                        case bsoncxx::type::k_document: {
+                            _arr << from_bson(_item.get_document().value);
+                            break;
+                        }
+                        case bsoncxx::type::k_oid: {
+                            _arr << _item.get_oid().value.to_string();
+                            break;
+                        }
+                        default: {
+                            _arr << zpt::undefined;
+                            break;
+                        }
+                    }
+                }
+                _record[_key] = _arr;
+                break;
+            }
+            case bsoncxx::type::k_oid: {
+                _record[_key] = _elem.get_oid().value.to_string();
+                break;
+            }
+            case bsoncxx::type::k_date: {
+                _record[_key] =
+                  std::to_string(_elem.get_date().value.count()); // ms since epoch as string
+                break;
+            }
+            case bsoncxx::type::k_null:
+            case bsoncxx::type::k_undefined: {
+                _record[_key] = zpt::undefined;
+                break;
+            }
+            default: {
+                _record[_key] = zpt::undefined;
+                break;
+            }
         }
-
-        auto* _val = PQgetvalue(_result, _row, _col_idx);
-        int _len = PQgetlength(_result, _row, _col_idx);
-
-        // OID type codes (from postgres_ext.h)
-        Oid _type = PQftype(_result, _col_idx);
-
-        // Try to detect JSON/JSONB columns and parse them
-        if (_type == 114 || _type == 3802) { // JSON or JSONB
-            std::string _str{ _val, static_cast<size_t>(_len) };
-            _record[_name] = zpt::json::parse_json_str(_str);
-            continue;
-        }
-
-        // String-like types
-        if (_type == 25 || _type == 1043 || _type == 1009 ||
-            _type == 17) { // text, varchar, name, bytea
-            _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
-            continue;
-        }
-
-        // Boolean
-        if (_type == 16) {
-            _record[_name] = (_val[0] == 't');
-            continue;
-        }
-
-        // Integer types
-        if (_type == 20) { // int8 / bigint
-            _record[_name] = std::stoll(std::string{ _val });
-            continue;
-        }
-        if (_type == 21) { // int2 / smallint
-            _record[_name] = std::stoi(std::string{ _val });
-            continue;
-        }
-        if (_type == 23) { // int4 / integer
-            _record[_name] = std::stoi(std::string{ _val });
-            continue;
-        }
-        if (_type == 600 || _type == 601) { // point
-            _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
-            continue;
-        }
-
-        // Float types
-        if (_type == 700) { // float4
-            _record[_name] = std::stof(std::string{ _val });
-            continue;
-        }
-        if (_type == 701) { // float8
-            _record[_name] = std::stod(std::string{ _val });
-            continue;
-        }
-
-        // Date/time types (always returned as strings by libpq)
-        if (_type == 1082 || _type == 1083 || _type == 1114 || _type == 1184 ||
-            _type == 1186) { // date, time, timestamp, timestamptz, interval
-            _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
-            continue;
-        }
-
-        // Default: treat as string
-        _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
     }
 
     return _record;
 }
 
-// Convenience overload: no metadata needed since PQfname/PQftype work directly
-auto zpt::storage::mongodb::to_json(PGresult* _result, int _row) -> zpt::json {
-    return to_json(_result, result_set_metadata{ _result }, _row);
+// ---- to_filter ----
+
+auto zpt::storage::mongodb::to_filter(zpt::json _filter) -> bsoncxx::document::value {
+    if (!_filter->ok() || _filter->type() != zpt::JSObject) {
+        return bsoncxx::builder::basic::make_document();
+    }
+    return to_bson(_filter);
 }
 
-// ---- SQL generation ----
+// ---- to_update_doc ----
 
-auto zpt::storage::mongodb::to_query(zpt::json _fields, zpt::json _filter) -> std::string {
-    std::ostringstream _oss;
+auto zpt::storage::mongodb::to_update_doc(zpt::json _to_update) -> bsoncxx::document::value {
+    bsoncxx::builder::basic::document _set;
+    bsoncxx::builder::basic::document _unset;
+    bool _has_unset{ false };
 
-    _oss << "SELECT ";
-    if (_fields->ok() && _fields->size() != 0) {
-        bool _first{ true };
-        for (auto const& [_, __, _field] : _fields) {
-            if (!_first) { _oss << ", "; }
-            _first = false;
-            _oss << "\"" << static_cast<std::string>(_field) << "\"";
+    for (auto const& [_, _key, _value] : _to_update) {
+        auto _k = static_cast<std::string>(_key);
+        if (_value->ok()) { append_value(_set, _k, _value); }
+        else {
+            _unset.append(kvp(_k, std::string{ "" }));
+            _has_unset = true;
         }
     }
-    else { _oss << "*"; }
-    _oss << " FROM \"{}\".\"{}\"";
 
-    if (_filter->ok() && _filter->string().length() != 0) {
-        _oss << " WHERE " << _filter->string();
-    }
-
-    return _oss.str();
+    bsoncxx::builder::basic::document _update;
+    _update.append(kvp("$set", _set.extract()));
+    if (_has_unset) { _update.append(kvp("$unset", _unset.extract())); }
+    return _update.extract();
 }
 
-auto zpt::storage::mongodb::to_insert(zpt::json _to_insert) -> std::string {
-    std::ostringstream _oss;
+// ---- to_projection ----
 
-    // Collect column names and values
-    _oss << "INSERT INTO \"{}\".\"{}\" (";
-    bool _first{ true };
-    for (auto const& [_, _key, _value] : _to_insert) {
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << "\"" << static_cast<std::string>(_key) << "\"";
+auto zpt::storage::mongodb::to_projection(zpt::json _fields) -> bsoncxx::document::value {
+    bsoncxx::builder::basic::document _proj;
+    for (auto const& [_, _field, __] : _fields) {
+        _proj.append(kvp(static_cast<std::string>(_field), 1));
     }
-    _oss << ") VALUES (";
-    _first = true;
-    for (auto const& [_, _key, _value] : _to_insert) {
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << quote(_value);
-    }
-    _oss << ");";
-
-    return _oss.str();
+    return _proj.extract();
 }
 
-auto zpt::storage::mongodb::to_update(zpt::json _to_update, zpt::json _pattern) -> std::string {
-    std::ostringstream _oss;
+// ---- to_sort ----
 
-    _oss << "UPDATE \"{}\".\"{}\" SET ";
-    to_assignment_list(_to_update, _oss, ", ");
-    if (_pattern->ok() && _pattern->string().length() != 0) {
-        _oss << " WHERE " << _pattern->string();
+auto zpt::storage::mongodb::to_sort(zpt::json _sort_spec) -> bsoncxx::document::value {
+    bsoncxx::builder::basic::document _sort;
+    for (auto const& [_, _field, _dir] : _sort_spec) {
+        int _order = (_dir->string() == "asc") ? 1 : -1;
+        _sort.append(kvp(static_cast<std::string>(_field), _order));
     }
-    _oss << ";";
-
-    return _oss.str();
-}
-
-auto zpt::storage::mongodb::to_upsert(zpt::json _to_upsert) -> std::string {
-    std::ostringstream _oss;
-
-    // Collect column names
-    std::vector<std::string> _keys;
-    bool _first{ true };
-    for (auto const& [_, _key, _value] : _to_upsert) {
-        _keys.push_back(static_cast<std::string>(_key));
-        if (!_first) { _oss << ", "; }
-        _first = false;
-    }
-
-    _oss << "INSERT INTO \"{}\".\"{}\" (";
-    _first = true;
-    for (auto const& _k : _keys) {
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << "\"" << _k << "\"";
-    }
-    _oss << ") VALUES (";
-    _first = true;
-    for (auto const& [_, _key, _value] : _to_upsert) {
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << quote(_value);
-    }
-    _oss << ") ON CONFLICT (_id) DO UPDATE SET ";
-
-    _first = true;
-    for (auto const& [_, _key, _value] : _to_upsert) {
-        if (_key == "_id") { continue; }
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << "\"" << _key << "\" = EXCLUDED.\"";
-        _oss << _key << "\"";
-    }
-    _oss << ";";
-
-    return _oss.str();
-}
-
-auto zpt::storage::mongodb::to_delete(zpt::json _pattern) -> std::string {
-    std::ostringstream _oss;
-
-    _oss << "DELETE FROM \"{}\".\"{}\"";
-    if (_pattern->ok() && _pattern->string().length() != 0) {
-        _oss << " WHERE " << _pattern->string();
-    }
-    _oss << ";";
-
-    return _oss.str();
-}
-
-auto zpt::storage::mongodb::to_assignment_list(zpt::json _to_convert,
-                                             std::ostream& _out,
-                                             std::string_view _separator) -> void {
-    bool _first{ true };
-    for (auto const& [_, _key, _value] : _to_convert) {
-        if (!_first) { _out << _separator; }
-        _first = false;
-        _out << "\"" << static_cast<std::string>(_key) << "\" = " << quote(_value);
-    }
-}
-
-// ---- quoting ----
-
-auto zpt::storage::mongodb::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_quote)
-  -> std::string {
-    bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
-                  _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
-                  _to_quote->type() == zpt::JSObject;
-
-    if (!_to_quote->ok()) { return "NULL"; }
-
-    std::string _str = static_cast<std::string>(_to_quote);
-
-    if (!_needs) {
-        // Numeric, boolean, etc. — pass through
-        return _str;
-    }
-
-    std::ostringstream _oss;
-    _oss << (_needs ? "'" : "")
-         << (_to_quote->ok() ? zpt::r_replace_multiple(static_cast<std::string>(_to_quote),
-                                                       { "'", "{", "}" },
-                                                       { "''", "{{", "}}" })
-                             : "NULL")
-         << (_needs ? "'" : "") << std::flush;
-
-    return _oss.str();
-}
-
-auto zpt::storage::mongodb::quote(zpt::json _to_quote) -> std::string {
-    return quote(nullptr, _to_quote);
+    return _sort.extract();
 }

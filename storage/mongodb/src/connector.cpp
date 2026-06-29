@@ -21,22 +21,13 @@
 */
 
 #include <algorithm>
+#include <mongocxx/exception/exception.hpp>
+#include <mongocxx/options/find.hpp>
+#include <mongocxx/options/replace.hpp>
 #include <zapata/mongodb/connector.h>
 #include <zapata/uuid.h>
 
-// ---- PGconn deleter ----
-
-auto zpt::storage::mongodb::mongodb_conn_deinit::operator()(PGconn* _conn) const -> void {
-    if (_conn != nullptr) { PQfinish(_conn); }
-}
-
-// ---- PGresult deleter ----
-
-auto zpt::storage::mongodb::mongodb_result_deinit::operator()(PGresult* _res) const -> void {
-    if (_res != nullptr) { PQclear(_res); }
-}
-
-// ---- Library (no-op: libpq is lazy-initialized per connection) ----
+// ---- Library ----
 
 zpt::storage::mongodb::library::library() {}
 zpt::storage::mongodb::library::~library() {}
@@ -54,33 +45,35 @@ zpt::storage::mongodb::connection::connection(zpt::json _options)
     this->open(_options("storage")("mongodb"));
 }
 
-auto zpt::storage::mongodb::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
+auto zpt::storage::mongodb::connection::open(zpt::json _options)
+  -> zpt::storage::connection::type* {
     this->__options = _options;
 
     auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
-    auto _user = this->__options("user")->string();
-    auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _port =
-      this->__options("port")->ok() ? std::to_string(this->__options("port")->integer()) : "5432";
+      this->__options("port")->ok() ? this->__options("port")->integer() : 27017LL;
+    auto _user = this->__options("user")->ok() ? this->__options("user")->string() : "";
+    auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _db = this->__options("db")->ok() ? this->__options("db")->string() : "";
 
-    std::ostringstream _connstr;
-    _connstr << "host='" << _host << "'";
-    _connstr << " port=" << _port;
-    _connstr << " user='" << _user << "'";
-    if (!_pass.empty()) { _connstr << " password='" << _pass << "'"; }
-    if (!_db.empty()) { _connstr << " dbname='" << _db << "'"; }
+    std::ostringstream _uri_ss;
+    _uri_ss << "mongodb://";
+    if (!_user.empty()) {
+        _uri_ss << _user;
+        if (!_pass.empty()) { _uri_ss << ":" << _pass; }
+        _uri_ss << "@";
+    }
+    _uri_ss << _host << ":" << _port;
+    if (!_db.empty()) { _uri_ss << "/" << _db; }
 
-    std::cout << _connstr.str() << std::endl;
-
-    auto* _pg = PQconnectdb(_connstr.str().c_str());
-    if (PQstatus(_pg) != CONNECTION_OK) {
-        auto _err = std::string{ PQerrorMessage(_pg) };
-        PQfinish(_pg);
-        expect(false, std::format("Unable to connect to PostgreSQL: {}", _err));
+    try {
+        auto _uri = mongocxx::uri{ _uri_ss.str() };
+        this->__mongodb = std::make_shared<mongocxx::client>(_uri);
+    }
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("Unable to connect to MongoDB: {}", _e.what()));
     }
 
-    this->__mongodb.reset(_pg, zpt::storage::mongodb::mongodb_conn_deinit{});
     return this;
 }
 
@@ -90,7 +83,6 @@ auto zpt::storage::mongodb::connection::close() -> zpt::storage::connection::typ
 }
 
 auto zpt::storage::mongodb::connection::session() -> zpt::storage::session {
-    if (PQstatus(this->__mongodb.get()) != CONNECTION_OK) { this->open(this->__options); }
     return zpt::make_session<zpt::storage::mongodb::session>(*this);
 }
 
@@ -101,59 +93,19 @@ auto zpt::storage::mongodb::connection::mongodb() const -> mongodb_ptr { return 
 // ---- Session ----
 
 zpt::storage::mongodb::session::session(zpt::storage::mongodb::connection const& _connection)
-  : __mongodb{ _connection.mongodb() } {
-    auto* _res = PQexec(this->__mongodb.get(), "BEGIN");
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    expect(_ok,
-           std::format("Transaction failed to start: {}", PQerrorMessage(this->__mongodb.get())));
-}
-
-zpt::storage::mongodb::session::~session() { this->rollback(); }
+  : __mongodb{ _connection.mongodb() } {}
 
 auto zpt::storage::mongodb::session::is_open() const -> bool {
-    return this->__mongodb != nullptr && PQstatus(this->__mongodb.get()) == CONNECTION_OK;
+    return this->__mongodb != nullptr;
 }
 
-auto zpt::storage::mongodb::session::commit() -> zpt::storage::session::type* {
-    auto* _res = PQexec(this->__mongodb.get(), "COMMIT");
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    expect(_ok, std::format("Commit failed: {}", PQerrorMessage(this->__mongodb.get())));
+auto zpt::storage::mongodb::session::commit() -> zpt::storage::session::type* { return this; }
 
-    _res = PQexec(this->__mongodb.get(), "BEGIN");
-    _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    expect(_ok,
-           std::format("Transaction failed to start: {}", PQerrorMessage(this->__mongodb.get())));
-    return this;
-}
+auto zpt::storage::mongodb::session::rollback() -> zpt::storage::session::type* { return this; }
 
-auto zpt::storage::mongodb::session::rollback() -> zpt::storage::session::type* {
-    auto* _res = PQexec(this->__mongodb.get(), "ROLLBACK");
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    // If we're already in a broken state, PQexec may fail — that's OK
-    if (PQresultStatus(_res) == PGRES_FATAL_ERROR &&
-        std::string{ PQerrorMessage(this->__mongodb.get()) }.find("no transaction in progress") !=
-          std::string::npos) {
-        PQclear(_res);
-        return this;
-    }
-    expect(_ok, std::format("Rollback failed: {}", PQerrorMessage(this->__mongodb.get())));
-    return this;
-}
-
-auto zpt::storage::mongodb::session::sql(std::string const& _statement)
+auto zpt::storage::mongodb::session::sql([[maybe_unused]] std::string const& _statement)
   -> zpt::storage::session::type* {
-    auto* _res = PQexec(this->__mongodb.get(), _statement.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
-    if (!_ok) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("SQL failed: {} — {}", _err, _statement));
-    }
-    PQclear(_res);
+    expect(false, "SQL is not supported for MongoDB");
     return this;
 }
 
@@ -167,12 +119,13 @@ auto zpt::storage::mongodb::session::mongodb() const -> mongodb_ptr { return thi
 // ---- Database ----
 
 zpt::storage::mongodb::database::database(zpt::storage::mongodb::session const& _session,
-                                        std::string const& _db)
+                                          std::string const& _db)
   : __mongodb{ _session.mongodb() }
-  , __schema{ _db } {}
+  , __db{ _db } {}
 
-auto zpt::storage::mongodb::database::sql(std::string const&) -> zpt::storage::database::type* {
-    expect(false, "database `sql` method not implemented for PostgreSQL, use session's");
+auto zpt::storage::mongodb::database::sql([[maybe_unused]] std::string const& _statement)
+  -> zpt::storage::database::type* {
+    expect(false, "SQL is not supported for MongoDB");
     return this;
 }
 
@@ -181,31 +134,35 @@ auto zpt::storage::mongodb::database::collection(std::string const& _collection)
     return zpt::make_collection<zpt::storage::mongodb::collection>(*this, _collection);
 }
 
-auto zpt::storage::mongodb::database::schema() const -> std::string const& { return this->__schema; }
+auto zpt::storage::mongodb::database::db() const -> std::string const& { return this->__db; }
 
 auto zpt::storage::mongodb::database::mongodb() const -> mongodb_ptr { return this->__mongodb; }
 
 // ---- Collection ----
 
 zpt::storage::mongodb::collection::collection(zpt::storage::mongodb::database const& _database,
-                                            std::string const& _collection)
+                                              std::string const& _collection)
   : __mongodb{ _database.mongodb() }
-  , __table{ _collection }
-  , __schema{ _database.schema() } {}
+  , __collection{ _collection }
+  , __db{ _database.db() } {}
 
-auto zpt::storage::mongodb::collection::add(zpt::json _document) const -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::add(zpt::json _document) const
+  -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_add>(*this, _document);
 }
 
-auto zpt::storage::mongodb::collection::modify(zpt::json _search) const -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::modify(zpt::json _search) const
+  -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_modify>(*this, _search);
 }
 
-auto zpt::storage::mongodb::collection::remove(zpt::json _search) const -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::remove(zpt::json _search) const
+  -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_remove>(*this, _search);
 }
 
-auto zpt::storage::mongodb::collection::replace(std::string const& _id, zpt::json _document) const
+auto zpt::storage::mongodb::collection::replace(std::string const& _id,
+                                                zpt::json _document) const
   -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_replace>(*this, _id, _document);
 }
@@ -215,31 +172,21 @@ auto zpt::storage::mongodb::collection::find(zpt::json _search) const -> zpt::st
 }
 
 auto zpt::storage::mongodb::collection::count(zpt::json _search) -> size_t {
-    auto _statement = std::format("SELECT count(*) FROM \"{}\"{}",
-                                  this->__table,
-                                  (_search->ok() && _search->string().length() != 0
-                                     ? std::format(" WHERE {}", _search->string())
-                                     : ""));
-
-    auto* _res = PQexec(this->__mongodb.get(), _statement.c_str());
-    auto _status = PQresultStatus(_res);
-    if (_status != PGRES_TUPLES_OK) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("count failed: {} — {}", _err, _statement));
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        return static_cast<size_t>(_coll.count_documents(to_filter(_search).view()));
     }
-
-    size_t _count = 0;
-    if (PQntuples(_res) > 0) { _count = std::stoul(PQgetvalue(_res, 0, 0)); }
-    PQclear(_res);
-    return _count;
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("count failed: {}", _e.what()));
+    }
+    return 0;
 }
 
-auto zpt::storage::mongodb::collection::table() const -> std::string const& { return this->__table; }
-
-auto zpt::storage::mongodb::collection::schema() const -> std::string const& {
-    return this->__schema;
+auto zpt::storage::mongodb::collection::coll() const -> std::string const& {
+    return this->__collection;
 }
+
+auto zpt::storage::mongodb::collection::db() const -> std::string const& { return this->__db; }
 
 auto zpt::storage::mongodb::collection::mongodb() const -> mongodb_ptr { return this->__mongodb; }
 
@@ -247,17 +194,18 @@ auto zpt::storage::mongodb::collection::mongodb() const -> mongodb_ptr { return 
 
 zpt::storage::mongodb::action::action(zpt::storage::mongodb::collection const& _collection)
   : __mongodb{ _collection.mongodb() }
-  , __table{ _collection.table() }
-  , __schema{ _collection.schema() } {}
+  , __collection{ _collection.coll() }
+  , __db{ _collection.db() } {}
 
-auto zpt::storage::mongodb::action::result() const -> mongodb_result_ptr { return this->__result; }
+auto zpt::storage::mongodb::action::cursor() const -> mongodb_cursor_ptr { return this->__cursor; }
 
 auto zpt::storage::mongodb::action::mongodb() const -> mongodb_ptr { return this->__mongodb; }
 
 // ---- action_add ----
 
-zpt::storage::mongodb::action_add::action_add(zpt::storage::mongodb::collection const& _collection,
-                                            zpt::json _document)
+zpt::storage::mongodb::action_add::action_add(
+  zpt::storage::mongodb::collection const& _collection,
+  zpt::json _document)
   : zpt::storage::mongodb::action::action{ _collection }
   , __underlying{ zpt::json::array() }
   , __generated_ids{ zpt::json::array() } {
@@ -292,17 +240,15 @@ auto zpt::storage::mongodb::action_add::find(zpt::json) -> zpt::storage::action:
 
 auto zpt::storage::mongodb::action_add::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
-    expect(false, "can't set from an 'add' action");
     return this;
 }
 
-auto zpt::storage::mongodb::action_add::unset(std::string const&) -> zpt::storage::action::type* {
-    expect(false, "can't unset from an 'add' action");
+auto zpt::storage::mongodb::action_add::unset(std::string const&)
+  -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mongodb::action_add::patch(zpt::json) -> zpt::storage::action::type* {
-    expect(false, "can't patch from an 'add' action");
     return this;
 }
 
@@ -315,38 +261,32 @@ auto zpt::storage::mongodb::action_add::fields(zpt::json) -> zpt::storage::actio
     return this;
 }
 
-auto zpt::storage::mongodb::action_add::offset(size_t) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mongodb::action_add::offset(size_t) -> zpt::storage::action::type* {
+    return this;
+}
 
-auto zpt::storage::mongodb::action_add::limit(size_t) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mongodb::action_add::limit(size_t) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::mongodb::action_add::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mongodb::action_add::execute() -> zpt::storage::result {
-    std::ostringstream _oss;
-    for (auto [_, __, _record] : this->__underlying) {
-        auto _id = zpt::uuid{}.to_base64_string();
-        _record << "_id" << _id;
-        this->__generated_ids << _id;
-        _oss << std::vformat(zpt::storage::mongodb::to_insert(_record),
-                             std::make_format_args(this->__schema, this->__table));
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        for (auto [_, __, _record] : this->__underlying) {
+            auto _id = zpt::uuid{}.to_base64_string();
+            _record << "_id" << _id;
+            this->__generated_ids << _id;
+            _coll.insert_one(to_bson(_record).view());
+        }
     }
-    _oss << std::flush;
-    auto _sql = _oss.str();
-
-    auto* _res = PQexec(this->__mongodb.get(), _sql.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    if (!_ok) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("INSERT failed: {} — {}", _err, _sql));
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("INSERT failed: {}", _e.what()));
     }
-
-    this->__result.reset(_res, zpt::storage::mongodb::mongodb_result_deinit{});
-
-    zpt::storage::result _to_return = zpt::make_result<zpt::storage::mongodb::result>(*this);
-    return _to_return;
+    return zpt::make_result<zpt::storage::mongodb::result>(*this);
 }
 
 auto zpt::storage::mongodb::action_add::get_generated_ids() const -> zpt::json {
@@ -360,8 +300,7 @@ zpt::storage::mongodb::action_modify::action_modify(
   zpt::json _search)
   : zpt::storage::mongodb::action::action{ _collection }
   , __underlying{ zpt::json::object() }
-  , __filter{ _search }
-  , __bind{ zpt::json::object() } {}
+  , __filter{ _search } {}
 
 auto zpt::storage::mongodb::action_modify::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'modify' action");
@@ -401,7 +340,8 @@ auto zpt::storage::mongodb::action_modify::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::mongodb::action_modify::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_modify::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     this->__underlying += _document;
     return this;
 }
@@ -424,38 +364,25 @@ auto zpt::storage::mongodb::action_modify::limit(size_t) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::mongodb::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    this->__bind += _map;
+auto zpt::storage::mongodb::action_modify::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mongodb::action_modify::execute() -> zpt::storage::result {
-    if (this->__filter->ok()) {
-        for (auto const& [_, _key, _value] : this->__bind) {
-            zpt::replace(this->__filter->string(),
-                         std::format(":{}", _key),
-                         zpt::storage::mongodb::quote(_value));
-        }
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        auto _res = _coll.update_many(to_filter(this->__filter).view(),
+                                      to_update_doc(this->__underlying).view());
+        this->__affected = _res ? static_cast<size_t>(_res->modified_count()) : 0;
     }
-
-    std::ostringstream _oss;
-    _oss << std::vformat(zpt::storage::mongodb::to_update(this->__underlying, this->__filter),
-                         std::make_format_args(this->__schema, this->__table));
-    _oss << std::flush;
-    auto _sql = _oss.str();
-
-    auto* _res = PQexec(this->__mongodb.get(), _sql.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    if (!_ok) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("UPDATE failed: {} — {}", _err, _sql));
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("UPDATE failed: {}", _e.what()));
     }
+    return zpt::make_result<zpt::storage::mongodb::result>(*this);
+}
 
-    this->__result.reset(_res, zpt::storage::mongodb::mongodb_result_deinit{});
-
-    zpt::storage::result _to_return = zpt::make_result<zpt::storage::mongodb::result>(*this);
-    return _to_return;
+auto zpt::storage::mongodb::action_modify::get_affected() const -> size_t {
+    return this->__affected;
 }
 
 // ---- action_remove ----
@@ -496,7 +423,8 @@ auto zpt::storage::mongodb::action_remove::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mongodb::action_remove::unset(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_remove::unset(std::string const&)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -521,38 +449,24 @@ auto zpt::storage::mongodb::action_remove::limit(size_t) -> zpt::storage::action
     return this;
 }
 
-auto zpt::storage::mongodb::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    this->__bind += _map;
+auto zpt::storage::mongodb::action_remove::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mongodb::action_remove::execute() -> zpt::storage::result {
-    if (this->__filter->ok()) {
-        for (auto const& [_, _key, _value] : this->__bind) {
-            zpt::replace(this->__filter->string(),
-                         std::format(":{}", _key),
-                         zpt::storage::mongodb::quote(_value));
-        }
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        auto _res = _coll.delete_many(to_filter(this->__filter).view());
+        this->__affected = _res ? static_cast<size_t>(_res->deleted_count()) : 0;
     }
-
-    std::ostringstream _oss;
-    _oss << std::vformat(zpt::storage::mongodb::to_delete(this->__filter),
-                         std::make_format_args(this->__schema, this->__table));
-    _oss << std::flush;
-    auto _sql = _oss.str();
-
-    auto* _res = PQexec(this->__mongodb.get(), _sql.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    if (!_ok) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("DELETE failed: {} — {}", _err, _sql));
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("DELETE failed: {}", _e.what()));
     }
+    return zpt::make_result<zpt::storage::mongodb::result>(*this);
+}
 
-    this->__result.reset(_res, zpt::storage::mongodb::mongodb_result_deinit{});
-
-    zpt::storage::result _to_return = zpt::make_result<zpt::storage::mongodb::result>(*this);
-    return _to_return;
+auto zpt::storage::mongodb::action_remove::get_affected() const -> size_t {
+    return this->__affected;
 }
 
 // ---- action_replace ----
@@ -562,8 +476,9 @@ zpt::storage::mongodb::action_replace::action_replace(
   std::string _id,
   zpt::json _document)
   : zpt::storage::mongodb::action::action{ _collection }
+  , __id{ std::move(_id) }
   , __underlying{ _document } {
-    this->__underlying << "_id" << _id;
+    this->__underlying << "_id" << this->__id;
 }
 
 auto zpt::storage::mongodb::action_replace::add(zpt::json) -> zpt::storage::action::type* {
@@ -581,9 +496,11 @@ auto zpt::storage::mongodb::action_replace::remove(zpt::json) -> zpt::storage::a
     return this;
 }
 
-auto zpt::storage::mongodb::action_replace::replace(std::string const&, zpt::json)
+auto zpt::storage::mongodb::action_replace::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'replace' action");
+    this->__id = _id;
+    this->__underlying = _document;
+    this->__underlying << "_id" << this->__id;
     return this;
 }
 
@@ -597,7 +514,8 @@ auto zpt::storage::mongodb::action_replace::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mongodb::action_replace::unset(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_replace::unset(std::string const&)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -627,37 +545,31 @@ auto zpt::storage::mongodb::action_replace::bind(zpt::json) -> zpt::storage::act
 }
 
 auto zpt::storage::mongodb::action_replace::execute() -> zpt::storage::result {
-    std::ostringstream _oss;
-    _oss << std::vformat(zpt::storage::mongodb::to_upsert(this->__underlying),
-                         std::make_format_args(this->__schema, this->__table));
-    _oss << std::flush;
-    auto _sql = _oss.str();
-
-    auto* _res = PQexec(this->__mongodb.get(), _sql.c_str());
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    if (!_ok) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("UPSERT failed: {} — {}", _err, _sql));
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        mongocxx::options::replace _opts;
+        _opts.upsert(true);
+        auto _filter = to_bson(zpt::json{ "_id", this->__id });
+        _coll.replace_one(_filter.view(), to_bson(this->__underlying).view(), _opts);
     }
-
-    this->__result.reset(_res, zpt::storage::mongodb::mongodb_result_deinit{});
-
-    zpt::storage::result _to_return = zpt::make_result<zpt::storage::mongodb::result>(*this);
-    return _to_return;
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("REPLACE failed: {}", _e.what()));
+    }
+    return zpt::make_result<zpt::storage::mongodb::result>(*this);
 }
 
 // ---- action_find ----
 
-zpt::storage::mongodb::action_find::action_find(zpt::storage::mongodb::collection const& _collection)
+zpt::storage::mongodb::action_find::action_find(
+  zpt::storage::mongodb::collection const& _collection)
   : zpt::storage::mongodb::action::action{ _collection } {}
 
-zpt::storage::mongodb::action_find::action_find(zpt::storage::mongodb::collection const& _collection,
-                                              zpt::json _search)
+zpt::storage::mongodb::action_find::action_find(
+  zpt::storage::mongodb::collection const& _collection,
+  zpt::json _search)
   : zpt::storage::mongodb::action::action{ _collection }
-  , __underlying{ _search }
+  , __filter{ _search }
   , __fields{ zpt::json::array() }
-  , __bind{ zpt::json::object() }
   , __suffix{ zpt::json::object() } {}
 
 auto zpt::storage::mongodb::action_find::add(zpt::json) -> zpt::storage::action::type* {
@@ -691,7 +603,8 @@ auto zpt::storage::mongodb::action_find::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mongodb::action_find::unset(std::string const&) -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_find::unset(std::string const&)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -701,17 +614,18 @@ auto zpt::storage::mongodb::action_find::patch(zpt::json) -> zpt::storage::actio
 
 auto zpt::storage::mongodb::action_find::sort(std::string const& _attribute, bool asc)
   -> zpt::storage::action::type* {
-    this->__suffix["order by"][_attribute] = (asc ? "asc" : "desc");
+    this->__suffix["sort"][_attribute] = (asc ? "asc" : "desc");
     return this;
 }
 
-auto zpt::storage::mongodb::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_find::fields(zpt::json _fields)
+  -> zpt::storage::action::type* {
     this->__fields += _fields;
     return this;
 }
 
 auto zpt::storage::mongodb::action_find::offset(size_t _rows) -> zpt::storage::action::type* {
-    this->__suffix["offset"] = _rows;
+    this->__suffix["skip"] = _rows;
     return this;
 }
 
@@ -720,58 +634,41 @@ auto zpt::storage::mongodb::action_find::limit(size_t _number) -> zpt::storage::
     return this;
 }
 
-auto zpt::storage::mongodb::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    this->__bind += _map;
+auto zpt::storage::mongodb::action_find::bind(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::mongodb::action_find::execute() -> zpt::storage::result {
-    if (this->__underlying->ok()) {
-        for (auto const& [_, _key, _value] : this->__bind) {
-            zpt::replace(this->__underlying->string(),
-                         std::format(":{}", _key),
-                         zpt::storage::mongodb::quote(_value));
+    try {
+        auto _coll = (*this->__mongodb)[this->__db][this->__collection];
+        mongocxx::options::find _opts;
+
+        if (this->__fields->ok() && this->__fields->size() != 0) {
+            _opts.projection(to_projection(this->__fields).view());
         }
-    }
-
-    std::ostringstream _oss;
-    _oss << std::vformat(zpt::storage::mongodb::to_query(this->__fields, this->__underlying),
-                         std::make_format_args(this->__schema, this->__table));
-
-    if (this->__suffix["order by"]->ok()) {
-        _oss << " ORDER BY ";
-        bool _first{ true };
-        for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
-            if (!_first) { _oss << ", "; }
-            _first = false;
-            _oss << "\"" << _field << "\" " << _direction->string();
+        if (this->__suffix["sort"]->ok()) {
+            _opts.sort(to_sort(this->__suffix["sort"]).view());
         }
+        if (this->__suffix["limit"]->ok()) {
+            _opts.limit(static_cast<int64_t>(this->__suffix["limit"]->integer()));
+        }
+        if (this->__suffix["skip"]->ok()) {
+            _opts.skip(static_cast<int64_t>(this->__suffix["skip"]->integer()));
+        }
+
+        auto _cursor = _coll.find(to_filter(this->__filter).view(), _opts);
+        this->__cursor = std::make_shared<mongocxx::cursor>(std::move(_cursor));
     }
-    if (this->__suffix["limit"]->ok()) { _oss << " LIMIT " << this->__suffix["limit"]; }
-    if (this->__suffix["offset"]->ok()) { _oss << " OFFSET " << this->__suffix["offset"]; }
-
-    _oss << ";";
-    auto _sql = _oss.str();
-
-    auto* _res = PQexec(this->__mongodb.get(), _sql.c_str());
-    auto _status = PQresultStatus(_res);
-    if (_status != PGRES_TUPLES_OK && _status != PGRES_COMMAND_OK) {
-        auto _err = std::string{ PQerrorMessage(this->__mongodb.get()) };
-        PQclear(_res);
-        expect(false, std::format("SELECT failed: {} — {}", _err, _sql));
+    catch (mongocxx::exception const& _e) {
+        expect(false, std::format("FIND failed: {}", _e.what()));
     }
-
-    this->__result.reset(_res, zpt::storage::mongodb::mongodb_result_deinit{});
-
-    zpt::storage::result _to_return = zpt::make_result<zpt::storage::mongodb::result>(*this);
-    return _to_return;
+    return zpt::make_result<zpt::storage::mongodb::result>(*this);
 }
 
 // ---- result ----
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action& _action)
-  : __mongodb{ _action.mongodb() }
-  , __result{ _action.result() } {}
+  : __cursor{ _action.cursor() } {}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_add& _action)
   : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {
@@ -779,48 +676,40 @@ zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_add& _action
 }
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_modify& _action)
-  : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {}
+  : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {
+    this->__affected = _action.get_affected();
+}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_remove& _action)
-  : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {}
+  : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {
+    this->__affected = _action.get_affected();
+}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_replace& _action)
   : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_find& _action)
   : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {
-    this->__is_doc_result = true;
+    this->__is_cursor_result = true;
 }
-
-zpt::storage::mongodb::result::~result() {}
 
 auto zpt::storage::mongodb::result::fetch(size_t _amount) -> zpt::json {
     zpt::json _result = zpt::json::array();
+    if (!this->__cursor) { return _result; }
     if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
 
-    auto* _res = this->__result.get();
-    if (_res == nullptr) { return _result; }
-
-    int _total_rows = PQntuples(_res);
     size_t _fetched{ 0 };
-    for (int _row = 0; _row < _total_rows && _fetched < _amount; ++_row) {
-        _result << zpt::storage::mongodb::to_json(_res, _row);
+    for (auto const& _doc : *this->__cursor) {
+        if (_fetched >= _amount) { break; }
+        _result << zpt::storage::mongodb::from_bson(_doc);
         ++_fetched;
     }
-
     return _result;
 }
 
 auto zpt::storage::mongodb::result::generated_id() -> zpt::json { return this->__generated_ids; }
 
-auto zpt::storage::mongodb::result::count() const -> size_t {
-    auto* _res = this->__result.get();
-    if (_res == nullptr) { return 0; }
-    if (this->__is_doc_result) { return static_cast<size_t>(PQntuples(_res)); }
-    auto* _tag = PQcmdTuples(_res);
-    if (_tag) { return std::stoul(_tag); }
-    return 0;
-}
+auto zpt::storage::mongodb::result::count() const -> size_t { return this->__affected; }
 
 auto zpt::storage::mongodb::result::status() const -> zpt::status { return 0; }
 

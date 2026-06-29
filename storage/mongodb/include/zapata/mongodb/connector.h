@@ -22,11 +22,11 @@
 
 /**
  * @file connector.h
- * @brief MongoDB storage connector implementation using the libpq C API.
+ * @brief MongoDB storage connector implementation using the mongocxx C++ driver.
  *
- * Implements the storage abstraction layer for MongoDB databases using
- * the MongoDB libpq client library. Provides the full connector hierarchy:
- * connection, session, database, collection, action, and result types.
+ * Implements the storage abstraction layer for MongoDB using the mongocxx
+ * client library. Provides the full connector hierarchy: connection, session,
+ * database, collection, action, and result types.
  *
  * @see zpt::storage::connection
  * @see zpt::storage::make_connection
@@ -34,6 +34,12 @@
 
 #pragma once
 
+#include <mongocxx/client.hpp>
+#include <mongocxx/collection.hpp>
+#include <mongocxx/cursor.hpp>
+#include <mongocxx/database.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
 #include <zapata/connector.h>
 #include <zapata/json.h>
 #include <zapata/mongodb/translate.h>
@@ -48,35 +54,28 @@ class collection;
 class action;
 class result;
 
-using mongodb_ptr = std::shared_ptr<>;
-using mongodb_result_ptr = std::shared_ptr<>;
+using mongodb_ptr = std::shared_ptr<mongocxx::client>;
+using mongodb_cursor_ptr = std::shared_ptr<mongocxx::cursor>;
 
-/** @brief Deleter for PGconn handles used with shared_ptr. */
-struct mongodb_conn_deinit {
-    auto operator()(PGconn*) const -> void;
-};
-
-/** @brief Deleter for PGresult handles used with shared_ptr. */
-struct mongodb_result_deinit {
-    auto operator()(PGresult*) const -> void;
-};
-
-/** @brief RAII wrapper for MongoDB library initialization/cleanup. */
+/** @brief RAII wrapper for mongocxx library initialization (must exist exactly once per process). */
 class library {
   public:
-    /** @brief Initializes the MongoDB client library (no-op, libpq is lazy). */
+    /** @brief Initializes the mongocxx driver instance. */
     library();
-    /** @brief Finalizes the MongoDB client library (no-op, libpq is lazy). */
+    /** @brief Destructor. */
     virtual ~library();
+
+  private:
+    mongocxx::instance __instance{};
 };
 
-/** @brief Returns the global MongoDB library instance (initializes on first call). */
+/** @brief Returns the global mongocxx library instance (initializes on first call). */
 auto init() -> library&;
 
 /** @brief MongoDB connection implementation. */
 class connection : public zpt::storage::connection::type {
   public:
-    /** @brief Constructs a connection with options (host, user, password, port, db). */
+    /** @brief Constructs a connection with options (host, port, user, password, db). */
     connection(zpt::json _options);
     /** @brief Destructor. */
     virtual ~connection() override = default;
@@ -90,7 +89,7 @@ class connection : public zpt::storage::connection::type {
     /** @brief Returns the connection configuration options. */
     virtual auto options() const -> zpt::json;
 
-    /** @brief Returns the underlying PGconn handle. */
+    /** @brief Returns the underlying mongocxx client handle. */
     auto mongodb() const -> mongodb_ptr;
 
   private:
@@ -98,94 +97,93 @@ class connection : public zpt::storage::connection::type {
     mongodb_ptr __mongodb{ nullptr };
 };
 
-/**
- * @brief MongoDB session implementation.
- *
- * Wraps a PGconn connection handle and provides transaction control
- * and database selection.
- */
+/** @brief MongoDB session implementation. */
 class session : public zpt::storage::session::type {
   public:
     /** @brief Constructs a session from the given MongoDB connection. */
     session(zpt::storage::mongodb::connection const& _connection);
     session(zpt::storage::mongodb::session const& _rhs) = delete;
     session(zpt::storage::mongodb::session&& _rhs) = delete;
-    /** @brief Destructor; ends the session thread. */
-    virtual ~session() override;
-    /** @brief Returns true if the underlying MongoDB connection is active. */
+    /** @brief Destructor. */
+    virtual ~session() override = default;
+    /** @brief Returns true if the underlying client is valid. */
     virtual auto is_open() const -> bool override;
-    /** @brief Commits the current transaction. */
+    /** @brief No-op for MongoDB (transactions require replica sets). */
     virtual auto commit() -> zpt::storage::session::type* override;
-    /** @brief Rolls back the current transaction. */
+    /** @brief No-op for MongoDB (transactions require replica sets). */
     virtual auto rollback() -> zpt::storage::session::type* override;
-    /** @brief Executes a raw SQL statement on this session. */
+    /** @brief Not supported for MongoDB; always throws. */
     virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
-    /** @brief Selects a database (schema) within this session. */
+    /** @brief Selects a database within this session. */
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
 
-    /** @brief Returns the underlying PGconn handle. */
+    /** @brief Returns the underlying mongocxx client handle. */
     auto mongodb() const -> mongodb_ptr;
 
   private:
     mongodb_ptr __mongodb{ nullptr };
 };
-/** @brief MongoDB database implementation (represents a schema/database). */
+
+/** @brief MongoDB database implementation. */
 class database : public zpt::storage::database::type {
   public:
-    /** @brief Constructs a database handle for the given schema name. */
+    /** @brief Constructs a database handle for the given database name. */
     database(zpt::storage::mongodb::session const& _session, std::string const& _db);
     database(zpt::storage::mongodb::database const& _rhs) = delete;
     database(zpt::storage::mongodb::database&& _rhs) = delete;
     /** @brief Destructor. */
     virtual ~database() override = default;
-    /** @brief Executes a raw SQL statement on this database. */
+    /** @brief Not supported for MongoDB; always throws. */
     virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
-    /** @brief Returns a collection (table) handle for the given name. */
+    /** @brief Returns a collection handle for the given name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
 
-    /** @brief Retrieves the name of the schema used for the operations. */
-    auto schema() const -> std::string const&;
-    /** @brief Returns the underlying PGconn handle. */
+    /** @brief Returns the database name. */
+    auto db() const -> std::string const&;
+    /** @brief Returns the underlying mongocxx client handle. */
     auto mongodb() const -> mongodb_ptr;
 
   private:
     mongodb_ptr __mongodb{ nullptr };
-    std::string __schema;
+    std::string __db;
 };
-/** @brief MongoDB collection implementation (represents a database table). */
+
+/** @brief MongoDB collection implementation. */
 class collection : public zpt::storage::collection::type {
   public:
-    /** @brief Constructs a collection handle for the given table within a database. */
-    collection(zpt::storage::mongodb::database const& _database, std::string const& _collection);
+    /** @brief Constructs a collection handle for the given collection within a database. */
+    collection(zpt::storage::mongodb::database const& _database,
+               std::string const& _collection);
     /** @brief Destructor. */
     virtual ~collection() override = default;
-    /** @brief Creates an INSERT action for the given document. */
+    /** @brief Creates an insert action for the given document. */
     virtual auto add(zpt::json _document) const -> zpt::storage::action override;
-    /** @brief Creates an UPDATE action with the given search criteria. */
+    /** @brief Creates an update action with the given filter. */
     virtual auto modify(zpt::json _search) const -> zpt::storage::action override;
-    /** @brief Creates a DELETE action with the given search criteria. */
+    /** @brief Creates a delete action with the given filter. */
     virtual auto remove(zpt::json _search) const -> zpt::storage::action override;
-    /** @brief Creates a REPLACE action for the document with the given ID. */
+    /** @brief Creates a replace/upsert action for the document with the given ID. */
     virtual auto replace(std::string const& _id, zpt::json _document) const
       -> zpt::storage::action override;
-    /** @brief Creates a SELECT action with the given search criteria. */
+    /** @brief Creates a find action with the given filter. */
     virtual auto find(zpt::json _search) const -> zpt::storage::action override;
-    /** @brief Returns the total number of rows in the table. */
+    /** @brief Returns the total number of documents matching the filter. */
     virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
 
-    /** @brief Returns the table name. */
-    auto table() const -> std::string const&;
-    /** @brief Retrieves the name of the schema used for the operations. */
-    auto schema() const -> std::string const&;
-    /** @brief Returns the underlying PGconn handle. */
+    /** @brief Returns the collection name. */
+    auto coll() const -> std::string const&;
+    /** @brief Returns the database name. */
+    auto db() const -> std::string const&;
+    /** @brief Returns the underlying mongocxx client handle. */
     auto mongodb() const -> mongodb_ptr;
 
   private:
     mongodb_ptr __mongodb{ nullptr };
-    std::string __table;
-    std::string __schema;
+    std::string __collection;
+    std::string __db;
 };
-/** @brief Base class for MongoDB action operations (manages result sets). */
+
+/** @brief Base class for MongoDB action operations. */
 class action : public zpt::storage::action::type {
   public:
     /** @brief Constructs an action bound to the given collection. */
@@ -193,276 +191,287 @@ class action : public zpt::storage::action::type {
     /** @brief Destructor. */
     virtual ~action() override = default;
 
-    /** @brief Returns the result set from the last execution. */
-    auto result() const -> mongodb_result_ptr;
-    /** @brief Returns the MongoDB connection handle. */
+    /** @brief Returns the cursor from the last find execution. */
+    auto cursor() const -> mongodb_cursor_ptr;
+    /** @brief Returns the MongoDB client handle. */
     auto mongodb() const -> mongodb_ptr;
 
   protected:
     mongodb_ptr __mongodb{ nullptr };
-    mongodb_result_ptr __result{ nullptr };
-    std::string __table;
-    std::string __schema;
+    mongodb_cursor_ptr __cursor{ nullptr };
+    std::string __collection;
+    std::string __db;
 };
-/** @brief MongoDB INSERT action builder. */
+
+/** @brief MongoDB insert action builder. */
 class action_add : public zpt::storage::mongodb::action {
   public:
-    /** @brief Constructs an INSERT action for the given document. */
+    /** @brief Constructs an insert action for the given document. */
     action_add(zpt::storage::mongodb::collection const& _collection, zpt::json _document);
     /** @brief Destructor. */
     virtual ~action_add() override = default;
     /** @brief Queues an additional document for insertion. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; always throws. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; always throws. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; always throws. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; always throws. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to INSERT; returns this action unchanged. */
+    /** @brief Not applicable to insert; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
-    /** @brief Binds named parameter values into the prepared INSERT statement. */
+    /** @brief No-op for MongoDB (no parameterized queries). */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the INSERT statement and returns a result with generated IDs. */
+    /** @brief Executes the insert and returns a result with generated IDs. */
     virtual auto execute() -> zpt::storage::result override;
-    /** @brief Returns the auto-generated IDs from the last INSERT execution. */
+    /** @brief Returns the auto-generated IDs from the last insert execution. */
     auto get_generated_ids() const -> zpt::json;
 
   private:
     zpt::json __underlying{ nullptr };
     zpt::json __generated_ids{ nullptr };
 };
-/** @brief MongoDB UPDATE action builder. */
+
+/** @brief MongoDB update action builder. */
 class action_modify : public zpt::storage::mongodb::action {
   public:
-    /** @brief Constructs an UPDATE action with the given search criteria. */
+    /** @brief Constructs an update action with the given filter. */
     action_modify(zpt::storage::mongodb::collection const& _collection, zpt::json _search);
     /** @brief Destructor. */
     virtual ~action_modify() override = default;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Refines the WHERE clause with additional search criteria. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Adds a SET clause assigning the given value to the named column. */
+    /** @brief Adds a field assignment to the update document. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    /** @brief Adds a SET clause that clears (nullifies) the named column. */
+    /** @brief Marks a field for removal in the update document. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
-    /** @brief Applies a JSON patch document as multiple SET clauses. */
+    /** @brief Merges a JSON patch document into the update. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; always throws. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to UPDATE; returns this action unchanged. */
+    /** @brief Not applicable to update; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
-    /** @brief Binds named parameter values into the prepared UPDATE statement. */
+    /** @brief No-op for MongoDB (no parameterized queries). */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the UPDATE statement and returns the affected row count. */
+    /** @brief Executes the update and returns the affected document count. */
     virtual auto execute() -> zpt::storage::result override;
+    /** @brief Returns the number of documents modified by the last execution. */
+    auto get_affected() const -> size_t;
 
   private:
     zpt::json __underlying{ nullptr };
     zpt::json __filter{ nullptr };
-    zpt::json __bind{ nullptr };
+    size_t __affected{ 0 };
 };
-/** @brief MongoDB DELETE action builder. */
+
+/** @brief MongoDB delete action builder. */
 class action_remove : public zpt::storage::mongodb::action {
   public:
-    /** @brief Constructs a DELETE action targeting rows that match the given search criteria. */
+    /** @brief Constructs a delete action targeting documents that match the given filter. */
     action_remove(zpt::storage::mongodb::collection const& _collection, zpt::json _search);
     /** @brief Destructor. */
     virtual ~action_remove() override = default;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; always throws. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; always throws. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Refines the WHERE clause with additional search criteria. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; always throws. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; always throws. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to DELETE; returns this action unchanged. */
+    /** @brief Not applicable to delete; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
-    /** @brief Binds named parameter values into the prepared DELETE statement. */
+    /** @brief No-op for MongoDB (no parameterized queries). */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the DELETE statement and returns the affected row count. */
+    /** @brief Executes the delete and returns the affected document count. */
     virtual auto execute() -> zpt::storage::result override;
+    /** @brief Returns the number of documents deleted by the last execution. */
+    auto get_affected() const -> size_t;
 
   private:
     zpt::json __filter{ nullptr };
-    zpt::json __bind{ nullptr };
+    size_t __affected{ 0 };
 };
-/** @brief MongoDB REPLACE action builder. */
+
+/** @brief MongoDB replace/upsert action builder. */
 class action_replace : public zpt::storage::mongodb::action {
   public:
-    /** @brief Constructs a REPLACE action for the document with the given ID. */
+    /** @brief Constructs a replace action for the document with the given ID. */
     action_replace(zpt::storage::mongodb::collection const& _collection,
                    std::string _id,
                    zpt::json _document);
     /** @brief Destructor. */
     virtual ~action_replace() override = default;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; always throws. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; always throws. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; always throws. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
     /** @brief Updates the replacement document and target ID. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; always throws. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to REPLACE; returns this action unchanged. */
+    /** @brief Not applicable to replace; returns this action unchanged. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
-    /** @brief Binds named parameter values into the prepared REPLACE statement. */
+    /** @brief No-op for MongoDB (no parameterized queries). */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the MongoDB REPLACE statement and returns the result. */
+    /** @brief Executes the replace/upsert and returns the result. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
+    std::string __id;
     zpt::json __underlying{ nullptr };
 };
-/** @brief MongoDB SELECT action builder with filtering, sorting, and pagination. */
+
+/** @brief MongoDB find action builder with filtering, sorting, and pagination. */
 class action_find : public zpt::storage::mongodb::action {
   public:
-    /** @brief Constructs a SELECT action that returns all rows in the collection. */
+    /** @brief Constructs a find action that returns all documents in the collection. */
     action_find(zpt::storage::mongodb::collection const& _collection);
-    /** @brief Constructs a SELECT action with an initial WHERE clause from the search document. */
+    /** @brief Constructs a find action with an initial filter. */
     action_find(zpt::storage::mongodb::collection const& _collection, zpt::json _search);
     /** @brief Destructor. */
     virtual ~action_find() override = default;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; always throws. */
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; always throws. */
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; always throws. */
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; always throws. */
     virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
-    /** @brief Refines the WHERE clause with additional search criteria. */
+    /** @brief Not applicable to find; always throws. */
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; returns this action unchanged. */
     virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; returns this action unchanged. */
     virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
-    /** @brief Not applicable to SELECT; returns this action unchanged. */
+    /** @brief Not applicable to find; returns this action unchanged. */
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    /** @brief Adds an ORDER BY clause for the given column. */
+    /** @brief Adds a sort field and direction to the query. */
     virtual auto sort(std::string const& _attribute, bool asc = true)
       -> zpt::storage::action::type* override;
-    /** @brief Restricts the columns returned by the SELECT to the given field list. */
+    /** @brief Restricts the returned fields to the given list. */
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
-    /** @brief Sets the number of rows to skip (OFFSET) in the result set. */
+    /** @brief Sets the number of documents to skip. */
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
-    /** @brief Sets the maximum number of rows (LIMIT) to return. */
+    /** @brief Sets the maximum number of documents to return. */
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
-    /** @brief Binds named parameter values into the prepared SELECT statement. */
+    /** @brief No-op for MongoDB (no parameterized queries). */
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
-    /** @brief Executes the SELECT query and returns the result set. */
+    /** @brief Executes the find query and returns the result cursor. */
     virtual auto execute() -> zpt::storage::result override;
 
   private:
-    zpt::json __underlying{ nullptr };
+    zpt::json __filter{ nullptr };
     zpt::json __fields{ nullptr };
-    zpt::json __bind{ nullptr };
     zpt::json __suffix{ nullptr };
 };
+
 /** @brief MongoDB query result set. */
 class result : public zpt::storage::result::type {
   public:
-    /** @brief Constructs a result from a generic action (executes the statement). */
+    /** @brief Constructs a result from a generic action (cursor and client only). */
     result(zpt::storage::mongodb::action& _action);
-    /** @brief Constructs a result from an INSERT action, capturing generated IDs. */
+    /** @brief Constructs a result from an insert action, capturing generated IDs. */
     result(zpt::storage::mongodb::action_add& _action);
-    /** @brief Constructs a result from an UPDATE action, capturing affected row count. */
+    /** @brief Constructs a result from an update action, capturing affected count. */
     result(zpt::storage::mongodb::action_modify& _action);
-    /** @brief Constructs a result from a DELETE action, capturing affected row count. */
+    /** @brief Constructs a result from a delete action, capturing affected count. */
     result(zpt::storage::mongodb::action_remove& _action);
-    /** @brief Constructs a result from a REPLACE action. */
+    /** @brief Constructs a result from a replace action. */
     result(zpt::storage::mongodb::action_replace& _action);
-    /** @brief Constructs a result from a SELECT action, holding the result set. */
+    /** @brief Constructs a result from a find action, holding the cursor. */
     result(zpt::storage::mongodb::action_find& _action);
-    /** @brief Destructor; frees the MongoDB result set. */
-    virtual ~result() override;
-    /** @brief Fetches up to @p _amount rows as a JSON array (0 = all). */
+    /** @brief Destructor. */
+    virtual ~result() override = default;
+    /** @brief Fetches up to @p _amount documents as a JSON array (0 = all). */
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
-    /** @brief Returns the auto-generated ID(s) from the last INSERT or REPLACE. */
+    /** @brief Returns the auto-generated ID(s) from the last insert. */
     virtual auto generated_id() -> zpt::json override;
-    /** @brief Returns the number of rows in the result set or affected by the statement. */
+    /** @brief Returns the number of documents in the result or affected by the operation. */
     virtual auto count() const -> size_t override;
     /** @brief Returns the HTTP-style status code reflecting the operation outcome. */
     virtual auto status() const -> zpt::status override;
     /** @brief Returns a human-readable message describing the operation outcome. */
     virtual auto message() const -> std::string override;
-    /** @brief Serializes the entire result to a JSON representation. */
+    /** @brief Serializes the result state to a JSON representation. */
     virtual auto to_json() const -> zpt::json override;
 
   private:
-    mongodb_ptr __mongodb{ nullptr };
-    mongodb_result_ptr __result{ nullptr };
-    bool __is_doc_result{ false };
+    mongodb_cursor_ptr __cursor{ nullptr };
     zpt::json __generated_ids{ nullptr };
+    size_t __affected{ 0 };
+    bool __is_cursor_result{ false };
 };
+
 } // namespace mongodb
 } // namespace storage
 } // namespace zpt

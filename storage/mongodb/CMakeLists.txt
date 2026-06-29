@@ -1,18 +1,14 @@
-set(STORAGE_PGSQL_INCLUDE_DIR
+set(STORAGE_MONGODB_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_package(PostgreSQL 18 QUIET)
+find_package(mongocxx QUIET)
+find_package(bsoncxx QUIET)
 
-if(NOT PostgreSQL_FOUND)
-  message(STATUS "zapata-storage-mongodb skipped: libpq not found")
+if(NOT mongocxx_FOUND OR NOT bsoncxx_FOUND)
+  message(STATUS "zapata-storage-mongodb skipped: mongocxx/bsoncxx not found")
   return()
 endif()
-
-include_directories(
-  SYSTEM
-    ${PostgreSQL_INCLUDE_DIRS}
-)
 
 add_library(zapata-storage-mongodb SHARED)
 add_dependencies(zapata-storage-mongodb
@@ -26,9 +22,9 @@ target_sources(zapata-storage-mongodb
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
   INTERFACE
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/mongodb.h
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/mongodb/translate.h
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/mongodb/connector.h
+    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb.h
+    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb/translate.h
+    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb/connector.h
 )
 target_include_directories(zapata-storage-mongodb
   PRIVATE
@@ -36,9 +32,9 @@ target_include_directories(zapata-storage-mongodb
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${STORAGE_PGSQL_INCLUDE_DIR}
+    ${STORAGE_MONGODB_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_PGSQL_INCLUDE_DIR}
+    ${STORAGE_MONGODB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-mongodb
   PUBLIC
@@ -46,7 +42,8 @@ target_link_libraries(zapata-storage-mongodb
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${PostgreSQL_LIBRARIES}
+    mongo::mongocxx_shared
+    mongo::bsoncxx_shared
 )
 set_target_properties(zapata-storage-mongodb
   PROPERTIES
@@ -62,7 +59,7 @@ install(TARGETS zapata-storage-mongodb
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(DIRECTORY ${STORAGE_PGSQL_INCLUDE_DIR}/zapata
+install(DIRECTORY ${STORAGE_MONGODB_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
 )
@@ -85,7 +82,7 @@ target_include_directories(zapata_example_storage_mongodb
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${STORAGE_PGSQL_INCLUDE_DIR}
+    ${STORAGE_MONGODB_INCLUDE_DIR}
 )
 target_link_libraries(zapata_example_storage_mongodb
   PRIVATE
@@ -93,7 +90,8 @@ target_link_libraries(zapata_example_storage_mongodb
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${PostgreSQL_LIBRARIES}
+    mongo::mongocxx_shared
+    mongo::bsoncxx_shared
     zapata-storage-mongodb
 )
 set_target_properties(zapata_example_storage_mongodb
