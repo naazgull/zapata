@@ -1648,11 +1648,10 @@ auto zpt::JSONElementT::prettify() const -> std::string {
     return _out;
 }
 
-auto zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json> {
+auto zpt::JSONElementT::element(size_t _pos) -> zpt::json::element {
     switch (this->__underlying.index()) {
-        case zpt::JSObject:
-            return std::make_tuple(_pos, this->object()->key_for(_pos), this->object()[_pos]);
-        case zpt::JSArray: return std::make_tuple(_pos, std::to_string(_pos), this->array()[_pos]);
+        case zpt::JSObject: return { _pos, this->object()->key_for(_pos), this->object()[_pos] };
+        case zpt::JSArray: return { _pos, std::to_string(_pos), this->array()[_pos] };
         case zpt::JSString:
         case zpt::JSInteger:
         case zpt::JSDouble:
@@ -1663,5 +1662,5 @@ auto zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, 
         case zpt::JSLambda:
         case zpt::JSRegex: break;
     }
-    return std::make_tuple(0, "", zpt::json{ *this });
+    return { 0, "", zpt::json{ *this } };
 }

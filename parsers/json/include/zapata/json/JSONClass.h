@@ -112,14 +112,15 @@ enum JSONType {
 auto to_string(zpt::JSONType _type) -> std::string;
 
 // Forward declarations
-class JSONElementT; ///< Internal JSON element implementation
-class JSONObj;      ///< JSON object wrapper
-class JSONArr;      ///< JSON array wrapper
-class JSONLambda;   ///< Lambda function implementation
-class JSONRegex;    ///< Regular expression implementation
-class JSONIterator; ///< Iterator for JSON containers
-class lambda;       ///< Lambda function wrapper
-class json;         ///< Main JSON value class
+class JSONElementT;  ///< Internal JSON element implementation
+class JSONObj;       ///< JSON object wrapper
+class JSONArr;       ///< JSON array wrapper
+class JSONLambda;    ///< Lambda function implementation
+class JSONRegex;     ///< Regular expression implementation
+class JSONIterator;  ///< Iterator for JSON containers
+class lambda;        ///< Lambda function wrapper
+class json;          ///< Main JSON value class
+struct json_element; ///< JSON iterator target type
 
 /** @brief Alias for JSONRegex. */
 using regex = JSONRegex;
@@ -252,7 +253,7 @@ class json {
     /** @brief Map type used internally for objects. */
     using map = std::map<std::string, zpt::json>;
     /** @brief Element tuple: (index, key, value). */
-    using element = std::tuple<size_t, std::string, zpt::json>;
+    using element = json_element;
     /** @brief Iterator type. */
     using iterator = zpt::JSONIterator;
     /** @brief Const iterator type. */
@@ -333,7 +334,7 @@ class json {
     /** @brief Move assignment. */
     auto operator=(zpt::json&& _rhs) -> zpt::json&;
     /** @brief Assignment from iterator element tuple. */
-    auto operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json&;
+    auto operator=(element _rhs) -> zpt::json&;
     /** @brief Assignment from initializer list. */
     auto operator=(std::initializer_list<zpt::json> _list) -> zpt::json&;
     /** @brief Assignment from any compatible type. */
@@ -356,9 +357,9 @@ class json {
     /** @name Comparison Operators */
     ///@{
     /** @brief Equality with iterator element tuple. */
-    auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool;
+    auto operator==(element _rhs) const -> bool;
     /** @brief Inequality with iterator element tuple. */
-    auto operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool;
+    auto operator!=(element _rhs) const -> bool;
     /** @brief Equality with nullptr (checks if null/undefined). */
     auto operator==(std::nullptr_t _rhs) const -> bool;
     /** @brief Inequality with nullptr. */
@@ -648,7 +649,7 @@ class json {
   private:
     std::shared_ptr<zpt::JSONElementT> __underlying{ nullptr };
 
-    json(std::tuple<size_t, std::string, zpt::json> _rhs);
+    json(element _rhs);
     auto strict_union(zpt::json _rhs) -> void;
     auto strict_intersection(zpt::json _rhs) -> void;
 
@@ -656,7 +657,15 @@ class json {
                          zpt::json::traverse_callback _callback,
                          std::string _path) -> void;
 };
+
+struct json_element {
+    size_t __index;
+    std::string __name;
+    zpt::json __value;
+};
 } // namespace zpt
+
+static_assert(std::is_move_constructible<zpt::json>::value);
 
 /**
  * @brief std::formatter specialization for zpt::json.
@@ -1832,7 +1841,7 @@ class JSONElementT {
      * @param _pos Position index.
      * @return Tuple for iteration; key is empty for arrays.
      */
-    virtual auto element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json>;
+    virtual auto element(size_t _pos) -> zpt::json::element;
 
   private:
     JSONElementT* __parent{ nullptr };
