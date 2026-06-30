@@ -69,7 +69,7 @@ zpt::json::json(zpt::allocator<zpt::JSONElementT>::shared_pointer _target)
 
 zpt::json::json(std::initializer_list<zpt::json> _init) { (*this) = _init; }
 
-zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) { (*this) = _rhs; }
+zpt::json::json(element _rhs) { (*this) = _rhs; }
 
 zpt::json::~json() {}
 
@@ -92,8 +92,8 @@ auto zpt::json::operator=(zpt::json&& _rhs) -> zpt::json& {
     return (*this);
 }
 
-auto zpt::json::operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json& {
-    this->__underlying = std::get<2>(_rhs).__underlying;
+auto zpt::json::operator=(element _rhs) -> zpt::json& {
+    this->__underlying = _rhs.__value.__underlying;
     return (*this);
 }
 
@@ -142,13 +142,9 @@ auto zpt::json::operator->() const -> zpt::JSONElementT const* { return this->__
 
 auto zpt::json::operator*() const -> zpt::JSONElementT const& { return *this->__underlying.get(); }
 
-auto zpt::json::operator==(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool {
-    return (*this) == std::get<2>(_rhs);
-}
+auto zpt::json::operator==(element _rhs) const -> bool { return (*this) == _rhs.__value; }
 
-auto zpt::json::operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool {
-    return (*this) != std::get<2>(_rhs);
-}
+auto zpt::json::operator!=(element _rhs) const -> bool { return (*this) != _rhs.__value; }
 
 auto zpt::json::operator==(std::nullptr_t) const -> bool {
     return this->__underlying->type() == zpt::JSNil;
@@ -1110,7 +1106,7 @@ auto zpt::json::flatten(zpt::json _document) -> zpt::json {
 auto zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
   -> zpt::json::iterator {
     for (zpt::json::iterator _to_return = _begin; _to_return != _end; ++_to_return) {
-        if (std::get<2>(*_to_return) == _to_find) { return _to_return; }
+        if ((*_to_return).__value == _to_find) { return _to_return; }
     }
     return _end;
 }
@@ -1197,17 +1193,16 @@ auto zpt::JSONIterator::operator++() -> JSONIterator& {
 auto zpt::JSONIterator::operator*() -> reference {
     switch (this->__target->type()) {
         case zpt::JSObject: {
-            return std::make_tuple(
-              this->__index, this->__iterator->first, this->__iterator->second);
+            return { this->__index, this->__iterator->first, this->__iterator->second };
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (**this->__target->array())[this->__index]);
+            return { this->__index, "", (**this->__target->array())[this->__index] };
         }
         default: {
             break;
         }
     }
-    return std::make_tuple(this->__index, "", this->__target);
+    return { this->__index, "", this->__target };
 }
 
 auto zpt::JSONIterator::operator++(int) -> JSONIterator {
@@ -1219,17 +1214,16 @@ auto zpt::JSONIterator::operator++(int) -> JSONIterator {
 auto zpt::JSONIterator::operator->() -> pointer {
     switch (this->__target->type()) {
         case zpt::JSObject: {
-            return std::make_tuple(
-              this->__index, this->__iterator->first, this->__iterator->second);
+            return { this->__index, this->__iterator->first, this->__iterator->second };
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (**this->__target->array())[this->__index]);
+            return { this->__index, "", (**this->__target->array())[this->__index] };
         }
         default: {
             break;
         }
     }
-    return std::make_tuple(this->__index, "", this->__target);
+    return { this->__index, "", this->__target };
 }
 
 auto zpt::JSONIterator::operator==(JSONIterator const& _rhs) const -> bool {
