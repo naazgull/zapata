@@ -32,6 +32,73 @@
 
 #pragma once
 
+#include <SWI-cpp2.h>
+#include <zapata/bridge.h>
+
 namespace zpt {
-namespace prolog {} // namespace prolog
+
+using prolog_object = std::shared_ptr<PlTerm>;
+
+namespace prolog {
+/**
+ * @brief Prolog scripting language bridge.
+ *
+ * Integrates Prolog with Zapata, providing:
+ * - Loading Prolog scripts from files
+ * - Calling Prolog functions from C++
+ * - Registering C++ callbacks callable from Prolog
+ * - Automatic JSON/Prolog value conversion
+ *
+ */
+class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_object> {
+  public:
+    using underlying_type = PlEngine&;                          ///< Raw Prolog state pointer
+    using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Prolog
+    using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Prolog C function
+    using mutex_type = zpt::locks::spin_mutex;
+
+    bridge();
+    bridge(bridge&& _rhs) = delete;
+    bridge(bridge& const& _rhs) = delete;
+    virtual ~bridge();
+
+    auto operator=(bridge const& _rhs) -> zpt::prolog::bridge& = delete;
+    auto operator=(bridge&& _rhs) -> zpt::prolog::bridge& = delete;
+
+    /** @brief Returns "prolog". */
+    auto name() const -> std::string;
+    /** @brief Loads a Prolog module from file. */
+    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
+      -> zpt::prolog::bridge&;
+    /** @brief Registers a C++ callback as a Prolog module. */
+    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
+      -> zpt::prolog::bridge&;
+    auto setup_lambda(zpt::json _conf, lambda_type _callback) -> zpt::prolog::bridge&;
+    /** @brief Locates a Prolog value by path. */
+    auto find(zpt::json _to_locate) -> object_type;
+    /** @brief Converts Prolog term to JSON. */
+    auto to_json(object_type _to_convert) -> zpt::json;
+    /** @brief Creates a JSON reference to a Prolog value. */
+    auto to_ref(object_type _to_convert, int _index = 1) -> zpt::json;
+    /** @brief Pushes JSON value onto Prolog term. */
+    auto to_object(zpt::json _to_convert) -> object_type;
+    /** @brief Dereferences a JSON Prolog reference. */
+    auto from_ref(zpt::json _to_convert, object_type _return) -> object_type;
+    /** @brief Executes a Prolog function with arguments. */
+    auto execute(zpt::json _func, zpt::json _args) -> zpt::prolog::bridge::object_type;
+    /** @brief Initializes the bridge (loads all modules). */
+    auto initialize() -> zpt::prolog::bridge&;
+
+  private:
+    PlEngine __underlying;
+    mutex_type __underlying_mutex;
+    std::atomic<bool> __initialized{ false };
+};
+} // namespace prolog
+
+/**
+ * @brief Returns the global Prolog bridge instance.
+ * @return Reference to the thread-local Prolog bridge.
+ */
+auto PROLOG_BRIDGE() -> zpt::prolog::bridge&;
 } // namespace zpt
