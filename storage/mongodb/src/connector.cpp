@@ -50,8 +50,7 @@ auto zpt::storage::mongodb::connection::open(zpt::json _options)
     this->__options = _options;
 
     auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
-    auto _port =
-      this->__options("port")->ok() ? this->__options("port")->integer() : 27017LL;
+    auto _port = this->__options("port")->ok() ? this->__options("port")->integer() : 27017LL;
     auto _user = this->__options("user")->ok() ? this->__options("user")->string() : "";
     auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _db = this->__options("db")->ok() ? this->__options("db")->string() : "";
@@ -95,9 +94,7 @@ auto zpt::storage::mongodb::connection::mongodb() const -> mongodb_ptr { return 
 zpt::storage::mongodb::session::session(zpt::storage::mongodb::connection const& _connection)
   : __mongodb{ _connection.mongodb() } {}
 
-auto zpt::storage::mongodb::session::is_open() const -> bool {
-    return this->__mongodb != nullptr;
-}
+auto zpt::storage::mongodb::session::is_open() const -> bool { return this->__mongodb != nullptr; }
 
 auto zpt::storage::mongodb::session::commit() -> zpt::storage::session::type* { return this; }
 
@@ -146,23 +143,19 @@ zpt::storage::mongodb::collection::collection(zpt::storage::mongodb::database co
   , __collection{ _collection }
   , __db{ _database.db() } {}
 
-auto zpt::storage::mongodb::collection::add(zpt::json _document) const
-  -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::add(zpt::json _document) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_add>(*this, _document);
 }
 
-auto zpt::storage::mongodb::collection::modify(zpt::json _search) const
-  -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::modify(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_modify>(*this, _search);
 }
 
-auto zpt::storage::mongodb::collection::remove(zpt::json _search) const
-  -> zpt::storage::action {
+auto zpt::storage::mongodb::collection::remove(zpt::json _search) const -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_remove>(*this, _search);
 }
 
-auto zpt::storage::mongodb::collection::replace(std::string const& _id,
-                                                zpt::json _document) const
+auto zpt::storage::mongodb::collection::replace(std::string const& _id, zpt::json _document) const
   -> zpt::storage::action {
     return zpt::make_action<zpt::storage::mongodb::action_replace>(*this, _id, _document);
 }
@@ -174,7 +167,8 @@ auto zpt::storage::mongodb::collection::find(zpt::json _search) const -> zpt::st
 auto zpt::storage::mongodb::collection::count(zpt::json _search) -> size_t {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
-        return static_cast<size_t>(_coll.count_documents(to_filter(_search).view()));
+        return static_cast<size_t>(
+          _coll.count_documents(zpt::storage::mongodb::to_filter(_search).view()));
     }
     catch (mongocxx::exception const& _e) {
         expect(false, std::format("count failed: {}", _e.what()));
@@ -203,9 +197,8 @@ auto zpt::storage::mongodb::action::mongodb() const -> mongodb_ptr { return this
 
 // ---- action_add ----
 
-zpt::storage::mongodb::action_add::action_add(
-  zpt::storage::mongodb::collection const& _collection,
-  zpt::json _document)
+zpt::storage::mongodb::action_add::action_add(zpt::storage::mongodb::collection const& _collection,
+                                              zpt::json _document)
   : zpt::storage::mongodb::action::action{ _collection }
   , __underlying{ zpt::json::array() }
   , __generated_ids{ zpt::json::array() } {
@@ -243,8 +236,7 @@ auto zpt::storage::mongodb::action_add::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mongodb::action_add::unset(std::string const&)
-  -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_add::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -276,11 +268,11 @@ auto zpt::storage::mongodb::action_add::bind(zpt::json) -> zpt::storage::action:
 auto zpt::storage::mongodb::action_add::execute() -> zpt::storage::result {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
-        for (auto [_, __, _record] : this->__underlying) {
+        for (auto&& [_, __, _record] : this->__underlying) {
             auto _id = zpt::uuid{}.to_base64_string();
             _record << "_id" << _id;
             this->__generated_ids << _id;
-            _coll.insert_one(to_bson(_record).view());
+            _coll.insert_one(zpt::storage::mongodb::to_bson(_record).view());
         }
     }
     catch (mongocxx::exception const& _e) {
@@ -371,8 +363,9 @@ auto zpt::storage::mongodb::action_modify::bind(zpt::json) -> zpt::storage::acti
 auto zpt::storage::mongodb::action_modify::execute() -> zpt::storage::result {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
-        auto _res = _coll.update_many(to_filter(this->__filter).view(),
-                                      to_update_doc(this->__underlying).view());
+        auto _res =
+          _coll.update_many(zpt::storage::mongodb::to_filter(this->__filter).view(),
+                            zpt::storage::mongodb::to_update_doc(this->__underlying).view());
         this->__affected = _res ? static_cast<size_t>(_res->modified_count()) : 0;
     }
     catch (mongocxx::exception const& _e) {
@@ -456,7 +449,7 @@ auto zpt::storage::mongodb::action_remove::bind(zpt::json) -> zpt::storage::acti
 auto zpt::storage::mongodb::action_remove::execute() -> zpt::storage::result {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
-        auto _res = _coll.delete_many(to_filter(this->__filter).view());
+        auto _res = _coll.delete_many(zpt::storage::mongodb::to_filter(this->__filter).view());
         this->__affected = _res ? static_cast<size_t>(_res->deleted_count()) : 0;
     }
     catch (mongocxx::exception const& _e) {
@@ -549,8 +542,9 @@ auto zpt::storage::mongodb::action_replace::execute() -> zpt::storage::result {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
         mongocxx::options::replace _opts;
         _opts.upsert(true);
-        auto _filter = to_bson(zpt::json{ "_id", this->__id });
-        _coll.replace_one(_filter.view(), to_bson(this->__underlying).view(), _opts);
+        auto _filter = zpt::storage::mongodb::to_bson(zpt::json{ "_id", this->__id });
+        _coll.replace_one(
+          _filter.view(), zpt::storage::mongodb::to_bson(this->__underlying).view(), _opts);
     }
     catch (mongocxx::exception const& _e) {
         expect(false, std::format("REPLACE failed: {}", _e.what()));
@@ -603,8 +597,7 @@ auto zpt::storage::mongodb::action_find::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mongodb::action_find::unset(std::string const&)
-  -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_find::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -618,8 +611,7 @@ auto zpt::storage::mongodb::action_find::sort(std::string const& _attribute, boo
     return this;
 }
 
-auto zpt::storage::mongodb::action_find::fields(zpt::json _fields)
-  -> zpt::storage::action::type* {
+auto zpt::storage::mongodb::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
     this->__fields += _fields;
     return this;
 }
@@ -644,11 +636,9 @@ auto zpt::storage::mongodb::action_find::execute() -> zpt::storage::result {
         mongocxx::options::find _opts;
 
         if (this->__fields->ok() && this->__fields->size() != 0) {
-            _opts.projection(to_projection(this->__fields).view());
+            _opts.projection(zpt::storage::mongodb::to_projection(this->__fields).view());
         }
-        if (this->__suffix["sort"]->ok()) {
-            _opts.sort(to_sort(this->__suffix["sort"]).view());
-        }
+        if (this->__suffix["sort"]->ok()) { _opts.sort(to_sort(this->__suffix["sort"]).view()); }
         if (this->__suffix["limit"]->ok()) {
             _opts.limit(static_cast<int64_t>(this->__suffix["limit"]->integer()));
         }

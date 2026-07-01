@@ -53,7 +53,7 @@ auto zpt::storage::mongodb::append_value(bsoncxx::builder::basic::document& _doc
             break;
         }
         case zpt::JSObject: {
-            _doc.append(kvp(_key, to_bson(_value)));
+            _doc.append(kvp(_key, zpt::storage::mongodb::to_bson(_value)));
             break;
         }
         case zpt::JSArray: {
@@ -218,7 +218,7 @@ auto zpt::storage::mongodb::to_filter(zpt::json _filter) -> bsoncxx::document::v
     if (!_filter->ok() || _filter->type() != zpt::JSObject) {
         return bsoncxx::builder::basic::make_document();
     }
-    return to_bson(_filter);
+    return zpt::storage::mongodb::to_bson(_filter);
 }
 
 // ---- to_update_doc ----
