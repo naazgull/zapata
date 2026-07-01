@@ -340,7 +340,7 @@ auto results = users->find({ "active", true })
     ->execute();
 
 auto docs = results->fetch();
-for (auto [_, __, doc] : docs) {
+for (auto&& [_, __, doc] : docs) {
     std::cout << doc("name")->string() << std::endl;
 }
 

@@ -82,7 +82,7 @@ auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic
         else { _body.assign(this->__underlying("body")->string()); }
     }
 
-    for (auto [_, _name, _value] : this->__underlying("headers")) {
+    for (auto&& [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
     if (!this->__underlying("headers")("Host")->ok()) {

@@ -28,7 +28,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     // auto& _bridge = zpt::PROLOG_BRIDGE();
     // _bridge.set_options(_plugin.config());
     // if (_bridge.options()("modules")->is_array()) {
-    //     for (auto [_, __, _module] : _bridge.options()("modules")) {
+    //     for (auto&& [_, __, _module] : _bridge.options()("modules")) {
     //         _bridge.add_module(_module("file")->string(), _module);
     //     }
     // }

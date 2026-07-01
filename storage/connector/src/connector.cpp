@@ -36,7 +36,7 @@ auto value_output(zpt::json _value, std::ostream& _find) -> void {
 auto func_default(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void {
     bool _first{ true };
     _find << "(";
-    for (auto [_, __, _value] : _params) {
+    for (auto&& [_, __, _value] : _params) {
         if (!_first) { _find << " " << _functor << " "; }
         zpt::storage::functional_to_sql(_value, _find, ::value_output);
         _first = false;
@@ -394,7 +394,7 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
         }
         if (_to_find("order_by")->ok()) {
             auto _sort = zpt::split(_to_find("order_by")->string(), ",");
-            for (auto [_, __, _expr] : _sort) {
+            for (auto&& [_, __, _expr] : _sort) {
                 auto _name = _expr->string();
                 bool _asc{ true };
                 if (_name[0] == '-') {
@@ -436,7 +436,7 @@ auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::jso
         }
         if (_to_remove("order_by")->ok()) {
             auto _sort = zpt::split(_to_remove("order_by")->string(), ",");
-            for (auto [_, __, _expr] : _sort) {
+            for (auto&& [_, __, _expr] : _sort) {
                 auto _name = _expr->string();
                 bool _asc{ true };
                 if (_name[0] == '-') {
@@ -458,7 +458,7 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
 
     std::ostringstream _find;
     bool _first{ true };
-    for (auto [_, _key, _value] : _to_process) {
+    for (auto&& [_, _key, _value] : _to_process) {
         if (_key == "page_size" || _key == "page_start_index" || _key == "fields" ||
             _key == "order_by") {
             continue;

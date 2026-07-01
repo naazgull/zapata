@@ -291,7 +291,7 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             auto _lhs = this->__underlying->clone();
-            for (auto [_idx, _key, _e] : _rhs) {
+            for (auto&& [_idx, _key, _e] : _rhs) {
                 if (_lhs[_key]->type() == zpt::JSObject || _lhs[_key]->type() == zpt::JSArray) {
                     _lhs << _key << (_lhs[_key] + _e);
                 }
@@ -302,19 +302,19 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = this->__underlying->clone();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << _e; }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << _e; }
                 return _lhs;
             }
             else {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : *this) { _lhs << (_e + _rhs); }
+                for (auto&& [_idx, _key, _e] : *this) { _lhs << (_e + _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -325,7 +325,7 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->integer() + _rhs->number()); }
@@ -333,7 +333,7 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->floating() + _rhs->number()); }
@@ -341,7 +341,7 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->boolean() || _rhs->number()); }
@@ -353,7 +353,7 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -379,14 +379,14 @@ auto zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
     if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
-            for (auto [_, _key, _e] : _rhs) {
+            for (auto&& [_, _key, _e] : _rhs) {
                 if ((*this)[_key]->ok()) { (*this)[_key] += _e; }
                 else { (*this) << _key << _e; }
             }
             return (*this);
         }
         case zpt::JSArray: {
-            for (auto [_, __, _e] : _rhs) { (*this) << _e; }
+            for (auto&& [_, __, _e] : _rhs) { (*this) << _e; }
             return (*this);
         }
         case zpt::JSString: {
@@ -430,25 +430,25 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             auto _lhs = this->__underlying->clone();
-            for (auto [_idx, _key, _e] : _rhs) { _lhs->object()->pop(_key); }
+            for (auto&& [_idx, _key, _e] : _rhs) { _lhs->object()->pop(_key); }
             return _lhs;
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] - _rhs[_idx]); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] - _rhs[_idx]); }
                 return _lhs;
             }
             else {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << (_e - _rhs); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << (_e - _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -464,7 +464,7 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->integer() - _rhs->number()); }
@@ -472,7 +472,7 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->floating() - _rhs->number()); }
@@ -480,7 +480,7 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->boolean() && _rhs->number()); }
@@ -492,7 +492,7 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->date() - _rhs->number()); }
@@ -515,13 +515,13 @@ auto zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
     if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
-            for (auto [_, _key, __] : _rhs) { (**this).object()->pop(_key); }
+            for (auto&& [_, _key, __] : _rhs) { (**this).object()->pop(_key); }
             return (*this);
         }
         case zpt::JSArray: {
             std::vector<size_t> _to_remove;
-            for (auto [__, _, _remove] : _rhs) {
-                for (auto [_idx, ____, _value] : (*this)) {
+            for (auto&& [__, _, _remove] : _rhs) {
+                for (auto&& [_idx, ____, _value] : (*this)) {
                     if (_value == _remove) { _to_remove.push_back(_idx); }
                 }
             }
@@ -573,19 +573,19 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] / _rhs[_idx]); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] / _rhs[_idx]); }
                 return _lhs;
             }
             else {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << (_e / _rhs); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << (_e / _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -601,7 +601,7 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->integer() / _rhs->number()); }
@@ -609,7 +609,7 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->floating() / _rhs->number()); }
@@ -617,7 +617,7 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->boolean() / _rhs->number()); }
@@ -629,7 +629,7 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 auto _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
+                for (auto&& [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else { return zpt::json(this->__underlying->date() / _rhs->number()); }
@@ -852,7 +852,7 @@ auto zpt::json::strict_union(zpt::json _rhs) -> void {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             if (_rhs->type() == zpt::JSObject) {
-                for (auto [_, _key, _e] : _rhs) {
+                for (auto&& [_, _key, _e] : _rhs) {
                     if ((*this)[_key]->type() == zpt::JSObject) { (*this)[_key].strict_union(_e); }
                     else if (!(*this)[_key]->ok()) { (*this) << _key << _e; }
                 }
@@ -861,7 +861,7 @@ auto zpt::json::strict_union(zpt::json _rhs) -> void {
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
-                for (auto [_, __, _e] : _rhs) { (*this) << _e; }
+                for (auto&& [_, __, _e] : _rhs) { (*this) << _e; }
             }
             return;
         }
@@ -884,14 +884,14 @@ auto zpt::json::strict_intersection(zpt::json _rhs) -> void {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             if (_rhs->type() == zpt::JSObject) {
-                for (auto [_, _key, _e] : _rhs) {
+                for (auto&& [_, _key, _e] : _rhs) {
                     if ((*this)(_key)->type() == zpt::JSObject ||
                         (*this)(_key)->type() == zpt::JSArray) {
                         (*this)[_key].strict_intersection(_e);
                     }
                 }
                 zpt::json _lhs = zpt::json::object();
-                for (auto [_, _key, _e] : (*this)) {
+                for (auto&& [_, _key, _e] : (*this)) {
                     if (_rhs(_key)->ok()) { _lhs << _key << _e; }
                 }
                 (*this) = _lhs;
@@ -900,14 +900,14 @@ auto zpt::json::strict_intersection(zpt::json _rhs) -> void {
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
-                for (auto [_idx, _, _e] : _rhs) {
+                for (auto&& [_idx, _, _e] : _rhs) {
                     if ((*this)(_idx)->type() == zpt::JSObject ||
                         (*this)(_idx)->type() == zpt::JSArray) {
                         (*this)[_idx].strict_intersection(_e);
                     }
                 }
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _, _e] : (*this)) {
+                for (auto&& [_idx, _, _e] : (*this)) {
                     if (_e == _rhs(_idx)) { _lhs << _e; }
                 }
                 (*this) = _lhs;
@@ -1070,7 +1070,7 @@ auto zpt::json::traverse(zpt::json _document,
     switch (_document->type()) {
         case zpt::JSArray:
         case zpt::JSObject: {
-            for (auto [_idx, _name, _item] : _document) {
+            for (auto&& [_idx, _name, _item] : _document) {
                 std::string _current_path{ _document->type() == zpt::JSArray ? std::to_string(_idx)
                                                                              : _name };
                 std::string _item_path{ _path + std::string{ _path.length() == 0 ? "" : "." } +

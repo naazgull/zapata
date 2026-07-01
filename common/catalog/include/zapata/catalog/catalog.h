@@ -220,7 +220,7 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
 
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
-            for (auto [_, __, _prefix] : _prefixes) {
+            for (auto&& [_, __, _prefix] : _prefixes) {
                 _result += this
                              ->__catalog                            //
                              ->find(std::format(EXACT_RESOLVE_STMT, //
@@ -240,7 +240,7 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
         else {
             zpt::json _matching = zpt::json::array();
 
-            for (auto [_, __, _prefix] : _prefixes) {
+            for (auto&& [_, __, _prefix] : _prefixes) {
                 auto _count = this
                                 ->__catalog                      //
                                 ->find(std::format(RESOLVE_STMT, //
@@ -299,7 +299,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
 
     for (auto const& [_idx, __, _part] : _parts) {
         if (_idx == _parts->size() - 1) {
-            for (auto [_, __, _prefix] : _prefixes) {
+            for (auto&& [_, __, _prefix] : _prefixes) {
                 _result += this
                              ->__catalog                        //
                              ->find(std::vformat(_exact_search, //
@@ -318,7 +318,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
         else {
             zpt::json _matching = zpt::json::array();
 
-            for (auto [_, __, _prefix] : _prefixes) {
+            for (auto&& [_, __, _prefix] : _prefixes) {
                 auto _count = this
                                 ->__catalog                                                  //
                                 ->find(std::vformat(_search,                                 //
@@ -366,7 +366,7 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
         ->fetch();
 
     std::istringstream _iss;
-    for (auto [_, __, _service] : _result) {
+    for (auto&& [_, __, _service] : _result) {
         if (_service("metadata")->ok()) {
             M _metadata;
             _iss.str(_service("metadata")->string());
@@ -414,7 +414,7 @@ auto zpt::catalog<K, M>::get_provider(std::string const& _id) const -> zpt::json
                         ->execute()
                         ->fetch();
 
-    for (auto [_, __, _provider] : _providers) {
+    for (auto&& [_, __, _provider] : _providers) {
         if (_provider("protocols")->ok()) {
             _provider["protocols"] = zpt::json::parse_json_str(_provider("protocols")->string());
         }

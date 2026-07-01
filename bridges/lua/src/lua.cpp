@@ -229,7 +229,7 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
         case zpt::JSObject: {
             lua_newtable(_return);
             int _index = lua_gettop(_return);
-            for (auto [_, _key, _value] : _to_convert) {
+            for (auto&& [_, _key, _value] : _to_convert) {
                 lua_pushstring(_return, _key.data());
                 this->to_object(_value, _return);
                 lua_settable(_return, _index);
@@ -239,7 +239,7 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
         case zpt::JSArray: {
             lua_newtable(_return);
             int _index = lua_gettop(_return);
-            for (auto [_idx, _, _value] : _to_convert) {
+            for (auto&& [_idx, _, _value] : _to_convert) {
                 lua_pushinteger(_return, _idx + 1);
                 this->to_object(_value, _return);
                 lua_settable(_return, _index);
@@ -329,15 +329,15 @@ auto zpt::lua::bridge::execute() -> zpt::lua::bridge::object_type {
 
 auto zpt::lua::bridge::to_args(zpt::json _args) -> zpt::lua::bridge& {
     expect(_args->is_array(), "Lua: `to_args` parameter `_args` must be an array");
-    for (auto [_, __, _arg] : _args) { this->to_object(_arg, this->__underlying); }
+    for (auto&& [_, __, _arg] : _args) { this->to_object(_arg, this->__underlying); }
     return (*this);
 }
 
 auto zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
-    for (auto [_file, _conf] : this->__external_to_load) {
+    for (auto&& [_file, _conf] : this->__external_to_load) {
         this->setup_module(_conf, _file, false);
     }
-    for (auto [_, _pair] : this->__builtin_to_load) {
+    for (auto&& [_, _pair] : this->__builtin_to_load) {
         auto [_callback, _conf] = _pair;
         this->setup_module(_conf, _callback, false);
     }

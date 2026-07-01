@@ -298,7 +298,7 @@ auto zpt::storage::mysqlx::action_add::bind(zpt::json) -> zpt::storage::action::
 
 auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     std::ostringstream _oss;
-    for (auto [_, __, _record] : this->__underlying) {
+    for (auto&& [_, __, _record] : this->__underlying) {
         auto _id = zpt::uuid{}.to_base64_string();
         _record << "_id" << _id;
         this->__generated_ids << _id;

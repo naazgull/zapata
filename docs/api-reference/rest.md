@@ -340,7 +340,7 @@ resolver->register_provider({
 
 // Search for services
 auto services = resolver->search({ "path", "/api/users" });
-for (auto [_, __, svc] : services) {
+for (auto&& [_, __, svc] : services) {
     std::cout << "Found: " << svc("provider_id")->string() << std::endl;
 }
 
