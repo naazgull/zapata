@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <zapata/prolog.h>
 
 auto test_pl_integration(char* _e_arg) -> int {
     try {
@@ -40,10 +41,38 @@ auto test_pl_integration(char* _e_arg) -> int {
                std::pair{ "bob", "ann" },
                std::pair{ "bob", "pat" },
              }) {
-            PlTermv args{ PlCompound("parent", PlTermv{ a(x), a(y) }) };
+            PlCompound parent("parent", PlTermv{ a(x), a(y) });
+            std::cout << "!!!!! " << zpt::prolog::to_json(parent) << std::endl;
+            PlTermv args{ parent };
             PlQuery q("assertz", args);
             if (!q.next_solution()) {
                 std::cerr << "assertz(parent(" << x << "," << y << ")) failed\n";
+                return 1;
+            }
+        }
+
+        // 2b. Define fact with a list argument
+        {
+            PlTerm_var pets_list;
+            PlTerm_tail l(pets_list);
+            (void)l.append(a("cat"));
+            (void)l.append(a("dog"));
+            (void)l.append(a("fish"));
+            (void)l.close();
+
+            std::cout << "!!!!! " << zpt::prolog::to_json(pets_list) << std::endl;
+
+            PlTerm_tail t{ pets_list };
+            PlTerm_var v;
+            std::cout << "  [";
+            while (t.next(v)) { std::cout << v.as_string() << ","; }
+            (void)t.close();
+            std::cout << "]" << std::endl;
+
+            PlTermv args{ PlCompound("owns", PlTermv{ a("bob"), pets_list }) };
+            PlQuery q("assertz", args);
+            if (!q.next_solution()) {
+                std::cerr << "assertz(owns(bob, [cat,dog,fish])) failed\n";
                 return 1;
             }
         }

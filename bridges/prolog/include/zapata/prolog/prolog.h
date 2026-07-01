@@ -57,10 +57,10 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Prolog C function
     using mutex_type = zpt::locks::spin_mutex;
 
-    bridge();
+    bridge(std::string const& _cmd);
     bridge(bridge&& _rhs) = delete;
-    bridge(bridge& const& _rhs) = delete;
-    virtual ~bridge();
+    bridge(bridge const& _rhs) = delete;
+    virtual ~bridge() throw();
 
     auto operator=(bridge const& _rhs) -> zpt::prolog::bridge& = delete;
     auto operator=(bridge&& _rhs) -> zpt::prolog::bridge& = delete;
@@ -68,18 +68,17 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     /** @brief Returns "prolog". */
     auto name() const -> std::string;
     /** @brief Loads a Prolog module from file. */
-    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
-      -> zpt::prolog::bridge&;
+    auto setup_module(zpt::json _conf, std::string _external_path) -> zpt::prolog::bridge&;
     /** @brief Registers a C++ callback as a Prolog module. */
-    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
-      -> zpt::prolog::bridge&;
+    auto setup_module(zpt::json _conf, callback_type _callback) -> zpt::prolog::bridge&;
+    /** @brief Registers a C++ callback as a Prolog function. */
     auto setup_lambda(zpt::json _conf, lambda_type _callback) -> zpt::prolog::bridge&;
     /** @brief Locates a Prolog value by path. */
     auto find(zpt::json _to_locate) -> object_type;
     /** @brief Converts Prolog term to JSON. */
     auto to_json(object_type _to_convert) -> zpt::json;
     /** @brief Creates a JSON reference to a Prolog value. */
-    auto to_ref(object_type _to_convert, int _index = 1) -> zpt::json;
+    auto to_ref(object_type _to_convert) -> zpt::json;
     /** @brief Pushes JSON value onto Prolog term. */
     auto to_object(zpt::json _to_convert) -> object_type;
     /** @brief Dereferences a JSON Prolog reference. */
@@ -94,11 +93,14 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     mutex_type __underlying_mutex;
     std::atomic<bool> __initialized{ false };
 };
+
+/** @brief Converts Prolog term to JSON. */
+auto to_json(PlTerm& _to_convert) -> zpt::json;
 } // namespace prolog
 
 /**
  * @brief Returns the global Prolog bridge instance.
  * @return Reference to the thread-local Prolog bridge.
  */
-auto PROLOG_BRIDGE() -> zpt::prolog::bridge&;
+auto PROLOG_BRIDGE(std::string const& _cmd = "") -> zpt::prolog::bridge&;
 } // namespace zpt

@@ -22,76 +22,117 @@
 
 #include <zapata/prolog/prolog.h>
 
-zpt::prolog::bridge::bridge()
-  : __underlying{ zpt::GLOBAL_CONFIG()("self")("command")->string().data() } {
+zpt::prolog::bridge::bridge(std::string const& _cmd)
+  : __underlying{ const_cast<char*>(_cmd.data()) } {
     this->initialize();
 }
 
-zpt::prolog::bridge::~bridge() {}
+zpt::prolog::bridge::~bridge() throw() {}
 
 auto zpt::prolog::bridge::name() const -> std::string { return "prolog"; }
 
-auto zpt::prolog::bridge::setup_module(zpt::json _conf,
-                                       std::string _external_path,
-                                       bool _persist = true) -> zpt::prolog::bridge& {
+auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_path)
+  -> zpt::prolog::bridge& {
     std::unique_lock _guard{ this->__underlying_mutex };
+    return (*this);
 }
 
-auto zpt::prolog::bridge::setup_module(zpt::json _conf,
-                                       callback_type _callback,
-                                       bool _persist = true) -> zpt::prolog::bridge& {
+auto zpt::prolog::bridge::setup_module(zpt::json _conf, callback_type _callback)
+  -> zpt::prolog::bridge& {
     std::unique_lock _guard{ this->__underlying_mutex };
+    return (*this);
 }
 
 auto zpt::prolog::bridge::setup_lambda(zpt::json _conf, lambda_type _callback)
   -> zpt::prolog::bridge& {
     std::unique_lock _guard{ this->__underlying_mutex };
+    return (*this);
 }
 
 auto zpt::prolog::bridge::find(zpt::json _to_locate) -> object_type {
     std::unique_lock _guard{ this->__underlying_mutex };
+    return nullptr;
 }
 
 auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
-    if (object_type == nullptr) { return zpt::undefined; }
+    if (_to_convert == nullptr) { return zpt::undefined; }
+    return zpt::prolog::to_json(*_to_convert);
+}
 
-    switch (_to_convert->type()) {
+auto zpt::prolog::bridge::to_ref(object_type _to_convert) -> zpt::json {
+    std::shared_lock _guard{ this->__underlying_mutex };
+    return zpt::undefined;
+}
+
+auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
+    std::shared_lock _guard{ this->__underlying_mutex };
+    return nullptr;
+}
+
+auto zpt::prolog::bridge::from_ref(zpt::json _to_convert, object_type _return) -> object_type {
+    std::shared_lock _guard{ this->__underlying_mutex };
+    return nullptr;
+}
+
+auto zpt::prolog::bridge::execute(zpt::json _func, zpt::json _args)
+  -> zpt::prolog::bridge::object_type {
+    std::unique_lock _guard{ this->__underlying_mutex };
+    return nullptr;
+}
+
+auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
+    if (this->__initialized.exchange(true)) { return (*this); }
+
+    std::unique_lock _guard{ this->__underlying_mutex };
+    return (*this);
+}
+
+auto zpt::prolog::to_json(PlTerm& _to_convert) -> zpt::json {
+    switch (_to_convert.type()) {
         case PL_VARIABLE: {
-            auto _name = _to_convert->as_string();
-            
-            break;
+            return zpt::json{ "type", PL_VARIABLE, "variable", _to_convert.as_string() };
         }
         case PL_ATOM: {
-            break;
+            return zpt::json{ "type", PL_ATOM, "atom", _to_convert.as_string() };
         }
         case PL_INTEGER: {
-            break;
+            return zpt::json::integer(_to_convert.as_int64_t());
         }
-        case PL_RATIONAL: {
-            break;
-        }
+        case PL_RATIONAL:
         case PL_FLOAT: {
-            break;
+            return zpt::json::floating(_to_convert.as_float());
         }
         case PL_STRING: {
-            break;
+            return zpt::json::string(_to_convert.as_string());
         }
         case PL_TERM: {
+            if (_to_convert.is_compound()) {
+                auto _elements = zpt::json::array();
+                for (size_t _idx = 0; _idx != _to_convert.arity(); ++_idx) {
+                    auto _term = _to_convert[_idx + 1];
+                    _elements << zpt::prolog::to_json(_term);
+                }
+                return zpt::json{ "type",     PL_TERM,  "functor", _to_convert.name().as_string(),
+                                  "elements", _elements };
+            }
             break;
         }
         case PL_NIL: {
-            break;
+            return zpt::undefined;
         }
         case PL_BLOB: {
+            expect(_to_convert.type() != PL_BLOB, "BLOB are not supported");
             break;
         }
+        case PL_LIST:
         case PL_LIST_PAIR: {
-            break;
+            PlTerm_tail _tail{ _to_convert };
+            PlTerm_var _element;
+            auto _elements = zpt::json::array();
+            while (_tail.next(_element)) { _elements << zpt::prolog::to_json(_element); }
+            return zpt::json{ "type", PL_LIST, "elements", _elements };
         }
         case PL_FUNCTOR: {
-            break;
-        }
-        case PL_LIST: {
             break;
         }
         case PL_CHARS: {
@@ -194,32 +235,11 @@ auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
             break;
         }
     }
+
+    return zpt::undefined;
 }
 
-auto zpt::prolog::bridge::to_ref(object_type _to_convert, int _index = 1) -> zpt::json {
-    std::shared_lock _guard{ this->__underlying_mutex };
-}
-
-auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
-    std::shared_lock _guard{ this->__underlying_mutex };
-}
-
-auto zpt::prolog::bridge::from_ref(zpt::json _to_convert, object_type _return) -> object_type {
-    std::shared_lock _guard{ this->__underlying_mutex };
-}
-
-auto zpt::prolog::bridge::execute(zpt::json _func, zpt::json _args)
-  -> zpt::prolog::bridge::object_type {
-    std::unique_lock _guard{ this->__underlying_mutex };
-}
-
-auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
-    if (this->__initialized.exchange(true)) { return (*this); }
-
-    std::unique_lock _guard{ this->__underlying_mutex };
-}
-
-auto zpt::PROLOG_BRIDGE() -> zpt::prolog::bridge& {
-    static zpt::prolog::bridge _bridge{};
+auto zpt::PROLOG_BRIDGE(std::string const& _cmd) -> zpt::prolog::bridge& {
+    static zpt::prolog::bridge _bridge{ _cmd };
     return _bridge;
 }

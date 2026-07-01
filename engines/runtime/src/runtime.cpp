@@ -59,7 +59,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     zpt::log_lvl = 8;
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
-    _config["self"]["command_line"] = std::string{ const_cast<char const*>(_argv[0]) };
+    _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
 
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
     zpt::log_format =
