@@ -69,7 +69,7 @@ auto zpt::uri::to_string(zpt::json const& _uri) -> std::string {
         if (_uri("params")->ok()) {
             bool _first{ true };
             _oss << "?";
-            for (auto [_, _key, _value] : _uri("params")) {
+            for (auto&& [_, _key, _value] : _uri("params")) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
                 _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "");
@@ -89,10 +89,10 @@ auto zpt::uri::to_regex(zpt::json const& _in) -> zpt::json {
 
 auto zpt::uri::to_regex_object(zpt::json const& _in) -> zpt::json {
     zpt::json _to_return = zpt::json::object();
-    for (auto [_, _key, _item] : _in) {
+    for (auto&& [_, _key, _item] : _in) {
         if (_key == "path") {
             zpt::json _parts = zpt::json::array();
-            for (auto [__, ___, _part] : _item) {
+            for (auto&& [__, ___, _part] : _item) {
                 auto _casted = static_cast<std::string>(_part);
                 auto _length = _casted.length();
                 if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
@@ -120,7 +120,7 @@ auto zpt::uri::to_regex_object(zpt::json const& _in) -> zpt::json {
 
 auto zpt::uri::to_regex_array(zpt::json const& _in) -> zpt::json {
     zpt::json _to_return = zpt::json::array();
-    for (auto [_, __, _item] : _in) {
+    for (auto&& [_, __, _item] : _in) {
         auto _casted = static_cast<std::string>(_item);
         auto _length = _casted.length();
         if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
@@ -164,7 +164,7 @@ auto zpt::uri::params::to_string(zpt::json const& _uri) -> std::string {
         if (_uri("params")->ok()) {
             bool _first{ true };
             _oss << "?";
-            for (auto [_, _key, _value] : _uri("params")) {
+            for (auto&& [_, _key, _value] : _uri("params")) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
                 _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "");

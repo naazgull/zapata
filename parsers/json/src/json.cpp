@@ -153,7 +153,7 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                              std::variant<std::string, size_t> const& _parent_key,
                              std::filesystem::path const& _context,
                              zpt::json _root) -> void {
-    for (auto [_idx, _key, _value] : _options) {
+    for (auto&& [_idx, _key, _value] : _options) {
         if (_options->is_object()) {
             if (_key == "$ref") {
                 auto& _ref = _value->string();

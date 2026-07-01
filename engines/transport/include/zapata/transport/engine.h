@@ -427,7 +427,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         expect(_found->ok() && _found->size() != 0,
                "Couldn't find a provider of '" << _uri("path")->string());
 
-        for (auto [_, __, _service] : _found) {
+        for (auto&& [_, __, _service] : _found) {
             if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
         }
 

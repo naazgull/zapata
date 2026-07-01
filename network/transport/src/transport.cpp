@@ -250,7 +250,7 @@ auto zpt::network::resolve_content_type(zpt::message _message) -> std::string {
         auto _mime_types = zpt::split(_accept, ",");
         double _weight{ 0 };
         std::string _highest{ "*/*" };
-        for (auto [_, __, _mime] : _mime_types) {
+        for (auto&& [_, __, _mime] : _mime_types) {
             auto _semicolon = _mime->string().find(";");
             auto _mime_name = _mime->string().substr(0, _semicolon);
             if (_semicolon != std::string::npos) {

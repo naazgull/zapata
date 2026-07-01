@@ -47,7 +47,7 @@
  * int age = obj["age"];
  *
  * // Iterate over elements
- * for (auto [idx, key, value] : obj) {
+ * for (auto&& [idx, key, value] : obj) {
  *     std::cout << key << ": " << value << std::endl;
  * }
  *
@@ -232,7 +232,7 @@ namespace zpt {
  *
  * @par Iteration
  * @code
- * for (auto [index, key, value] : obj) {
+ * for (auto&& [index, key, value] : obj) {
  *     // index: position (size_t)
  *     // key: object key or empty for arrays
  *     // value: zpt::json element

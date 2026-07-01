@@ -33,11 +33,11 @@ auto main(int, char**) -> int {
       4,
       { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
 
-    for (auto [_, _key, _record] : _catalog.search("/users/n@zgul.me/info")) {
+    for (auto&& [_, _key, _record] : _catalog.search("/users/n@zgul.me/info")) {
         zpt::json::parse_json_str(_record("metadata")->string())("callback")
           ->lambda()({ zpt::array, _key, _record }, zpt::context{ nullptr });
     }
-    for (auto [_, _key, _record] : _catalog.search("/users/n@zgul.me")) {
+    for (auto&& [_, _key, _record] : _catalog.search("/users/n@zgul.me")) {
         zpt::json::parse_json_str(_record("metadata")->string())("callback")
           ->lambda()({ zpt::array, _key, _record }, zpt::context{ nullptr });
     }

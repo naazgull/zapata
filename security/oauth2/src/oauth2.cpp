@@ -88,8 +88,8 @@ auto zpt::auth::oauth2::server::authorize(std::string const& _topic,
 
     auto _roles_found{ 0ULL };
     auto _roles_granted = _identity["roles"];
-    for (auto [_, __, _role_needed] : _roles_needed) {
-        for (auto [_, __, _role_granted] : _roles_granted) {
+    for (auto&& [_, __, _role_needed] : _roles_needed) {
+        for (auto&& [_, __, _role_granted] : _roles_granted) {
             if (_role_needed == _role_granted) {
                 ++_roles_found;
                 break;

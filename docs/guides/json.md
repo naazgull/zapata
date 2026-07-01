@@ -188,7 +188,7 @@ config->del_path("database.primary.port");
 ```cpp
 zpt::json obj = { "a", 1, "b", 2, "c", 3 };
 
-for (auto [index, key, value] : obj) {
+for (auto&& [index, key, value] : obj) {
     std::cout << index << ": " << key << " = " << value << std::endl;
 }
 // Output:
@@ -197,7 +197,7 @@ for (auto [index, key, value] : obj) {
 // 2: c = 3
 
 zpt::json arr = { zpt::array, 10, 20, 30 };
-for (auto [index, key, value] : arr) {
+for (auto&& [index, key, value] : arr) {
     std::cout << index << ": " << value << std::endl;
 }
 // Output:

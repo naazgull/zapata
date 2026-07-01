@@ -84,7 +84,7 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative, zpt::json co
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
                   _path);
-    for (auto [_, __, _record] : this->__catalog.search(_to_search)) {
+    for (auto&& [_, __, _record] : this->__catalog.search(_to_search)) {
         auto _hash_code = _record("hash")->integer();
         expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
                "Couldn't find callback for [" << _hash_code << "](" << _path << ")");
@@ -103,7 +103,7 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
         auto _to_search = std::format("/{}{}",
                                       zpt::ontology::to_str(_received->performative()),
                                       _received->resource()->string());
-        for (auto [_, __, _record] : this->__catalog.resolve(_to_search)) {
+        for (auto&& [_, __, _record] : this->__catalog.resolve(_to_search)) {
             auto _hash_code = _record("hash")->integer();
             expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
                    "Couldn't find callback for [" << _hash_code << "]("

@@ -139,7 +139,7 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
     this->resolve_builtin_dependencies();
 
     auto _to_load = zpt::json::object();
-    for (auto [_idx, __, _lib] : this->__configuration("load")) {
+    for (auto&& [_idx, __, _lib] : this->__configuration("load")) {
         auto _name = _lib("name")->string();
         _to_load << _name << zpt::json::object();
     }
@@ -148,14 +148,14 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
     while (_to_load->size() != 0 && !_no_change) {
         _no_change = true;
 
-        for (auto [_idx, __, _lib] : this->__configuration("load")) {
+        for (auto&& [_idx, __, _lib] : this->__configuration("load")) {
             auto _name = _lib("name")->string();
             if (this->__plugins.find(_name) != this->__plugins.end()) { continue; }
 
             expect(!_lib("requires")->ok() || _lib("requires")->is_array(),
                    "Configuration error: library 'requires' field must be an array");
 
-            for (auto [___, ____, _required] : _lib("requires")) {
+            for (auto&& [___, ____, _required] : _lib("requires")) {
                 if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
                     _to_load[_name] << _required->string() << false;
                 }
