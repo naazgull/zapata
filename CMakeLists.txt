@@ -113,7 +113,7 @@ add_subdirectory(storage/pgsql)
 # add_subdirectory(network/mqtt)
 # add_subdirectory(network/smtp)
 # add_subdirectory(storage/couchdb)
-# add_subdirectory(storage/mongodb)
+add_subdirectory(storage/mongodb)
 # add_subdirectory(storage/redis)
 
 # ------------------------------------------------------------------------

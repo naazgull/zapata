@@ -20,7 +20,15 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file mongodb.h
+ * @brief MongoDB database connector.
+ *
+ * Provides MongoDB support using the mongocxx C++ driver.
+ *
+ * @see zpt::storage::mongodb::connection
+ */
+
 #pragma once
 
-#include <zapata/mongodb/Client.h>
-#include <zapata/mongodb/convert_mongo.h>
+#include <zapata/mongodb/connector.h>
