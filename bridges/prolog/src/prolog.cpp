@@ -23,11 +23,11 @@
 #include <zapata/prolog/prolog.h>
 
 zpt::prolog::bridge::bridge(std::string const& _cmd)
-  : __underlying{ const_cast<char*>(_cmd.data()) } {
+  : __engine_args{ _cmd } {
     this->initialize();
 }
 
-zpt::prolog::bridge::~bridge() throw() {}
+zpt::prolog::bridge::~bridge() throw() { PL_cleanup(0); }
 
 auto zpt::prolog::bridge::name() const -> std::string { return "prolog"; }
 
@@ -51,11 +51,11 @@ auto zpt::prolog::bridge::setup_lambda(zpt::json _conf, lambda_type _callback)
 
 auto zpt::prolog::bridge::find(zpt::json _to_locate) -> object_type {
     std::unique_lock _guard{ this->__underlying_mutex };
-    return nullptr;
+    return zpt::prolog::term::null();
 }
 
 auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
-    if (_to_convert == nullptr) { return zpt::undefined; }
+    if (_to_convert == zpt::prolog::term::null()) { return zpt::undefined; }
     return zpt::prolog::to_json(*_to_convert);
 }
 
@@ -66,177 +66,130 @@ auto zpt::prolog::bridge::to_ref(object_type _to_convert) -> zpt::json {
 
 auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
     std::shared_lock _guard{ this->__underlying_mutex };
-    return nullptr;
+    return zpt::prolog::term::null();
 }
 
 auto zpt::prolog::bridge::from_ref(zpt::json _to_convert, object_type _return) -> object_type {
     std::shared_lock _guard{ this->__underlying_mutex };
-    return nullptr;
+    return zpt::prolog::term::null();
 }
 
 auto zpt::prolog::bridge::execute(zpt::json _func, zpt::json _args)
   -> zpt::prolog::bridge::object_type {
     std::unique_lock _guard{ this->__underlying_mutex };
-    return nullptr;
+    return zpt::prolog::term::null();
 }
 
 auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
     if (this->__initialized.exchange(true)) { return (*this); }
 
     std::unique_lock _guard{ this->__underlying_mutex };
+    char* _arg = const_cast<char*>(this->__engine_args.data());
+    expect(PL_initialise(1, &_arg), "couldn't initialise Prolog engine");
     return (*this);
 }
 
-auto zpt::prolog::to_json(PlTerm& _to_convert) -> zpt::json {
-    switch (_to_convert.type()) {
+auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
+    bool _supported_type{ false };
+
+    switch (PL_term_type(_to_convert)) {
         case PL_VARIABLE: {
-            return zpt::json{ "type", PL_VARIABLE, "variable", _to_convert.as_string() };
-        }
-        case PL_ATOM: {
-            return zpt::json{ "type", PL_ATOM, "atom", _to_convert.as_string() };
-        }
-        case PL_INTEGER: {
-            return zpt::json::integer(_to_convert.as_int64_t());
-        }
-        case PL_RATIONAL:
-        case PL_FLOAT: {
-            return zpt::json::floating(_to_convert.as_float());
-        }
-        case PL_STRING: {
-            return zpt::json::string(_to_convert.as_string());
-        }
-        case PL_TERM: {
-            if (_to_convert.is_compound()) {
-                auto _elements = zpt::json::array();
-                for (size_t _idx = 0; _idx != _to_convert.arity(); ++_idx) {
-                    auto _term = _to_convert[_idx + 1];
-                    _elements << zpt::prolog::to_json(_term);
-                }
-                return zpt::json{ "type",     PL_TERM,  "functor", _to_convert.name().as_string(),
-                                  "elements", _elements };
-            }
+            expect(_supported_type, "unsupported type PL_VARIABLE");
             break;
         }
         case PL_NIL: {
             return zpt::undefined;
         }
         case PL_BLOB: {
-            expect(_to_convert.type() != PL_BLOB, "BLOB are not supported");
+            expect(_supported_type, "unsupported type PL_VARIABLE");
             break;
         }
-        case PL_LIST:
+        case PL_ATOM:
+        case PL_STRING: {
+            char* _buffer{ nullptr };
+            expect(PL_get_chars(_to_convert, &_buffer, CVT_ATOM | CVT_STRING | BUF_MALLOC),
+                   "counldn't extract the string from the term");
+            auto _str = zpt::json::string(std::string{ const_cast<char const*>(_buffer) });
+            PL_free(_buffer);
+            return _str;
+        }
+        case PL_INTEGER: {
+            std::int64_t _int{ 0 };
+            expect(PL_get_int64(_to_convert, &_int), "couldn't extract the integer from the term");
+            return zpt::json::integer(_int);
+        }
+        case PL_RATIONAL:
+        case PL_FLOAT: {
+            double _floating{ 0 };
+            expect(PL_get_float(_to_convert, &_floating),
+                   "couldn't extract the float from the term");
+            return zpt::json::floating(_floating);
+        }
+        case PL_TERM: {
+            if (PL_is_compound(_to_convert)) {
+                atom_t _name{ 0 };
+                size_t _arity{ 0 };
+                expect(PL_get_name_arity(_to_convert, &_name, &_arity),
+                       "couldn't get name and arity from the compound term");
+                size_t _{ 0 };
+                std::string _functor{ PL_atom_nchars(_name, &_) };
+
+                auto _composed = zpt::json::object();
+                for (size_t _idx = 1; _idx != _arity + 1; ++_idx) {
+                    zpt::prolog::term _term;
+                    PL_get_arg(_idx, _to_convert, *_term);
+                    auto _element = zpt::prolog::to_json(*_term);
+                    if (_element->type() == zpt::JSObject) { _composed += _element; }
+                    else { _composed << std::format("{}", _idx) << _element; }
+                }
+
+                auto _return = zpt::json::object();
+                _return << _functor << _composed;
+                return _return;
+            }
+            break;
+        }
         case PL_LIST_PAIR: {
-            PlTerm_tail _tail{ _to_convert };
-            PlTerm_var _element;
-            auto _elements = zpt::json::array();
-            while (_tail.next(_element)) { _elements << zpt::prolog::to_json(_element); }
-            return zpt::json{ "type", PL_LIST, "elements", _elements };
-        }
-        case PL_FUNCTOR: {
-            break;
-        }
-        case PL_CHARS: {
-            break;
-        }
-        case PL_POINTER: {
-            break;
-        }
-        case PL_CODE_LIST: {
-            break;
-        }
-        case PL_CHAR_LIST: {
-            break;
-        }
-        case PL_BOOL: {
-            break;
-        }
-        case PL_FUNCTOR_CHARS: {
-            break;
-        }
-        case _PL_PREDICATE_INDICATOR: {
-            break;
-        }
-        case PL_SHORT: {
-            break;
-        }
-        case PL_INT: {
-            break;
-        }
-        case PL_LONG: {
-            break;
-        }
-        case PL_DOUBLE: {
-            break;
-        }
-        case PL_NCHARS: {
-            break;
-        }
-        case PL_UTF8_CHARS: {
-            break;
-        }
-        case PL_UTF8_STRING: {
-            break;
-        }
-        case PL_INT64: {
-            break;
-        }
-        case PL_NUTF8_CHARS: {
-            break;
-        }
-        case PL_NUTF8_CODES: {
-            break;
-        }
-        case PL_NUTF8_STRING: {
-            break;
-        }
-        case PL_NWCHARS: {
-            break;
-        }
-        case PL_NWCODES: {
-            break;
-        }
-        case PL_NWSTRING: {
-            break;
-        }
-        case PL_MBCHARS: {
-            break;
-        }
-        case PL_MBCODES: {
-            break;
-        }
-        case PL_MBSTRING: {
-            break;
-        }
-        case PL_INTPTR: {
-            break;
-        }
-        case PL_CHAR: {
-            break;
-        }
-        case PL_CODE: {
-            break;
-        }
-        case PL_BYTE: {
-            break;
-        }
-        case PL_PARTIAL_LIST: {
-            break;
-        }
-        case PL_CYCLIC_TERM: {
-            break;
-        }
-        case PL_NOT_A_LIST: {
-            break;
+            zpt::prolog::term _head;
+            term_t _tail = PL_copy_term_ref(_to_convert);
+            auto _return = zpt::json::array();
+            while (PL_get_list_ex(_tail, _head, _tail)) { _return << zpt::prolog::to_json(_head); }
+            return _return;
         }
         case PL_DICT: {
-            break;
-        }
-        case PL_SWORD: {
             break;
         }
     }
 
     return zpt::undefined;
+}
+
+auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
+    switch (_to_convert->type()) {
+        case zpt::JSObject: {
+            zpt::prolog::term _t;
+            for (auto&& [_, _key, _value] : _to_convert) {}
+        }
+        case zpt::JSArray: {
+        }
+        case zpt::JSString: {
+        }
+        case zpt::JSInteger: {
+        }
+        case zpt::JSDouble: {
+        }
+        case zpt::JSBoolean: {
+        }
+        case zpt::JSUndefined:
+        case zpt::JSNil: {
+        }
+        case zpt::JSDate: {
+        }
+        case zpt::JSLambda: {
+        }
+        case zpt::JSRegex: {
+        }
+    }
 }
 
 auto zpt::PROLOG_BRIDGE(std::string const& _cmd) -> zpt::prolog::bridge& {

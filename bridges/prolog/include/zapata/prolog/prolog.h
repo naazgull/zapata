@@ -24,9 +24,6 @@
  * @file prolog.h
  * @brief Prolog bridge implementation (stub).
  *
- * Placeholder for future Prolog language integration with the
- * Zapata framework.
- *
  * @see zpt::programming::bridge
  */
 
@@ -34,10 +31,11 @@
 
 #include <SWI-cpp2.h>
 #include <zapata/bridge.h>
+#include <zapata/prolog/helpers.h>
 
 namespace zpt {
 
-using prolog_object = std::shared_ptr<PlTerm>;
+using prolog_object = zpt::prolog::term;
 
 namespace prolog {
 /**
@@ -52,9 +50,8 @@ namespace prolog {
  */
 class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_object> {
   public:
-    using underlying_type = PlEngine&;                          ///< Raw Prolog state pointer
-    using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Prolog
-    using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Prolog C function
+    using callback_type = std::function<void()>; ///< C++ callback for Prolog
+    using lambda_type = std::function<int()>;    ///< Lambda as Prolog C function
     using mutex_type = zpt::locks::spin_mutex;
 
     bridge(std::string const& _cmd);
@@ -89,13 +86,13 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     auto initialize() -> zpt::prolog::bridge&;
 
   private:
-    PlEngine __underlying;
+    std::string __engine_args;
     mutex_type __underlying_mutex;
     std::atomic<bool> __initialized{ false };
 };
 
 /** @brief Converts Prolog term to JSON. */
-auto to_json(PlTerm& _to_convert) -> zpt::json;
+auto to_json(term_t _to_convert) -> zpt::json;
 } // namespace prolog
 
 /**

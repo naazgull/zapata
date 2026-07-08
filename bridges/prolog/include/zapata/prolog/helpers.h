@@ -21,15 +21,43 @@
 */
 
 /**
- * @file prolog.h
- * @brief Prolog scripting language bridge.
- *
- * Aggregate header for the Prolog bridge module.
- *
- * @see zpt::programming::bridge
+ * @file interface.h
+ * @brief Prolog bridge helper classes.
  */
 
 #pragma once
 
-#include <zapata/prolog/helpers.h>
-#include <zapata/prolog/prolog.h>
+#include <SWI-Prolog.h>
+#include <zapata/atomics/padded_atomic.h>
+
+namespace zpt {
+namespace prolog {
+class term {
+  public:
+    term();
+    term(term const& _rhs);
+    term(term&& _rhs);
+    virtual ~term();
+
+    operator term_t();
+    auto operator*() -> term_t&;
+    auto operator=(term const& _rhs) -> term&;
+    auto operator=(term&& _rhs) -> term&;
+    auto operator==(term const& _rhs) -> bool;
+    auto operator!=(term const& _rhs) -> bool;
+    auto to_string() const -> std::string;
+    static auto null() -> term&;
+
+    friend auto operator<<(std::ostream& _os, term const& _in) -> std::ostream& {
+        _os << _in.to_string();
+        return _os;
+    }
+
+  private:
+    term_t __underlying{ 0 };
+    std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr };
+
+    term(bool);
+};
+} // namespace prolog
+} // namespace zpt
