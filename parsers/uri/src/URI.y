@@ -35,6 +35,9 @@ class URITokenizerLexer;
 
 int yylex(YYSTYPE* yylval, zpt::URITokenizerLexer* ctx);
 void yyerror(zpt::URITokenizerLexer* ctx, char const* msg);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable="
 %}
 
 %define api.pure full
@@ -280,3 +283,5 @@ void yyerror(zpt::URITokenizerLexer* ctx, char const* msg) {
     throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") +
                                      std::to_string(ctx->lineNr()) + std::string{msg});
 }
+
+#pragma GCC diagnostic pop
