@@ -45,6 +45,9 @@ class HTTPTokenizerLexer;
 
 int yylex(YYSTYPE* yylval, zpt::HTTPTokenizerLexer* ctx);
 void yyerror(zpt::HTTPTokenizerLexer* ctx, char const* msg);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable="
 %}
 
 %define api.pure full
@@ -144,3 +147,5 @@ void yyerror(zpt::HTTPTokenizerLexer* ctx, char const* msg) {
     throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") +
                                     std::to_string(ctx->lineNr()));
 }
+
+#pragma GCC diagnostic pop

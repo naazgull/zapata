@@ -11,7 +11,16 @@ zpt::gen::rest::unit::unit(std::string const& _module_name,
     this->__namespace = (this->__schema("info")("namespace")->ok()
                            ? this->__schema("info")("namespace")->string() + std::string{ "::" }
                            : std::string{ "" }) +
-                        this->__module.name();
+                        zpt::r_replace(this->__module.name(), "/", "::");
+
+    if (this->__schema("info")("database")->ok()) {
+        this->__schema["info"]["database"] =
+          std::format("\"{}\"", this->__schema("info")("database")->string());
+    }
+    else {
+        this->__schema["info"]["database"] =
+          "_config(\"storage\")(db_driver_type)(\"database\")->string()";
+    }
 }
 
 auto zpt::gen::rest::unit::generate_operations() -> unit& {
@@ -128,11 +137,11 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
         this->__module.add(_file);
         std::cout << "> Generating " << _file_path << "." << std::endl;
 
-        auto _lib = std::format("{}-{}",
-                                this->__schema("info")("namespace")->ok()
-                                  ? this->__schema("info")("namespace")->string()
-                                  : "",
-                                zpt::r_replace(this->__module.name(), "_", "-"));
+        auto _lib = std::format(
+          "{}-{}",
+          this->__schema("info")("namespace")->ok() ? this->__schema("info")("namespace")->string()
+                                                    : "",
+          zpt::r_replace(zpt::r_replace(this->__module.name(), "_", "-"), "/", "-"));
         _file->add<zpt::ast::cmake_instruction>(std::format("add_library({} SHARED)", _lib));
         std::ostringstream _oss;
         _oss << std::format("target_sources({}\n"
@@ -224,6 +233,12 @@ auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string
         _file //
           ->add<zpt::ast::cpp_instruction>("#pragma once\n")
           .add<zpt::ast::cpp_instruction>("#include <iostream>\n#include <zapata/rest.h>\n");
+        if (_def("zpt:extends")->ok()) {
+            _file //
+              ->add<zpt::ast::cpp_instruction>(
+                std::format("#include<{}.h>\n",
+                            zpt::r_replace(_def("zpt:extends")("super")->string(), "::", "/")));
+        }
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
     }
@@ -242,6 +257,21 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
         this->__module.add(_file);
+
+        auto _include_path = std::format("{}/{}/{}.h",
+                                         this->__schema("info")("namespace")->string(),
+                                         this->__module.name(),
+                                         _def(_method)("operationId")->string());
+        auto _db_driver = this->__schema("info")("dbDriver")->string();
+        _file->add<zpt::ast::cpp_instruction>(std::format(
+          "#include <{}>\n#include <zapata/connector.h>\n#include "
+          "<zapata/{}.h>\n\nusing db_connection_type = zpt::storage::{}::connection;\nconstexpr "
+          "char const* db_driver_type = \"{}\";\n",
+          _include_path,
+          _db_driver,
+          _db_driver,
+          _db_driver));
+
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
     }
@@ -260,10 +290,14 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
+        auto _extends_from = _def("zpt:extends")->ok() ? _def("zpt:extends")("super")->string()
+                                                       : "zpt::events::process";
+        auto _constructor_name = zpt::split(_extends_from, "::");
+        _constructor_name = _constructor_name(_constructor_name->size() - 1);
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
-                                                           "public zpt::events::process");
-        auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
+                                                           std::format("public {}", _extends_from));
+        auto _h_constructor = zpt::make_instruction<zpt::ast::cpp_instruction>(
+          std::format("using {}::{}", _extends_from, _constructor_name->string()));
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -271,11 +305,17 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT);
-        _class //
-          ->add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _class //
@@ -300,35 +340,31 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = std::format("{}/{}/{}.h",
-                                         this->__schema("info")("namespace")->string(),
-                                         this->__module.name(),
-                                         _def("*")("operationId")->string());
         auto _class_method_prefix =
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
-          _include_path,
-          this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
-            _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context()->is_replied()");
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+                _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
+                  "return this->context() != nullptr && !this->context()->is_replied()");
+            }
+            else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
+            _cpp_blocked->add(_cpp_blocked_body);
+            _cpp_file->add(_cpp_blocked);
         }
-        else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
-        _cpp_blocked->add(_cpp_blocked_body);
-        _cpp_file->add(_cpp_blocked);
 
-        auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
-        _cpp_authorized->add(_cpp_authorized_body);
-        _cpp_file->add(_cpp_authorized);
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
+            _cpp_authorized->add(_cpp_authorized_body);
+            _cpp_file->add(_cpp_authorized);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
@@ -399,10 +435,14 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
+        auto _extends_from = _def("zpt:extends")->ok() ? _def("zpt:extends")("super")->string()
+                                                       : "zpt::events::process";
+        auto _constructor_name = zpt::split(_extends_from, "::");
+        _constructor_name = _constructor_name(_constructor_name->size() - 1);
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
-                                                           "public zpt::events::process");
-        auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
+                                                           std::format("public {}", _extends_from));
+        auto _h_constructor = zpt::make_instruction<zpt::ast::cpp_instruction>(
+          std::format("using {}::{}", _extends_from, _constructor_name->string()));
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -410,11 +450,17 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT);
-        _class //
-          ->add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _class //
@@ -447,35 +493,31 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = std::format("{}/{}/{}.h",
-                                         this->__schema("info")("namespace")->string(),
-                                         this->__module.name(),
-                                         _def("*")("operationId")->string());
         auto _class_method_prefix =
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
-          _include_path,
-          this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
-            _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context()->is_replied()");
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+                _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
+                  "return this->context() != nullptr && !this->context()->is_replied()");
+            }
+            else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
+            _cpp_blocked->add(_cpp_blocked_body);
+            _cpp_file->add(_cpp_blocked);
         }
-        else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
-        _cpp_blocked->add(_cpp_blocked_body);
-        _cpp_file->add(_cpp_blocked);
 
-        auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
-        _cpp_authorized->add(_cpp_authorized_body);
-        _cpp_file->add(_cpp_authorized);
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
+            _cpp_authorized->add(_cpp_authorized_body);
+            _cpp_file->add(_cpp_authorized);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
@@ -547,23 +589,35 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
-        auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("post")("operationId")->string(),
-                                                           "public zpt::events::process");
-        auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
+        auto _extends_from = _def("zpt:extends")->ok() ? _def("zpt:extends")("super")->string()
+                                                       : "zpt::events::process";
+        auto _constructor_name = zpt::split(_extends_from, "::");
+        _constructor_name = _constructor_name(_constructor_name->size() - 1);
+        auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
+                                                           std::format("public {}", _extends_from));
+        auto _h_constructor = zpt::make_instruction<zpt::ast::cpp_instruction>(
+          std::format("using {}::{}", _extends_from, _constructor_name->string()));
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC,
                                         std::format("~{}", _def("post")("operationId")->string()),
                                         "",
-                                        zpt::ast::DEFAULT)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
-        _namespace->add(_class);
+                                        zpt::ast::DEFAULT);
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
+              .add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+            _namespace->add(_class);
+        }
 
         auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
           "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
@@ -573,35 +627,31 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "post");
     if (_cpp_file != nullptr) {
-        auto _include_path = std::format("{}/{}/{}.h",
-                                         this->__schema("info")("namespace")->string(),
-                                         this->__module.name(),
-                                         _def("post")("operationId")->string());
         auto _class_method_prefix =
           std::format("{}::{}::", this->__namespace, _def("post")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
-          _include_path,
-          this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        if (_def("post")("requestBody")("zpt:redirect")->ok()) {
-            _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context()->is_replied()");
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            if (_def("post")("requestBody")("zpt:redirect")->ok()) {
+                _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
+                  "return this->context() != nullptr && !this->context()->is_replied()");
+            }
+            else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
+            _cpp_blocked->add(_cpp_blocked_body);
+            _cpp_file->add(_cpp_blocked);
         }
-        else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
-        _cpp_blocked->add(_cpp_blocked_body);
-        _cpp_file->add(_cpp_blocked);
 
-        auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
-        _cpp_authorized->add(_cpp_authorized_body);
-        _cpp_file->add(_cpp_authorized);
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
+            _cpp_authorized->add(_cpp_authorized_body);
+            _cpp_file->add(_cpp_authorized);
+        }
 
         if (_def("post")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
@@ -640,10 +690,14 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
           std::format("namespace {}", this->__namespace));
         _h_file->add(_namespace);
 
+        auto _extends_from = _def("zpt:extends")->ok() ? _def("zpt:extends")("super")->string()
+                                                       : "zpt::events::process";
+        auto _constructor_name = zpt::split(_extends_from, "::");
+        _constructor_name = _constructor_name(_constructor_name->size() - 1);
         auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
-                                                           "public zpt::events::process");
-        auto _h_constructor =
-          zpt::make_instruction<zpt::ast::cpp_instruction>("using zpt::events::process::process");
+                                                           std::format("public {}", _extends_from));
+        auto _h_constructor = zpt::make_instruction<zpt::ast::cpp_instruction>(
+          std::format("using {}::{}", _extends_from, _constructor_name->string()));
         _class->add(_h_constructor, zpt::ast::PUBLIC);
 
         _class //
@@ -651,11 +705,17 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
                                         std::format("~{}", _def("*")("operationId")->string()),
                                         "",
                                         zpt::ast::DEFAULT);
-        _class //
-          ->add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-          .add<zpt::ast::cpp_function>(
-            zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "blocked", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             _class //
@@ -680,35 +740,31 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
 
     auto _cpp_file = this->generate_operation_cpp_file(_def, "*");
     if (_cpp_file != nullptr) {
-        auto _include_path = std::format("{}/{}/{}.h",
-                                         this->__schema("info")("namespace")->string(),
-                                         this->__module.name(),
-                                         _def("*")("operationId")->string());
         auto _class_method_prefix =
           std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
-        _cpp_file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/{}/connector.h>\n",
-          _include_path,
-          this->__schema("info")("dbDriver")->string()));
-
-        auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
-            _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
-              "return this->context() != nullptr && !this->context()->is_replied()");
+        if (_def("zpt:extends")->ok() && !_def("zpt:extends")("no-override")->contains("blocked")) {
+            auto _cpp_blocked = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}blocked", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_blocked_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+                _cpp_blocked_body->add<zpt::ast::cpp_instruction>(
+                  "return this->context() != nullptr && !this->context()->is_replied()");
+            }
+            else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
+            _cpp_blocked->add(_cpp_blocked_body);
+            _cpp_file->add(_cpp_blocked);
         }
-        else { _cpp_blocked_body->add<zpt::ast::cpp_instruction>("return false"); }
-        _cpp_blocked->add(_cpp_blocked_body);
-        _cpp_file->add(_cpp_blocked);
 
-        auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
-          std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
-        auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-        _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
-        _cpp_authorized->add(_cpp_authorized_body);
-        _cpp_file->add(_cpp_authorized);
+        if (_def("zpt:extends")->ok() &&
+            !_def("zpt:extends")("no-override")->contains("authorized")) {
+            auto _cpp_authorized = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}authorized", _class_method_prefix), "bool", zpt::ast::CONST);
+            auto _cpp_authorized_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            _cpp_authorized_body->add<zpt::ast::cpp_instruction>("return true");
+            _cpp_authorized->add(_cpp_authorized_body);
+            _cpp_file->add(_cpp_authorized);
+        }
 
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
@@ -909,8 +965,9 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
 
     _method_body //
-      ->add<zpt::ast::cpp_instruction>(
-        std::format("auto _collection = _session->database(\"{}\")->collection(\"{}\")",
+      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      .add<zpt::ast::cpp_instruction>(
+        std::format("auto _collection = _session->database({})->collection(\"{}\")",
                     this->__schema("info")("database")->string(),
                     _def("*")("requestBody")("dbCollection")->string()))
       .add<zpt::ast::cpp_instruction>(
@@ -1104,7 +1161,10 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     _if_block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
-                                      "_config(\"rest\")(\"prefix\")->string() : \"\"");
+                                      "_config(\"rest\")(\"prefix\")->string() : \"\"")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _transport = _config(\"transport\")(\"default\")->ok() ? "
+        "_config(\"transport\")(\"default\")->string() : \"tcp\"");
     this->add_parameters_and_validation(_if_block, _def, _path);
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
@@ -1113,7 +1173,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
         std::format("auto _redirect_to{{ \"{}\" }}",
                     _def(_performative)("requestBody")("zpt:redirect")->string()))
       .add<zpt::ast::cpp_instruction>(
-        "auto _request = zpt::TRANSPORT_LAYER() //\n.get(\"tcp\")->make_request()")
+        "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
       .add<zpt::ast::cpp_instruction>(
         "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}\", "
         "_prefix, _redirect_to)).body() = this->received()->body()")
@@ -1150,13 +1210,12 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
                                                 bool _with_collection) -> void {
     _block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>(std::format(
-        "auto _session = zpt::make_connection<zpt::storage::{}::connection>(_config)->session()",
-        this->__schema("info")("dbDriver")->string()));
+      .add<zpt::ast::cpp_instruction>(
+        "auto _session = zpt::make_connection<db_connection_type>(_config)->session()");
     if (_with_collection) {
         _block-> //
           add<zpt::ast::cpp_instruction>(
-            std::format("auto _collection = _session->database(\"{}\")->collection(\"{}\")",
+            std::format("auto _collection = _session->database({})->collection(\"{}\")",
                         this->__schema("info")("database")->string(),
                         _def("*")("requestBody")("dbCollection")->string()));
     }
@@ -1330,10 +1389,12 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    _oss << "create schema if not exists " << this->__schema("info")("database")->string() << ";"
-         << std::endl
-         << "use " << this->__schema("info")("database")->string() << ";" << std::endl
-         << "drop table if exists " << _collection << ";" << std::endl
+    if (this->__schema("info")("database")->string().find("_config") != 0) {
+        _oss << "create schema if not exists " << this->__schema("info")("database")->string()
+             << ";" << std::endl
+             << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
+    }
+    _oss << "drop table if exists " << _collection << ";" << std::endl
          << "create table " << _collection << " (\n_id varchar(22) not null," << std::endl;
 
     for (auto const& [_, __, _object] : _def("allOf")) {

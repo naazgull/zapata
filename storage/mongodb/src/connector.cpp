@@ -633,7 +633,9 @@ auto zpt::storage::mongodb::action_find::bind(zpt::json) -> zpt::storage::action
 auto zpt::storage::mongodb::action_find::execute() -> zpt::storage::result {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
-        mongocxx::options::find _opts;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+        mongocxx::options::find _opts{};
 
         if (this->__fields->ok() && this->__fields->size() != 0) {
             _opts.projection(zpt::storage::mongodb::to_projection(this->__fields).view());
@@ -645,6 +647,7 @@ auto zpt::storage::mongodb::action_find::execute() -> zpt::storage::result {
         if (this->__suffix["skip"]->ok()) {
             _opts.skip(static_cast<int64_t>(this->__suffix["skip"]->integer()));
         }
+#pragma GCC diagnostic pop
 
         auto _cursor = _coll.find(to_filter(this->__filter).view(), _opts);
         this->__cursor = std::make_shared<mongocxx::cursor>(std::move(_cursor));

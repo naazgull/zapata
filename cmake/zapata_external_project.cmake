@@ -34,15 +34,6 @@ set_target_properties(zapata-bridge-base
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-bridge-base.so
 )
 
-add_library(zapata-bridge-lua-plugin SHARED IMPORTED)
-add_dependencies(zapata-bridge-lua-plugin
-  zapata
-)
-set_target_properties(zapata-bridge-lua-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-bridge-lua-plugin.so
-)
-
 add_library(zapata-bridge-lua SHARED IMPORTED)
 add_dependencies(zapata-bridge-lua
   zapata
@@ -50,15 +41,6 @@ add_dependencies(zapata-bridge-lua
 set_target_properties(zapata-bridge-lua
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-bridge-lua.so
-)
-
-add_library(zapata-bridge-prolog-plugin SHARED IMPORTED)
-add_dependencies(zapata-bridge-prolog-plugin
-  zapata
-)
-set_target_properties(zapata-bridge-prolog-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-bridge-prolog-plugin.so
 )
 
 add_library(zapata-bridge-prolog SHARED IMPORTED)
@@ -79,24 +61,6 @@ set_target_properties(zapata-common-catalog
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-common-catalog.so
 )
 
-add_library(zapata-runtime SHARED IMPORTED)
-add_dependencies(zapata-runtime
-  zapata
-)
-set_target_properties(zapata-runtime
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-runtime.so
-)
-
-add_library(zapata-engine-rest-plugin SHARED IMPORTED)
-add_dependencies(zapata-engine-rest-plugin
-  zapata
-)
-set_target_properties(zapata-engine-rest-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-engine-rest-plugin.so
-)
-
 add_library(zapata-engine-rest SHARED IMPORTED)
 add_dependencies(zapata-engine-rest
   zapata
@@ -115,15 +79,6 @@ set_target_properties(zapata-engine-startup
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-engine-startup.so
 )
 
-add_library(zapata-engine-transport-plugin SHARED IMPORTED)
-add_dependencies(zapata-engine-transport-plugin
-  zapata
-)
-set_target_properties(zapata-engine-transport-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-engine-transport-plugin.so
-)
-
 add_library(zapata-engine-transport SHARED IMPORTED)
 add_dependencies(zapata-engine-transport
   zapata
@@ -140,24 +95,6 @@ add_dependencies(zapata-events
 set_target_properties(zapata-events
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-events.so
-)
-
-add_library(zapata-generator-ast SHARED IMPORTED)
-add_dependencies(zapata-generator-ast
-  zapata
-)
-set_target_properties(zapata-generator-ast
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-generator-ast.so
-)
-
-add_library(zapata-generator-rest SHARED IMPORTED)
-add_dependencies(zapata-generator-rest
-  zapata
-)
-set_target_properties(zapata-generator-rest
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-generator-rest.so
 )
 
 add_library(zapata-globals SHARED IMPORTED)
@@ -196,15 +133,6 @@ set_target_properties(zapata-io-stream
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-io-stream.so
 )
 
-add_library(zapata-net-http-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-http-plugin
-  zapata
-)
-set_target_properties(zapata-net-http-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-http-plugin.so
-)
-
 add_library(zapata-net-http SHARED IMPORTED)
 add_dependencies(zapata-net-http
   zapata
@@ -212,24 +140,6 @@ add_dependencies(zapata-net-http
 set_target_properties(zapata-net-http
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-http.so
-)
-
-add_library(zapata-net-identity-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-identity-plugin
-  zapata
-)
-set_target_properties(zapata-net-identity-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-identity-plugin.so
-)
-
-add_library(zapata-net-local-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-local-plugin
-  zapata
-)
-set_target_properties(zapata-net-local-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-local-plugin.so
 )
 
 add_library(zapata-net-local SHARED IMPORTED)
@@ -241,15 +151,6 @@ set_target_properties(zapata-net-local
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-local.so
 )
 
-add_library(zapata-net-pipe-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-pipe-plugin
-  zapata
-)
-set_target_properties(zapata-net-pipe-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-pipe-plugin.so
-)
-
 add_library(zapata-net-pipe SHARED IMPORTED)
 add_dependencies(zapata-net-pipe
   zapata
@@ -259,15 +160,6 @@ set_target_properties(zapata-net-pipe
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-pipe.so
 )
 
-add_library(zapata-net-self-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-self-plugin
-  zapata
-)
-set_target_properties(zapata-net-self-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-self-plugin.so
-)
-
 add_library(zapata-net-self SHARED IMPORTED)
 add_dependencies(zapata-net-self
   zapata
@@ -275,15 +167,6 @@ add_dependencies(zapata-net-self
 set_target_properties(zapata-net-self
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-self.so
-)
-
-add_library(zapata-net-tcp-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-tcp-plugin
-  zapata
-)
-set_target_properties(zapata-net-tcp-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-tcp-plugin.so
 )
 
 add_library(zapata-net-tcp SHARED IMPORTED)
@@ -304,15 +187,6 @@ set_target_properties(zapata-net-transport
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-transport.so
 )
 
-add_library(zapata-net-upnp-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-upnp-plugin
-  zapata
-)
-set_target_properties(zapata-net-upnp-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-upnp-plugin.so
-)
-
 add_library(zapata-net-upnp SHARED IMPORTED)
 add_dependencies(zapata-net-upnp
   zapata
@@ -320,15 +194,6 @@ add_dependencies(zapata-net-upnp
 set_target_properties(zapata-net-upnp
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-upnp.so
-)
-
-add_library(zapata-net-websocket-plugin SHARED IMPORTED)
-add_dependencies(zapata-net-websocket-plugin
-  zapata
-)
-set_target_properties(zapata-net-websocket-plugin
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-net-websocket-plugin.so
 )
 
 add_library(zapata-net-websocket SHARED IMPORTED)
@@ -394,22 +259,13 @@ set_target_properties(zapata-regex-graph
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-regex-graph.so
 )
 
-add_library(zapata-rest-client-example SHARED IMPORTED)
-add_dependencies(zapata-rest-client-example
+add_library(zapata-runtime SHARED IMPORTED)
+add_dependencies(zapata-runtime
   zapata
 )
-set_target_properties(zapata-rest-client-example
+set_target_properties(zapata-runtime
   PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-rest-client-example.so
-)
-
-add_library(zapata-rest-example SHARED IMPORTED)
-add_dependencies(zapata-rest-example
-  zapata
-)
-set_target_properties(zapata-rest-example
-  PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-rest-example.so
+    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-runtime.so
 )
 
 add_library(zapata-storage-connector SHARED IMPORTED)
@@ -421,6 +277,15 @@ set_target_properties(zapata-storage-connector
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-storage-connector.so
 )
 
+add_library(zapata-storage-mongodb SHARED IMPORTED)
+add_dependencies(zapata-storage-mongodb
+  zapata
+)
+set_target_properties(zapata-storage-mongodb
+  PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-storage-mongodb.so
+)
+
 add_library(zapata-storage-mysqlx SHARED IMPORTED)
 add_dependencies(zapata-storage-mysqlx
   zapata
@@ -428,6 +293,15 @@ add_dependencies(zapata-storage-mysqlx
 set_target_properties(zapata-storage-mysqlx
   PROPERTIES
     IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-storage-mysqlx.so
+)
+
+add_library(zapata-storage-pgsql SHARED IMPORTED)
+add_dependencies(zapata-storage-pgsql
+  zapata
+)
+set_target_properties(zapata-storage-pgsql
+  PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libzapata-storage-pgsql.so
 )
 
 add_library(zapata-storage-sqlite SHARED IMPORTED)
