@@ -37,6 +37,7 @@ void yyerror(zpt::FunctionalTokenizerLexer* ctx, char const* msg);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable="
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
 %}
 
 %define api.pure full
