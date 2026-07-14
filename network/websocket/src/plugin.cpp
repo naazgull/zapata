@@ -30,6 +30,10 @@ static zpt::padded_atomic<bool> _has_exited{ false };
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
       .add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+    zlog("Started WebSocket connection upgrade support", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("ws"); }
+extern "C" auto _zpt_unload_(zpt::plugin&) {
+    zpt::TRANSPORT_LAYER().remove("ws");
+    zlog("Stopped WebSocket connection upgrade support", zpt::info);
+}
