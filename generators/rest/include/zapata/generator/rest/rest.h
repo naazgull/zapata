@@ -134,6 +134,8 @@ class unit {
     auto add_generated(zpt::ast::basic_code_block::ptr _block,
                        zpt::json _def,
                        std::string const& _generate) -> void;
+    auto get_filter_expression(zpt::json _def) -> std::string;
+    auto get_bind_expression(zpt::json _def) -> std::string;
     auto get_visible_fields(zpt::json _def) -> std::string;
     auto remove_hidden_fields(zpt::json _def) -> std::string;
 

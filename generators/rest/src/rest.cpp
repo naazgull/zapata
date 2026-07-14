@@ -264,7 +264,7 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
                                          _def(_method)("operationId")->string());
         auto _db_driver = this->__schema("info")("dbDriver")->string();
         _file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include "
+          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/uri.h>\n#include "
           "<zapata/{}.h>\n\nusing db_connection_type = zpt::storage::{}::connection;\nconstexpr "
           "char const* db_driver_type = \"{}\";\n",
           _include_path,
@@ -478,8 +478,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
               zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
             _retrieve_element //
               ->add<zpt::ast::cpp_variable>("_session", "zpt::storage::session&")
-              .add<zpt::ast::cpp_variable>("_id", "std::string const&")
-              .add<zpt::ast::cpp_variable>("_params = zpt::undefined", "zpt::json");
+              .add<zpt::ast::cpp_variable>("_params", "zpt::json");
             _class->add(_retrieve_element, zpt::ast::PRIVATE);
         }
 
@@ -838,12 +837,20 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
     this->add_db_configuration(_method_body, _def);
 
     _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
+      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_generated(_method_body, _def, "create");
     this->add_parameters_and_validation(_method_body, _def, _path);
     this->add_schema_validation(_method_body, _def);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
+    if (_def("parameters")->size() != 0) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            std::format("_received += {}", this->get_bind_expression(_def)));
+    }
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
         "auto _id = _collection //\n->add(_received)->execute()->generated_id()")
@@ -876,7 +883,9 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _params = this->received()->parameters()");
+      ->add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
@@ -925,7 +934,9 @@ auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _c
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _params = this->received()->parameters()");
+      ->add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
@@ -960,7 +971,6 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
       std::format("{}retrieve_element", _class_method_prefix), "zpt::json");
     _method //
       ->add<zpt::ast::cpp_variable>("_session", "zpt::storage::session&")
-      .add<zpt::ast::cpp_variable>("_id", "std::string const&")
       .add<zpt::ast::cpp_variable>("_params", "zpt::json");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
 
@@ -974,9 +984,10 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>(
-        "auto _result = _collection //\n->find(\"_id = :id\")->bind({ "
-        "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
+      .add<zpt::ast::cpp_instruction>(std::format(
+        "auto _result = _collection //\n->find({})->bind({})->fields(_fields)->execute()->fetch(1)",
+        this->get_filter_expression(_def),
+        this->get_bind_expression(_def)));
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
@@ -999,21 +1010,26 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
     _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
+      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
     this->add_generated(_method_body, _def, "update");
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::string{ "auto _result = _collection //\n->modify(\"_id = :id\")->bind({ \"id\", _id "
-                     "})->patch(_received)->execute()->count()" })
+        std::format("auto _result = _collection "
+                    "//\n->modify({})->bind({})->patch(_received)->execute()->count()",
+                    this->get_filter_expression(_def),
+                    this->get_bind_expression(_def)))
       .add<zpt::ast::cpp_instruction>("_session->commit()");
 
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _id)");
+        "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _params)");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
     _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
@@ -1044,13 +1060,14 @@ auto zpt::gen::rest::unit::generate_get_element(zpt::ast::basic_file::ptr _cpp_f
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def, false);
     _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _params = this->received()->parameters()");
+      ->add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _result = this->retrieve_element(_session, _id, _params)");
+      ->add<zpt::ast::cpp_instruction>("auto _result = this->retrieve_element(_session, _params)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
@@ -1083,13 +1100,18 @@ auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cp
       std::format("{}remove_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
+    _method_body //
+      ->add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::string{ "auto _result = _collection //\n->remove(\"_id = :id\")->bind({ \"id\", _id "
-                     "})->execute()->count()" })
+        std::format("auto _result = _collection //\n->remove({})->bind({})->execute()->count()",
+                    this->get_filter_expression(_def),
+                    this->get_bind_expression(_def)))
       .add<zpt::ast::cpp_instruction>("_session->commit()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
@@ -1123,7 +1145,11 @@ auto zpt::gen::rest::unit::generate_process_request(zpt::ast::basic_file::ptr _c
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}process_request", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-    _method_body->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
+    _method_body //
+      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
@@ -1164,7 +1190,10 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
                                       "_config(\"rest\")(\"prefix\")->string() : \"\"")
       .add<zpt::ast::cpp_instruction>(
         "auto _transport = _config(\"transport\")(\"default\")->ok() ? "
-        "_config(\"transport\")(\"default\")->string() : \"tcp\"");
+        "_config(\"transport\")(\"default\")->string() : \"tcp\"")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _params = this->received()->parameters()->is_object() ? "
+        "this->received()->parameters()->clone() : zpt::json::object()");
     this->add_parameters_and_validation(_if_block, _def, _path);
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
@@ -1175,8 +1204,9 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
       .add<zpt::ast::cpp_instruction>(
-        "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}\", "
-        "_prefix, _redirect_to)).body() = this->received()->body()")
+        "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
+        "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() = "
+        "this->received()->body()")
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
@@ -1224,17 +1254,9 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
 auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_block::ptr _block,
                                                          zpt::json _def,
                                                          zpt::json _path) -> void {
-    bool _has_params{ false };
     bool _has_path{ false };
     for (auto const& [_, __, _param] : _def("parameters")) {
-        if (_param("in")->string() == "query") {
-            if (!_has_params) {
-                _block->add<zpt::ast::cpp_instruction>(
-                  "auto _params = this->received()->parameters()");
-                _has_params = true;
-            }
-        }
-        else if (_param("in")->string() == "path") {
+        if (_param("in")->string() == "path") {
             if (!_has_path) {
                 _block
                   ->add<zpt::ast::cpp_instruction>("auto _path = this->received()->uri()(\"path\")")
@@ -1246,25 +1268,20 @@ auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_bl
         }
     }
 
-    for (auto const& [_, __, _param] : _def("parameters")) {
-        if (_param("in")->string() == "query") {
-            _block->add<zpt::ast::cpp_instruction>(std::format(
-              "auto _{} = _params(\"{}\")", _param("name")->string(), _param("name")->string()));
-        }
-    }
     for (auto const& [_idx, _, _part] : _path("path")) {
         auto _variable = _part->string();
         if (_variable.find("{") == 0) {
             std::string _name = _variable.substr(1, _variable.length() - 2);
-            _block->add<zpt::ast::cpp_instruction>(
-              std::format("auto _{} = _path(_prefix_len + {})", _name, _idx));
+            _block //
+              ->add<zpt::ast::cpp_instruction>(
+                std::format("_params[\"{}\"] = _path(_prefix_len + {})", _name, _idx));
         }
     }
     for (auto const& [_, __, _param] : _def("parameters")) {
         if (_param("in")->string() == "path" ||
             (_param("in")->string() == "query" && _param("required")->boolean())) {
             _block->add<zpt::ast::cpp_instruction>(
-              std::format("expect(_{}->ok(), \"Required {} parameter '{}'\")",
+              std::format("expect(_params(\"{}\")->ok(), \"Required {} parameter '{}'\")",
                           _param("name")->string(),
                           _param("in")->string(),
                           _param("name")->string()));
@@ -1341,6 +1358,35 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
             }
         }
     }
+}
+
+auto zpt::gen::rest::unit::get_filter_expression(zpt::json _def) -> std::string {
+    std::ostringstream _oss;
+    _oss << "\"";
+    bool _first = true;
+    for (auto const& [_, __, _param] : _def("parameters")) {
+        auto _name = _param("name")->string();
+        if (!_first) { _oss << " and "; }
+        _first = false;
+        _oss << (_name == "id" ? "_" : "") << _name << " = :" << _name;
+    }
+    _oss << "\"" << std::flush;
+    return _oss.str();
+}
+
+auto zpt::gen::rest::unit::get_bind_expression(zpt::json _def) -> std::string {
+    std::ostringstream _oss;
+    _oss << "{ ";
+    bool _first = true;
+    for (auto const& [_, __, _param] : _def("parameters")) {
+        auto _name = _param("name")->string();
+        if (!_first) { _oss << ", "; }
+        _first = false;
+        _oss << "\"" << _name << "\", ";
+        _oss << "_params(\"" << _name << "\")";
+    }
+    _oss << " }" << std::flush;
+    return _oss.str();
 }
 
 auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
