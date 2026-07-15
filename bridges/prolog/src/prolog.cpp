@@ -59,19 +59,9 @@ auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
     return zpt::prolog::to_json(*_to_convert);
 }
 
-auto zpt::prolog::bridge::to_ref(object_type _to_convert) -> zpt::json {
-    std::shared_lock _guard{ this->__underlying_mutex };
-    return zpt::undefined;
-}
-
 auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
     std::shared_lock _guard{ this->__underlying_mutex };
-    return zpt::prolog::term::null();
-}
-
-auto zpt::prolog::bridge::from_ref(zpt::json _to_convert, object_type _return) -> object_type {
-    std::shared_lock _guard{ this->__underlying_mutex };
-    return zpt::prolog::term::null();
+    return zpt::prolog::to_object(_to_convert);
 }
 
 auto zpt::prolog::bridge::execute(zpt::json _func, zpt::json _args)
@@ -134,17 +124,31 @@ auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
                 size_t _{ 0 };
                 std::string _functor{ PL_atom_nchars(_name, &_) };
 
-                auto _composed = zpt::json::object();
-                for (size_t _idx = 1; _idx != _arity + 1; ++_idx) {
-                    zpt::prolog::term _term;
-                    PL_get_arg(_idx, _to_convert, *_term);
-                    auto _element = zpt::prolog::to_json(*_term);
-                    if (_element->type() == zpt::JSObject) { _composed += _element; }
-                    else { _composed << std::format("{}", _idx) << _element; }
-                }
+                expect(_functor == "," || _functor == ":",
+                       "functor `" << _functor << "` is not translatable to JSON");
 
                 auto _return = zpt::json::object();
-                _return << _functor << _composed;
+
+                if (_functor == ":") {
+                    zpt::prolog::term _term1;
+                    PL_get_arg(1, _to_convert, *_term1);
+                    auto _name = zpt::prolog::to_json(*_term1);
+                    zpt::prolog::term _term2;
+                    PL_get_arg(2, _to_convert, *_term2);
+                    auto _value = zpt::prolog::to_json(*_term2);
+                    _return << _name->string() << _value;
+                }
+                if (_functor == ",") {
+                    for (size_t _idx = 1; _idx != _arity + 1; ++_idx) {
+                        zpt::prolog::term _term;
+                        PL_get_arg(_idx, _to_convert, *_term);
+                        auto _element = zpt::prolog::to_json(*_term);
+                        expect(_element->type() == zpt::JSObject,
+                               "invalid Prolog, JSON object type expected");
+                        _return += _element;
+                    }
+                }
+
                 return _return;
             }
             break;
@@ -165,31 +169,103 @@ auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
 }
 
 auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
+    static atom_t _colon = PL_new_atom(":");
+    static atom_t _comma = PL_new_atom(",");
+
     switch (_to_convert->type()) {
         case zpt::JSObject: {
-            zpt::prolog::term _t;
-            for (auto&& [_, _key, _value] : _to_convert) {}
+            zpt::prolog::term _term;
+            size_t _idx{ 0 };
+            for (auto&& [_, _key, _value] : _to_convert) {
+                zpt::prolog::term _pair;
+                expect(PL_put_functor(*_pair, PL_new_functor(_colon, 2)),
+                       "couldn't add functor to Prolog term");
+                auto _p_key = zpt::prolog::to_object(zpt::json::string(_key));
+                auto _p_value = zpt::prolog::to_object(_value);
+                _pair //
+                  .add(_p_key)
+                  .add(_p_value);
+                expect(PL_unify_arg(1, *_pair, *_p_key), "couldn't add `:` key to Prolog term");
+                expect(PL_unify_arg(2, *_pair, *_p_value), "couldn't add `:` value to Prolog term");
+
+                if (_idx == 0) { _term = _pair; }
+                else {
+                    zpt::prolog::term _chain;
+                    expect(PL_put_functor(*_chain, PL_new_functor(_comma, 2)),
+                           "couldn't add functor to Prolog term");
+                    _chain //
+                      .add(_pair)
+                      .add(_term);
+                    expect(PL_unify_arg(1, *_chain, *_pair),
+                           "couldn't add `,` first argument to Prolog term");
+                    expect(PL_unify_arg(2, *_chain, *_term),
+                           "couldn't add `,` second argument to Prolog term");
+                    _term = _chain;
+                }
+                ++_idx;
+            }
+            return _term;
         }
         case zpt::JSArray: {
+            if (_to_convert->size() == 0) {
+                zpt::prolog::term _array;
+                PL_put_nil(*_array);
+                return _array;
+            }
+
+            zpt::prolog::term _tail;
+            for (size_t _idx = _to_convert->size(); _idx != 0; --_idx) {
+                auto _head = zpt::prolog::to_object(_to_convert(_idx - 1));
+                _tail //
+                  .add(_head);
+                expect(PL_cons_list(*_tail, *_head, *_tail), "couldn't construct list");
+            }
+            return _tail;
         }
         case zpt::JSString: {
+            zpt::prolog::term _string;
+            expect(PL_put_string_chars(*_string, _to_convert->string().data()),
+                   "couldn't add string to Prolog term");
+            return _string;
         }
         case zpt::JSInteger: {
+            zpt::prolog::term _integer;
+            expect(PL_put_integer(*_integer, _to_convert->integer()),
+                   "couldn't add integer to Prolog term");
+            return _integer;
         }
         case zpt::JSDouble: {
+            zpt::prolog::term _float;
+            expect(PL_put_float(*_float, _to_convert->floating()),
+                   "couldn't add float to Prolog term");
+            return _float;
         }
         case zpt::JSBoolean: {
+            zpt::prolog::term _boolean;
+            expect(PL_put_atom_chars(*_boolean, _to_convert->boolean() ? "true" : "false"),
+                   "couldn't add boolean atom to Prolog term");
+            return _boolean;
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
+            zpt::prolog::term _nil;
+            PL_put_nil(*_nil);
+            return _nil;
         }
         case zpt::JSDate: {
+            zpt::prolog::term _date;
+            expect(PL_put_string_chars(*_date, static_cast<std::string>(_to_convert).data()),
+                   "couldn't add date string to Prolog term");
+            return _date;
         }
-        case zpt::JSLambda: {
-        }
+        case zpt::JSLambda:
         case zpt::JSRegex: {
+            expect(_to_convert->type() != zpt::JSLambda, "can't convert type JSON lambda");
+            expect(_to_convert->type() != zpt::JSRegex, "can't convert type JSON regexp");
         }
     }
+
+    return zpt::prolog::term::null();
 }
 
 auto zpt::PROLOG_BRIDGE(std::string const& _cmd) -> zpt::prolog::bridge& {

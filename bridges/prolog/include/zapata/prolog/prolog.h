@@ -74,12 +74,8 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     auto find(zpt::json _to_locate) -> object_type;
     /** @brief Converts Prolog term to JSON. */
     auto to_json(object_type _to_convert) -> zpt::json;
-    /** @brief Creates a JSON reference to a Prolog value. */
-    auto to_ref(object_type _to_convert) -> zpt::json;
     /** @brief Pushes JSON value onto Prolog term. */
     auto to_object(zpt::json _to_convert) -> object_type;
-    /** @brief Dereferences a JSON Prolog reference. */
-    auto from_ref(zpt::json _to_convert, object_type _return) -> object_type;
     /** @brief Executes a Prolog function with arguments. */
     auto execute(zpt::json _func, zpt::json _args) -> zpt::prolog::bridge::object_type;
     /** @brief Initializes the bridge (loads all modules). */
@@ -93,6 +89,8 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
 
 /** @brief Converts Prolog term to JSON. */
 auto to_json(term_t _to_convert) -> zpt::json;
+/** @brief Converts JSON to Prolog term. */
+auto to_object(zpt::json _to_convert) -> zpt::prolog::term;
 } // namespace prolog
 
 /**

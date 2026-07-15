@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <SWI-Stream.h>
 #include <zapata/prolog/helpers.h>
 
 zpt::prolog::term::term()
@@ -43,8 +44,8 @@ zpt::prolog::term::~term() {
         (*this->__references)->fetch_sub(1);
         if ((*this->__references)->load() == 0) { PL_free_term_ref(this->__underlying); }
     }
-}
 
+}
 zpt::prolog::term::operator term_t() { return this->__underlying; }
 
 auto zpt::prolog::term::operator*() -> term_t& { return this->__underlying; }
@@ -69,14 +70,34 @@ auto zpt::prolog::term::operator==(term const& _rhs) -> bool {
 
 auto zpt::prolog::term::operator!=(term const& _rhs) -> bool { return !((*this) == _rhs); }
 
-auto zpt::prolog::term::null() -> term& {
-    static term _return{ true };
-    return _return;
+auto zpt::prolog::term::emplace() -> term { return this->__children.emplace_back(); }
+
+auto zpt::prolog::term::add(term const& _to_add) -> term& {
+    this->__children.push_back(_to_add);
+    return (*this);
 }
 
 auto zpt::prolog::term::to_string() const -> std::string {
-    std::ostringstream _oss;
-    return _oss.str();
+    if (this->__underlying == 0) { return ""; }
+
+    char* _buffer{ nullptr };
+    size_t _size{ 0 };
+    IOSTREAM* _stream = Sopenmem(&_buffer, &_size, "w");
+    expect(_stream, "couldn't open memory stream");
+
+    expect(PL_write_term(_stream, this->__underlying, 1200, PL_WRT_QUOTED),
+           "couldn't write term to string");
+    Sflush(_stream);
+    Sclose(_stream);
+
+    std::string _result{ _buffer };
+    free(_buffer);
+    return _result;
+}
+
+auto zpt::prolog::term::null() -> term& {
+    static term _return{ true };
+    return _return;
 }
 
 zpt::prolog::term::term(bool)

@@ -28,6 +28,7 @@
 #pragma once
 
 #include <SWI-Prolog.h>
+#include <vector>
 #include <zapata/atomics/padded_atomic.h>
 
 namespace zpt {
@@ -45,6 +46,8 @@ class term {
     auto operator=(term&& _rhs) -> term&;
     auto operator==(term const& _rhs) -> bool;
     auto operator!=(term const& _rhs) -> bool;
+    auto emplace() -> term;
+    auto add(term const& _to_add) -> term&;
     auto to_string() const -> std::string;
     static auto null() -> term&;
 
@@ -55,6 +58,7 @@ class term {
 
   private:
     term_t __underlying{ 0 };
+    std::vector<term> __children;
     std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr };
 
     term(bool);
