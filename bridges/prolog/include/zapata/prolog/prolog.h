@@ -77,7 +77,7 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     /** @brief Pushes JSON value onto Prolog term. */
     auto to_object(zpt::json _to_convert) -> object_type;
     /** @brief Executes a Prolog function with arguments. */
-    auto execute(zpt::json _func, zpt::json _args) -> zpt::prolog::bridge::object_type;
+    auto execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type;
     /** @brief Initializes the bridge (loads all modules). */
     auto initialize() -> zpt::prolog::bridge&;
 

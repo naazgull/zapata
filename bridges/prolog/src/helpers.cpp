@@ -27,6 +27,16 @@ zpt::prolog::term::term()
   : __underlying{ PL_new_term_ref() }
   , __references{ std::make_shared<zpt::padded_atomic<size_t>>(1) } {}
 
+zpt::prolog::term::term(term_t _to_assign)
+  : __underlying{ _to_assign }
+  , __references{ std::make_shared<zpt::padded_atomic<size_t>>(1) } {}
+
+zpt::prolog::term::term(std::string const& _to_parse)
+  : __underlying{ PL_new_term_ref() }
+  , __references{ std::make_shared<zpt::padded_atomic<size_t>>(1) } {
+    expect(PL_chars_to_term(_to_parse.data(), this->__underlying), "unable to parse Prolog string");
+}
+
 zpt::prolog::term::term(term const& _rhs)
   : __underlying{ _rhs.__underlying }
   , __references{ _rhs.__references } {
@@ -44,11 +54,18 @@ zpt::prolog::term::~term() {
         (*this->__references)->fetch_sub(1);
         if ((*this->__references)->load() == 0) { PL_free_term_ref(this->__underlying); }
     }
-
 }
 zpt::prolog::term::operator term_t() { return this->__underlying; }
 
 auto zpt::prolog::term::operator*() -> term_t& { return this->__underlying; }
+
+auto zpt::prolog::term::operator=(term_t _rhs) -> term& {
+    expect((*this->__references)->load() == 1,
+           "can't assign a raw `term_t` to an already shared term");
+    PL_free_term_ref(this->__underlying);
+    this->__underlying = _rhs;
+    return (*this);
+}
 
 auto zpt::prolog::term::operator=(term const& _rhs) -> term& {
     this->__underlying = _rhs.__underlying;
@@ -96,10 +113,6 @@ auto zpt::prolog::term::to_string() const -> std::string {
 }
 
 auto zpt::prolog::term::null() -> term& {
-    static term _return{ true };
+    static term _return{ 0 };
     return _return;
 }
-
-zpt::prolog::term::term(bool)
-  : __underlying{ 0 }
-  , __references{ std::make_shared<zpt::padded_atomic<size_t>>(1) } {}

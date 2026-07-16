@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <zapata/base/sentry.h>
 #include <zapata/prolog/prolog.h>
 
 zpt::prolog::bridge::bridge(std::string const& _cmd)
@@ -31,31 +32,44 @@ zpt::prolog::bridge::~bridge() throw() { PL_cleanup(0); }
 
 auto zpt::prolog::bridge::name() const -> std::string { return "prolog"; }
 
-auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_path)
+auto zpt::prolog::bridge::setup_module(zpt::json, std::string _external_path)
   -> zpt::prolog::bridge& {
     std::unique_lock _guard{ this->__underlying_mutex };
+
+    zpt::prolog::term _file;
+    PL_put_atom_chars(*_file, _external_path.data());
+
+    predicate_t _consult = PL_predicate("consult", 1, nullptr);
+    qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _consult, _file);
+    zpt::sentry _cleanup{ [_qid]() { PL_close_query(_qid); } };
+
+    expect(PL_next_solution(_qid) != PL_S_FALSE,
+           "unable to properly load `" << _external_path << "`");
+
     return (*this);
 }
 
-auto zpt::prolog::bridge::setup_module(zpt::json _conf, callback_type _callback)
-  -> zpt::prolog::bridge& {
+auto zpt::prolog::bridge::setup_module(zpt::json, callback_type _callback) -> zpt::prolog::bridge& {
     std::unique_lock _guard{ this->__underlying_mutex };
+    _callback();
     return (*this);
 }
 
-auto zpt::prolog::bridge::setup_lambda(zpt::json _conf, lambda_type _callback)
-  -> zpt::prolog::bridge& {
-    std::unique_lock _guard{ this->__underlying_mutex };
+auto zpt::prolog::bridge::setup_lambda(zpt::json, lambda_type) -> zpt::prolog::bridge& {
+    bool _supported{ false };
+    expect(_supported, "lambda register not yet supported in Prolog bridge");
     return (*this);
 }
 
-auto zpt::prolog::bridge::find(zpt::json _to_locate) -> object_type {
-    std::unique_lock _guard{ this->__underlying_mutex };
+auto zpt::prolog::bridge::find(zpt::json) -> object_type {
+    bool _applicable{ false };
+    expect(_applicable, "object search doesn't apply to Prolog bridge");
     return zpt::prolog::term::null();
 }
 
 auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
     if (_to_convert == zpt::prolog::term::null()) { return zpt::undefined; }
+    std::cout << _to_convert << std::endl;
     return zpt::prolog::to_json(*_to_convert);
 }
 
@@ -64,9 +78,30 @@ auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
     return zpt::prolog::to_object(_to_convert);
 }
 
-auto zpt::prolog::bridge::execute(zpt::json _func, zpt::json _args)
-  -> zpt::prolog::bridge::object_type {
+auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type {
     std::unique_lock _guard{ this->__underlying_mutex };
+
+    term_t _args = PL_new_term_refs(3);
+    expect(PL_put_term(_args + 0, *_to_call), "unable to set argument 1 in `findall`");
+    expect(PL_put_term(_args + 1, *_to_call), "unable to set argument 2 in `findall`");
+
+    predicate_t _findall = PL_predicate("findall", 3, "database");
+    qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _findall, _args);
+    zpt::sentry _cleanup{ [_args, _qid]() {
+        PL_close_query(_qid);
+        PL_free_term_ref(_args + 2);
+        PL_free_term_ref(_args + 1);
+        PL_free_term_ref(_args + 0);
+    } };
+
+    if (PL_next_solution(_qid) != PL_S_FALSE) {
+        zpt::prolog::term _result;
+        record_t _record = PL_record(_args + 2);
+        expect(PL_recorded(_record, *_result), "unable to copy resulting term");
+        PL_erase(_record);
+        return _result;
+    }
+
     return zpt::prolog::term::null();
 }
 
@@ -214,11 +249,14 @@ auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
             }
 
             zpt::prolog::term _tail;
+            PL_put_nil(*_tail);
             for (size_t _idx = _to_convert->size(); _idx != 0; --_idx) {
                 auto _head = zpt::prolog::to_object(_to_convert(_idx - 1));
                 _tail //
                   .add(_head);
-                expect(PL_cons_list(*_tail, *_head, *_tail), "couldn't construct list");
+                zpt::prolog::term _new_tail;
+                expect(PL_cons_list(*_new_tail, *_head, *_tail), "couldn't construct list");
+                expect(PL_put_term(*_tail, *_new_tail), "couldn't copy the tail content");
             }
             return _tail;
         }

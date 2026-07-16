@@ -36,12 +36,15 @@ namespace prolog {
 class term {
   public:
     term();
+    term(term_t _to_assign);
+    term(std::string const& _to_parse);
     term(term const& _rhs);
     term(term&& _rhs);
     virtual ~term();
 
     operator term_t();
     auto operator*() -> term_t&;
+    auto operator=(term_t _rhs) -> term&;
     auto operator=(term const& _rhs) -> term&;
     auto operator=(term&& _rhs) -> term&;
     auto operator==(term const& _rhs) -> bool;
@@ -60,8 +63,6 @@ class term {
     term_t __underlying{ 0 };
     std::vector<term> __children;
     std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr };
-
-    term(bool);
 };
 } // namespace prolog
 } // namespace zpt

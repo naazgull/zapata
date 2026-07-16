@@ -452,7 +452,7 @@ auto test_pl_integration(char* _e_arg) -> int {
     {
         /* Write a small source file to consult, so the example is
          * self-contained (no external .pl file to ship/locate). */
-        char const* tmp_path = "/tmp/zapata_prolog_bridge_example.pl";
+        char const* tmp_path = "/tmp/zapata_prolog_integration_example.pl";
         std::ofstream out(tmp_path);
         out << ":- dynamic(likes/2).\n"
             << "likes(mary, wine).\n"
