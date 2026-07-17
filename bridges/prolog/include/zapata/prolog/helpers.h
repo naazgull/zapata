@@ -64,5 +64,7 @@ class term {
     std::vector<term> __children;
     std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr };
 };
+
+auto term_to_string(term_t _to_convert) -> std::string;
 } // namespace prolog
 } // namespace zpt

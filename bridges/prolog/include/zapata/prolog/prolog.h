@@ -91,6 +91,7 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
 auto to_json(term_t _to_convert) -> zpt::json;
 /** @brief Converts JSON to Prolog term. */
 auto to_object(zpt::json _to_convert) -> zpt::prolog::term;
+auto get_name_arity(term_t _term) -> std::tuple<std::string, size_t>;
 } // namespace prolog
 
 /**

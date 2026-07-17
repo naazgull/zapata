@@ -29,8 +29,13 @@ auto test_module() -> void {
 
 auto test_call() -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE();
-    auto _result = _bridge.call(zpt::prolog::term{ "likes(X, Y)" });
-    std::cout << _result << std::endl;
+    for (size_t _try = 0; _try != 10; ++_try) {
+        auto _result = _bridge.call(zpt::prolog::term{ "(likes(X, Y), (person:X, likes:Y))" });
+        std::cout << _result << std::endl;
+        expect(_bridge.call(zpt::prolog::term{
+                 std::format("assertz(likes(person{}, \"beer n.{}\"))", _try, _try) }),
+               "assertz didn't succeed");
+    }
 }
 
 auto main(int, char** _argv) -> int {

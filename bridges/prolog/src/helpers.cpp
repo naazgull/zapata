@@ -96,13 +96,21 @@ auto zpt::prolog::term::add(term const& _to_add) -> term& {
 
 auto zpt::prolog::term::to_string() const -> std::string {
     if (this->__underlying == 0) { return ""; }
+    return zpt::prolog::term_to_string(this->__underlying);
+}
 
+auto zpt::prolog::term::null() -> term& {
+    static term _return{ 0 };
+    return _return;
+}
+
+auto zpt::prolog::term_to_string(term_t _to_convert) -> std::string {
     char* _buffer{ nullptr };
     size_t _size{ 0 };
     IOSTREAM* _stream = Sopenmem(&_buffer, &_size, "w");
     expect(_stream, "couldn't open memory stream");
 
-    expect(PL_write_term(_stream, this->__underlying, 1200, PL_WRT_QUOTED),
+    expect(PL_write_term(_stream, _to_convert, 1200, PL_WRT_QUOTED),
            "couldn't write term to string");
     Sflush(_stream);
     Sclose(_stream);
@@ -110,9 +118,4 @@ auto zpt::prolog::term::to_string() const -> std::string {
     std::string _result{ _buffer };
     free(_buffer);
     return _result;
-}
-
-auto zpt::prolog::term::null() -> term& {
-    static term _return{ 0 };
-    return _return;
 }

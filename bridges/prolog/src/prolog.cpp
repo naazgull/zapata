@@ -69,7 +69,6 @@ auto zpt::prolog::bridge::find(zpt::json) -> object_type {
 
 auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
     if (_to_convert == zpt::prolog::term::null()) { return zpt::undefined; }
-    std::cout << _to_convert << std::endl;
     return zpt::prolog::to_json(*_to_convert);
 }
 
@@ -81,25 +80,51 @@ auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
 auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type {
     std::unique_lock _guard{ this->__underlying_mutex };
 
-    term_t _args = PL_new_term_refs(3);
-    expect(PL_put_term(_args + 0, *_to_call), "unable to set argument 1 in `findall`");
-    expect(PL_put_term(_args + 1, *_to_call), "unable to set argument 2 in `findall`");
+    expect(PL_term_type(_to_call) == PL_TERM && PL_is_compound(_to_call),
+           "term parameter must be a compound");
+    auto&& [_functor, _arity] = zpt::prolog::get_name_arity(_to_call);
+    if (_functor == "," && _arity == 2) {
+        zpt::prolog::term _goal;
+        PL_get_arg(1, _to_call, *_goal);
+        zpt::prolog::term _template;
+        PL_get_arg(2, _to_call, *_template);
 
-    predicate_t _findall = PL_predicate("findall", 3, "database");
-    qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _findall, _args);
-    zpt::sentry _cleanup{ [_args, _qid]() {
+        term_t _args = PL_new_term_refs(3);
+        expect(PL_put_term(_args + 0, *_template), "unable to set argument 1 in `findall`");
+        expect(PL_put_term(_args + 1, *_goal), "unable to set argument 2 in `findall`");
+
+        predicate_t _findall = PL_predicate("findall", 3, nullptr);
+        qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _findall, _args);
+        auto _cleanup = [_args, _qid]() {
+            PL_close_query(_qid);
+            PL_free_term_ref(_args + 2);
+            PL_free_term_ref(_args + 1);
+            PL_free_term_ref(_args + 0);
+        };
+
+        if (PL_next_solution(_qid) != PL_S_FALSE) {
+            auto _record = PL_record(_args + 2);
+            _cleanup();
+            zpt::prolog::term _return;
+            PL_recorded(_record, *_return);
+            PL_erase(_record);
+            return _return;
+        }
+        _cleanup();
+    }
+    else {
+        term_t _args = PL_new_term_refs(1);
+        expect(PL_put_term(_args + 0, *_to_call), "unable to set argument 1 in `call`");
+
+        predicate_t _call = PL_predicate("call", 1, nullptr);
+        qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _call, _args);
+        auto _result = PL_next_solution(_qid);
         PL_close_query(_qid);
-        PL_free_term_ref(_args + 2);
-        PL_free_term_ref(_args + 1);
         PL_free_term_ref(_args + 0);
-    } };
 
-    if (PL_next_solution(_qid) != PL_S_FALSE) {
-        zpt::prolog::term _result;
-        record_t _record = PL_record(_args + 2);
-        expect(PL_recorded(_record, *_result), "unable to copy resulting term");
-        PL_erase(_record);
-        return _result;
+        zpt::prolog::term _return;
+        expect(PL_put_integer(*_return, _result), "couldn't add integer to Prolog term");
+        return _return;
     }
 
     return zpt::prolog::term::null();
@@ -152,15 +177,10 @@ auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
         }
         case PL_TERM: {
             if (PL_is_compound(_to_convert)) {
-                atom_t _name{ 0 };
-                size_t _arity{ 0 };
-                expect(PL_get_name_arity(_to_convert, &_name, &_arity),
-                       "couldn't get name and arity from the compound term");
-                size_t _{ 0 };
-                std::string _functor{ PL_atom_nchars(_name, &_) };
-
-                expect(_functor == "," || _functor == ":",
-                       "functor `" << _functor << "` is not translatable to JSON");
+                auto&& [_functor, _arity] = zpt::prolog::get_name_arity(_to_convert);
+                if (_functor != "," && _functor != ":") {
+                    return zpt::json::string(zpt::prolog::term_to_string(_to_convert));
+                }
 
                 auto _return = zpt::json::object();
 
@@ -304,6 +324,15 @@ auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
     }
 
     return zpt::prolog::term::null();
+}
+
+auto zpt::prolog::get_name_arity(term_t _term) -> std::tuple<std::string, size_t> {
+    atom_t _name{ 0 };
+    size_t _arity{ 0 };
+    expect(PL_get_name_arity(_term, &_name, &_arity),
+           "couldn't get name and arity from the compound term");
+    size_t _{ 0 };
+    return { PL_atom_nchars(_name, &_), _arity };
 }
 
 auto zpt::PROLOG_BRIDGE(std::string const& _cmd) -> zpt::prolog::bridge& {
