@@ -1,110 +1,49 @@
-/*
-  This is free and unencumbered software released into the public domain.
-
-  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
-  this software, either in source code form or as a compiled binary, for any
-  purpose, commercial or non-commercial, and by any means.
-
-  In jurisdictions that recognize copyright laws, the author or authors of this
-  software dedicate any and all copyright interest in the software to the public
-  domain. We make this dedication for the benefit of the public at large and to
-  the detriment of our heirs and successors. We intend this dedication to be an
-  overt act of relinquishment in perpetuity of all present and future rights to
-  this software under copyright law.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-#include <SWI-cpp2.h>
 #include <iostream>
-#include <string>
-#include <vector>
+#include <zapata/prolog.h>
 
-auto test_pl_integration(char* _e_arg) -> int {
-    try {
-        // 1. Initialize the engine
-        PlEngine e(_e_arg);
+auto test_conversion() -> void {
+    auto& _bridge = zpt::PROLOG_BRIDGE();
 
-        // Helper: create an atom from a C string
-        auto a = [](const char* s) { return PlTerm_atom(s); };
+    zpt::prolog::term _prolog{ "(person:(name:\"susan meyer\", drink:tea, misc:[1, 2, 3], "
+                               "lives:apartment), dog:(name:edge))." };
+    std::cout << "PROLOG: " << _prolog << std::endl;
+    auto _json = _bridge.object_to_json(_prolog);
+    std::cout << "JSON: " << _json << std::endl;
+    _prolog = _bridge.json_to_object(_json);
+    std::cout << "PROLOG: " << _prolog << std::endl;
+    _json = _bridge.object_to_json(_prolog);
+    std::cout << "JSON: " << _json << std::endl;
+}
 
-        // 2. Define facts: assertz(parent(tom, bob)) etc.
-        for (auto&& [x, y] : {
-               std::pair{ "tom", "bob" },
-               std::pair{ "tom", "liz" },
-               std::pair{ "bob", "ann" },
-               std::pair{ "bob", "pat" },
-             }) {
-            PlTermv args{ PlCompound("parent", PlTermv{ a(x), a(y) }) };
-            PlQuery q("assertz", args);
-            if (!q.next_solution()) {
-                std::cerr << "assertz(parent(" << x << "," << y << ")) failed\n";
-                return 1;
-            }
-        }
+auto test_module() -> void {
+    auto& _bridge = zpt::PROLOG_BRIDGE();
+    char const* _path = "/tmp/zapata_prolog_bridge_example.pl";
+    std::ofstream _out(_path);
+    _out << ":- dynamic(likes/2).\n"
+         << "likes(mary, wine).\n"
+         << "likes(john, beer).\n";
+    _out.close();
 
-        // 3. Collect children of tom.
-        //    PL_close_query() rolls back any bindings made inside the query frame
-        //    (trail unwind), so we must save results as C++ values while the
-        //    query is still open, then build the Prolog list afterwards.
-        {
-            std::vector<std::string> children;
+    _bridge.add_module(_path);
+}
 
-            PlTerm_var X;
-            PlTermv args{ a("tom"), X };
-            PlQuery q("parent", args);
-            while (q.next_solution()) { children.push_back(args[1].as_string()); }
-
-            // Build the result list and iterate it — all outside the query frame
-            PlTerm_var child_list;
-            PlTerm_tail l(child_list);
-            for (auto const& child : children) { (void)l.append(PlTerm_atom(child)); }
-            (void)l.close();
-
-            // Iterate using PlTerm_tail
-            PlTerm_tail tail(child_list);
-            PlTerm_var e;
-            while (tail.next(e)) { std::cout << "  parent(tom, " << e.as_string() << ")\n"; }
-        }
-
-        // 4. Arithmetic: X is 42 + 10
-        {
-            PlTerm_var x;
-            PlCompound plus("+", PlTermv{ PlTerm_integer(42), PlTerm_integer(10) });
-            PlTermv args{ x, plus };
-            PlQuery q("is", args);
-            if (q.next_solution()) { std::cout << "  42 + 10 = " << x.as_string() << "\n"; }
-        }
-
-        // 5. member/2 — check if bob is in a list
-        {
-            PlTerm_var bob_list;
-            PlTerm_tail l(bob_list);
-            for (auto&& name : { "tom", "bob", "ann", "pat" }) { (void)l.append(a(name)); }
-            (void)l.close();
-
-            PlTermv args{ a("bob"), bob_list };
-            PlQuery q("member", args);
-            if (q.next_solution()) { std::cout << "  member(bob, [tom,bob,ann,pat]): true\n"; }
-        }
+auto test_call() -> void {
+    auto& _bridge = zpt::PROLOG_BRIDGE();
+    for (size_t _try = 0; _try != 10; ++_try) {
+        auto _result = _bridge.call(zpt::prolog::term{ "(likes(X, Y), (person:X, likes:Y))" });
+        std::cout << _result << std::endl;
+        expect(_bridge.call(zpt::prolog::term{
+                 std::format("assertz(likes(person{}, \"beer n.{}\"))", _try, _try) }),
+               "assertz didn't succeed");
     }
-    catch (PlFail const&) {
-        // PlFail is normal control flow in C++2 — thrown by next_solution()/next()
-        // on no more solutions. Only unexpected here.
-        std::cerr << "ERROR: unexpected PlFail\n";
-        return 1;
-    }
-    catch (PlException const& ex) {
-        std::cerr << "ERROR: " << ex.what() << "\n";
-        return 1;
-    }
+}
+
+auto main(int, char** _argv) -> int {
+    zpt::PROLOG_BRIDGE(std::string{ const_cast<const char*>(_argv[0]) });
+
+    test_conversion();
+    test_module();
+    test_call();
 
     return 0;
 }
-
-auto main(int /*argc*/, char** argv) -> int { test_pl_integration(argv[0]); }

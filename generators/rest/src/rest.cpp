@@ -592,7 +592,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
                                                        : "zpt::events::process";
         auto _constructor_name = zpt::split(_extends_from, "::");
         _constructor_name = _constructor_name(_constructor_name->size() - 1);
-        auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("*")("operationId")->string(),
+        auto _class = zpt::make_class<zpt::ast::cpp_class>(_def("post")("operationId")->string(),
                                                            std::format("public {}", _extends_from));
         auto _h_constructor = zpt::make_instruction<zpt::ast::cpp_instruction>(
           std::format("using {}::{}", _extends_from, _constructor_name->string()));

@@ -21,15 +21,50 @@
 */
 
 /**
- * @file prolog.h
- * @brief Prolog scripting language bridge.
- *
- * Aggregate header for the Prolog bridge module.
- *
- * @see zpt::programming::bridge
+ * @file interface.h
+ * @brief Prolog bridge helper classes.
  */
 
 #pragma once
 
-#include <zapata/prolog/helpers.h>
-#include <zapata/prolog/prolog.h>
+#include <SWI-Prolog.h>
+#include <vector>
+#include <zapata/atomics/padded_atomic.h>
+
+namespace zpt {
+namespace prolog {
+class term {
+  public:
+    term();
+    term(term_t _to_assign);
+    term(std::string const& _to_parse);
+    term(term const& _rhs);
+    term(term&& _rhs);
+    virtual ~term();
+
+    operator term_t();
+    auto operator*() -> term_t&;
+    auto operator=(term_t _rhs) -> term&;
+    auto operator=(term const& _rhs) -> term&;
+    auto operator=(term&& _rhs) -> term&;
+    auto operator==(term const& _rhs) -> bool;
+    auto operator!=(term const& _rhs) -> bool;
+    auto emplace() -> term;
+    auto add(term const& _to_add) -> term&;
+    auto to_string() const -> std::string;
+    static auto null() -> term&;
+
+    friend auto operator<<(std::ostream& _os, term const& _in) -> std::ostream& {
+        _os << _in.to_string();
+        return _os;
+    }
+
+  private:
+    term_t __underlying{ 0 };
+    std::vector<term> __children;
+    std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr };
+};
+
+auto term_to_string(term_t _to_convert) -> std::string;
+} // namespace prolog
+} // namespace zpt

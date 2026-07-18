@@ -17,9 +17,11 @@ add_dependencies(zapata-bridge-prolog
 )
 target_sources(zapata-bridge-prolog
   PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/prolog.cpp
   INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog.h
+    ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/helpers.h
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/prolog.h
 )
 target_include_directories(zapata-bridge-prolog
@@ -133,6 +135,39 @@ target_link_libraries(zapata_example_bridge_prolog
     swipl::libswipl
 )
 set_target_properties(zapata_example_bridge_prolog
+  PROPERTIES
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
+)
+
+add_executable(zapata_example_integration_prolog)
+add_dependencies(zapata_example_integration_prolog
+  zapata-base
+  zapata-parser-json
+  zapata-bridge-base
+  zapata-bridge-prolog
+)
+target_sources(zapata_example_integration_prolog
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/prolog_integration.cpp
+)
+target_include_directories(zapata_example_integration_prolog
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
+    zapata-bridge-prolog
+    ${BRIDGE_PROLOG_INCLUDE_DIR}
+)
+target_link_libraries(zapata_example_integration_prolog
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+    zapata-bridge-base
+    zapata-bridge-prolog
+    swipl::libswipl
+)
+set_target_properties(zapata_example_integration_prolog
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"

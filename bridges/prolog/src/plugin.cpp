@@ -24,17 +24,15 @@
 #include <zapata/prolog.h>
 #include <zapata/startup.h>
 
-extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    // auto& _bridge = zpt::PROLOG_BRIDGE();
-    // _bridge.set_options(_plugin.config());
-    // if (_bridge.options()("modules")->is_array()) {
-    //     for (auto&& [_, __, _module] : _bridge.options()("modules")) {
-    //         _bridge.add_module(_module("file")->string(), _module);
-    //     }
-    // }
-    // zlog("Initialized PROLOG bridge", zpt::info);
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _bridge = zpt::PROLOG_BRIDGE(zpt::GLOBAL_CONFIG()("self")("cmd")->string());
+    _bridge.set_options(_plugin.config());
+    if (_bridge.options()("modules")->is_array()) {
+        for (auto&& [_, __, _module] : _bridge.options()("modules")) {
+            _bridge.add_module(_module("file")->string(), _module);
+        }
+    }
+    zlog("Initialized PROLOG bridge", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    // zlog("Unloaded PROLOG bridge", zpt::info);
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded PROLOG bridge", zpt::info); }
