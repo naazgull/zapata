@@ -339,12 +339,12 @@ auto zpt::lua::bridge::to_args(zpt::json _args) -> zpt::lua::bridge& {
 }
 
 auto zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
-    for (auto&& [_file, _conf] : this->__external_to_load) {
-        this->setup_module(_conf, _file, false);
-    }
     for (auto&& [_, _pair] : this->__builtin_to_load) {
         auto [_callback, _conf] = _pair;
         this->setup_module(_conf, _callback, false);
+    }
+    for (auto&& [_file, _conf] : this->__external_to_load) {
+        this->setup_module(_conf, _file, false);
     }
     return (*this);
 }

@@ -18,7 +18,7 @@ function example_lua_consumer.consume()
       _status = _reply.status
    end
 
-   zpt.log("Received message with status ", _reply)
+   zpt.log("Received message: ", _reply.body)
 end
 
 return example_lua_consumer

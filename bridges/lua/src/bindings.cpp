@@ -6,6 +6,7 @@ namespace {
 struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "call", zpt::lua::bindings::send_request },
                            { "config", zpt::lua::bindings::get_config },
+                           { "log", zpt::lua::bindings::log },
                            { nullptr, nullptr } };
 }
 
@@ -63,6 +64,21 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
 auto zpt::lua::bindings::get_config(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     _bridge.to_object(zpt::GLOBAL_CONFIG(), _state);
+    return 1;
+}
+
+auto zpt::lua::bindings::log(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+
+    if (_args->type() == zpt::JSArray) {
+        std::ostringstream _oss;
+        for (auto&& [_, __, _value] : _args) { _oss << static_cast<std::string>(_value); }
+        _oss << std::flush;
+        zlog(_oss.str(), zpt::info);
+    }
+    else { zlog(static_cast<std::string>(_args), zpt::info); }
+
     return 1;
 }
 
