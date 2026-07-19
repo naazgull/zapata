@@ -33,4 +33,5 @@
 
 #pragma once
 
+#include <zapata/lua/bindings.h>
 #include <zapata/lua/lua.h>

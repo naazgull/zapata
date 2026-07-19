@@ -35,6 +35,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         auto _stream = zpt::make_stream<zpt::socketstream>(
           _config("bind")->string(), _config("port")->integer(), zpt::NO_SSL, IPPROTO_UDP);
         _stream->transport("upnp");
+        zlog("UPNP server socket bound to `" << _stream->uri() << "`", zpt::trace);
 
         auto _polling = zpt::STREAM_POLLING();
         _polling->listen_on(std::move(_stream));
@@ -42,11 +43,15 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         zlog("Started UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
              zpt::info);
     }
+    else { zlog("Loaded UPNP transport", zpt::info); }
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
+    if (_config("port")->ok()) {
+        zlog("Stopped UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
+             zpt::info);
+    }
+    else { zlog("Unloading UPNP transport", zpt::info); }
     zpt::TRANSPORT_LAYER().remove("upnp");
-    zlog("Stopped UPNP transport on " << _config("bind")->string() << ":" << _config("port"),
-         zpt::info);
 }

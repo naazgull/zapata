@@ -1,11 +1,10 @@
 #include <iostream>
 #include <zapata/prolog.h>
 
-auto test_conversion() -> void {
+auto test_conversion(std::string const& _to_convert) -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE();
 
-    zpt::prolog::term _prolog{ "(person:(name:\"susan meyer\", drink:tea, misc:[1, 2, 3], "
-                               "lives:apartment), dog:(name:edge))." };
+    zpt::prolog::term _prolog{ _to_convert };
     std::cout << "PROLOG: " << _prolog << std::endl;
     auto _json = _bridge.object_to_json(_prolog);
     std::cout << "JSON: " << _json << std::endl;
@@ -41,7 +40,10 @@ auto test_call() -> void {
 auto main(int, char** _argv) -> int {
     zpt::PROLOG_BRIDGE(std::string{ const_cast<const char*>(_argv[0]) });
 
-    test_conversion();
+    test_conversion(
+      R"(((headers:("Server":zapata, "Date":"2026-01-01"), uri:"/something"), body:from:client))");
+    test_conversion(
+      R"((person:(name:"susan meyer", drink:tea, misc:[1, 2, 3], lives:apartment), dog:(name:edge)))");
     test_module();
     test_call();
 

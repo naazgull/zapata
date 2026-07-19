@@ -60,14 +60,17 @@ add_dependencies(zapata-bridge-lua-plugin
   zapata-engine-startup
   zapata-bridge-base
   zapata-bridge-lua
+  zapata-engine-rest
 )
 target_sources(zapata-bridge-lua-plugin
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings.cpp
 )
 target_include_directories(zapata-bridge-lua-plugin
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-globals
     zapata-events
     zapata-lockfree
@@ -75,6 +78,8 @@ target_include_directories(zapata-bridge-lua-plugin
     zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-lua
+    zapata-engine-rest
+    zapata-engine-transport
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}
@@ -82,12 +87,18 @@ target_include_directories(zapata-bridge-lua-plugin
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
     zapata-base
-    zapata-parser-json
+    zapata-common-catalog
+    zapata-globals
     zapata-events
     zapata-lockfree
+    zapata-parser-json
     zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-lua
+    zapata-engine-rest
+    zapata-engine-transport
+    ${SQLite3_LIBRARIES}
+    zapata-storage-sqlite
     ${LUA_LIBRARIES}
 )
 set_target_properties(zapata-bridge-lua-plugin

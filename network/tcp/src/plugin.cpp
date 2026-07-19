@@ -36,6 +36,8 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _server_sock = zpt::TCP_SERVER_SOCKET(
           _config("bind")->string(),
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
+        zlog("TCP+J́SON server socket bound to `" << static_cast<std::string>(*_server_sock) << "`",
+             zpt::trace);
 
         _plugin.add_thread([=]() mutable -> void {
             zpt::set_thread_name("tcp@listener");
@@ -60,10 +62,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             zlog("Stopped TCP+JSON transport on port " << _config("port"), zpt::info);
         });
     }
+    else { zlog("Loaded TCP+JSON transport", zpt::info); }
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
     zpt::TRANSPORT_LAYER().remove("tcp");
     if (_config("port")->ok()) { zpt::TCP_SERVER_SOCKET()->close(); }
+    else { zlog("Unloading TCP+JSON transport", zpt::info); }
 }

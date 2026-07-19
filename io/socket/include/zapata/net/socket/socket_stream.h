@@ -323,6 +323,8 @@ class basic_serversocketstream {
     basic_serversocketstream(std::string const& _path);
     virtual ~basic_serversocketstream();
 
+    /** @brief Returns a URI representation (e.g., "tcp://host:port"). */
+    operator std::string();
     /** @brief Closes the server socket. */
     auto close() -> void;
     /** @brief Returns true if the server socket is open. */
@@ -351,6 +353,7 @@ class basic_serversocketstream {
   protected:
     int __sockfd{ -1 };
     short __protocol{ -1 };
+    std::string __address{ "" };
     std::string __path{ "" };
     std::uint16_t __port{ 0 };
 };
@@ -1097,7 +1100,8 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream()
 template<typename Char>
 zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _address,
                                                               std::uint16_t _port)
-  : __sockfd{ 0 } {
+  : __sockfd{ 0 }
+  , __address{ _address } {
     this->bind(_address, _port);
 }
 
@@ -1110,6 +1114,26 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const&
 template<typename Char>
 zpt::basic_serversocketstream<Char>::~basic_serversocketstream() {
     this->close();
+}
+
+template<typename Char>
+zpt::basic_serversocketstream<Char>::operator std::string() {
+    std::ostringstream _oss;
+    switch (this->__protocol) {
+        case IPPROTO_TCP: {
+            _oss << "tcp" << "://" << this->__address << ":" << this->__port;
+            break;
+        }
+        case UNIXPROTO_RAW: {
+            _oss << "unix:" << this->__path;
+            break;
+        }
+        default: {
+            _oss << "raw";
+        }
+    }
+    _oss << std::flush;
+    return _oss.str();
 }
 
 template<typename Char>

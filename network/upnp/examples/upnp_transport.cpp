@@ -32,7 +32,7 @@ auto main(int _argc, char* _argv[]) -> int {
         _iss.str(std::string{ _argv[3] });
         std::uint16_t _port{ 0 };
         _iss >> _port;
-        zpt::json _config{ "bind", _argv[2], "port", _port };
+        zpt::json _config{ "address", _argv[2], "bind", _argv[2], "port", _port };
         zlog(_config, zpt::debug);
         zpt::transport _transport{ new zpt::net::transport::upnp{} };
 
@@ -69,7 +69,7 @@ auto main(int _argc, char* _argv[]) -> int {
             auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
             _stream //
               ->transport("upnp")
-              .set_peer<zpt::socketstream>(_config("bind")->string(), _config("port")->integer());
+              .set_peer<zpt::socketstream>(_config("address")->string(), _config("port")->integer());
 
             _transport->send(_stream, _message);
 
