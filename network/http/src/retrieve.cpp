@@ -12,7 +12,7 @@ auto zpt::http::retrieve(zpt::message _to_send) -> zpt::message {
     auto _scheme = _to_send->uri()("scheme")->string();
     auto _use_ssl = (_scheme == "https");
     auto _domain = _to_send->uri()("domain")->string();
-    auto _port = _to_send->uri()("port")->integer();
+    auto _port = _to_send->uri()("port")->ok() ? _to_send->uri()("port")->integer() : 0;
 
     auto _stream = zpt::make_stream<zpt::socketstream>(
       _domain, (_port == 0 ? (_use_ssl ? 443 : 80) : _port), _use_ssl, IPPROTO_TCP);

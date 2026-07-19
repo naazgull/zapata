@@ -369,12 +369,16 @@ auto zpt::transports::engine::resolve(zpt::message _received,
   -> std::list<zpt::event> {
     std::list<zpt::event> _return;
     for (auto& _resolver : this->__resolvers) {
+#ifndef PROPAGATE_EXCEPTION
         try {
+#endif
             auto _events = _resolver->resolve(_received, _initializer);
             _return.merge(_events);
+#ifndef PROPAGATE_EXCEPTION
         }
         catch (...) {
         }
+#endif
     }
     return _return;
 }
