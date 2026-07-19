@@ -73,7 +73,6 @@ auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
 }
 
 auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
-    std::shared_lock _guard{ this->__underlying_mutex };
     return zpt::prolog::to_object(_to_convert);
 }
 

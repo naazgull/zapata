@@ -41,6 +41,9 @@ class execute_after_boot : public zpt::system_event {
               _execute("args"));
         }
 
+        zpt::SYSTEM_EVENTS_RESOLVER()->remove<execute_after_boot>(
+          zpt::system_event_type::FINISHED_BOOT);
+
         return zpt::events::finish;
     }
 };
@@ -61,12 +64,8 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
     if (_bridge.options()("exec")->is_array()) {
         zpt::SYSTEM_EVENTS_RESOLVER()->add<execute_after_boot>(
-          zpt::system_event_type::MINION_HELLO_RECEIVED);
+          zpt::system_event_type::FINISHED_BOOT);
     }
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zpt::SYSTEM_EVENTS_RESOLVER()->remove<execute_after_boot>(
-      zpt::system_event_type::MINION_HELLO_RECEIVED);
-    zlog("Unloaded LUA bridge", zpt::info);
-}
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded LUA bridge", zpt::info); }

@@ -37,6 +37,13 @@ auto test_call() -> void {
     }
 }
 
+auto test_foreign_function() -> void {
+    auto& _bridge = zpt::PROLOG_BRIDGE();
+    _bridge.call(zpt::prolog::term{ std::format(
+      "use_foreign_library(\"{}/lib/libzapata_bridge_prolog_bindings\")", ZPT_INSTALL_PREFIX) });
+    std::cout << _bridge.call(zpt::prolog::term{ "(zpt_config(X), X)" }) << std::endl;
+}
+
 auto main(int, char** _argv) -> int {
     zpt::PROLOG_BRIDGE(std::string{ const_cast<const char*>(_argv[0]) });
 
@@ -46,6 +53,7 @@ auto main(int, char** _argv) -> int {
       R"((person:(name:"susan meyer", drink:tea, misc:[1, 2, 3], lives:apartment), dog:(name:edge)))");
     test_module();
     test_call();
+    test_foreign_function();
 
     return 0;
 }
