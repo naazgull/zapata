@@ -47,9 +47,11 @@ auto zpt::net::transport::tcp::make_reply(zpt::message _request) const -> zpt::m
 }
 
 auto zpt::net::transport::tcp::process_incoming_request(zpt::stream _stream) const -> zpt::message {
+    zlog(">>>>>>>>>>>>>>>>> REQUEST RECEIVED", zpt::debug);
     expect(_stream->transport() == "tcp", "Stream underlying transport isn't 'tcp'");
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
+    zlog(">>>>>>>>>>>>>>>>> REQUEST BODY IS " << _message, zpt::debug);
     return _message;
 }
 

@@ -420,9 +420,11 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
 
+    zlog(">>>>>> " << _uri, zpt::debug);
+
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
-        // try {
+        try {
             auto _found = this->__resolver->search(
               std::format("/{}{}",
                           zpt::ontology::to_str(this->__to_send->performative()),
@@ -443,13 +445,13 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
                 _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
                 _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
             }
-        // }
-        // catch (...) {
-        //     auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
-        //     _reply->status(404);
-        //     this->__context->reply(_reply);
-        //     return zpt::events::finish;
-        // }
+        }
+        catch (...) {
+            auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
+            _reply->status(404);
+            this->__context->reply(_reply);
+            return zpt::events::finish;
+        }
     }
 
     if (_is_self) { this->call_internally(); }
@@ -462,9 +464,6 @@ template<ProcessOperation T>
 auto zpt::events::call<T>::call_internally() -> call& {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
-    expect(_transport->has_capability(zpt::transport_capability::SYNCHRONOUS),
-           "`call` only makes sense for synchronous protocols");
-
     auto _stream = zpt::allocate_shared<zpt::event_stream>();
     _stream->transport("self");
 
