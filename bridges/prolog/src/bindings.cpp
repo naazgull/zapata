@@ -90,8 +90,9 @@ static auto send_to_log(term_t _to_log /*+*/) -> foreign_t {
     return 1;
 }
 
-static auto get_value_for_key(term_t _to_search_pl /*+*/, term_t _key_pl /*+*/, term_t _result_pl /*?*/)
-  -> foreign_t {
+static auto get_value_for_key(term_t _to_search_pl /*+*/,
+                              term_t _key_pl /*+*/,
+                              term_t _result_pl /*?*/) -> foreign_t {
     expect(PL_term_type(_key_pl) != PL_VARIABLE,
            "`zpt_key`'s first parameter must NOT be a variable");
     expect(PL_term_type(_to_search_pl) != PL_VARIABLE,

@@ -42,7 +42,7 @@ namespace configuration {
  * @param _output JSON object to populate with merged configuration.
  */
 auto load(zpt::json _parameters, zpt::json& _output) -> void;
-
+auto load_defaults() -> zpt::json;
 } // namespace configuration
 } // namespace startup
 } // namespace zpt

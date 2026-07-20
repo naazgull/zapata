@@ -26,6 +26,8 @@
 
 namespace {
 zpt::json __builtins = R"({
+        "builtin:testing": { "name": "builtin:testing", "source": "libzapata-common-testing-plugin.so",
+            "requires" : [ "builtin:lua", "builtin:rest", "builtin:transport" ] },
         "builtin:lua": { "name": "builtin:lua", "source": "libzapata-bridge-lua-plugin.so",
             "requires" : [ "builtin:rest", "builtin:transport" ] },
         "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",

@@ -57,7 +57,8 @@ class result;
 using mongodb_ptr = std::shared_ptr<mongocxx::client>;
 using mongodb_cursor_ptr = std::shared_ptr<mongocxx::cursor>;
 
-/** @brief RAII wrapper for mongocxx library initialization (must exist exactly once per process). */
+/** @brief RAII wrapper for mongocxx library initialization (must exist exactly once per process).
+ */
 class library {
   public:
     /** @brief Initializes the mongocxx driver instance. */
@@ -152,8 +153,7 @@ class database : public zpt::storage::database::type {
 class collection : public zpt::storage::collection::type {
   public:
     /** @brief Constructs a collection handle for the given collection within a database. */
-    collection(zpt::storage::mongodb::database const& _database,
-               std::string const& _collection);
+    collection(zpt::storage::mongodb::database const& _database, std::string const& _collection);
     /** @brief Destructor. */
     virtual ~collection() override = default;
     /** @brief Creates an insert action for the given document. */

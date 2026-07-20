@@ -105,6 +105,11 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
         if (this->__configuration(_scheme)->ok() &&
             (this->__configuration(_scheme)("port")->ok() ||
              this->__configuration(_scheme)("path")->ok())) {
+            if (!this->__configuration(_scheme)("bind")->ok() &&
+                !this->__configuration(_scheme)("path")->ok()) {
+                this->__configuration[_scheme]["bind"] = "0.0.0.0";
+            }
+
             if (this->__configuration(_scheme)("address")->ok()) {
                 _host.assign(this->__configuration(_scheme)("address")->string());
             }

@@ -2,8 +2,7 @@
 
 auto main(int, char**) -> int {
     zpt::json _config{ { "storage",
-                         { "mongodb",
-                           { "host", "zgul.me", "port", 27017, "db", "test" } } } };
+                         { "mongodb", { "host", "zgul.me", "port", 27017, "db", "test" } } } };
     auto _connection = zpt::make_connection<zpt::storage::mongodb::connection>(_config);
     auto _session = _connection->session();
 

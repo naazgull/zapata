@@ -1,4 +1,4 @@
-local example_lua_consumer = {}
+example_lua_consumer = {}
 
 function example_lua_consumer.consume()
    local _conf = zpt.config()

@@ -229,7 +229,7 @@ auto zpt::conf::dirs(zpt::json& _options) -> void {
         zpt::json::traverse(
           _traversable,
           [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-              if (_key == "$include") {
+              if (_key == "$ref") {
                   zpt::json _object = (_path.rfind(".") != std::string::npos
                                          ? _options->get_path(_path.substr(0, _path.rfind(".")))
                                          : _options);
@@ -239,7 +239,7 @@ auto zpt::conf::dirs(zpt::json& _options) -> void {
                       }
                   }
                   else { zpt::conf::dirs((std::string)_item, _object); }
-                  _object->object()->pop("$include");
+                  _object->object()->pop("$ref");
                   *_redo = true;
               }
           });

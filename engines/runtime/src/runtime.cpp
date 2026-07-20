@@ -118,6 +118,8 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
 }
 
+auto zpt::runtime::shutdown() -> void { zpt::STREAM_POLLING()->shutdown(); }
+
 namespace {
 auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
 } // namespace

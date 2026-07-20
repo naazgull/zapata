@@ -27,7 +27,7 @@
 #include <zapata/streams/streams.h>
 
 namespace {
-constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
+constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 1000 };
 }
 
 zpt::basic_stream::basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying)
@@ -236,12 +236,12 @@ auto zpt::polling::poll() -> zpt::polling& {
         }
 
     } while (!this->__shutdown.load());
+    this->close();
     return (*this);
 }
 
 auto zpt::polling::shutdown() -> zpt::polling& {
-    auto _already = this->__shutdown.exchange(true);
-    if (!_already) { this->close(); }
+    this->__shutdown.store(true);
     return (*this);
 }
 
