@@ -41,7 +41,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
              zpt::trace);
 
         _plugin.add_thread([&]() -> void {
-            zpt::set_thread_name("http@listener");
+            zpt::this_thread::name("http@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started HTTP transport on port " << _config("port"), zpt::info);
 

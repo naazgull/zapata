@@ -30,8 +30,10 @@ zpt::prolog::bridge::bridge(std::string const& _cmd)
 }
 
 zpt::prolog::bridge::~bridge() throw() {
-    if (this->__main_engine) { PL_cleanup(0); }
-    else { PL_thread_destroy_engine(); }
+    if (!this->__main_engine) {
+        zlog("Detaching Prolog engine from " << zpt::this_thread::name(), zpt::debug);
+        PL_thread_destroy_engine();
+    }
 }
 
 auto zpt::prolog::bridge::name() const -> std::string { return "prolog"; }
@@ -144,6 +146,14 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
     return zpt::prolog::term::null();
 }
 
+zpt::prolog::bridge::bridge(bridge const& _rhs)
+  : __engine_args{ _rhs.__engine_args }
+  , __builtin_to_load{ _rhs.__builtin_to_load }
+  , __external_to_load{ _rhs.__external_to_load } {
+    this->set_options(_rhs.options());
+    this->initialize_thread();
+}
+
 auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
     char* _arg = const_cast<char*>(this->__engine_args.data());
     expect(PL_initialise(1, &_arg), "couldn't initialise Prolog engine");
@@ -162,14 +172,6 @@ auto zpt::prolog::bridge::initialize_thread() -> zpt::prolog::bridge& {
     }
 
     return (*this);
-}
-
-zpt::prolog::bridge::bridge(bridge const& _rhs)
-  : __engine_args{ _rhs.__engine_args }
-  , __builtin_to_load{ _rhs.__builtin_to_load }
-  , __external_to_load{ _rhs.__external_to_load } {
-    this->set_options(_rhs.options());
-    this->initialize_thread();
 }
 
 auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {

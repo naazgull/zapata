@@ -80,9 +80,6 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     auto to_object(zpt::json _to_convert) -> object_type;
     /** @brief Executes a Prolog function with arguments. */
     auto execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type;
-    /** @brief Initializes the bridge (loads all modules). */
-    auto initialize() -> zpt::prolog::bridge&;
-    auto initialize_thread() -> zpt::prolog::bridge&;
 
   private:
     std::string __engine_args;
@@ -91,6 +88,9 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     std::map<std::string, zpt::json> __external_to_load;
 
     bridge(bridge const& _rhs);
+    /** @brief Initializes the bridge (loads all modules). */
+    auto initialize() -> zpt::prolog::bridge&;
+    auto initialize_thread() -> zpt::prolog::bridge&;
 };
 
 /** @brief Converts Prolog term to JSON. */

@@ -40,7 +40,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
              zpt::trace);
 
         _plugin.add_thread([=]() mutable -> void {
-            zpt::set_thread_name("tcp@listener");
+            zpt::this_thread::name("tcp@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started TCP+JSON transport on port " << _config("port"), zpt::info);
 

@@ -39,7 +39,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _server_sock = zpt::UNIX_SERVER_SOCKET(_config("path")->string());
 
         _plugin.add_thread([=]() mutable -> void {
-            zpt::set_thread_name("unix@listener");
+            zpt::this_thread::name("unix@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
 

@@ -46,6 +46,12 @@ auto zpt::get_time(time_t _t) -> zpt::tm_ptr {
     return zpt::tm_ptr(_tm);
 }
 
-auto zpt::set_thread_name(std::string const& _name) -> void {
+auto zpt::this_thread::name(std::string const& _name) -> void {
     ::pthread_setname_np(::pthread_self(), _name.substr(0, 15).data());
+}
+
+auto zpt::this_thread::name() -> std::string {
+    char _buffer[17] = { 0 };
+    ::pthread_getname_np(::pthread_self(), _buffer, 16);
+    return std::string{ const_cast<const char*>(_buffer) };
 }
