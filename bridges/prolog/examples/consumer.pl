@@ -1,4 +1,4 @@
-consume :-
+consume(Status) :-
     zpt_make_request(tcp, Req1),
     zpt_log(["Send message: ", Req1]),
     Req2 = (Req1,
@@ -6,5 +6,8 @@ consume :-
             uri:"/test_plugin",
             body:(name:"client", date:"2026-01-01T00:00:00.000")), !,
     zpt_call(Req2, Reply),
-    zpt_key("status", Reply, 200),
+    zpt_key("status", Reply, Status),
     zpt_log(["Received message: ", Reply]).
+
+consume :-
+    consume(200) ; consume.
