@@ -90,7 +90,7 @@ static auto send_to_log(term_t _to_log /*+*/) -> foreign_t {
     return 1;
 }
 
-static auto get_key(term_t _key_pl /*+*/, term_t _to_search_pl /*+*/, term_t _result_pl /*?*/)
+static auto get_value_for_key(term_t _to_search_pl /*+*/, term_t _key_pl /*+*/, term_t _result_pl /*?*/)
   -> foreign_t {
     expect(PL_term_type(_key_pl) != PL_VARIABLE,
            "`zpt_key`'s first parameter must NOT be a variable");
@@ -109,8 +109,8 @@ static auto get_key(term_t _key_pl /*+*/, term_t _to_search_pl /*+*/, term_t _re
     else if (_to_search->type() == zpt::JSObject) {
         auto _key = zpt::prolog::to_json(_key_pl);
         expect(_key->is_string(), "key must be a string in order to search in a compound");
-        if (_to_search(_key->string())->ok()) {
-            auto _result = zpt::prolog::to_object(_to_search(_key->string()));
+        if (_to_search->get_path(_key->string())->ok()) {
+            auto _result = zpt::prolog::to_object(_to_search->get_path(_key->string()));
             return PL_unify_term(_result_pl, PL_TERM, *_result);
         }
     }
@@ -125,5 +125,5 @@ extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_call", 2, (void*)::send_request, 0);
     PL_register_foreign("zpt_config", 1, (void*)::get_config, 0);
     PL_register_foreign("zpt_log", 1, (void*)::send_to_log, 0);
-    PL_register_foreign("zpt_key", 3, (void*)::get_key, 0);
+    PL_register_foreign("zpt_value_for", 3, (void*)::get_value_for_key, 0);
 }
