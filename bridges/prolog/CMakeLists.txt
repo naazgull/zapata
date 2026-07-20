@@ -97,8 +97,62 @@ set_target_properties(zapata-bridge-prolog-plugin
     LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
+add_library(zapata_bridge_prolog_bindings SHARED)
+add_dependencies(zapata_bridge_prolog_bindings
+  zapata-base
+  zapata-parser-json
+  zapata-events
+  zapata-engine-startup
+  zapata-bridge-base
+  zapata-bridge-prolog
+)
+target_sources(zapata_bridge_prolog_bindings
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings.cpp
+)
+target_include_directories(zapata_bridge_prolog_bindings
+  PRIVATE
+    zapata-base
+    zapata-common-catalog
+    zapata-globals
+    zapata-events
+    zapata-lockfree
+    zapata-parser-json
+    zapata-engine-startup
+    zapata-bridge-base
+    zapata-bridge-prolog
+    zapata-engine-rest
+    zapata-engine-transport
+    ${BRIDGE_PROLOG_INCLUDE_DIR}
+  INTERFACE
+    ${BRIDGE_PROLOG_INCLUDE_DIR}
+)
+target_link_libraries(zapata_bridge_prolog_bindings
+  PUBLIC
+    zapata-base
+    zapata-common-catalog
+    zapata-parser-json
+    zapata-events
+    zapata-lockfree
+    zapata-engine-startup
+    zapata-bridge-base
+    zapata-bridge-prolog
+    zapata-engine-rest
+    zapata-engine-transport
+    swipl::libswipl
+    ${SQLite3_LIBRARIES}
+    zapata-storage-sqlite
+)
+set_target_properties(zapata_bridge_prolog_bindings
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-bridge-prolog zapata-bridge-prolog-plugin
+install(TARGETS zapata-bridge-prolog zapata-bridge-prolog-plugin zapata_bridge_prolog_bindings
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

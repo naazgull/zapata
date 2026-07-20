@@ -100,22 +100,26 @@ auto zpt::lua::bridge::thread_instance() -> bridge& {
 auto zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
   -> zpt::lua::bridge& {
     expect(_conf("module")->is_string(), "Lua: module name must be provided");
+    lua_newtable(this->__underlying);
     expect(!luaL_loadfile(this->__underlying, _external_path.data()),
            "Lua: error loading module '" << _external_path
                                          << "': " << lua_tostring(this->__underlying, -1));
     expect(!lua_pcall(this->__underlying, 0, LUA_MULTRET, 0),
            "Lua: error invoking function: " << lua_tostring(this->__underlying, -1));
-    zlog("Lua: loading module " << _conf("module") << " from " << _external_path, zpt::info);
-    if (_persist) { this->__external_to_load.insert(std::make_pair(_external_path, _conf)); }
+    lua_setglobal(this->__underlying, _conf("module")->string().data());
+    if (_persist) {
+        zlog("Lua: loading module " << _conf("module") << " from " << _external_path, zpt::info);
+        this->__external_to_load.insert(std::make_pair(_external_path, _conf));
+    }
     return (*this);
 }
 
 auto zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
   -> zpt::lua::bridge& {
     expect(_conf("module")->is_string(), "Lua: module name must be provided");
-    zlog("Lua: loading builtin module " << _conf("module"), zpt::info);
     _callback(this->__underlying);
     if (_persist) {
+        zlog("Lua: loading builtin module " << _conf("module"), zpt::info);
         this->__builtin_to_load.insert(
           std::make_pair(_conf("module")->string(), std::make_tuple(_callback, _conf)));
     }
@@ -316,6 +320,7 @@ zpt::lua::bridge::bridge(bridge const& _rhs)
   , __builtin_to_load{ _rhs.__builtin_to_load }
   , __external_to_load{ _rhs.__external_to_load } {
     expect(this->__underlying != nullptr, "Lua failed to initialize state");
+    this->set_options(_rhs.options());
     luaL_openlibs(this->__underlying);
     this->initialize();
 }
@@ -334,12 +339,12 @@ auto zpt::lua::bridge::to_args(zpt::json _args) -> zpt::lua::bridge& {
 }
 
 auto zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
-    for (auto&& [_file, _conf] : this->__external_to_load) {
-        this->setup_module(_conf, _file, false);
-    }
     for (auto&& [_, _pair] : this->__builtin_to_load) {
         auto [_callback, _conf] = _pair;
         this->setup_module(_conf, _callback, false);
+    }
+    for (auto&& [_file, _conf] : this->__external_to_load) {
+        this->setup_module(_conf, _file, false);
     }
     return (*this);
 }

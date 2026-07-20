@@ -98,7 +98,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
     this //
       ->to_send()
       ->status(405)
-      .body() = { "message", "Only GET allowed to use with `/services`" };
+      .body() = { "message", "Only POST or GET allowed to use with `/services`" };
     return zpt::events::abort;
 }
 
@@ -139,7 +139,7 @@ auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatch
 }
 
 auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _config) -> void {
-    auto _upnp_host = _config("upnp")("bind")->string();
+    auto _upnp_host = _config("upnp")("address")->string();
     auto _upnp_port = _config("upnp")("port")->integer();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("upnp");

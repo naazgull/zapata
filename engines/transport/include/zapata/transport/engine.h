@@ -326,10 +326,11 @@ class call {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   private:
-    zpt::events::dispatcher::ptr __dispatcher;
-    zpt::events::resolver __resolver;
-    zpt::polling::ptr __polling;
-    zpt::message __to_send;
+    zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::events::resolver __resolver{ nullptr };
+    zpt::polling::ptr __polling{ nullptr };
+    zpt::message __to_send{ nullptr };
+    zpt::call_context::ptr __context{ nullptr };
 
     auto call_internally() -> call&;
     auto send_externally() -> call&;
@@ -368,7 +369,8 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
                            zpt::call_context::ptr _context,
                            zpt::message _send)
   : __resolver{ _resolver }
-  , __to_send{ _send } {
+  , __to_send{ _send }
+  , __context{ _context } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
@@ -420,26 +422,33 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
-        auto _found = this->__resolver->search(
-          std::format("/{}{}",
-                      zpt::ontology::to_str(this->__to_send->performative()),
-                      _uri("raw_path")->string()));
-        expect(_found->ok() && _found->size() != 0,
-               "Couldn't find a provider of '" << _uri("path")->string());
-
-        for (auto&& [_, __, _service] : _found) {
-            if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
-        }
-
-        if (!_is_self) {
-            auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
-            expect(_provider->ok() && _provider->size() != 0,
+        try {
+            auto _found = this->__resolver->search(
+              std::format("/{}{}",
+                          zpt::ontology::to_str(this->__to_send->performative()),
+                          _uri("raw_path")->string()));
+            expect(_found->ok() && _found->size() != 0,
                    "Couldn't find a provider of '" << _uri("path")->string());
-            _uri["scheme"] = _provider(0)("protocols")("default");
-            _uri["domain"] =
-              _provider(0)("protocols")("registered")(_uri("scheme")->string())("bind");
-            _uri["port"] =
-              _provider(0)("protocols")("registered")(_uri("scheme")->string())("port");
+
+            for (auto&& [_, __, _service] : _found) {
+                if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
+            }
+
+            if (!_is_self) {
+                auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
+                expect(_provider->ok() && _provider->size() != 0,
+                       "Couldn't find a provider of '" << _uri("path")->string());
+                auto _scheme = _provider(0)("protocols")("default")->string();
+                _uri["scheme"] = _scheme;
+                _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
+                _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
+            }
+        }
+        catch (...) {
+            auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
+            _reply->status(404);
+            this->__context->reply(_reply);
+            return zpt::events::finish;
         }
     }
 
@@ -453,9 +462,6 @@ template<ProcessOperation T>
 auto zpt::events::call<T>::call_internally() -> call& {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
-    expect(_transport->has_capability(zpt::transport_capability::SYNCHRONOUS),
-           "`call` only makes sense for synchronous protocols");
-
     auto _stream = zpt::allocate_shared<zpt::event_stream>();
     _stream->transport("self");
 

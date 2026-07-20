@@ -218,6 +218,11 @@ auto zpt::Re2cJSONLexer::lex() -> int {
             case zpt::re2c_json_cond::escaped: _token = this->lexEscaped(); break;
             case zpt::re2c_json_cond::unicode: _token = this->lexUnicode(); break;
             case zpt::re2c_json_cond::regexp: _token = this->lexRegexp(); break;
+            case zpt::re2c_json_cond::kw_true: _token = this->lexKwTrue(); break;
+            case zpt::re2c_json_cond::kw_false: _token = this->lexKwFalse(); break;
+            case zpt::re2c_json_cond::kw_null: _token = this->lexKwNull(); break;
+            case zpt::re2c_json_cond::kw_undefined: _token = this->lexKwUndefined(); break;
+            case zpt::re2c_json_cond::kw_lambda: _token = this->lexKwLambda(); break;
         }
 
         // Deliberately NOT re-checking __left here: a rule that just

@@ -160,7 +160,7 @@ auto zpt::Re2cHTTPLexer::lexInitial() -> int {
             this->begin(zpt::re2c_cond::reply);
             return PROTOCOL_VERSION;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -199,7 +199,7 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
             this->captureMatch();
             return SPACE;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -229,7 +229,7 @@ auto zpt::Re2cHTTPLexer::lexReply() -> int {
             this->captureMatch();
             return SPACE;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -288,7 +288,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
             }
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -299,7 +299,7 @@ auto zpt::Re2cHTTPLexer::lexHeaderval() -> int {
             this->begin(zpt::re2c_cond::headers);
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -317,7 +317,7 @@ auto zpt::Re2cHTTPLexer::lexStatustext() -> int {
             this->captureMatch();
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -334,7 +334,7 @@ auto zpt::Re2cHTTPLexer::lexContentLengthVal() -> int {
             this->begin(zpt::re2c_cond::headers);
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -350,7 +350,7 @@ auto zpt::Re2cHTTPLexer::lexTransferEncodingVal() -> int {
             this->begin(zpt::re2c_cond::headers);
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -366,7 +366,7 @@ auto zpt::Re2cHTTPLexer::lexTrailerVal() -> int {
             this->begin(zpt::re2c_cond::headers);
             return STRING;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -430,6 +430,6 @@ auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
             }
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }

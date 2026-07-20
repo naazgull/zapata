@@ -24,18 +24,27 @@
 #include <zapata/prolog/prolog.h>
 
 zpt::prolog::bridge::bridge(std::string const& _cmd)
-  : __engine_args{ _cmd } {
+  : __engine_args{ _cmd }
+  , __main_engine{ true } {
     this->initialize();
 }
 
-zpt::prolog::bridge::~bridge() throw() { PL_cleanup(0); }
+zpt::prolog::bridge::~bridge() throw() {
+    if (!this->__main_engine) {
+        zlog("Detaching Prolog engine from " << zpt::this_thread::name(), zpt::debug);
+        PL_thread_destroy_engine();
+    }
+}
 
 auto zpt::prolog::bridge::name() const -> std::string { return "prolog"; }
 
-auto zpt::prolog::bridge::setup_module(zpt::json, std::string _external_path)
-  -> zpt::prolog::bridge& {
-    std::unique_lock _guard{ this->__underlying_mutex };
+auto zpt::prolog::bridge::thread_instance() -> bridge& {
+    static thread_local zpt::prolog::bridge _return{ *this };
+    return _return;
+}
 
+auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
+  -> zpt::prolog::bridge& {
     zpt::prolog::term _file;
     PL_put_atom_chars(*_file, _external_path.data());
 
@@ -46,12 +55,22 @@ auto zpt::prolog::bridge::setup_module(zpt::json, std::string _external_path)
     expect(PL_next_solution(_qid) != PL_S_FALSE,
            "unable to properly load `" << _external_path << "`");
 
+    if (_persist) {
+        zlog("Prolog: loading module " << _conf("module") << " from " << _external_path, zpt::info);
+        this->__external_to_load.insert(std::make_pair(_external_path, _conf));
+    }
+
     return (*this);
 }
 
-auto zpt::prolog::bridge::setup_module(zpt::json, callback_type _callback) -> zpt::prolog::bridge& {
-    std::unique_lock _guard{ this->__underlying_mutex };
+auto zpt::prolog::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
+  -> zpt::prolog::bridge& {
     _callback();
+    if (_persist) {
+        zlog("Prolog: loading builtin module " << _conf("module"), zpt::info);
+        this->__builtin_to_load.insert(
+          std::make_pair(_conf("module")->string(), std::make_tuple(_callback, _conf)));
+    }
     return (*this);
 }
 
@@ -73,13 +92,10 @@ auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
 }
 
 auto zpt::prolog::bridge::to_object(zpt::json _to_convert) -> object_type {
-    std::shared_lock _guard{ this->__underlying_mutex };
     return zpt::prolog::to_object(_to_convert);
 }
 
 auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type {
-    std::unique_lock _guard{ this->__underlying_mutex };
-
     expect(PL_term_type(_to_call) == PL_TERM && PL_is_compound(_to_call),
            "term parameter must be a compound");
     auto&& [_functor, _arity] = zpt::prolog::get_name_arity(_to_call);
@@ -130,12 +146,31 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
     return zpt::prolog::term::null();
 }
 
-auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
-    if (this->__initialized.exchange(true)) { return (*this); }
+zpt::prolog::bridge::bridge(bridge const& _rhs)
+  : __engine_args{ _rhs.__engine_args }
+  , __builtin_to_load{ _rhs.__builtin_to_load }
+  , __external_to_load{ _rhs.__external_to_load } {
+    this->set_options(_rhs.options());
+    this->initialize_thread();
+}
 
-    std::unique_lock _guard{ this->__underlying_mutex };
+auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
     char* _arg = const_cast<char*>(this->__engine_args.data());
     expect(PL_initialise(1, &_arg), "couldn't initialise Prolog engine");
+    return (*this);
+}
+
+auto zpt::prolog::bridge::initialize_thread() -> zpt::prolog::bridge& {
+    PL_thread_attach_engine(nullptr);
+
+    for (auto&& [_, _pair] : this->__builtin_to_load) {
+        auto [_callback, _conf] = _pair;
+        this->setup_module(_conf, _callback, false);
+    }
+    for (auto&& [_file, _conf] : this->__external_to_load) {
+        this->setup_module(_conf, _file, false);
+    }
+
     return (*this);
 }
 

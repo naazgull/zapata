@@ -62,7 +62,7 @@ auto main(int argc, char* argv[]) -> int {
               .performative(zpt::Post)
               .uri("/test")
               .body() =
-              R"({"body":[{"_id":"/NOTIFY/minions/boot","hash":0,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"},{"_id":"/POST/minions/hello","hash":1,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"}],"headers":{"Cache-Control":"no-store","Content-Type":"application/json","Date":"Sun, 10 Aug 2025 15:17:01 WEST","Host":"192.168.50.11:8083","X-Conversation-ID":"26a97074-a68d-4227-a6fd-fdfd2d6f6369","X-Version":"1.1"},"performative":"POST","uri":{"domain":"192.168.50.11","is_relative":false,"path":["minions","hello"],"port":8083,"raw_path":"/minions/hello","scheme":"tcp"}})"_JSON;
+              R"({"services":[{"_id":"/NOTIFY/minions/boot","hash":0,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"},{"_id":"/POST/minions/hello","hash":1,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"}],"headers":{"Cache-Control":"no-store","Content-Type":"application/json","Date":"Sun, 10 Aug 2025 15:17:01 WEST","Host":"192.168.50.11:8083","X-Conversation-ID":"26a97074-a68d-4227-a6fd-fdfd2d6f6369","X-Version":"1.1"},"performative":"POST","uri":{"domain":"192.168.50.11","is_relative":false,"path":["minions","hello"],"port":8083,"raw_path":"/minions/hello","scheme":"tcp"}})"_JSON;
 
             auto _stream =
               zpt::make_stream<zpt::socketstream>("127.0.0.1", _port, zpt::NO_SSL, IPPROTO_TCP);
@@ -70,6 +70,7 @@ auto main(int argc, char* argv[]) -> int {
               ->transport("tcp");
 
             _transport->send(_stream, _message);
+            std::this_thread::sleep_for(std::chrono::seconds{ 60 });
 
             if (zpt::stream_cast<zpt::socketstream>(_stream).is_error()) {
                 zlog(zpt::stream_cast<zpt::socketstream>(_stream).error_string(), zpt::debug);

@@ -51,10 +51,12 @@ auto zpt::locks::spin_mutex::spin_shared_lock() -> void {
 }
 
 auto zpt::locks::spin_mutex::spin_exclusive_lock() -> void {
+    if (this->__exclusive_owner == std::this_thread::get_id()) { return; }
     while (this->__exclusive_access->exchange(true, std::memory_order_acquire)) {
         std::this_thread::yield();
     }
     while (this->__shared_access->load(std::memory_order_seq_cst) != 0) {
         std::this_thread::yield();
     }
+    this->__exclusive_owner = std::this_thread::get_id();
 }

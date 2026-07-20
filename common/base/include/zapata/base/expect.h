@@ -91,6 +91,7 @@ using tm_ptr = std::shared_ptr<std::tm>;
  */
 auto get_time(time_t _t) -> zpt::tm_ptr;
 
+namespace this_thread {
 /**
  * @brief Sets the name of the current thread for debugging purposes.
  * @param _name The name to assign to the current thread.
@@ -98,6 +99,8 @@ auto get_time(time_t _t) -> zpt::tm_ptr;
  * Thread names appear in debuggers and profilers, making it easier
  * to identify threads during development.
  */
-auto set_thread_name(std::string const& _name) -> void;
+auto name(std::string const& _name) -> void;
+auto name() -> std::string;
+} // namespace this_thread
 
 } // namespace zpt

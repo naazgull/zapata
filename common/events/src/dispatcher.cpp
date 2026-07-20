@@ -114,7 +114,7 @@ auto zpt::events::dispatcher::get_state() const -> zpt::json {
 auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::timer<float> _timer{ 0.005f };
     auto _name = std::format("{}@{}", this->__name, _consumer_nr);
-    zpt::set_thread_name(_name);
+    zpt::this_thread::name(_name);
     zlog(_name << " starting", zpt::trace);
     do {
         try {

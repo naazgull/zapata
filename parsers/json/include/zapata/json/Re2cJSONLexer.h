@@ -47,6 +47,19 @@ namespace zpt {
  * The original flexc++ lexer also declared a `number` start condition; it is
  * omitted here because the number rule never calls begin(StartCondition_::number)
  * in JSON.f - numbers are matched and returned directly from INITIAL.
+ *
+ * kw_true/kw_false/kw_null/kw_undefined/kw_lambda exist so that "true",
+ * "false", "null", "undefined" and "lambda(...)" are not matched as flat
+ * literals directly inside lexInitial()'s shared dispatch. re2c computes one
+ * YYFILL bound per dispatch point, sized to the longest literal reachable
+ * from it - if these keywords stayed in lexInitial, every other branch
+ * sharing that entry point (including the single-byte "}"/"]" that close a
+ * top-level value) would be forced to wait for up to 9 bytes ("undefined")
+ * before the DFA even looks at the first character. Over a live socket that
+ * stays open after sending a short, complete value, that wait never ends.
+ * Splitting each keyword into its own start condition, entered via a
+ * single-byte trigger ("t"/"f"/"n"/"u"/"l") from lexInitial, isolates its
+ * bound to its own method so lexInitial's shared entry only ever needs 1 byte.
  */
 enum class re2c_json_cond {
     INITIAL,
@@ -55,6 +68,11 @@ enum class re2c_json_cond {
     escaped,
     unicode,
     regexp,
+    kw_true,
+    kw_false,
+    kw_null,
+    kw_undefined,
+    kw_lambda,
 };
 
 /**
@@ -176,6 +194,11 @@ class Re2cJSONLexer {
     auto lexEscaped() -> int;
     auto lexUnicode() -> int;
     auto lexRegexp() -> int;
+    auto lexKwTrue() -> int;
+    auto lexKwFalse() -> int;
+    auto lexKwNull() -> int;
+    auto lexKwUndefined() -> int;
+    auto lexKwLambda() -> int;
 
     std::istream* __in;
     std::ostream* __out;

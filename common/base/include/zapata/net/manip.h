@@ -30,6 +30,7 @@
 #pragma once
 
 #include <arpa/inet.h>
+#include <cstdint>
 #include <cstring>
 #include <ifaddrs.h>
 #include <memory>
@@ -52,6 +53,7 @@ namespace net {
  * @endcode
  */
 auto getip(std::string const& _if = "") -> std::string;
-
+auto get_available_port(std::string const& _protocol, std::uint32_t _start_from = 1024)
+  -> std::uint32_t;
 } // namespace net
 } // namespace zpt

@@ -56,7 +56,6 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
 
     bridge(std::string const& _cmd);
     bridge(bridge&& _rhs) = delete;
-    bridge(bridge const& _rhs) = delete;
     virtual ~bridge() throw();
 
     auto operator=(bridge const& _rhs) -> zpt::prolog::bridge& = delete;
@@ -64,10 +63,13 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
 
     /** @brief Returns "prolog". */
     auto name() const -> std::string;
+    auto thread_instance() -> bridge&;
     /** @brief Loads a Prolog module from file. */
-    auto setup_module(zpt::json _conf, std::string _external_path) -> zpt::prolog::bridge&;
+    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
+      -> zpt::prolog::bridge&;
     /** @brief Registers a C++ callback as a Prolog module. */
-    auto setup_module(zpt::json _conf, callback_type _callback) -> zpt::prolog::bridge&;
+    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
+      -> zpt::prolog::bridge&;
     /** @brief Registers a C++ callback as a Prolog function. */
     auto setup_lambda(zpt::json _conf, lambda_type _callback) -> zpt::prolog::bridge&;
     /** @brief Locates a Prolog value by path. */
@@ -78,13 +80,17 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     auto to_object(zpt::json _to_convert) -> object_type;
     /** @brief Executes a Prolog function with arguments. */
     auto execute(zpt::prolog::term _to_call) -> zpt::prolog::bridge::object_type;
-    /** @brief Initializes the bridge (loads all modules). */
-    auto initialize() -> zpt::prolog::bridge&;
 
   private:
     std::string __engine_args;
-    mutex_type __underlying_mutex;
-    std::atomic<bool> __initialized{ false };
+    bool __main_engine{ false };
+    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load;
+    std::map<std::string, zpt::json> __external_to_load;
+
+    bridge(bridge const& _rhs);
+    /** @brief Initializes the bridge (loads all modules). */
+    auto initialize() -> zpt::prolog::bridge&;
+    auto initialize_thread() -> zpt::prolog::bridge&;
 };
 
 /** @brief Converts Prolog term to JSON. */

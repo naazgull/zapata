@@ -25,20 +25,27 @@
 zpt::lua::bridge _bridge;
 
 std::string _script = R"(
-    function fact (n)
+    local builtin2 = {}
+
+    function builtin2.fact (n)
+      local r = builtin.to_c(n)
+      print("LUA: "..r.a.." "..r.b[1])
+
       if n == 0 then
         return 1
       else
-        return n * fact(n-1)
+        return n * builtin2.fact(n-1)
       end
     end
+
+    return builtin2
 )";
 
 auto to_c(lua_State* _state) -> int {
     auto& _instance = _bridge.thread_instance();
     zpt::json _json = _instance.object_to_json(_state);
     zlog(_json, zpt::debug);
-    _instance.json_to_object({ "a", _json, "b", { zpt::array, 1, 2, 3, 4, 10 } });
+    _instance.to_object({ "a", _json, "b", { zpt::array, 1, 2, 3, 4, 10 } }, _state);
     return 1;
 }
 
@@ -65,7 +72,7 @@ auto main(int, char**) -> int {
 
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "fact" },
+        zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin2", "function", "fact" },
                                             zpt::json{ zpt::array, 10 }),
              zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
@@ -84,7 +91,7 @@ auto main(int, char**) -> int {
 
     std::thread _thread2{ [&]() -> void {
         std::cout << "Thread2:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "fact" },
+        zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin2", "function", "fact" },
                                             zpt::json{ zpt::array, 20 }),
              zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },

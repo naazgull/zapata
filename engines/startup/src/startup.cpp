@@ -27,9 +27,9 @@
 namespace {
 zpt::json __builtins = R"({
         "builtin:lua": { "name": "builtin:lua", "source": "libzapata-bridge-lua-plugin.so",
-            "requires" : [] },
+            "requires" : [ "builtin:rest", "builtin:transport" ] },
         "builtin:prolog": { "name": "builtin:prolog", "source": "libzapata-bridge-prolog-plugin.so",
-            "requires" : [] },
+            "requires" : [ "builtin:rest", "builtin:transport" ] },
         "builtin:rest": { "name": "builtin:rest", "source": "libzapata-engine-rest-plugin.so",
             "requires" : [ "builtin:transport", "builtin:identity" ] },
         "builtin:transport": { "name": "builtin:transport",
@@ -164,8 +164,13 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
 
             if (_to_load(_name)->size() != 0) { continue; }
 
+            auto _key = zpt::r_replace(_name, "builtin:", "");
+            if (!this->__configuration(_key)->ok()) {
+                this->__configuration[_key] = zpt::json::object();
+            }
+
             _no_change = false;
-            this->load(_lib, this->__configuration(zpt::r_replace(_name, "builtin:", "")));
+            this->load(_lib, this->__configuration(_key));
             this->__load_order.push_back(_name);
             _to_load->object()->pop(_name);
         }
@@ -227,7 +232,9 @@ auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
 
 auto zpt::get_default_uri() -> std::string {
     auto _scheme = zpt::IDENTITY()("protocols")("default")->string();
-    auto _my_host = zpt::IDENTITY()("protocols")("registered")(_scheme)("bind")->string();
+    if (!zpt::IDENTITY()("protocols")("registered")(_scheme)->ok()) { return ""; }
+
+    auto _my_host = zpt::IDENTITY()("protocols")("registered")(_scheme)("address")->string();
     auto _my_port = zpt::IDENTITY()("protocols")("registered")(_scheme)("port")->integer();
     return std::format("{}://{}:{}", _scheme, _my_host, _my_port);
 }

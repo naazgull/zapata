@@ -55,6 +55,7 @@ zpt::prolog::term::~term() {
         if ((*this->__references)->load() == 0) { PL_free_term_ref(this->__underlying); }
     }
 }
+
 zpt::prolog::term::operator term_t() { return this->__underlying; }
 
 auto zpt::prolog::term::operator*() -> term_t& { return this->__underlying; }

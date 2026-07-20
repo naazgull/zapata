@@ -60,30 +60,39 @@ namespace {
 auto zpt::Re2cJSONLexer::lexInitial() -> int {
     /*!re2c
         [\n\r\f\t ]+ { return 0; }
-        "true" {
+        "t" {
+            // "true" is the only JSON token starting with 't', so this single
+            // byte unambiguously commits to kw_true - see the re2c_json_cond
+            // comment in Re2cJSONLexer.h for why the keyword body is matched
+            // in its own start condition instead of as a flat literal here.
             this->captureMatch();
-            this->leaveIfComplete();
-            return BOOLEAN;
+            this->more();
+            this->begin(zpt::re2c_json_cond::kw_true);
+            return 0;
         }
-        "false" {
+        "f" {
             this->captureMatch();
-            this->leaveIfComplete();
-            return BOOLEAN;
+            this->more();
+            this->begin(zpt::re2c_json_cond::kw_false);
+            return 0;
         }
-        "null" {
+        "n" {
             this->captureMatch();
-            this->leaveIfComplete();
-            return NIL;
+            this->more();
+            this->begin(zpt::re2c_json_cond::kw_null);
+            return 0;
         }
-        "undefined" {
+        "u" {
             this->captureMatch();
-            this->leaveIfComplete();
-            return NIL;
+            this->more();
+            this->begin(zpt::re2c_json_cond::kw_undefined);
+            return 0;
         }
-        "lambda(" [^)]+ ")" {
+        "l" {
             this->captureMatch();
-            this->leaveIfComplete();
-            return LAMBDA;
+            this->more();
+            this->begin(zpt::re2c_json_cond::kw_lambda);
+            return 0;
         }
         "{" {
             this->captureMatch();
@@ -136,7 +145,67 @@ auto zpt::Re2cJSONLexer::lexInitial() -> int {
             this->begin(zpt::re2c_json_cond::regexp);
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
+    */
+}
+
+auto zpt::Re2cJSONLexer::lexKwTrue() -> int {
+    /*!re2c
+        "rue" {
+            this->captureMatch();
+            this->begin(zpt::re2c_json_cond::INITIAL);
+            this->leaveIfComplete();
+            return BOOLEAN;
+        }
+        * { return -1; }
+    */
+}
+
+auto zpt::Re2cJSONLexer::lexKwFalse() -> int {
+    /*!re2c
+        "alse" {
+            this->captureMatch();
+            this->begin(zpt::re2c_json_cond::INITIAL);
+            this->leaveIfComplete();
+            return BOOLEAN;
+        }
+        * { return -1; }
+    */
+}
+
+auto zpt::Re2cJSONLexer::lexKwNull() -> int {
+    /*!re2c
+        "ull" {
+            this->captureMatch();
+            this->begin(zpt::re2c_json_cond::INITIAL);
+            this->leaveIfComplete();
+            return NIL;
+        }
+        * { return -1; }
+    */
+}
+
+auto zpt::Re2cJSONLexer::lexKwUndefined() -> int {
+    /*!re2c
+        "ndefined" {
+            this->captureMatch();
+            this->begin(zpt::re2c_json_cond::INITIAL);
+            this->leaveIfComplete();
+            return NIL;
+        }
+        * { return -1; }
+    */
+}
+
+auto zpt::Re2cJSONLexer::lexKwLambda() -> int {
+    /*!re2c
+        "ambda(" [^)]+ ")" {
+            this->captureMatch();
+            this->begin(zpt::re2c_json_cond::INITIAL);
+            this->leaveIfComplete();
+            return LAMBDA;
+        }
+        * { return -1; }
     */
 }
 
@@ -166,7 +235,7 @@ auto zpt::Re2cJSONLexer::lexString() -> int {
             this->more();
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -196,7 +265,7 @@ auto zpt::Re2cJSONLexer::lexStringSingle() -> int {
             this->more();
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -226,7 +295,7 @@ auto zpt::Re2cJSONLexer::lexRegexp() -> int {
             this->more();
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -297,7 +366,7 @@ auto zpt::Re2cJSONLexer::lexEscaped() -> int {
             this->begin(this->d_intermediate_state);
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }
 
@@ -346,6 +415,6 @@ auto zpt::Re2cJSONLexer::lexUnicode() -> int {
             this->begin(this->d_intermediate_state);
             return 0;
         }
-        * { return 0; }
+        * { return -1; }
     */
 }

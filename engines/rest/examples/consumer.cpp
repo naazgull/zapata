@@ -71,7 +71,7 @@ class test_client_boot : public zpt::system_event {
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zlog("Sending request to 'test_plugin'", zpt::info);
+    zlog("Loading module 'test_plugin_client'", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_boot>(
       zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
 }

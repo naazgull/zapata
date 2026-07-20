@@ -28,6 +28,10 @@
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
       .add("pipe", zpt::make_transport<zpt::net::transport::pipe_stream>());
+    zlog("Loaded PIPE+JSON transport", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("pipe"); }
+extern "C" auto _zpt_unload_(zpt::plugin&) {
+    zlog("Unloading PIPE+JSON transport", zpt::info);
+    zpt::TRANSPORT_LAYER().remove("pipe");
+}

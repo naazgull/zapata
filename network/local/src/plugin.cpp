@@ -39,7 +39,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _server_sock = zpt::UNIX_SERVER_SOCKET(_config("path")->string());
 
         _plugin.add_thread([=]() mutable -> void {
-            zpt::set_thread_name("unix@listener");
+            zpt::this_thread::name("unix@listener");
             auto _polling = zpt::STREAM_POLLING();
             zlog("Started UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
 
@@ -61,6 +61,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             zlog("Stopped UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
         });
     }
+    else { zlog("Loaded UNIX+JSON transport", zpt::info); }
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
@@ -69,5 +70,6 @@ extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
         zpt::UNIX_SERVER_SOCKET()->close();
         unlink(_config("path")->string().data());
     }
+    else { zlog("Unloading UNIX+JSON transport", zpt::info); }
     zpt::TRANSPORT_LAYER().remove("unix");
 }
