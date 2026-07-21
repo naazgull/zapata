@@ -618,6 +618,8 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
             _namespace->add(_class);
         }
 
+        _namespace->add(_class);
+
         auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
           "operator()", "zpt::events::state", zpt::ast::OVERRIDE);
         _h_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher::ptr");
