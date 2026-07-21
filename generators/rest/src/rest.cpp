@@ -612,12 +612,11 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
             !_def("zpt:extends")("no-override")->contains("authorized")) {
             _class //
               ->add<zpt::ast::cpp_function>(
-                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE)
-              .add<zpt::ast::cpp_function>(
-                zpt::ast::PUBLIC, "process_request", "zpt::events::state");
-            _namespace->add(_class);
+                zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
         }
-
+        _class //
+          ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+        
         _namespace->add(_class);
 
         auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
