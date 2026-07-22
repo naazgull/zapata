@@ -432,7 +432,8 @@ zpt::storage::mysqlx::action_remove::action_remove(
   zpt::storage::mysqlx::collection const& _collection,
   zpt::json _search)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __filter{ _search } {}
+  , __filter{ _search }
+  , __bind{ zpt::json::object() } {}
 
 auto zpt::storage::mysqlx::action_remove::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'remove' action");
