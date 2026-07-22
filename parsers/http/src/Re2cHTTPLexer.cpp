@@ -170,8 +170,6 @@ auto zpt::Re2cHTTPLexer::yyfill(std::size_t _need) -> void {
 }
 
 auto zpt::Re2cHTTPLexer::captureMatch() -> void {
-    this->__line_nr +=
-      static_cast<std::size_t>(std::count(this->__token_start, this->__cursor, '\n'));
     if (this->__more) {
         this->__matched.append(this->__token_start, this->__cursor);
         this->__more = false;
@@ -231,6 +229,8 @@ auto zpt::Re2cHTTPLexer::lex() -> int {
     while (true) {
         if (this->__left) { return this->__leave_value; }
 
+        this->__line_nr +=
+          static_cast<std::size_t>(std::count(this->__token_start, this->__cursor, '\n'));
         this->__token_start = this->__cursor;
         int _token = 0;
         switch (this->__condition) {
