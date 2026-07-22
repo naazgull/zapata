@@ -854,7 +854,7 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
     }
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        "auto _id = _collection //\n->add(_received)->execute()->generated_id()")
+        "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
       .add<zpt::ast::cpp_instruction>("_session->commit()")
       .add<zpt::ast::cpp_instruction>(
         "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
