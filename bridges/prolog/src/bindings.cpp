@@ -83,9 +83,9 @@ static auto send_to_log(term_t _to_log /*+*/) -> foreign_t {
         std::ostringstream _oss;
         for (auto&& [_, __, _value] : _args) { _oss << static_cast<std::string>(_value); }
         _oss << std::flush;
-        zlog(_oss.str(), zpt::info);
+        zlog(_oss.str(), static_cast<zpt::LogLevel>(zpt::log_lvl));
     }
-    else { zlog(static_cast<std::string>(_args), zpt::info); }
+    else { zlog(static_cast<std::string>(_args), static_cast<zpt::LogLevel>(zpt::log_lvl)); }
 
     return 1;
 }
