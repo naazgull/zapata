@@ -2,6 +2,18 @@ set(COMMON_TESTING_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(Lua QUIET)
+
+if(NOT Lua_FOUND)
+  message(STATUS "zapata-common-testing skipped: Lua not found")
+  return()
+endif()
+
+include_directories(
+  SYSTEM
+    ${LUA_INCLUDE_DIR}
+)
+
 add_library(zapata-common-testing-plugin SHARED)
 add_dependencies(zapata-common-testing-plugin
   zapata-base

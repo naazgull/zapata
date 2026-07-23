@@ -1207,7 +1207,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>(
         "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
         "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() = "
-        "this->received()->body()")
+        "_received")
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
