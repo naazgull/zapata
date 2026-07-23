@@ -892,13 +892,11 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        "auto _find = zpt::storage::filter_find(_collection, _params)")
-      .add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>(
-        "auto _result = _find //\n->fields(_fields)->execute()->fetch()");
+      .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
+                                      "_params) //\n->fields(_fields)->execute()->fetch()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>(
@@ -985,10 +983,8 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>(
-        "auto _find = zpt::storage::filter_find(_collection, _params);")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _result = _find //\n->fields(_fields)->execute()->fetch(1)");
+      .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
+                                      "_params) //\n->fields(_fields)->execute()->fetch(1)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
@@ -1020,10 +1016,8 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _modify = zpt::storage::filter_modify(_collection, _params)")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _result = _modify //\n->patch(_received)->execute()->count()")
+      ->add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_modify(_collection, "
+                                       "_params) //\n->patch(_received)->execute()->count()")
       .add<zpt::ast::cpp_instruction>("_session->commit()");
 
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
@@ -1109,8 +1103,7 @@ auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cp
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        "auto _remove = zpt::storage::filter_remove(_collection, _params)")
-      .add<zpt::ast::cpp_instruction>("auto _result = _remove //\n->execute()->count()")
+        "auto _result = zpt::storage::filter_remove(_collection, _params) //\n->execute()->count()")
       .add<zpt::ast::cpp_instruction>("_session->commit()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //

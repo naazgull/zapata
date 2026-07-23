@@ -49,8 +49,7 @@ class execute_after_boot : public zpt::system_event {
                 zlog(_target->string() << ": ok", zpt::notice);
             }
             catch (std::exception const& _e) {
-                zlog(_e.what(), zpt::error);
-                abort();
+                zlog(_target->string() << ": fail - " << _e.what(), zpt::notice);
             }
         }
 
@@ -90,7 +89,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             for (auto&& _t : _files) { _targets << _t; }
         }
     }
-    
+
     _config["target"] = zpt::json::array();
     auto& _bridge = zpt::LUA_BRIDGE();
     for (auto&& [_, __, _target] : _targets) {
