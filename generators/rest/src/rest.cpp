@@ -616,7 +616,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         }
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
-        
+
         _namespace->add(_class);
 
         auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
@@ -985,10 +985,10 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
       .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>(std::format(
-        "auto _result = _collection //\n->find({})->bind({})->fields(_fields)->execute()->fetch(1)",
-        this->get_filter_expression(_def),
-        this->get_bind_expression(_def)));
+      .add<zpt::ast::cpp_instruction>(
+        "auto _find = zpt::storage::filter_find(_collection, _params);")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _result = _find //\n->fields(_fields)->execute()->fetch(1)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
@@ -1021,10 +1021,9 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::format("auto _result = _collection "
-                    "//\n->modify({})->bind({})->patch(_received)->execute()->count()",
-                    this->get_filter_expression(_def),
-                    this->get_bind_expression(_def)))
+        "auto _modify = zpt::storage::filter_modify(_collection, _params)")
+      .add<zpt::ast::cpp_instruction>(
+        "auto _result = _modify //\n->patch(_received)->execute()->count()")
       .add<zpt::ast::cpp_instruction>("_session->commit()");
 
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
@@ -1110,9 +1109,8 @@ auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cp
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::format("auto _result = _collection //\n->remove({})->bind({})->execute()->count()",
-                    this->get_filter_expression(_def),
-                    this->get_bind_expression(_def)))
+        "auto _remove = zpt::storage::filter_remove(_collection, _params)")
+      .add<zpt::ast::cpp_instruction>("auto _result = _remove //\n->execute()->count()")
       .add<zpt::ast::cpp_instruction>("_session->commit()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
@@ -1273,6 +1271,7 @@ auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_bl
         auto _variable = _part->string();
         if (_variable.find("{") == 0) {
             std::string _name = _variable.substr(1, _variable.length() - 2);
+            if (_name == "id") { _name = "_id"; }
             _block //
               ->add<zpt::ast::cpp_instruction>(
                 std::format("_params[\"{}\"] = _path(_prefix_len + {})", _name, _idx));
@@ -1281,9 +1280,11 @@ auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_bl
     for (auto const& [_, __, _param] : _def("parameters")) {
         if (_param("in")->string() == "path" ||
             (_param("in")->string() == "query" && _param("required")->boolean())) {
+            auto _name = _param("name")->string();
+            if (_name == "id") { _name = "_id"; }
             _block->add<zpt::ast::cpp_instruction>(
               std::format("expect(_params(\"{}\")->ok(), \"Required {} parameter '{}'\")",
-                          _param("name")->string(),
+                          _name,
                           _param("in")->string(),
                           _param("name")->string()));
         }
@@ -1359,20 +1360,6 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
             }
         }
     }
-}
-
-auto zpt::gen::rest::unit::get_filter_expression(zpt::json _def) -> std::string {
-    std::ostringstream _oss;
-    _oss << "\"";
-    bool _first = true;
-    for (auto const& [_, __, _param] : _def("parameters")) {
-        auto _name = _param("name")->string();
-        if (!_first) { _oss << " and "; }
-        _first = false;
-        _oss << (_name == "id" ? "_" : "") << _name << " = :" << _name;
-    }
-    _oss << "\"" << std::flush;
-    return _oss.str();
 }
 
 auto zpt::gen::rest::unit::get_bind_expression(zpt::json _def) -> std::string {
