@@ -166,8 +166,6 @@ auto zpt::Re2cJSONLexer::yyfill(std::size_t _need) -> void {
 }
 
 auto zpt::Re2cJSONLexer::captureMatch() -> void {
-    this->__line_nr +=
-      static_cast<std::size_t>(std::count(this->__token_start, this->__cursor, '\n'));
     if (this->__more) {
         this->__matched.append(this->__token_start, this->__cursor);
         this->__more = false;
@@ -209,6 +207,8 @@ auto zpt::Re2cJSONLexer::lex() -> int {
         // yyerror() report a clean syntax error for truncated JSON.
         if (this->__eof && this->__cursor >= this->__data_limit) { return 0; }
 
+        this->__line_nr +=
+          static_cast<std::size_t>(std::count(this->__token_start, this->__cursor, '\n'));
         this->__token_start = this->__cursor;
         int _token = 0;
         switch (this->__condition) {

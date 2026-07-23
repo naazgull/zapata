@@ -7,6 +7,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "call", zpt::lua::bindings::send_request },
                            { "config", zpt::lua::bindings::get_config },
                            { "log", zpt::lua::bindings::log },
+                           { "to_json", zpt::lua::bindings::to_json_str },
                            { nullptr, nullptr } };
 }
 
@@ -75,10 +76,17 @@ auto zpt::lua::bindings::log(lua_State* _state) -> int {
         std::ostringstream _oss;
         for (auto&& [_, __, _value] : _args) { _oss << static_cast<std::string>(_value); }
         _oss << std::flush;
-        zlog(_oss.str(), zpt::info);
+        zlog(_oss.str(), static_cast<zpt::LogLevel>(zpt::log_lvl));
     }
-    else { zlog(static_cast<std::string>(_args), zpt::info); }
+    else { zlog(static_cast<std::string>(_args), static_cast<zpt::LogLevel>(zpt::log_lvl)); }
 
+    return 1;
+}
+
+auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+    _bridge.json_to_object(static_cast<std::string>(_args));
     return 1;
 }
 

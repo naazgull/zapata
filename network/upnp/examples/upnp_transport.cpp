@@ -69,7 +69,8 @@ auto main(int _argc, char* _argv[]) -> int {
             auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
             _stream //
               ->transport("upnp")
-              .set_peer<zpt::socketstream>(_config("address")->string(), _config("port")->integer());
+              .set_peer<zpt::socketstream>(_config("address")->string(),
+                                           _config("port")->integer());
 
             _transport->send(_stream, _message);
 

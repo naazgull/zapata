@@ -327,8 +327,9 @@ zpt::lua::bridge::bridge(bridge const& _rhs)
 
 auto zpt::lua::bridge::execute() -> zpt::lua::bridge::object_type {
     expect(lua_isfunction(this->__underlying, 1), "Lua: there is no callable item in the stack");
-    expect(!lua_pcall(this->__underlying, lua_gettop(this->__underlying) - 1, LUA_MULTRET, 0),
-           "Lua: error invoking function: " << lua_tostring(this->__underlying, -1));
+    if (lua_pcall(this->__underlying, lua_gettop(this->__underlying) - 1, LUA_MULTRET, 0)) {
+        throw zpt::InterruptedException{ lua_tostring(this->__underlying, -1) };
+    }
     return this->__underlying;
 }
 
