@@ -59,7 +59,7 @@ class execute_after_boot : public zpt::system_event {
           ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
         if (_failed->size() != 0) {
-            zlog("Failed tests: " << _failed, zpt::warning);
+            zlog("Failed tests: " << zpt::pretty{ _failed }, zpt::warning);
             abort();
         }
 
