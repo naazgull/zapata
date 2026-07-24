@@ -411,13 +411,16 @@ class result {
     std::shared_ptr<zpt::storage::result::type> __underlying{ nullptr };
 };
 
+/** @brief Creates a remove action with query parameters. */
+auto filter_remove(zpt::storage::collection& _collection, zpt::json _params)
+  -> zpt::storage::action;
+/** @brief Creates a modify action with query parameters. */
+auto filter_modify(zpt::storage::collection& _collection, zpt::json _params)
+  -> zpt::storage::action;
 /** @brief Creates a find action with query parameters. */
 auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 /** @brief Formats find results into a reply. */
 auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
-/** @brief Creates a remove action with query parameters. */
-auto filter_remove(zpt::storage::collection& _collection, zpt::json _params)
-  -> zpt::storage::action;
 /** @brief Extracts find criteria from JSON. */
 auto extract_find(zpt::json _to_parse) -> std::string;
 /** @brief Converts functional JSON to SQL. */

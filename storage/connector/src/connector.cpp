@@ -380,6 +380,46 @@ auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
     return *this->__underlying.get();
 }
 
+auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _to_remove)
+  -> zpt::storage::action {
+    if (_to_remove->ok()) {
+        auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
+        if (_to_remove("page_size")->ok()) {
+            _remove //
+              ->limit(_to_remove("page_size"));
+        }
+        if (_to_remove("page_start_index")->ok()) {
+            _remove //
+              ->offset(_to_remove("page_start_index"));
+        }
+        if (_to_remove("order_by")->ok()) {
+            auto _sort = zpt::split(_to_remove("order_by")->string(), ",");
+            for (auto&& [_, __, _expr] : _sort) {
+                auto _name = _expr->string();
+                bool _asc{ true };
+                if (_name[0] == '-') {
+                    _asc = false;
+                    _name = _name.substr(1);
+                }
+                else if (_name[0] == '+') { _name = _name.substr(1); }
+                _remove //
+                  ->sort(_name, _asc);
+            }
+        }
+        return _remove;
+    }
+    return _collection->remove({});
+}
+
+auto zpt::storage::filter_modify(zpt::storage::collection& _collection, zpt::json _to_modify)
+  -> zpt::storage::action {
+    if (_to_modify->ok()) {
+        auto _modify = _collection->modify(zpt::storage::extract_find(_to_modify));
+        return _modify;
+    }
+    return _collection->modify({});
+}
+
 auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _to_find)
   -> zpt::storage::action {
     if (_to_find->ok()) {
@@ -420,37 +460,6 @@ auto zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
             _reply << "page_start_index" << static_cast<long long>(_params("page_start_index"));
         }
     }
-}
-
-auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _to_remove)
-  -> zpt::storage::action {
-    if (_to_remove->ok()) {
-        auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
-        if (_to_remove("page_size")->ok()) {
-            _remove //
-              ->limit(_to_remove("page_size"));
-        }
-        if (_to_remove("page_start_index")->ok()) {
-            _remove //
-              ->offset(_to_remove("page_start_index"));
-        }
-        if (_to_remove("order_by")->ok()) {
-            auto _sort = zpt::split(_to_remove("order_by")->string(), ",");
-            for (auto&& [_, __, _expr] : _sort) {
-                auto _name = _expr->string();
-                bool _asc{ true };
-                if (_name[0] == '-') {
-                    _asc = false;
-                    _name = _name.substr(1);
-                }
-                else if (_name[0] == '+') { _name = _name.substr(1); }
-                _remove //
-                  ->sort(_name, _asc);
-            }
-        }
-        return _remove;
-    }
-    return _collection->remove({});
 }
 
 auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {

@@ -42,6 +42,7 @@ class execute_after_boot : public zpt::system_event {
         auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
         auto _config = zpt::GLOBAL_CONFIG();
         auto _dummy_args = zpt::json::array();
+        auto _failed = zpt::json::array();
 
         for (auto&& [_, __, _target] : _config("testing")("target")) {
             try {
@@ -49,13 +50,18 @@ class execute_after_boot : public zpt::system_event {
                 zlog(_target->string() << ": ok", zpt::notice);
             }
             catch (std::exception const& _e) {
-                zlog(_e.what(), zpt::error);
-                abort();
+                zlog(_target->string() << ": fail - " << _e.what(), zpt::notice);
+                _failed << _target;
             }
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
           ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+
+        if (_failed->size() != 0) {
+            zlog("Failed tests: " << zpt::pretty{ _failed }, zpt::warning);
+            abort();
+        }
 
         zlog("Shutting down", zpt::notice);
         zpt::runtime::shutdown();
@@ -90,7 +96,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             for (auto&& _t : _files) { _targets << _t; }
         }
     }
-    
+
     _config["target"] = zpt::json::array();
     auto& _bridge = zpt::LUA_BRIDGE();
     for (auto&& [_, __, _target] : _targets) {

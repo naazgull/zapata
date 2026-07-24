@@ -156,27 +156,37 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
     for (auto&& [_idx, _key, _value] : _options) {
         if (_options->is_object()) {
             if (_key == "$ref") {
-                auto& _ref = _value->string();
-                zpt::json _other;
-
-                if (_ref[0] == '#') {
-                    _ref = _ref.substr(2);
-                    _other = _root->get_path(_ref, "/");
-                }
-                else if (_ref.find("file:") == 0) {
-                    _ref = _ref.substr(5);
-                    std::filesystem::path _path{ _ref };
-                    if (!_path.is_absolute()) {
-                        _path = std::filesystem::canonical(_context / _path);
-                    }
-                    else { _path = std::filesystem::canonical(_path); }
-                    zpt::conf::file(_path, _other, _root);
-                }
-
-                if (_parent_key.index() == 1) { _parent[std::get<size_t>(_parent_key)] = _other; }
+                zpt::json _ref_list;
+                if (_value->is_array()) { _ref_list = _value; }
                 else {
-                    if (std::get<std::string>(_parent_key).length() == 0) { _parent = _other; }
-                    else { _parent[std::get<std::string>(_parent_key)] = _other; }
+                    _ref_list = zpt::json::array();
+                    _ref_list << _value;
+                }
+                for (auto&& [_, __, _reference] : _ref_list) {
+                    auto& _ref = _reference->string();
+                    zpt::json _other;
+
+                    if (_ref[0] == '#') {
+                        _ref = _ref.substr(2);
+                        _other = _root->get_path(_ref, "/");
+                    }
+                    else if (_ref.find("file:") == 0) {
+                        _ref = _ref.substr(5);
+                        std::filesystem::path _path{ _ref };
+                        if (!_path.is_absolute()) {
+                            _path = std::filesystem::canonical(_context / _path);
+                        }
+                        else { _path = std::filesystem::canonical(_path); }
+                        zpt::conf::file(_path, _other, _root);
+                    }
+
+                    if (_parent_key.index() == 1) {
+                        _parent[std::get<size_t>(_parent_key)] = _other;
+                    }
+                    else {
+                        if (std::get<std::string>(_parent_key).length() == 0) { _parent = _other; }
+                        else { _parent[std::get<std::string>(_parent_key)] = _other; }
+                    }
                 }
             }
             else { zpt::conf::evaluate_ref(_value, _options, _key, _context, _root); }
