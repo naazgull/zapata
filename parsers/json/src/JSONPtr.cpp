@@ -853,8 +853,11 @@ auto zpt::json::strict_union(zpt::json _rhs) -> void {
         case zpt::JSObject: {
             if (_rhs->type() == zpt::JSObject) {
                 for (auto&& [_, _key, _e] : _rhs) {
-                    if ((*this)[_key]->type() == zpt::JSObject) { (*this)[_key].strict_union(_e); }
-                    else if (!(*this)[_key]->ok()) { (*this) << _key << _e; }
+                    auto& _this_e = (*this)[_key];
+                    if (_this_e->type() == zpt::JSObject || _this_e->type() == zpt::JSArray) {
+                        _this_e.strict_union(_e);
+                    }
+                    else if (!_this_e->ok()) { (*this) << _key << _e; }
                 }
             }
             return;
