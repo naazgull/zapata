@@ -146,12 +146,19 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
     return zpt::prolog::term::null();
 }
 
+auto zpt::prolog::bridge::cleanup() -> zpt::prolog::bridge& {
+    this->__builtin_to_load.clear();
+    this->__external_to_load.clear();
+    return (*this);
+}
+
 zpt::prolog::bridge::bridge(bridge const& _rhs)
   : __engine_args{ _rhs.__engine_args }
   , __builtin_to_load{ _rhs.__builtin_to_load }
   , __external_to_load{ _rhs.__external_to_load } {
     this->set_options(_rhs.options());
     this->initialize_thread();
+    this->cleanup();
 }
 
 auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {

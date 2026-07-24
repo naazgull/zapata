@@ -22,62 +22,6 @@
 
 #include <zapata/lua/lua.h>
 
-zpt::lua_object::lua_object()
-  : __underlying{ luaL_newstate() }
-  , __initialized_internally{ true } {
-    expect(this->__underlying != nullptr, "Lua: couldn't allocate new `lua_State`");
-}
-
-zpt::lua_object::lua_object(lua_State* _rhs)
-  : __underlying{ _rhs } {}
-
-zpt::lua_object::lua_object(lua_object const& _rhs)
-  : __underlying{ _rhs.__underlying }
-  , __initialized_internally{ false } {}
-
-zpt::lua_object::lua_object(lua_object&& _rhs)
-  : __underlying{ _rhs.__underlying }
-  , __initialized_internally{ _rhs.__initialized_internally } {
-    _rhs.__underlying = nullptr;
-    _rhs.__initialized_internally = false;
-}
-
-zpt::lua_object::~lua_object() {
-    if (this->__initialized_internally) { lua_close(this->__underlying); }
-    this->__underlying = nullptr;
-}
-
-auto zpt::lua_object::operator=(lua_object const& _rhs) -> lua_object& {
-    if (this->__initialized_internally) { lua_close(this->__underlying); }
-    this->__underlying = _rhs.__underlying;
-    this->__initialized_internally = false;
-    return (*this);
-}
-
-auto zpt::lua_object::operator=(lua_object&& _rhs) -> lua_object& {
-    if (this->__initialized_internally) { lua_close(this->__underlying); }
-    this->__underlying = _rhs.__underlying;
-    this->__initialized_internally = _rhs.__initialized_internally;
-    _rhs.__underlying = nullptr;
-    _rhs.__initialized_internally = false;
-    return (*this);
-}
-
-auto zpt::lua_object::operator=(lua_State* _rhs) -> lua_object& {
-    if (this->__initialized_internally) { lua_close(this->__underlying); }
-    this->__underlying = _rhs;
-    this->__initialized_internally = false;
-    return (*this);
-}
-
-auto zpt::lua_object::operator->() -> lua_State* { return this->__underlying; }
-
-auto zpt::lua_object::operator*() -> lua_State& { return *this->__underlying; }
-
-zpt::lua_object::operator lua_State*() { return this->__underlying; }
-
-auto zpt::lua_object::get() -> lua_State* { return this->__underlying; }
-
 zpt::lua::bridge::bridge()
   : __underlying{ luaL_newstate() } {
     expect(this->__underlying != nullptr, "Lua failed to initialize state");
@@ -156,7 +100,7 @@ auto zpt::lua::bridge::clear_stack() -> zpt::lua::bridge& {
 }
 
 auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert) -> zpt::json {
-    if (_to_convert.get() == nullptr) { return zpt::undefined; }
+    if (_to_convert == nullptr) { return zpt::undefined; }
 
     int _size = lua_gettop(_to_convert);
     if (_size == 0) { return zpt::undefined; }
@@ -323,6 +267,7 @@ zpt::lua::bridge::bridge(bridge const& _rhs)
     this->set_options(_rhs.options());
     luaL_openlibs(this->__underlying);
     this->initialize();
+    this->cleanup();
 }
 
 auto zpt::lua::bridge::execute() -> zpt::lua::bridge::object_type {
@@ -347,6 +292,12 @@ auto zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
     for (auto&& [_file, _conf] : this->__external_to_load) {
         this->setup_module(_conf, _file, false);
     }
+    return (*this);
+}
+
+auto zpt::lua::bridge::cleanup() -> zpt::lua::bridge& {
+    this->__builtin_to_load.clear();
+    this->__external_to_load.clear();
     return (*this);
 }
 

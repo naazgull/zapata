@@ -68,4 +68,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded LUA bridge", zpt::info); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zpt::LUA_BRIDGE().cleanup();
+    zlog("Unloaded LUA bridge", zpt::info);
+}

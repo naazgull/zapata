@@ -38,34 +38,6 @@
 #include <zapata/bridge.h>
 
 namespace zpt {
-
-/**
- * @brief RAII wrapper for lua_State.
- *
- * Manages Lua state lifetime and provides convenient access.
- */
-class lua_object {
-  public:
-    lua_object();
-    lua_object(lua_State* _rhs);
-    lua_object(lua_object const& _rhs);
-    lua_object(lua_object&& _rhs);
-    virtual ~lua_object();
-
-    auto operator=(lua_object const& _rhs) -> lua_object&;
-    auto operator=(lua_object&& _rhs) -> lua_object&;
-    auto operator=(lua_State* _rhs) -> lua_object&;
-    auto operator->() -> lua_State*;
-    auto operator*() -> lua_State&;
-    operator lua_State*();
-
-    auto get() -> lua_State*;
-
-  private:
-    lua_State* __underlying{ nullptr };
-    bool __initialized_internally{ false };
-};
-
 namespace lua {
 
 /**
@@ -87,7 +59,7 @@ namespace lua {
  *                        { "arg", "hello" });
  * @endcode
  */
-class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object> {
+class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
   public:
     using underlying_type = lua_State*;                         ///< Raw Lua state pointer
     using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Lua
@@ -95,7 +67,7 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
 
     bridge();
     bridge(bridge&& _rhs) = delete;
-    virtual ~bridge();
+    ~bridge();
 
     auto operator=(bridge const& _rhs) -> zpt::lua::bridge& = delete;
     auto operator=(bridge&& _rhs) -> zpt::lua::bridge& = delete;
@@ -137,6 +109,7 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
 
     /** @brief Initializes the bridge (loads all modules). */
     auto initialize() -> zpt::lua::bridge&;
+    auto cleanup() -> zpt::lua::bridge&;
 
   private:
     lua_State* __underlying{ nullptr };

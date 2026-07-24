@@ -73,4 +73,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Initialized PROLOG bridge", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded PROLOG bridge", zpt::info); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zpt::PROLOG_BRIDGE().cleanup();
+    zlog("Unloaded PROLOG bridge", zpt::info);
+}
