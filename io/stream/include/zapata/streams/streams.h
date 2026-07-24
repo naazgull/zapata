@@ -210,7 +210,8 @@ class polling : public std::enable_shared_from_this<polling> {
 
   private:
     int __epoll_fd{ -1 };
-    zpt::locks::spin_mutex __poll_lock{};
+    zpt::locks::spin_mutex __poll_lock;
+    // std::shared_mutex __poll_lock;
     std::map<int, zpt::stream> __polled_streams;
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };
