@@ -58,7 +58,7 @@ class mqtt_stream : public basic_stream {
     auto persistent() -> bool override;
     auto connect() -> mqtt_stream&;
     auto is_connected() const -> bool;
-    auto subscribe(std::string const& _topic, bool _store = true) -> mqtt_stream&;
+    auto subscribe(std::string const& _topic) -> mqtt_stream&;
     auto publish(zpt::message _payload) -> mqtt_stream&;
     auto loop_misc() -> mqtt_stream&;
 
@@ -71,6 +71,7 @@ class mqtt_stream : public basic_stream {
     std::vector<zpt::message> __buffer;
 
     auto credentials(std::string const& _user, std::string const& _passwd) -> void;
+    auto send_subscribe(std::string const& _topic) -> mqtt_stream&;
     static auto on_connect(struct mosquitto* _mosq, void* _ptr, int _rc) -> void;
     static auto on_message(struct mosquitto* _mosq,
                            void* _ptr,
