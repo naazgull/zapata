@@ -154,23 +154,10 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
 
 auto zpt::mqtt_stream::is_connected() const -> bool { return this->__connected->load(); }
 
-auto zpt::mqtt_stream::subscribe(std::string const& _topic, bool _store) -> zpt::mqtt_stream& {
-    if (this->__connected->load()) {
-        zlog("Subscribing to topic " << _topic, zpt::trace);
-        // Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic
-        // subscription patterns.
-        // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
-        std::unique_lock _guard{ this->__mosq_mutex };
-        if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
-
-        int _;
-        errno = 0;
-        auto _ret = mosquitto_subscribe(this->__mosq, &_, _topic.data(), 0);
-        ::check_error("subscribing", _ret, errno);
-        mosquitto_loop_write(this->__mosq, 1);
-        mosquitto_loop_misc(this->__mosq);
-    }
-    if (_store) { this->__subscriptions.insert(_topic); }
+auto zpt::mqtt_stream::subscribe(std::string const& _topic) -> zpt::mqtt_stream& {
+    std::unique_lock _guard{ this->__mosq_mutex };
+    this->send_subscribe(_topic);
+    this->__subscriptions.insert(_topic);
     return (*this);
 }
 
@@ -222,6 +209,25 @@ auto zpt::mqtt_stream::credentials(std::string const& _user, std::string const& 
     ::check_error("setting credentials", _ret, errno);
 }
 
+auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_stream& {
+    if (this->__connected->load()) {
+        zlog("Subscribing to topic " << _topic, zpt::trace);
+        // Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic
+        // subscription patterns.
+        // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
+        std::unique_lock _guard{ this->__mosq_mutex };
+        if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+
+        int _;
+        errno = 0;
+        auto _ret = mosquitto_subscribe(this->__mosq, &_, _topic.data(), 0);
+        ::check_error("subscribing", _ret, errno);
+        mosquitto_loop_write(this->__mosq, 1);
+        mosquitto_loop_misc(this->__mosq);
+    }
+    return (*this);
+}
+
 auto zpt::mqtt_stream::on_connect(struct mosquitto*, void* _ptr, int _rc) -> void {
     zpt::mqtt_stream::ptr _self =
       std::static_pointer_cast<zpt::mqtt_stream>(((zpt::mqtt_stream*)_ptr)->shared_from_this());
@@ -233,7 +239,7 @@ auto zpt::mqtt_stream::on_connect(struct mosquitto*, void* _ptr, int _rc) -> voi
     zpt::STREAM_POLLING() //
       ->listen_on(_self);
 
-    for (auto& _topic : _self->__subscriptions) { _self->subscribe(_topic, false); }
+    for (auto& _topic : _self->__subscriptions) { _self->send_subscribe(_topic); }
 }
 
 auto zpt::mqtt_stream::on_message(struct mosquitto*,
