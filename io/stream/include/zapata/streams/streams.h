@@ -40,6 +40,7 @@
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/allocator.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/locks/spin_mutex.h>
 #include <zapata/text/convert.h>
 
@@ -109,6 +110,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto read_without_io(std::any& _out) -> basic_stream&;
     /** @brief Writes without performing I/O (e.g., to internal buffer). */
     virtual auto write_without_io(std::any const& _in) -> basic_stream&;
+    /** @brief Whether or not the stream consumed several messages and more are available. */
+    virtual auto has_next() const -> bool;
     /** @brief Stream extraction operator. */
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
@@ -194,6 +197,8 @@ class polling : public std::enable_shared_from_this<polling> {
     auto close() -> zpt::polling&;
     /** @brief Registers a delegate function called when streams are ready. */
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
+    /** @brief Registers a delegate function called when streams are ready. */
+    auto unregister_delegate(delegate_fn_type _callback) -> zpt::polling&;
     /** @brief Adds a stream to be monitored for I/O. */
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     /** @brief Temporarily stops monitoring a stream. */
@@ -210,7 +215,8 @@ class polling : public std::enable_shared_from_this<polling> {
 
   private:
     int __epoll_fd{ -1 };
-    zpt::locks::spin_mutex __poll_lock{};
+    zpt::locks::spin_mutex __poll_lock;
+    // std::shared_mutex __poll_lock;
     std::map<int, zpt::stream> __polled_streams;
     std::vector<delegate_fn_type> __delegates;
     std::atomic<bool> __shutdown{ false };

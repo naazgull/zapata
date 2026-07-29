@@ -18,6 +18,7 @@ add_dependencies(zapata-engine-rest
   zapata-io-stream
   zapata-io-socket
   zapata-lockfree
+  zapata-net-self
   zapata-net-transport
   zapata-ontology
   zapata-parser-json
@@ -46,6 +47,7 @@ target_include_directories(zapata-engine-rest
     zapata-io-stream
     zapata-io-socket
     zapata-lockfree
+    zapata-net-self
     zapata-net-transport
     zapata-ontology
     zapata-parser-json
@@ -66,6 +68,7 @@ target_link_libraries(zapata-engine-rest
     zapata-io-stream
     zapata-io-socket
     zapata-lockfree
+    zapata-net-self
     zapata-net-transport
     zapata-ontology
     zapata-parser-json
@@ -97,6 +100,7 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-io-stream
   zapata-io-socket
   zapata-lockfree
+  zapata-net-self
   zapata-net-transport
   zapata-ontology
   zapata-parser-json
@@ -117,6 +121,7 @@ target_include_directories(zapata-engine-rest-plugin
     zapata-io-stream
     zapata-io-socket
     zapata-lockfree
+    zapata-net-self
     zapata-net-transport
     zapata-ontology
     zapata-parser-json
@@ -136,6 +141,7 @@ target_link_libraries(zapata-engine-rest-plugin
     zapata-io-stream
     zapata-io-socket
     zapata-lockfree
+    zapata-net-self
     zapata-net-transport
     zapata-ontology
     zapata-parser-json

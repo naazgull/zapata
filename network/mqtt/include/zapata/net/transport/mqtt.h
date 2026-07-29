@@ -21,21 +21,23 @@
 */
 
 /**
- * @file self.h
- * @brief In-process transport for local service calls.
+ * @file mqtt.h
+ * @brief MQTT transport implementation.
  *
- * Provides zero-copy message passing within the same process.
- * Used when a service calls another service in the same application.
+ * Provides MQTT socket communication with JSON message framing.
+ * Uses length-prefixed messages for reliable delivery.
  *
- * Capabilities: SYNCHRONOUS
+ * Capabilities: SYNCHRONOUS | PERSISTENT
  *
- * @see zpt::net::transport::self
+ * @see zpt::net::transport::mqtt
  */
 
 #pragma once
+#include <mosquitto.h>
+#include <set>
 #include <string>
 #include <utility>
-#include <zapata/catalog.h>
+#include <zapata/net/transport/mqtt_stream.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
 
@@ -44,15 +46,15 @@ namespace net {
 namespace transport {
 
 /**
- * @brief In-process transport for local calls.
+ * @brief MQTT transport with JSON framing.
  *
- * Provides efficient in-memory message passing without serialization.
- * Registered for "self" URI scheme.
+ * Supports persistent connections with message framing.
+ * Registered for "mqtt" URI scheme.
  */
-class self : public zpt::basic_transport {
+class mqtt : public zpt::basic_transport {
   public:
-    self() = default;
-    virtual ~self() = default;
+    mqtt() = default;
+    virtual ~mqtt() = default;
 
     auto has_capability(std::uint64_t _capability) const -> bool override;
     auto make_request() const -> zpt::message override;
@@ -60,10 +62,9 @@ class self : public zpt::basic_transport {
     auto make_reply(zpt::message _request) const -> zpt::message override;
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
+    auto publish(zpt::message _to_publish) const -> void override;
 };
 } // namespace transport
 } // namespace net
-/** @brief Returns the global catalog identifier. */
-auto CATALOG(std::string const& _name = "", std::string const& _self_id = "")
-  -> zpt::catalog<std::string, zpt::json>::ptr;
+auto MQTT_STREAM(zpt::json _config = zpt::undefined) -> zpt::mqtt_stream::ptr;
 } // namespace zpt

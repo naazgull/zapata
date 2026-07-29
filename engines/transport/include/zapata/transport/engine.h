@@ -54,10 +54,12 @@ class engine : public std::enable_shared_from_this<engine> {
     /** @brief Constructs an engine with the given configuration. */
     engine(zpt::json _config);
     /** @brief Destructor. */
-    virtual ~engine() = default;
+    virtual ~engine();
 
     /** @brief Adds an event resolver for routing messages. */
     auto add_resolver(zpt::events::resolver _resolver) -> engine&;
+    /** @brief Removes the given event resolver from routing messages. */
+    auto remove_resolver(zpt::events::resolver _resolver) -> engine&;
     /** @brief Resolves a message to matching event handlers. */
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event>;
@@ -70,6 +72,7 @@ class engine : public std::enable_shared_from_this<engine> {
     zpt::json __configuration;
     std::vector<zpt::events::resolver> __resolvers;
     zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    zpt::polling::delegate_fn_type __delegate_callback{ nullptr };
 };
 } // namespace transports
 
@@ -334,6 +337,7 @@ class call {
 
     auto call_internally() -> call&;
     auto send_externally() -> call&;
+    auto publish_externally() -> call&;
 };
 
 /**
@@ -374,7 +378,6 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
-    this->__resolver->add(this->__to_send, _context, zpt::events::make_callback<T>);
 }
 
 template<ProcessOperation T>
@@ -420,6 +423,13 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
 
+    if (_uri("scheme")->is_string() && zpt::TRANSPORT_LAYER()
+                                         .get(_uri("scheme")->string())
+                                         ->has_capability(zpt::transport_capability::PUB_SUB)) {
+        this->publish_externally();
+        return zpt::events::finish;
+    }
+
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
         try {
@@ -460,21 +470,24 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::call_internally() -> call& {
+    this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
     auto _stream = zpt::allocate_shared<zpt::event_stream>();
     _stream->transport("self");
 
     this->__to_send->header("Content-Type", "application/json");
-    _transport->send(_stream, this->__to_send);
-
     this->__polling->listen_on(_stream);
+    _transport->send(_stream, this->__to_send);
 
     return (*this);
 }
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::send_externally() -> call& {
+    this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+
     auto& _uri = this->__to_send->uri();
     auto _scheme = _uri("scheme")->string();
     auto _transport = zpt::TRANSPORT_LAYER() //
@@ -487,10 +500,18 @@ auto zpt::events::call<T>::send_externally() -> call& {
     _stream->transport(_scheme);
 
     this->__to_send->header("Content-Type", "application/json");
+    this->__polling->listen_on(_stream);
     _transport->send(_stream, this->__to_send);
 
-    this->__polling->listen_on(_stream);
+    return (*this);
+}
 
+template<ProcessOperation T>
+auto zpt::events::call<T>::publish_externally() -> call& {
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(this->__to_send->uri()("scheme")->string());
+    this->__to_send->header("Content-Type", "application/json");
+    _transport->publish(this->__to_send);
     return (*this);
 }
 

@@ -12,6 +12,7 @@ endif()
 add_library(zapata-net-self SHARED)
 add_dependencies(zapata-net-self
   zapata-base
+  zapata-common-catalog
   zapata-globals
   zapata-io-stream
   zapata-net-transport
@@ -28,11 +29,13 @@ target_sources(zapata-net-self
 target_include_directories(zapata-net-self
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-globals
     zapata-io-stream
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-storage-sqlite
     ${NETWORK_SELF_INCLUDE_DIR}
   INTERFACE
     ${NETWORK_SELF_INCLUDE_DIR}
@@ -40,11 +43,14 @@ target_include_directories(zapata-net-self
 target_link_libraries(zapata-net-self
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-globals
     zapata-io-stream
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-net-self
   PROPERTIES
@@ -58,6 +64,7 @@ set_target_properties(zapata-net-self
 add_library(zapata-net-self-plugin SHARED)
 add_dependencies(zapata-net-self-plugin
   zapata-base
+  zapata-common-catalog
   zapata-engine-startup
   zapata-events
   zapata-globals
@@ -75,6 +82,7 @@ target_sources(zapata-net-self-plugin
 target_include_directories(zapata-net-self-plugin
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-engine-startup
     zapata-events
     zapata-globals
@@ -83,6 +91,7 @@ target_include_directories(zapata-net-self-plugin
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-storage-sqlite
     ${NETWORK_SELF_INCLUDE_DIR}
   INTERFACE
     ${NETWORK_SELF_INCLUDE_DIR}
@@ -90,6 +99,7 @@ target_include_directories(zapata-net-self-plugin
 target_link_libraries(zapata-net-self-plugin
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-engine-startup
     zapata-events
     zapata-globals
@@ -98,6 +108,8 @@ target_link_libraries(zapata-net-self-plugin
     zapata-parser-json
     zapata-parser-uri
     zapata-net-self
+    zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
  )
 set_target_properties(zapata-net-self-plugin
   PROPERTIES
@@ -133,22 +145,27 @@ target_sources(zapata_example_self_transport
 target_include_directories(zapata_example_self_transport
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-io-stream
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
-    ${NETWORK_SELF_INCLUDE_DIR}
+    zapata-storage-sqlite
+   ${NETWORK_SELF_INCLUDE_DIR}
 )
 target_link_libraries(zapata_example_self_transport
   PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
     zapata-base
+    zapata-common-catalog
     zapata-io-stream
     zapata-net-transport
     zapata-net-self
     zapata-parser-json
     zapata-parser-uri
+    zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata_example_self_transport
   PROPERTIES

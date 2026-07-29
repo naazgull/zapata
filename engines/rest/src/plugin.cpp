@@ -58,5 +58,17 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
         zpt::rest::services::broadcast("/minions/shutdown", _config);
     }
 
-    zpt::REST_RESOLVER()->clear();
+    zpt::REST_RESOLVER() //
+      ->remove<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")
+      .remove<zpt::rest::minion_shutdown>(zpt::Notify, "/minions/shutdown")
+      .remove<zpt::rest::minion_hello>("/minions/hello")
+      .remove<zpt::rest::minion_state>("/minions/state");
+
+    zpt::TRANSPORT_ENGINE() //
+      ->remove_resolver(zpt::REST_RESOLVER());
+
+    expect(zpt::REST_RESOLVER()->count() == 0,
+           zpt::REST_RESOLVER()->count()
+             << " callbacks still registered in REST resolver, it usually leads to segmentation "
+                "faults due to dynamic library unloading");
 }

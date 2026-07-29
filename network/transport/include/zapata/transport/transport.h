@@ -55,7 +55,8 @@ namespace zpt {
  */
 enum transport_capability {
     SYNCHRONOUS = 1, ///< Transport supports request-response pattern
-    PERSISTENT = 2   ///< Transport maintains persistent connections
+    PERSISTENT = 2,  ///< Transport maintains persistent connections
+    PUB_SUB = 4      ///< Transport follows pub/sub flow
 };
 
 /**
@@ -108,6 +109,8 @@ class basic_transport {
     virtual auto receive(zpt::stream _stream) const -> zpt::message final;
     /** @brief Sends a message to a stream. */
     virtual auto send(zpt::stream _stream, zpt::message _to_send) const -> void final;
+    /** @brief Publishes a message to a pub-sub topic. */
+    virtual auto publish(zpt::message _to_publish) const -> void;
 };
 
 /** @brief Shared pointer to a transport. */

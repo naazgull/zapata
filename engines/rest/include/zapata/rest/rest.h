@@ -108,11 +108,9 @@ class resolver_t : public zpt::events::resolver_t {
     auto unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& override;
     /** @brief Returns provider metadata by ID. */
     auto get_provider(std::string const& _id) const -> zpt::json override;
-    /** @brief Removes all registered services and providers. */
-    auto clear() -> resolver_t& override;
 
   private:
-    zpt::catalog<std::string, zpt::json> __catalog;
+    zpt::catalog<std::string, zpt::json>::ptr __catalog{ nullptr };
     std::vector<zpt::events::resolver_callback> __callbacks;
     mutable zpt::rest::pending_messages __pending_requests;
     zpt::json __configuration;

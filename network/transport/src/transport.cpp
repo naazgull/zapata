@@ -72,6 +72,11 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
     }
 }
 
+auto zpt::basic_transport::publish(zpt::message) const -> void {
+    expect(this->has_capability(zpt::transport_capability::PUB_SUB),
+           "Transport isn't capable of PUB-SUB");
+}
+
 zpt::network::layer::layer(zpt::json _global_config)
   : __configuration{ _global_config } {
     this->add_content_provider("*/*",

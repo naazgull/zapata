@@ -51,10 +51,6 @@ static constexpr char const* EXACT_RESOLVE_STMT =
 } // namespace
 
 namespace zpt {
-
-/** @brief Returns the global catalog identifier. */
-auto CATALOG() -> ssize_t&;
-
 /**
  * @brief SQLite-backed service catalog with pattern matching.
  *
@@ -75,6 +71,8 @@ auto CATALOG() -> ssize_t&;
 template<typename K, typename M>
 class catalog {
   public:
+    using ptr = std::shared_ptr<catalog>;
+
     /**
      * @brief Constructs a catalog backed by an in-memory SQLite database.
      * @param _catalog_name Name for the SQLite database.

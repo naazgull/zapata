@@ -109,13 +109,17 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
       .clear();
     zlog("Unloaded transport layer", zpt::info);
     zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
+    zpt::DISPATCHER() //
       ->stop_consumers();
     zlog("Stopped global event dispatcher", zpt::info);
-
-    zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
+
+    expect(zpt::SYSTEM_EVENTS_RESOLVER()->count() == 0,
+           zpt::SYSTEM_EVENTS_RESOLVER()->count()
+             << " callbacks still registered in REST resolver, it usually leads to segmentation "
+                "faults due to dynamic library unloading");
 }
 
 auto zpt::runtime::shutdown() -> void { zpt::STREAM_POLLING()->shutdown(); }

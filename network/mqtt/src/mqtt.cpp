@@ -22,47 +22,50 @@
 
 #include <zapata/base.h>
 #include <zapata/globals/globals.h>
-#include <zapata/net/transport/self.h>
+#include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/transport/mqtt.h>
 
-auto zpt::net::transport::self::has_capability(std::uint64_t _capability) const -> bool {
-    static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;
+auto zpt::net::transport::mqtt::has_capability(std::uint64_t _capability) const -> bool {
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::PUB_SUB;
     return (_capabilities & _capability) == _capability;
 }
 
-auto zpt::net::transport::self::make_request() const -> zpt::message {
+auto zpt::net::transport::mqtt::make_request() const -> zpt::message {
     auto _to_return = zpt::allocate_message<zpt::json_message>();
     return _to_return;
 }
 
-auto zpt::net::transport::self::make_reply(bool _with_allocator) const -> zpt::message {
+auto zpt::net::transport::mqtt::make_reply(bool _with_allocator) const -> zpt::message {
     auto _to_return = _with_allocator ? zpt::allocate_message<zpt::json_message>()
                                       : zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
-auto zpt::net::transport::self::make_reply(zpt::message _request) const -> zpt::message {
+auto zpt::net::transport::mqtt::make_reply(zpt::message _request) const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::json_message>(_request, true);
     return _to_return;
 }
 
-auto zpt::net::transport::self::process_incoming_request(zpt::stream _stream) const
+auto zpt::net::transport::mqtt::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
-    expect(_stream->transport() == "self", "Stream underlying transport isn't 'self'");
+    expect(_stream->transport() == "mqtt", "Stream underlying transport isn't 'mqtt'");
     auto _message = zpt::allocate_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }
 
-auto zpt::net::transport::self::process_incoming_reply(zpt::stream _stream) const -> zpt::message {
-    expect(_stream->transport() == "self", "Stream underlying transport isn't 'self'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
-    (*_stream) >> std::noskipws >> _message;
-    return _message;
+auto zpt::net::transport::mqtt::process_incoming_reply(zpt::stream _stream) const -> zpt::message {
+    return this->process_incoming_request(_stream);
 }
 
-auto zpt::CATALOG(std::string const& _name, std::string const& _self_id)
-  -> zpt::catalog<std::string, zpt::json>::ptr {
-    static auto _global =
-      zpt::allocate_shared<zpt::catalog<std::string, zpt::json>>(_name, _self_id);
+auto zpt::net::transport::mqtt::publish(zpt::message _to_publish) const -> void {
+    expect(this->has_capability(zpt::transport_capability::PUB_SUB),
+           "Transport isn't capable of PUB-SUB");
+    auto _server = zpt::MQTT_STREAM();
+    _server->publish(_to_publish);
+}
+
+auto zpt::MQTT_STREAM(zpt::json _config) -> zpt::mqtt_stream::ptr {
+    static auto _global = zpt::allocate_shared<zpt::mqtt_stream>(_config);
     return _global;
 }

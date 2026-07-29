@@ -21,21 +21,44 @@
 */
 
 #include <iostream>
-#include <zapata/net/transport/self.h>
+#include <zapata/events.h>
+#include <zapata/net/mqtt.h>
+#include <zapata/ontology.h>
+#include <zapata/rest.h>
+#include <zapata/rest/services.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/uuid.h>
+
+class on_message : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~on_message() = default;
+
+    auto blocked() const -> bool { return false; }
+
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
+        return zpt::events::finish;
+    }
+
+  private:
+    size_t _count{ 0 };
+};
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zpt::TRANSPORT_LAYER() //
-      .add("self", zpt::make_transport<zpt::net::transport::self>());
-
-    auto _identity = zpt::GLOBAL_CONFIG()("identity");
-    std::string _id = _identity("id")->ok() ? _identity("id")->string() : zpt::uuid{}.to_string();
-    _identity["id"] = _id;
-    _identity["name"] = _identity("name")->ok() ? _identity("name") : _identity("_id");
-
-    zpt::CATALOG(_identity("name")->string(), _identity("id")->string());
+    zlog("Loading module 'example_mqtt_consumer'", zpt::info);
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto _resolver = zpt::REST_RESOLVER();
+    auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+    _resolver //
+      ->add<on_message>(zpt::Inform, std::format("{}/test/topic", _prefix));
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("self"); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    auto _config = zpt::GLOBAL_CONFIG();
+    auto _resolver = zpt::REST_RESOLVER();
+    auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+    _resolver //
+      ->remove<on_message>(zpt::Inform, std::format("{}/test/topic", _prefix));
+    zlog("Unloading module 'example_mqtt_consumer'", zpt::info);
+}
