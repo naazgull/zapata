@@ -28,10 +28,10 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
-class execute_after_boot : public zpt::system_event {
+class plugin_mqtt_execute_after_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
-    ~execute_after_boot() = default;
+    ~plugin_mqtt_execute_after_boot() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         auto _catalog = zpt::CATALOG();
@@ -45,7 +45,7 @@ class execute_after_boot : public zpt::system_event {
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->remove<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
         return zpt::events::finish;
     }
@@ -63,7 +63,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
              zpt::trace);
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->add<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->add<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
         _plugin.add_thread([=]() mutable -> void {
             zpt::this_thread::name("mqtt@loop-misc");

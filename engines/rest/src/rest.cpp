@@ -35,7 +35,6 @@ auto zpt::rest::resolver_t::add(zpt::message _sent,
                                 zpt::call_context::ptr _context,
                                 zpt::events::resolver_callback _callback)
   -> zpt::rest::resolver_t& {
-    assert(false);
     this->__pending_requests.push(_sent, _context, _callback);
     return (*this);
 }

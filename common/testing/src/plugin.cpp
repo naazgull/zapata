@@ -33,10 +33,10 @@ auto trim_module_name(std::string const& _to_trim) -> std::string {
 }
 } // namespace
 
-class execute_after_boot : public zpt::system_event {
+class plugin_testing_execute_after_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
-    ~execute_after_boot() = default;
+    ~plugin_testing_execute_after_boot() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
@@ -46,6 +46,7 @@ class execute_after_boot : public zpt::system_event {
 
         for (auto&& [_, __, _target] : _config("testing")("target")) {
             try {
+                zlog(_target->string() << ": exec...", zpt::debug);
                 _bridge.call(zpt::json{ "module", _target, "function", "run" }, _dummy_args);
                 zlog(_target->string() << ": ok", zpt::notice);
             }
@@ -56,7 +57,7 @@ class execute_after_boot : public zpt::system_event {
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->remove<plugin_testing_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
         if (_failed->size() != 0) {
             zlog("Failed tests: " << zpt::pretty{ _failed }, zpt::warning);
@@ -109,7 +110,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 
     zpt::SYSTEM_EVENTS_RESOLVER() //
-      ->add<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+      ->add<plugin_testing_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
     zlog("Loaded testing plugin", zpt::info);
 }

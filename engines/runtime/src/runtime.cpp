@@ -118,8 +118,8 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
 
     expect(zpt::SYSTEM_EVENTS_RESOLVER()->count() == 0,
            zpt::SYSTEM_EVENTS_RESOLVER()->count()
-             << " callbacks still registered in REST resolver, it usually leads to segmentation "
-                "faults due to dynamic library unloading");
+             << " callbacks still registered in SYSTEM EVENTS resolver, it usually leads to "
+                "segmentation faults due to dynamic library unloading");
 }
 
 auto zpt::runtime::shutdown() -> void { zpt::STREAM_POLLING()->shutdown(); }
