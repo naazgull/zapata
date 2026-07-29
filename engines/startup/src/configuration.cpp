@@ -42,7 +42,6 @@ auto zpt::startup::configuration::load(zpt::json _parameters, zpt::json& _output
     }
     if (_output.size() == 0) { _output += zpt::startup::configuration::load_defaults(); }
 
-    zpt::conf::dirs(_output);
     zpt::conf::env(_output);
 
     for (auto&& [_, __, _param] : _parameters("--")) {

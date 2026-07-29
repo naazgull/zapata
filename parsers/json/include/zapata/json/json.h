@@ -73,8 +73,6 @@ auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;
 namespace conf {
 /** @brief Parses command-line arguments into JSON. */
 auto getopt(int _argc, char* _argv[]) -> zpt::json;
-/** @brief Sets up configuration from parsed options. */
-auto setup(zpt::json _options) -> void;
 /** @brief Evaluates $ref references in configuration. */
 auto evaluate_ref(zpt::json _options,
                   zpt::json _parent,
@@ -85,8 +83,6 @@ auto evaluate_ref(zpt::json _options,
 auto file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root) -> void;
 /** @brief Loads configuration from a directory. */
 auto dirs(std::string const& _dir, zpt::json& _options) -> void;
-/** @brief Loads configuration from default directories. */
-auto dirs(zpt::json& _options) -> void;
 /** @brief Loads configuration from environment variables. */
 auto env(zpt::json& _options) -> void;
 } // namespace conf

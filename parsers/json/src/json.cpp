@@ -143,11 +143,6 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
     return _return;
 }
 
-auto zpt::conf::setup(zpt::json _options) -> void {
-    zpt::conf::dirs(_options);
-    zpt::conf::env(_options);
-}
-
 auto zpt::conf::evaluate_ref(zpt::json _options,
                              zpt::json _parent,
                              std::variant<std::string, size_t> const& _parent_key,
@@ -181,13 +176,14 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                     }
 
                     if (_parent_key.index() == 1) {
-                        _parent[std::get<size_t>(_parent_key)] = _other;
+                        _parent[std::get<size_t>(_parent_key)] |= _other;
                     }
                     else {
-                        if (std::get<std::string>(_parent_key).length() == 0) { _parent = _other; }
-                        else { _parent[std::get<std::string>(_parent_key)] = _other; }
+                        if (std::get<std::string>(_parent_key).length() == 0) { _parent |= _other; }
+                        else { _parent[std::get<std::string>(_parent_key)] |= _other; }
                     }
                 }
+                _parent->object()->pop(_key);
             }
             else { zpt::conf::evaluate_ref(_value, _options, _key, _context, _root); }
         }
@@ -208,8 +204,9 @@ auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zp
     _context.remove_filename();
     try {
         _ifs >> _conf;
-        zpt::conf::evaluate_ref(_conf, _conf, "", _context, _root);
-        _options |= _conf;
+        auto _parent = _conf->clone();
+        zpt::conf::evaluate_ref(_conf, _parent, "", _context, _root);
+        _options |= _parent;
     }
     catch (zpt::SyntaxErrorException const& _e) {
         _conf = zpt::undefined;
@@ -229,32 +226,6 @@ auto zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
         if (std::filesystem::is_directory(_file)) { zpt::conf::dirs(_file, _options); }
         else { zpt::conf::file(static_cast<std::string>(_file), _options, _options); }
     }
-}
-
-auto zpt::conf::dirs(zpt::json& _options) -> void {
-    bool* _redo = new bool(false);
-    do {
-        *_redo = false;
-        zpt::json _traversable = _options->clone();
-        zpt::json::traverse(
-          _traversable,
-          [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-              if (_key == "$ref") {
-                  zpt::json _object = (_path.rfind(".") != std::string::npos
-                                         ? _options->get_path(_path.substr(0, _path.rfind(".")))
-                                         : _options);
-                  if (_item->is_array()) {
-                      for (auto const& [_idx, _key, _file] : _item) {
-                          zpt::conf::dirs((std::string)_file, _object);
-                      }
-                  }
-                  else { zpt::conf::dirs((std::string)_item, _object); }
-                  _object->object()->pop("$ref");
-                  *_redo = true;
-              }
-          });
-    } while (*_redo);
-    delete _redo;
 }
 
 auto zpt::conf::env(zpt::json& _options) -> void {
