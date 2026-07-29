@@ -24,10 +24,18 @@
 #include <zapata/net/transport/self.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
+#include <zapata/uuid.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
       .add("self", zpt::make_transport<zpt::net::transport::self>());
+
+    auto _identity = zpt::GLOBAL_CONFIG()("identity");
+    std::string _id = _identity("id")->ok() ? _identity("id")->string() : zpt::uuid{}.to_string();
+    _identity["id"] = _id;
+    _identity["name"] = _identity("name")->ok() ? _identity("name") : _identity("_id");
+
+    zpt::CATALOG(_identity("name")->string(), _identity("id")->string());
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("self"); }

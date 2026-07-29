@@ -66,6 +66,9 @@ zpt::json_message::json_message()
     this->__underlying << "headers" << _headers;
 }
 
+zpt::json_message::json_message(zpt::json const& _other)
+  : __underlying{ _other->clone() } {}
+
 zpt::json_message::json_message(zpt::message _request, bool)
   : json_message{} {
     auto _req_headers = _request->headers();

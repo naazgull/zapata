@@ -170,6 +170,8 @@ class json_message : public basic_message {
   public:
     /** @brief Constructs an empty JSON message. */
     json_message();
+    /** @brief Populates this message with the given JSON. */
+    json_message(zpt::json const& _other);
     /** @brief Constructs a JSON reply from an existing request. */
     json_message(zpt::message _req, bool);
     /** @brief Destructor. */
@@ -273,6 +275,4 @@ auto zpt::make_message(Args... _args) -> zpt::message {
 template<typename T, typename... Args>
 auto zpt::allocate_message(Args... _args) -> zpt::message {
     return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
-    // return std::allocate_shared<T>(zpt::allocator<T>{ zpt::MEM_POOL() },
-    //                                std::forward<Args>(_args)...);
 }

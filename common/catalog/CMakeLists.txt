@@ -40,8 +40,8 @@ target_link_libraries(zapata-common-catalog
     zapata-base
     zapata-parser-json
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-common-catalog
   PROPERTIES
@@ -79,16 +79,17 @@ target_include_directories(zapata_example_common_catalog
     zapata-parser-json
     zapata-storage-sqlite
     zapata-storage-connector
+    zapata-storage-sqlite
     ${COMMON_CATALOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata_example_common_catalog
   PRIVATE
     zapata-base
+    zapata-common-catalog
     zapata-parser-json
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
-    zapata-common-catalog
+    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata_example_common_catalog
   PROPERTIES

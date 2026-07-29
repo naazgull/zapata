@@ -24,16 +24,32 @@
 #include <mosquitto.h>
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/mqtt.h>
+#include <zapata/net/transport/self.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
-// auto _polling = zpt::STREAM_POLLING();
-// auto _transport = zpt::TRANSPORT_LAYER().get("mqtt");
+class execute_after_boot : public zpt::system_event {
+  public:
+    using zpt::system_event::system_event;
+    ~execute_after_boot() = default;
 
-// mosquitto_lib_init();
-// auto _mosq = mosquitto_new(nullptr, true, this);
-// int _protocol = MQTT_PROTOCOL_V311;
-// mosquitto_opts_set(this->__mosq, MOSQ_OPT_PROTOCOL_VERSION, &_protocol);
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
+        auto _catalog = zpt::CATALOG();
+        auto _stream = zpt::MQTT_STREAM();
+        auto _services = _catalog->list();
+
+        for (auto&& [_, __, _service] : _services) {
+            if (_service("_id")->string().find("/minions") != std::string::npos) { continue; }
+            auto _topic = zpt::r_replace(_service("_id")->string(), "{}", "*");
+            _stream->subscribe(_topic);
+        }
+
+        zpt::SYSTEM_EVENTS_RESOLVER() //
+          ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+        
+        return zpt::events::finish;
+    }
+};
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
@@ -46,28 +62,40 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                                         << _config("port")->integer() << "`",
              zpt::trace);
 
-        _plugin.add_thread([=]() mutable -> void {
-            zpt::this_thread::name("mqtt@listener");
-            // auto _server = zpt::MQTT_SERVER();
-            auto _polling = zpt::STREAM_POLLING();
+        zpt::SYSTEM_EVENTS_RESOLVER() //
+          ->add<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
-            // _server->connect(_config("address")->string(), _config("port")->integer());
+        _plugin.add_thread([=]() mutable -> void {
+            zpt::this_thread::name("mqtt@loop-misc");
+            auto _stream = zpt::MQTT_STREAM(_config);
+
             zlog("Started MQTT transport connected to " << _config("address")->string() << ":"
                                                         << _config("port")->integer(),
                  zpt::info);
 
-            try {
-                do {
-                    // _server->receive();
-                } while (!_polling->is_in_shutdown());
-            }
-            catch (zpt::failed_expectation const& _e) {
-                zlog(_e.what(), zpt::error);
-            }
-            catch (zpt::ClosedException const& _e) {
-            }
-            catch (std::exception const& _e) {
-                zlog(_e.what(), zpt::error);
+            while (!zpt::STREAM_POLLING()->is_in_shutdown()) {
+                try {
+                    if (!_stream->is_connected()) {
+                        try {
+                            _stream->connect();
+                        }
+                        catch (...) {
+                            std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+                            continue;
+                        }
+                    }
+                    _stream->loop_misc();
+                    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+                }
+                catch (zpt::failed_expectation const& _e) {
+                    zlog(_e.what(), zpt::error);
+                }
+                catch (zpt::ClosedException const& _e) {
+                    if (!zpt::STREAM_POLLING()->is_in_shutdown()) { continue; }
+                }
+                catch (std::exception const& _e) {
+                    zlog(_e.what(), zpt::error);
+                }
             }
             zlog("Stopped MQTT transport connected to " << _config("address")->string() << ":"
                                                         << _config("port")->integer(),

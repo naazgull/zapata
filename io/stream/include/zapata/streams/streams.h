@@ -194,6 +194,8 @@ class polling : public std::enable_shared_from_this<polling> {
     auto close() -> zpt::polling&;
     /** @brief Registers a delegate function called when streams are ready. */
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
+    /** @brief Registers a delegate function called when streams are ready. */
+    auto unregister_delegate(delegate_fn_type _callback) -> zpt::polling&;
     /** @brief Adds a stream to be monitored for I/O. */
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     /** @brief Temporarily stops monitoring a stream. */

@@ -122,6 +122,16 @@ auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling
     return (*this);
 }
 
+auto zpt::polling::unregister_delegate(delegate_fn_type _callback) -> zpt::polling& {
+    for (auto _it = this->__delegates.begin(); _it != this->__delegates.end();) {
+        if (_it->target<delegate_fn_type>() == _callback.target<delegate_fn_type>()) {
+            _it = this->__delegates.erase(_it);
+        }
+        else { ++_it; }
+    }
+    return (*this);
+}
+
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) { this->insert(_stream); }
     return (*this);

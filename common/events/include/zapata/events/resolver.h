@@ -90,7 +90,7 @@ class resolver_t {
     virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
     /** @brief Removes a handler by performative and ID. */
     virtual auto remove(zpt::performative _performtive, zpt::json const& _id) -> resolver_t& = 0;
-
+    virtual auto count() const -> size_t final;
     /**
      * @brief Resolves a message to matching event handlers.
      * @param _received Incoming message to resolve.
@@ -111,8 +111,9 @@ class resolver_t {
     virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
     /** @brief Retrieves a service provider by ID. */
     virtual auto get_provider(std::string const& _id) const -> zpt::json = 0;
-    /** @brief Removes all registered handlers and providers. */
-    virtual auto clear() -> resolver_t& = 0;
+
+  protected:
+    zpt::padded_atomic<size_t> __registered_callbacks{ 0 };
 };
 /** @brief Shared pointer type for resolvers. */
 using resolver = std::shared_ptr<resolver_t>;

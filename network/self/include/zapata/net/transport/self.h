@@ -35,6 +35,7 @@
 #pragma once
 #include <string>
 #include <utility>
+#include <zapata/catalog.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
 
@@ -62,4 +63,7 @@ class self : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
+/** @brief Returns the global catalog identifier. */
+auto CATALOG(std::string const& _name = "", std::string const& _self_id = "")
+  -> zpt::catalog<std::string, zpt::json>::ptr;
 } // namespace zpt

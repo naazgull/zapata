@@ -28,3 +28,4 @@
 #pragma once
 
 #include <zapata/net/transport/mqtt.h>
+#include <zapata/net/transport/mqtt_stream.h>

@@ -143,8 +143,6 @@ class resolver_t : public zpt::events::resolver_t {
     auto unregister_provider(std::string const& _id) -> resolver_t& override;
     /** @brief Returns provider metadata by ID. */
     auto get_provider(std::string const& _id) const -> zpt::json override;
-    /** @brief Removes all registered handlers and providers. */
-    auto clear() -> resolver_t& override;
 
   private:
     std::map<zpt::system_event_type, std::map<zpt::json, zpt::events::resolver_callback>>
@@ -177,7 +175,8 @@ auto zpt::system_events::resolver_t::add(zpt::system_event_type _type) -> resolv
 
 template<zpt::events::Operation T>
 auto zpt::system_events::resolver_t::remove(zpt::system_event_type _type) -> resolver_t& {
-    this->__callbacks[_type].erase(zpt::system_events::get_id<T>());
+    this->__registered_callbacks->fetch_sub(
+      this->__callbacks[_type].erase(zpt::system_events::get_id<T>()));
     return (*this);
 }
 

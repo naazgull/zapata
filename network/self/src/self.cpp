@@ -59,3 +59,10 @@ auto zpt::net::transport::self::process_incoming_reply(zpt::stream _stream) cons
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }
+
+auto zpt::CATALOG(std::string const& _name, std::string const& _self_id)
+  -> zpt::catalog<std::string, zpt::json>::ptr {
+    static auto _global =
+      zpt::allocate_shared<zpt::catalog<std::string, zpt::json>>(_name, _self_id);
+    return _global;
+}

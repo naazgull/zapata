@@ -64,6 +64,7 @@ auto zpt::system_events::resolver_t::add(zpt::performative,
                                          zpt::events::resolver_callback _callback) -> resolver_t& {
     this->__callbacks[static_cast<zpt::system_event_type>(_type->integer())].insert(
       std::make_pair(_id, _callback));
+    this->__registered_callbacks->fetch_add(1);
     return (*this);
 }
 
@@ -74,7 +75,9 @@ auto zpt::system_events::resolver_t::remove(zpt::message) -> resolver_t& {
 
 auto zpt::system_events::resolver_t::remove(zpt::performative, zpt::json const& _id)
   -> resolver_t& {
-    for (auto& [_, _per_id] : this->__callbacks) { _per_id.erase(_id); }
+    for (auto& [_, _per_id] : this->__callbacks) {
+        this->__registered_callbacks->fetch_sub(_per_id.erase(_id));
+    }
     return (*this);
 }
 
@@ -117,11 +120,6 @@ auto zpt::system_events::resolver_t::unregister_provider(std::string const&) -> 
 auto zpt::system_events::resolver_t::get_provider(std::string const&) const -> zpt::json {
     expect(false, "Not implemented for `zpt::system_events`");
     return zpt::undefined;
-}
-
-auto zpt::system_events::resolver_t::clear() -> resolver_t& {
-    this->__callbacks.clear();
-    return (*this);
 }
 
 auto zpt::SYSTEM_EVENTS_RESOLVER() -> zpt::system_events::resolver {

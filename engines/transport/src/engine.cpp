@@ -171,6 +171,9 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         this->__polling->unmute(this->__stream);
 #ifndef PROPAGATE_EXCEPTION
     }
+    catch (zpt::InterruptedException const& _e) {
+        this->__polling->unmute(this->__stream);
+    }
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, _dispatcher);
     }
@@ -229,7 +232,9 @@ zpt::events::process::~process() {
 #endif
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
-        if (this->__to_send->status() != 100) {
+
+        if (this->__to_send->status() != 100 &&
+            !_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
             if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
                  this->__received->performative() != zpt::Reply) ||
                 (this->__to_send != nullptr && this->__to_send->status() != 0)) {
@@ -324,31 +329,32 @@ zpt::transports::engine::engine(zpt::json _config)
   , __dispatcher{ zpt::allocate_shared<zpt::events::dispatcher>(
       "transport",
       _config("limits")("max_workers")->ok() ? _config("limits")("max_workers")->integer() : 1) } {
-    zpt::STREAM_POLLING() //
-      ->register_delegate([this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
+    this->__delegate_callback = [this](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
 #ifndef PROPAGATE_EXCEPTION
-          try {
+        try {
 #endif
-              this->__dispatcher->trigger<zpt::events::receive>(
-                this->shared_from_this(), _poll, _stream);
-              return true;
+            this->__dispatcher->trigger<zpt::events::receive>(
+              this->shared_from_this(), _poll, _stream);
+            return true;
 #ifndef PROPAGATE_EXCEPTION
-          }
-          catch (std::bad_alloc const& _e) {
-              auto _reply = ::report_error(_e, _stream, _poll);
-              if (_reply != nullptr) {
-                  this->__dispatcher->trigger<zpt::events::send>(_poll, _stream, _reply);
-              }
-          }
-          catch (std::exception const& _e) {
-              auto _reply = ::report_error(_e, _stream, _poll);
-              if (_reply != nullptr) {
-                  this->__dispatcher->trigger<zpt::events::send>(_poll, _stream, _reply);
-              }
-          }
+        }
+        catch (std::bad_alloc const& _e) {
+            auto _reply = ::report_error(_e, _stream, _poll);
+            if (_reply != nullptr) {
+                this->__dispatcher->trigger<zpt::events::send>(_poll, _stream, _reply);
+            }
+        }
+        catch (std::exception const& _e) {
+            auto _reply = ::report_error(_e, _stream, _poll);
+            if (_reply != nullptr) {
+                this->__dispatcher->trigger<zpt::events::send>(_poll, _stream, _reply);
+            }
+        }
 #endif
-          return true;
-      });
+        return true;
+    };
+    zpt::STREAM_POLLING()->register_delegate(this->__delegate_callback);
+
     auto _event_init = zpt::allocate_shared<zpt::events::transport_event_init>();
     _event_init->__polling = zpt::STREAM_POLLING();
     _event_init->__dispatcher = this->__dispatcher;
@@ -358,9 +364,22 @@ zpt::transports::engine::engine(zpt::json _config)
       .start_consumers();
 }
 
+zpt::transports::engine::~engine() {
+    zpt::STREAM_POLLING()->unregister_delegate(this->__delegate_callback);
+}
+
 auto zpt::transports::engine::add_resolver(zpt::events::resolver _resolver)
   -> zpt::transports::engine& {
     this->__resolvers.push_back(_resolver);
+    return (*this);
+}
+
+auto zpt::transports::engine::remove_resolver(zpt::events::resolver _resolver)
+  -> zpt::transports::engine& {
+    for (auto _it = this->__resolvers.begin(); _it != this->__resolvers.end();) {
+        if (_it->get() == _resolver.get()) { _it = this->__resolvers.erase(_it); }
+        else { ++_it; }
+    }
     return (*this);
 }
 

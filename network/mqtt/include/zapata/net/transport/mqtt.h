@@ -33,9 +33,11 @@
  */
 
 #pragma once
+#include <mosquitto.h>
+#include <set>
 #include <string>
 #include <utility>
-#include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/transport/mqtt_stream.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
 
@@ -60,7 +62,9 @@ class mqtt : public zpt::basic_transport {
     auto make_reply(zpt::message _request) const -> zpt::message override;
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
+    auto publish(zpt::message _to_publish) const -> void override;
 };
 } // namespace transport
 } // namespace net
+auto MQTT_STREAM(zpt::json _config = zpt::undefined) -> zpt::mqtt_stream::ptr;
 } // namespace zpt
