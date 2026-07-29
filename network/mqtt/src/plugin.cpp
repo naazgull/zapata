@@ -46,7 +46,7 @@ class execute_after_boot : public zpt::system_event {
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
           ->remove<execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
-        
+
         return zpt::events::finish;
     }
 };
@@ -91,7 +91,6 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                     zlog(_e.what(), zpt::error);
                 }
                 catch (zpt::ClosedException const& _e) {
-                    if (!zpt::STREAM_POLLING()->is_in_shutdown()) { continue; }
                 }
                 catch (std::exception const& _e) {
                     zlog(_e.what(), zpt::error);

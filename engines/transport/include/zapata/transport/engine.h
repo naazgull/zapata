@@ -337,7 +337,7 @@ class call {
 
     auto call_internally() -> call&;
     auto send_externally() -> call&;
-    auto publish_externally(zpt::transport _transport) -> call&;
+    auto publish_externally() -> call&;
 };
 
 /**
@@ -423,6 +423,13 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
 
+    if (_uri("scheme")->is_string() && zpt::TRANSPORT_LAYER()
+                                         .get(_uri("scheme")->string())
+                                         ->has_capability(zpt::transport_capability::PUB_SUB)) {
+        this->publish_externally();
+        return zpt::events::finish;
+    }
+
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
         try {
@@ -455,14 +462,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         }
     }
 
-    if (_is_self) {
-        auto _transport = zpt::TRANSPORT_LAYER() //
-                            .get(_uri("scheme")->string());
-        if (_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
-            this->publish_externally(_transport);
-        }
-        else { this->call_internally(); }
-    }
+    if (_is_self) { this->call_internally(); }
     else { this->send_externally(); }
 
     return zpt::events::finish;
@@ -507,7 +507,9 @@ auto zpt::events::call<T>::send_externally() -> call& {
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::publish_externally(zpt::transport _transport) -> call& {
+auto zpt::events::call<T>::publish_externally() -> call& {
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(this->__to_send->uri()("scheme")->string());
     this->__to_send->header("Content-Type", "application/json");
     _transport->publish(this->__to_send);
     return (*this);

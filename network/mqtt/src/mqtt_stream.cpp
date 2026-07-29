@@ -28,8 +28,7 @@ auto check_error(std::string const& _operation, int _return, int _errno) -> void
 
 zpt::mqtt_stream::mqtt_stream(zpt::json _config)
   : __mosq{ nullptr }
-  , __config{ _config }
-  , __buffer{ nullptr } {
+  , __config{ _config } {
     this->__transport = "mqtt";
 }
 
@@ -70,15 +69,17 @@ auto zpt::mqtt_stream::read_without_io(std::any& _out) -> zpt::mqtt_stream& {
     std::unique_lock _guard{ this->__mosq_mutex };
     if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
 
-    mosquitto_loop_read(this->__mosq, 1);
-    mosquitto_loop_misc(this->__mosq);
+    if (this->__buffer.size() == 0) {
+        mosquitto_loop_read(this->__mosq, 1);
+        mosquitto_loop_misc(this->__mosq);
+    }
 
-    if (this->__buffer == nullptr) {
+    if (this->__buffer.size() == 0) {
         throw zpt::InterruptedException{ "control message received on MQTT socket" };
     }
 
-    _out = std::make_any<zpt::message>(this->__buffer);
-    this->__buffer.reset();
+    _out = std::make_any<zpt::message>(this->__buffer.back());
+    this->__buffer.pop_back();
 
     return (*this);
 }
@@ -86,6 +87,8 @@ auto zpt::mqtt_stream::read_without_io(std::any& _out) -> zpt::mqtt_stream& {
 auto zpt::mqtt_stream::write_without_io(std::any const& _in) -> zpt::mqtt_stream& {
     return this->publish(std::any_cast<zpt::message>(_in));
 }
+
+auto zpt::mqtt_stream::has_next() const -> bool { return this->__buffer.size() != 0; }
 
 auto zpt::mqtt_stream::persistent() -> bool { return true; }
 
@@ -109,9 +112,7 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
         // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect_callback_set
         // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_message_callback_set
         mosquitto_connect_callback_set(this->__mosq, zpt::mqtt_stream::on_connect);
-        mosquitto_disconnect_callback_set(this->__mosq, zpt::mqtt_stream::on_disconnect);
         mosquitto_message_callback_set(this->__mosq, zpt::mqtt_stream::on_message);
-        // mosquitto_subscribe_callback_set(this->__mosq, zpt::mqtt_stream::on_subscribe);
         mosquitto_log_callback_set(this->__mosq, zpt::mqtt_stream::on_log);
 
         if (this->__config("user")->is_string() && this->__config("password")->is_string()) {
@@ -176,12 +177,12 @@ auto zpt::mqtt_stream::subscribe(std::string const& _topic, bool _store) -> zpt:
 auto zpt::mqtt_stream::publish(zpt::message _payload) -> zpt::mqtt_stream& {
     expect(this->__connected->load(), "Socket is disconnected, unable to publish message");
 
-    _payload->performative(zpt::Inform);
     std::ostringstream _oss;
     _payload->to_stream(_oss);
     _oss.flush();
     auto _payload_str = _oss.str();
-    auto _topic = _payload->resource()->string();
+    auto _topic = std::format(
+      "/{}{}", zpt::ontology::to_str(_payload->performative()), _payload->resource()->string());
     // Publishes a message to a given topic. See also http://mosquitto.org/man/mqtt-7.html
     // for topic subscription patterns.
     // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
@@ -235,31 +236,16 @@ auto zpt::mqtt_stream::on_connect(struct mosquitto*, void* _ptr, int _rc) -> voi
     for (auto& _topic : _self->__subscriptions) { _self->subscribe(_topic, false); }
 }
 
-auto zpt::mqtt_stream::on_disconnect(struct mosquitto* _mosq, void* _ptr, int _reason) -> void {
-    // if (_reason != 0) {
-    //     zpt::mqtt_stream::ptr _self =
-    //       std::static_pointer_cast<zpt::mqtt_stream>(((zpt::mqtt_stream*)_ptr)->shared_from_this());
-    //     _self //
-    //       ->shutdown()
-    //       .connect();
-    // }
-}
-
 auto zpt::mqtt_stream::on_message(struct mosquitto*,
                                   void* _ptr,
                                   const struct mosquitto_message* _received) -> void {
     zpt::mqtt_stream::ptr _self =
       std::static_pointer_cast<zpt::mqtt_stream>(((zpt::mqtt_stream*)_ptr)->shared_from_this());
-    _self->__buffer = zpt::make_message<zpt::json_message>(zpt::json::parse_json_str(std::string{
+    auto _message = zpt::make_message<zpt::json_message>(zpt::json::parse_json_str(std::string{
       static_cast<char*>(_received->payload), static_cast<size_t>(_received->payloadlen) }));
-    _self->__buffer->header("Content-Type", "application/json");
+    _message->header("Content-Type", "application/json");
+    _self->__buffer.push_back(_message);
 }
-
-auto zpt::mqtt_stream::on_subscribe(struct mosquitto* _mosq,
-                                    void* _ptr,
-                                    int _mid,
-                                    int _qos_count,
-                                    const int* _granted_qos) -> void {}
 
 auto zpt::mqtt_stream::on_log(struct mosquitto*, void*, int _level, const char* _message) -> void {
     zlog(_message, static_cast<zpt::LogLevel>(_level));

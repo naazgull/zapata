@@ -40,6 +40,7 @@
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/allocator.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/locks/spin_mutex.h>
 #include <zapata/text/convert.h>
 
@@ -109,6 +110,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto read_without_io(std::any& _out) -> basic_stream&;
     /** @brief Writes without performing I/O (e.g., to internal buffer). */
     virtual auto write_without_io(std::any const& _in) -> basic_stream&;
+    /** @brief Whether or not the stream consumed several messages and more are available. */
+    virtual auto has_next() const -> bool;
     /** @brief Stream extraction operator. */
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;

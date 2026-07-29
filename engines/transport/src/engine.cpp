@@ -128,9 +128,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
   -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
-#ifndef PROPAGATE_EXCEPTION
     try {
-#endif
         auto _received = _transport->receive(this->__stream);
         if (!_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
@@ -169,11 +167,11 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
             return zpt::events::finish;
         }
         this->__polling->unmute(this->__stream);
-#ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::InterruptedException const& _e) {
         this->__polling->unmute(this->__stream);
     }
+#ifndef PROPAGATE_EXCEPTION
     catch (std::bad_alloc const& _e) {
         this->catch_error(_e, _dispatcher);
     }

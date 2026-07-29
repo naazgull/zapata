@@ -130,7 +130,7 @@ auto zpt::mqtt::server::subscribe(std::string const& _topic) -> void {
 auto zpt::mqtt::server::publish(zpt::message _payload) -> void {
     if (this->__connected->load()) {
         _payload->performative(zpt::Inform);
-        
+
         std::ostringstream _oss;
         _payload->to_stream(_oss);
         _oss.flush();

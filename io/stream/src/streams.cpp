@@ -62,6 +62,8 @@ auto zpt::basic_stream::write_without_io(std::any const&) -> basic_stream& {
     return (*this);
 }
 
+auto zpt::basic_stream::has_next() const -> bool { return false; }
+
 auto zpt::basic_stream::close() -> zpt::basic_stream& {
     zlog("Closing connection to " << this->uri(), zpt::trace);
     this->__underlying.reset(nullptr);
@@ -150,6 +152,10 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     if (!_stream->__muted) { return (*this); }
     if (!_stream->persistent()) {
         this->erase(_stream);
+        return (*this);
+    }
+    if (_stream->has_next()) {
+        this->delegate(_stream);
         return (*this);
     }
 

@@ -21,6 +21,7 @@
 */
 #pragma once
 
+#include <vector>
 #include <zapata/base/expect.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/json.h>
@@ -53,6 +54,7 @@ class mqtt_stream : public basic_stream {
     auto read_without_io(std::any& _out) -> mqtt_stream& override;
     /** @brief Writes content to the internal buffer without I/O. */
     auto write_without_io(std::any const& _in) -> mqtt_stream& override;
+    auto has_next() const -> bool override;
     auto persistent() -> bool override;
     auto connect() -> mqtt_stream&;
     auto is_connected() const -> bool;
@@ -66,19 +68,13 @@ class mqtt_stream : public basic_stream {
     zpt::json __config;
     zpt::padded_atomic<bool> __connected{ false };
     std::set<std::string> __subscriptions;
-    zpt::message __buffer;
+    std::vector<zpt::message> __buffer;
 
     auto credentials(std::string const& _user, std::string const& _passwd) -> void;
     static auto on_connect(struct mosquitto* _mosq, void* _ptr, int _rc) -> void;
-    static auto on_disconnect(struct mosquitto* _mosq, void* _ptr, int _reason) -> void;
     static auto on_message(struct mosquitto* _mosq,
                            void* _ptr,
                            const struct mosquitto_message* _message) -> void;
-    static auto on_subscribe(struct mosquitto* _mosq,
-                             void* _ptr,
-                             int _mid,
-                             int _qos_count,
-                             const int* _granted_qos) -> void;
     static auto on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message)
       -> void;
 };

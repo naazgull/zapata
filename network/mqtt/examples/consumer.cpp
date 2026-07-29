@@ -38,21 +38,6 @@ class on_message : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
         zlog(zpt::pretty{ this->received()->body() }, zpt::debug);
-        ++_count;
-        if (_count < 5) {
-            auto _config = zpt::GLOBAL_CONFIG();
-            auto _prefix =
-              _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-            auto _to_publish = zpt::make_message<zpt::json_message>();
-            _to_publish //
-              ->performative(zpt::Inform)
-              .uri(std::format("{}/test/topic", _prefix))
-              .body() = {
-                "from", "self", "date", zpt::json::date(), "id", zpt::uuid{}.to_string()
-            };
-            // zpt::MQTT_STREAM()->publish(_to_publish);
-            zpt::make_call<zpt::events::discard>(zpt::REST_RESOLVER(), _to_publish);
-        }
         return zpt::events::finish;
     }
 
@@ -61,12 +46,12 @@ class on_message : public zpt::events::process {
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zlog("Loading module 'mqtt_plugin_client'", zpt::info);
+    zlog("Loading module 'example_mqtt_consumer'", zpt::info);
     auto _config = zpt::GLOBAL_CONFIG();
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver //
-      ->add<on_message>(std::format("{}/test/topic", _prefix));
+      ->add<on_message>(zpt::Inform, std::format("{}/test/topic", _prefix));
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
@@ -74,6 +59,6 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _resolver = zpt::REST_RESOLVER();
     auto _prefix = _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
     _resolver //
-      ->remove<on_message>(std::format("{}/test/topic", _prefix));
-    zlog("Unloading module 'mqtt_plugin_client'", zpt::info);
+      ->remove<on_message>(zpt::Inform, std::format("{}/test/topic", _prefix));
+    zlog("Unloading module 'example_mqtt_consumer'", zpt::info);
 }

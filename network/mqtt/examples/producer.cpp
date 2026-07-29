@@ -29,10 +29,10 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
-class test_mqtt_provider_boot : public zpt::system_event {
+class example_mqtt_provider_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
-    ~execute_after_boot() = default;
+    ~example_mqtt_provider_boot() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         auto _config = zpt::GLOBAL_CONFIG();
@@ -41,24 +41,23 @@ class test_mqtt_provider_boot : public zpt::system_event {
             auto _to_publish = zpt::make_message<zpt::json_message>();
             _to_publish //
               ->performative(zpt::Inform)
-              .uri(std::format("{}/test/topic", _prefix))
+              .uri(std::format("mqtt:{}/test/topic", _prefix))
               .body() = { "from", "self", "date", zpt::json::date(), "id", _idx };
-            // zpt::MQTT_STREAM()->publish(_to_publish);
-            zpt::make_call<zpt::events::discard>(zpt::REST_RESOLVER(), _to_publish);
+            zpt::make_call(zpt::REST_RESOLVER(), _to_publish);
         }
 
-        zpt::SYSTEM_EVENTS_RESOLVER()->remove<test_mqtt_provider_boot>(
+        zpt::SYSTEM_EVENTS_RESOLVER()->remove<example_mqtt_provider_boot>(
           zpt::system_event_type::FINISHED_BOOT);
         return zpt::events::finish;
     }
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
-    zlog("Loading module 'mqtt_plugin_producer'", zpt::info);
-    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_mqtt_provider_boot>(
+    zlog("Loading module 'example_mqtt_producer'", zpt::info);
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<example_mqtt_provider_boot>(
       zpt::system_event_type::FINISHED_BOOT);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Unloading module 'mqtt_plugin_producer'", zpt::info);
+    zlog("Unloading module 'example_mqtt_producer'", zpt::info);
 }
