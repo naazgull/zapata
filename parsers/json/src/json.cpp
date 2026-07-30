@@ -148,6 +148,7 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                              std::variant<std::string, size_t> const& _parent_key,
                              std::filesystem::path const& _context,
                              zpt::json _root) -> void {
+    std::cout << "- " << _options->type() << " " << _options << std::endl;
     for (auto&& [_idx, _key, _value] : _options) {
         if (_options->is_object()) {
             if (_key == "$ref") {
@@ -183,7 +184,6 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                         else { _parent[std::get<std::string>(_parent_key)] |= _other; }
                     }
                 }
-                _parent->object()->pop(_key);
             }
             else { zpt::conf::evaluate_ref(_value, _options, _key, _context, _root); }
         }
