@@ -42,7 +42,8 @@ auto main(int _argc, char* _argv[]) -> int {
     std::ifstream _ifs{ _parameters("--schema")->string() };
     expect(_ifs.is_open(), "Couldn't open file at '" << _parameters("--schema")->string() << "'");
     _ifs >> _schema;
-    zpt::conf::evaluate_ref(_schema, _schema, "", _context, _schema);
+    auto _evaluated = zpt::conf::evaluate_ref(_schema, _context, _schema);
+    if (_evaluated->ok()) { _schema = _evaluated; }
 
     zpt::gen::rest::unit _module{ _schema("module")->string(), _output_backend, _schema };
     _module //
