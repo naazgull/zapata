@@ -97,6 +97,7 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
     auto _tls = this->__config("ssl")->is_bool() && this->__config("ssl")->boolean();
     auto _port = this->__config("port")->integer();
     auto _keep_alive = 1000;
+    this->__uri = std::format("{}://{}:{}", _tls ? "mqtts" : "mqtt", _host, _port);
     {
         std::unique_lock _guard{ this->__mosq_mutex };
         // Init mosquitto.
@@ -147,7 +148,6 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
         } while (!this->__connected->load());
     }
 
-    this->__uri = std::format("{}://{}:{}", _tls ? "mqtts" : "mqtt", _host, _port);
     zlog("Connected to " << this->__uri, zpt::trace);
     return (*this);
 }
@@ -162,8 +162,6 @@ auto zpt::mqtt_stream::subscribe(std::string const& _topic) -> zpt::mqtt_stream&
 }
 
 auto zpt::mqtt_stream::publish(zpt::message _payload) -> zpt::mqtt_stream& {
-    expect(this->__connected->load(), "Socket is disconnected, unable to publish message");
-
     std::ostringstream _oss;
     _payload->to_stream(_oss);
     _oss.flush();
@@ -174,6 +172,7 @@ auto zpt::mqtt_stream::publish(zpt::message _payload) -> zpt::mqtt_stream& {
     // for topic subscription patterns.
     // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
     std::unique_lock _guard{ this->__mosq_mutex };
+    expect(this->__connected->load(), "Socket is disconnected, unable to publish message");
     if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
 
     int _message_id{ 0 };
