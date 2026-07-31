@@ -76,6 +76,14 @@ auto getopt(int _argc, char* _argv[]) -> zpt::json;
 /** @brief Evaluates $ref references in configuration. */
 auto evaluate_ref(zpt::json _options, std::filesystem::path const& _context, zpt::json _root)
   -> zpt::json;
+/** @brief Evaluates $ref references to entities in files other than the one being processed. */
+auto evaluate_external_ref(zpt::json _options,
+                           std::filesystem::path const& _context,
+                           zpt::json _root) -> zpt::json;
+/** @brief Evaluates $ref references in entities in the file being processed. */
+auto evaluate_internal_ref(zpt::json _options,
+                           std::filesystem::path const& _context,
+                           zpt::json _root) -> zpt::json;
 /** @brief Loads configuration from a file. */
 auto file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root) -> void;
 /** @brief Loads configuration from a directory. */

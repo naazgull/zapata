@@ -62,7 +62,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                                         << _config("port")->integer() << "`",
              zpt::trace);
 
-        if (!_config("register_listeners")->is_bool() || _config("register_listeners")->boolean()) {
+        if (!_config("subscribe")->is_bool() || _config("subscribe")->boolean()) {
             zpt::SYSTEM_EVENTS_RESOLVER() //
               ->add<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
         }

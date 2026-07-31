@@ -147,27 +147,31 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                              std::filesystem::path const& _context,
                              zpt::json _root) -> zpt::json {
     zpt::json _return;
+    auto _intermediate = zpt::conf::evaluate_external_ref(_options, _context, _root);
+    if (_intermediate->ok()) { _return = _intermediate; }
+    _intermediate = zpt::conf::evaluate_internal_ref(_return, _context, _return);
+    if (_intermediate->ok()) { _return = _intermediate; }
+    return _return;
+}
+
+auto zpt::conf::evaluate_external_ref(zpt::json _options,
+                                      std::filesystem::path const& _context,
+                                      zpt::json _root) -> zpt::json {
+    zpt::json _return;
     for (auto&& [_idx, _key, _value] : _options) {
         if (_options->is_object()) {
             if (_key == "$ref") {
-                if (_return == zpt::undefined) {
-                    _return = _options->clone();
-                    _return->object()->pop("$ref");
-                }
-
                 zpt::json _ref_list;
-                if (_value->is_array()) { _ref_list = _value; }
+                if (_value->is_array()) { _ref_list = _value->clone(); }
                 else {
                     _ref_list = zpt::json::array();
                     _ref_list << _value;
                 }
-                for (auto&& [_, __, _reference] : _ref_list) {
+                for (auto&& [_idx, __, _reference] : _ref_list) {
                     auto& _ref = _reference->string();
-                    if (_ref[0] == '#') {
-                        _ref = _ref.substr(2);
-                        _return |= _root->get_path(_ref, "/")->clone();
-                    }
-                    else if (_ref.find("file:") == 0) {
+                    if (_ref.find("file:") == 0) {
+                        if (_return == zpt::undefined) { _return = _options->clone(); }
+
                         _ref = _ref.substr(5);
                         std::filesystem::path _path{ _ref };
                         if (!_path.is_absolute()) {
@@ -179,21 +183,59 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                 }
             }
             else {
-                auto _intermediate = zpt::conf::evaluate_ref(_value, _context, _root);
+                auto _intermediate = zpt::conf::evaluate_external_ref(_value, _context, _root);
                 if (_intermediate->ok()) {
-                    if (_return == zpt::undefined) {
-                        _return = _options->clone();
-                    }
+                    if (_return == zpt::undefined) { _return = _options->clone(); }
                     _return[_key] = _intermediate;
                 }
             }
         }
         else if (_options->is_array()) {
-            auto _intermediate = zpt::conf::evaluate_ref(_value, _context, _root);
+            auto _intermediate = zpt::conf::evaluate_external_ref(_value, _context, _root);
             if (_intermediate->ok()) {
-                if (_return == zpt::undefined) {
-                    _return = _options->clone();
+                if (_return == zpt::undefined) { _return = _options->clone(); }
+                _return[_idx] = _intermediate;
+            }
+        }
+    }
+    return _return;
+}
+
+auto zpt::conf::evaluate_internal_ref(zpt::json _options,
+                                      std::filesystem::path const& _context,
+                                      zpt::json _root) -> zpt::json {
+    zpt::json _return;
+    for (auto&& [_idx, _key, _value] : _options) {
+        if (_options->is_object()) {
+            if (_key == "$ref") {
+                zpt::json _ref_list;
+                if (_value->is_array()) { _ref_list = _value; }
+                else {
+                    _ref_list = zpt::json::array();
+                    _ref_list << _value;
                 }
+                for (auto&& [_, __, _reference] : _ref_list) {
+                    auto& _ref = _reference->string();
+                    if (_ref[0] == '#') {
+                        if (_return == zpt::undefined) { _return = _options->clone(); }
+
+                        _ref = _ref.substr(2);
+                        _return |= _root->get_path(_ref, "/")->clone();
+                    }
+                }
+            }
+            else {
+                auto _intermediate = zpt::conf::evaluate_internal_ref(_value, _context, _root);
+                if (_intermediate->ok()) {
+                    if (_return == zpt::undefined) { _return = _options->clone(); }
+                    _return[_key] = _intermediate;
+                }
+            }
+        }
+        else if (_options->is_array()) {
+            auto _intermediate = zpt::conf::evaluate_internal_ref(_value, _context, _root);
+            if (_intermediate->ok()) {
+                if (_return == zpt::undefined) { _return = _options->clone(); }
                 _return[_idx] = _intermediate;
             }
         }
