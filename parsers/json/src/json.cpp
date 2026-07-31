@@ -144,14 +144,17 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 }
 
 auto zpt::conf::evaluate_ref(zpt::json _options,
-                             zpt::json _parent,
-                             std::variant<std::string, size_t> const& _parent_key,
                              std::filesystem::path const& _context,
-                             zpt::json _root) -> void {
-    std::cout << "- " << _options->type() << " " << _options << std::endl;
+                             zpt::json _root) -> zpt::json {
+    zpt::json _return;
     for (auto&& [_idx, _key, _value] : _options) {
         if (_options->is_object()) {
             if (_key == "$ref") {
+                if (_return == zpt::undefined) {
+                    _return = _options->clone();
+                    _return->object()->pop("$ref");
+                }
+
                 zpt::json _ref_list;
                 if (_value->is_array()) { _ref_list = _value; }
                 else {
@@ -160,11 +163,9 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                 }
                 for (auto&& [_, __, _reference] : _ref_list) {
                     auto& _ref = _reference->string();
-                    zpt::json _other;
-
                     if (_ref[0] == '#') {
                         _ref = _ref.substr(2);
-                        _other = _root->get_path(_ref, "/");
+                        _return |= _root->get_path(_ref, "/")->clone();
                     }
                     else if (_ref.find("file:") == 0) {
                         _ref = _ref.substr(5);
@@ -173,24 +174,31 @@ auto zpt::conf::evaluate_ref(zpt::json _options,
                             _path = std::filesystem::canonical(_context / _path);
                         }
                         else { _path = std::filesystem::canonical(_path); }
-                        zpt::conf::file(_path, _other, _root);
-                    }
-
-                    if (_parent_key.index() == 1) {
-                        _parent[std::get<size_t>(_parent_key)] |= _other;
-                    }
-                    else {
-                        if (std::get<std::string>(_parent_key).length() == 0) { _parent |= _other; }
-                        else { _parent[std::get<std::string>(_parent_key)] |= _other; }
+                        zpt::conf::file(_path, _return, _root);
                     }
                 }
             }
-            else { zpt::conf::evaluate_ref(_value, _options, _key, _context, _root); }
+            else {
+                auto _intermediate = zpt::conf::evaluate_ref(_value, _context, _root);
+                if (_intermediate->ok()) {
+                    if (_return == zpt::undefined) {
+                        _return = _options->clone();
+                    }
+                    _return[_key] = _intermediate;
+                }
+            }
         }
         else if (_options->is_array()) {
-            zpt::conf::evaluate_ref(_value, _options, _idx, _context, _root);
+            auto _intermediate = zpt::conf::evaluate_ref(_value, _context, _root);
+            if (_intermediate->ok()) {
+                if (_return == zpt::undefined) {
+                    _return = _options->clone();
+                }
+                _return[_idx] = _intermediate;
+            }
         }
     }
+    return _return;
 }
 
 auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root)
@@ -204,9 +212,9 @@ auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zp
     _context.remove_filename();
     try {
         _ifs >> _conf;
-        auto _parent = _conf->clone();
-        zpt::conf::evaluate_ref(_conf, _parent, "", _context, _root);
-        _options |= _parent;
+        auto _evaluated = zpt::conf::evaluate_ref(_conf, _context, _root);
+        if (_evaluated->ok()) { _options |= _evaluated; }
+        else { _options |= _conf; }
     }
     catch (zpt::SyntaxErrorException const& _e) {
         _conf = zpt::undefined;

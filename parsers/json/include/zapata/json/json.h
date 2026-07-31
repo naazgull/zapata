@@ -74,11 +74,8 @@ namespace conf {
 /** @brief Parses command-line arguments into JSON. */
 auto getopt(int _argc, char* _argv[]) -> zpt::json;
 /** @brief Evaluates $ref references in configuration. */
-auto evaluate_ref(zpt::json _options,
-                  zpt::json _parent,
-                  std::variant<std::string, size_t> const& _parent_key,
-                  std::filesystem::path const& _context,
-                  zpt::json _root) -> void;
+auto evaluate_ref(zpt::json _options, std::filesystem::path const& _context, zpt::json _root)
+  -> zpt::json;
 /** @brief Loads configuration from a file. */
 auto file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root) -> void;
 /** @brief Loads configuration from a directory. */
