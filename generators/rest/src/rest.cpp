@@ -204,10 +204,6 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
                       ")",
                       this->__schema("info")("namespace")->string()));
     }
-    else {
-        std::cout << "> Skipping generation of " << _file_path
-                  << ", file already exists, move it out of the way first." << std::endl;
-    }
     return (*this);
 }
 
@@ -242,10 +238,6 @@ auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
     }
-    else {
-        std::cout << "> Skipping generation of " << _file_path
-                  << ", file already exists, move it out of the way first." << std::endl;
-    }
     return nullptr;
 }
 
@@ -274,10 +266,6 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
 
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
-    }
-    else {
-        std::cout << "> Skipping generation of " << _file_path
-                  << ", file already exists, move it out of the way first." << std::endl;
     }
     return nullptr;
 }
@@ -852,12 +840,21 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
           ->add<zpt::ast::cpp_instruction>(
             std::format("_received += {}", this->get_bind_expression(_def)));
     }
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
-      .add<zpt::ast::cpp_instruction>("_session->commit()")
-      .add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+
+    if (!this->has_id(_def)) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
+          .add<zpt::ast::cpp_instruction>("_session->commit()")
+          .add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("_collection //\n->add(_received)->execute()")
+          .add<zpt::ast::cpp_instruction>("_session->commit()")
+          .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(201).body() = _received");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -1398,16 +1395,21 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
+auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
+    if (_def("*")("requestBody")("allOf")->ok()) {
+        for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
+            if (_object("properties")("_id")->ok()) { return true; }
+        }
+    }
+    return false;
+}
+
 auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
   -> zpt::ast::basic_file::ptr {
     auto _collection = _def("dbCollection")->string();
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
     auto _file_path = _directory / std::format("{}_mysql.sql", _collection);
-    if (std::filesystem::exists(_file_path)) {
-        std::cout << "> Skipping generation of " << _file_path
-                  << ", file already exists, move it out of the way first." << std::endl;
-        return nullptr;
-    }
+    if (std::filesystem::exists(_file_path)) { return nullptr; }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
 
@@ -1422,7 +1424,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
     }
     _oss << "drop table if exists " << _collection << ";" << std::endl
-         << "create table " << _collection << " (\n_id varchar(22) not null," << std::endl;
+         << "create table " << _collection << " (\n";
+    if (!_def("allOf")("properties")("_id")->ok()) { _oss << "_id varchar(22) not null,\n"; }
 
     for (auto const& [_, __, _object] : _def("allOf")) {
         for (auto const& [_, _name, _field] : _object("properties")) {

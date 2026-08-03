@@ -137,6 +137,7 @@ class unit {
     auto get_bind_expression(zpt::json _def) -> std::string;
     auto get_visible_fields(zpt::json _def) -> std::string;
     auto remove_hidden_fields(zpt::json _def) -> std::string;
+    auto has_id(zpt::json _def) -> bool;
 
     auto generate_sql_schemata_mysql(zpt::json _def) -> zpt::ast::basic_file::ptr;
 };
