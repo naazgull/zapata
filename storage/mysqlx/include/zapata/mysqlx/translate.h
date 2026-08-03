@@ -44,7 +44,9 @@ namespace mysqlx {
  */
 class result_set_metadata {
   public:
+    /** @brief Array of bound column descriptors for fetching result data. */
     zpt::allocator<MYSQL_BIND>::array_pointer __bind{ nullptr };
+    /** @brief Number of columns in the result set. */
     size_t __column_count{ 0 };
 
     result_set_metadata(MYSQL_STMT* _statement);
@@ -80,6 +82,7 @@ auto to_delete(zpt::json _pattern) -> std::string;
 /** @brief Writes a comma-separated assignment list (col=val) to the stream. */
 auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
   -> void;
+/** @brief Wraps a value in single quotes for SQL string literal output. */
 auto quote(zpt::json _to_quote) -> std::string;
 } // namespace mysqlx
 } // namespace storage

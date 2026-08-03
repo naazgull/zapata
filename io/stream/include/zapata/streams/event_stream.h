@@ -73,6 +73,7 @@ class event_stream : public basic_stream {
     auto persistent() -> bool override;
 
   private:
+    /** @brief Content stored during write_without_io, retrieved during read_without_io. */
     std::any __content;
     /** @brief Number of times `read_without_io()` has been called; stream is disposed at 2. */
     unsigned short __reads{ 0 };

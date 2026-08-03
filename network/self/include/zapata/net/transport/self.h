@@ -54,11 +54,17 @@ class self : public zpt::basic_transport {
     self() = default;
     virtual ~self() = default;
 
+    /** @brief Returns true for SYNCHRONOUS capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Creates a new request message with JSON payload. */
     auto make_request() const -> zpt::message override;
+    /** @brief Creates a new reply message, optionally using the allocator. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
+    /** @brief Creates a reply message derived from the given request. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
+    /** @brief Processes an incoming request message in the same process. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    /** @brief Processes an incoming reply message in the same process. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport

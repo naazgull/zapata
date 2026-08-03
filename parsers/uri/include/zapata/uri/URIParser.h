@@ -47,6 +47,7 @@ class URIParser : public URITokenizer {
   public:
     /** @brief Constructs a parser with the given I/O streams. */
     URIParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    /** @brief Destructor. */
     virtual ~URIParser();
 
     /** @brief Sets the JSON root node to populate during parsing. */

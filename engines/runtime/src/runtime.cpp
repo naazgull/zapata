@@ -7,6 +7,7 @@
 #include <zapata/transport.h>
 
 namespace {
+/** @brief Signal handler that triggers stream polling shutdown. */
 auto deallocate(int) -> void;
 } // namespace
 

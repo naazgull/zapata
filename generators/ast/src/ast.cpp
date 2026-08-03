@@ -2,6 +2,15 @@
 #include <zapata/ast/ast.h>
 #include <zapata/base.h>
 
+/**
+ * @file ast.cpp
+ * @brief Implementation of base AST classes.
+ *
+ * Provides concrete implementations for all AST node types including
+ * serialization, element addition, and traversal operations.
+ */
+
+/** @brief Computes and returns the indentation string for this node's nesting level. */
 auto zpt::ast::basic_element::get_indentation() const -> std::string {
     if (this->__newline) {
         this->__indentation =
@@ -11,28 +20,38 @@ auto zpt::ast::basic_element::get_indentation() const -> std::string {
     return std::string(this->__indentation, ' ');
 }
 
+/** @brief Returns whether to emit a newline before this element. */
 auto zpt::ast::basic_element::new_line() const -> bool { return this->__newline; }
 
+/** @brief Sets whether to emit a newline before this element.
+ *  @param _value True to emit a newline, false to suppress it. */
 auto zpt::ast::basic_element::set_new_line(bool _value) -> basic_element& {
     this->__newline = _value;
     return (*this);
 }
 
+/** @brief Constructs a module node with the given name. */
 zpt::ast::basic_module::basic_module(std::string const& _name)
   : __module_name{ _name } {}
 
+/** @brief Returns the module name. */
 auto zpt::ast::basic_module::name() const -> std::string const& { return this->__module_name; }
 
+/** @brief Adds a file to this module.
+ *  @param _to_add File to add. */
 auto zpt::ast::basic_module::add(std::shared_ptr<basic_file> _to_add) -> basic_module& {
     this->__files.push_back(_to_add);
     return (*this);
 }
 
+/** @brief Serializes all files to their respective paths. */
 auto zpt::ast::basic_module::dump() -> basic_module& {
     for (auto& _file : this->__files) { _file->dump(); }
     return (*this);
 }
 
+/** @brief Serializes all files to the given stream.
+ *  @param _out Output stream to serialize to. */
 auto zpt::ast::basic_module::dump(std::ostream& _out) -> basic_module& {
     for (auto& _file : this->__files) { _file->dump(_out); }
     return (*this);

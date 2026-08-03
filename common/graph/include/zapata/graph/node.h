@@ -112,9 +112,13 @@ class node {
     }
 
   private:
+    /** @brief Child nodes for branching paths in the tree. */
     std::vector<node> __children;
+    /** @brief The value segment at this node's position in the path. */
     T __value;
+    /** @brief The full path identifier associated with this node (set when a leaf is reached). */
     P __path;
+    /** @brief Callbacks invoked when this node's path matches during evaluation. */
     std::vector<C> __callbacks;
 };
 } // namespace tree

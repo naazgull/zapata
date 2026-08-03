@@ -105,12 +105,19 @@ class plugin {
     auto add_thread(std::function<void()> _callback) -> plugin&;
 
   private:
+    /** @brief Shared library handle from dlopen. */
     void* __lib_handler{ nullptr };
+    /** @brief Plugin name. */
     std::string __name{ "" };
+    /** @brief Path to the shared library source file. */
     std::string __source{ "" };
+    /** @brief Whether the plugin is currently running. */
     bool __running{ false };
+    /** @brief Plugin configuration JSON. */
     zpt::json __config;
+    /** @brief Worker threads registered via add_thread. */
     std::vector<std::thread> __threads;
+    /** @brief Plugin lifecycle state. */
     zpt::padded_atomic<std::uint16_t> __state{ PLUGIN_STATE_UNLOADED };
 };
 
@@ -158,12 +165,18 @@ class boot {
     }
 
   private:
+    /** @brief Application configuration JSON. */
     zpt::json __configuration;
+    /** @brief Map of loaded plugins, keyed by name. */
     std::map<std::string, plugin_map_element_type> __plugins;
+    /** @brief Order in which plugins were loaded. */
     std::vector<std::string> __load_order;
 
+    /** @brief Resolves and adds builtin plugin dependencies from __builtins metadata. */
     auto resolve_builtin_dependencies() -> void;
+    /** @brief Internal helper that loads a single plugin from options and config. */
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
+    /** @brief Computes a string hash for a plugin event (plugin/step). */
     auto hash(zpt::json& _event) -> std::string;
 };
 

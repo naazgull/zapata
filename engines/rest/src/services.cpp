@@ -3,6 +3,7 @@
 #include <zapata/uri.h>
 
 namespace {
+/** @brief Registers a remote minion's provider and its services with the REST resolver. */
 auto add_minion(zpt::json const& _minion) -> void;
 }
 

@@ -25,6 +25,7 @@
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
+/** @brief Plugin entry point: initializes the global transport engine. */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zpt::TRANSPORT_ENGINE(_plugin.config());
     zlog("Started multi-transport engine ("
@@ -35,6 +36,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
          zpt::info);
 }
 
+/** @brief Plugin unload entry point: shuts down the transport engine. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Stopped multi-transport engine", zpt::info);
     zpt::TRANSPORT_ENGINE()->shutdown();

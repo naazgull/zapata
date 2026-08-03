@@ -114,9 +114,10 @@ template<typename T>
 auto fromstr(T _in) -> std::string;
 /** @} */
 
-/** @brief Base64 encoding character table. */
+/** @brief Standard Base64 encoding lookup table (64 characters plus null terminator). */
 const char encodeCharacterTable[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/** @brief Standard Base64 decoding lookup table (maps each byte to its 6-bit value, or -1 if invalid). */
 const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
@@ -130,8 +131,10 @@ const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
+/** @brief URL-safe Base64 encoding lookup table (uses - and _ instead of + and /). */
 const char encodeCharacterTableUrl[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+/** @brief URL-safe Base64 decoding lookup table. */
 const signed char decodeCharacterTableUrl[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
@@ -145,6 +148,7 @@ const signed char decodeCharacterTableUrl[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
+/** @brief ISO-8859-1 Latin character wide string (accented vowels, cedilla, etc.). */
 const std::wstring iso = L"\u00e1\u00e0\u00e2\u00e3\u00e4\u00e9\u00e8\u00ea\u1ebd\u00eb\u00ed\u00ec"
                          L"\u00ee\u0129\u00ef\u00f3"
                          L"\u00f2\u00f4\u00f5\u00f6\u00fa\u00f9\u00fb\u0169\u00fc\u00e7\u00c1\u00c0"
@@ -152,6 +156,7 @@ const std::wstring iso = L"\u00e1\u00e0\u00e2\u00e3\u00e4\u00e9\u00e8\u00ea\u1eb
                          L"\u00c8\u00ca\u1ebc\u00cb\u00cd\u00cc\u00ce\u0128\u00cf\u00d3\u00d2\u00d4"
                          L"\u00d5\u00d6\u00da\u00d9"
                          L"\u00db\u0168\u00dc\u00c7";
+/** @brief Plain ASCII equivalent wide string (unaccented vowels, no cedilla). */
 const std::wstring plain = L"aaaaaeeeeeiiiiiooooouuuuucAAAAAEEEEEIIIIIOOOOOUUUUUC";
 
 /**

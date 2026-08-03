@@ -110,9 +110,13 @@ class resolver_t : public zpt::events::resolver_t {
     auto get_provider(std::string const& _id) const -> zpt::json override;
 
   private:
+    /** @brief Catalog mapping URI patterns to callback indices. */
     zpt::catalog<std::string, zpt::json>::ptr __catalog{ nullptr };
+    /** @brief Vector of registered REST callback handlers. */
     std::vector<zpt::events::resolver_callback> __callbacks;
+    /** @brief Store for pending request/response callbacks. */
     mutable zpt::rest::pending_messages __pending_requests;
+    /** @brief Configuration passed to the resolver at construction. */
     zpt::json __configuration;
 };
 } // namespace rest

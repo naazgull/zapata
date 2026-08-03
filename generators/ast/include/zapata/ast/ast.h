@@ -93,6 +93,7 @@ class basic_element : public std::enable_shared_from_this<basic_element> {
   public:
     std::shared_ptr<basic_element> __parent{ nullptr }; ///< Parent element for indentation.
 
+    /** @brief Default-constructs a basic_element. */
     basic_element() = default;
     virtual ~basic_element() = default;
 
@@ -102,15 +103,23 @@ class basic_element : public std::enable_shared_from_this<basic_element> {
     virtual auto get_indentation() const -> std::string final;
     /** @brief Returns whether to emit a newline before this element. */
     virtual auto new_line() const -> bool final;
-    /** @brief Sets whether to emit a newline before this element. */
+    /** @brief Sets whether to emit a newline before this element.
+     *  @param _value True to emit a newline, false to suppress it.
+     *  @return Reference to this element for chaining. */
     virtual auto set_new_line(bool _value) -> basic_element& final;
+    /** @brief Stream insertion operator that calls to_string().
+     *  @param _out Output stream.
+     *  @param _in Element to output.
+     *  @return Reference to the output stream. */
     friend auto operator<<(std::ostream& _out, basic_element& _in) -> std::ostream& {
         _out << _in.to_string();
         return _out;
     }
 
   private:
+    /** @brief Current indentation level in spaces. */
     mutable std::uint16_t __indentation{ 0 };
+    /** @brief Whether to emit a newline before this element. */
     bool __newline{ true };
 };
 
@@ -126,9 +135,13 @@ concept BasicASTElement = requires(T _t) { requires std::derived_from<T, basic_e
  */
 class basic_module {
   public:
+    /** @brief Shared pointer to a basic_module. */
     using ptr = std::shared_ptr<basic_module>;
+    /** @brief Allowed type for elements in a module (shared_ptr<basic_file>). */
     using allowed_type = std::shared_ptr<basic_file>;
 
+    /** @brief Constructs a module node with the given name.
+     *  @param _module_name Module name (used for directory and namespace). */
     basic_module(std::string const& _module_name);
     ~basic_module() = default;
 
@@ -148,7 +161,9 @@ class basic_module {
     auto traverse_elements(Callback _callback) -> basic_module&;
 
   protected:
+    /** @brief The module name. */
     std::string __module_name;
+    /** @brief Files contained in this module. */
     std::vector<allowed_type> __files;
 };
 
@@ -160,7 +175,9 @@ class basic_module {
  */
 class basic_file {
   public:
+    /** @brief Shared pointer to a basic_file. */
     using ptr = std::shared_ptr<basic_file>;
+    /** @brief Variant of allowed element types within a file. */
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_function>,
@@ -168,6 +185,8 @@ class basic_file {
       std::shared_ptr<basic_variable>,
       std::shared_ptr<basic_instruction>>;
 
+    /** @brief Constructs a file node at the given path.
+     *  @param _path Output file path. */
     basic_file(std::filesystem::path const& _path);
     ~basic_file() = default;
 
@@ -188,7 +207,9 @@ class basic_file {
     auto traverse_elements(Callback _callback) -> basic_file&;
 
   protected:
+    /** @brief The output file path. */
     std::filesystem::path __filename;
+    /** @brief AST elements contained in this file. */
     std::vector<allowed_type> __elements;
 };
 
@@ -200,13 +221,18 @@ class basic_file {
  */
 class basic_class : public basic_element {
   public:
+    /** @brief Shared pointer to a basic_class. */
     using ptr = std::shared_ptr<basic_class>;
+    /** @brief Variant of allowed member types within a class. */
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_function>,
       std::shared_ptr<basic_variable>,
       std::shared_ptr<basic_instruction>>;
 
+    /** @brief Constructs a basic_class node.
+     *  @param _name Class name.
+     *  @param _extends Optional base class name for inheritance. */
     basic_class(std::string const& _name, std::string const& _extends = "");
     virtual ~basic_class() override = default;
 
@@ -221,10 +247,15 @@ class basic_class : public basic_element {
     auto traverse_elements(Callback _callback) -> basic_class&;
 
   protected:
+    /** @brief The class name. */
     std::string __name;
+    /** @brief The base class name for inheritance (empty if none). */
     std::string __extends;
+    /** @brief Members declared in the public section. */
     std::vector<allowed_type> __public;
+    /** @brief Members declared in the protected section. */
     std::vector<allowed_type> __protected;
+    /** @brief Members declared in the private section. */
     std::vector<allowed_type> __private;
 };
 
@@ -236,13 +267,17 @@ class basic_class : public basic_element {
  */
 class basic_code_block : public basic_element {
   public:
+    /** @brief Shared pointer to a basic_code_block. */
     using ptr = std::shared_ptr<basic_code_block>;
+    /** @brief Variant of allowed statement types within a code block. */
     using allowed_type = std::variant< //
       std::shared_ptr<basic_class>,
       std::shared_ptr<basic_code_block>,
       std::shared_ptr<basic_variable>,
       std::shared_ptr<basic_instruction>>;
 
+    /** @brief Constructs a code block with an optional prefix (e.g., "else").
+     *  @param _prefix Text emitted before the opening brace. */
     basic_code_block(std::string const& _prefix = "");
     virtual ~basic_code_block() override = default;
 
@@ -257,7 +292,9 @@ class basic_code_block : public basic_element {
     auto traverse_elements(Callback _callback) -> basic_code_block&;
 
   protected:
+    /** @brief Prefix text emitted before the opening brace. */
     std::string __prefix;
+    /** @brief Statements contained within the code block. */
     std::vector<allowed_type> __elements;
 };
 
@@ -269,8 +306,13 @@ class basic_code_block : public basic_element {
  */
 class basic_function : public basic_element {
   public:
+    /** @brief Shared pointer to a basic_function. */
     using ptr = std::shared_ptr<basic_function>;
 
+    /** @brief Constructs a function AST node.
+     *  @param _name Function name.
+     *  @param _return_type Return type string (for trailing return syntax).
+     *  @param _modifiers Bitwise OR of VIRTUAL, CONST, OVERRIDE, FINAL, DEFAULT, DELETE, ABSTRACT. */
     basic_function(std::string const& _name,
                    std::string const& _return_type = "",
                    int _modifiers = 0);
@@ -288,10 +330,15 @@ class basic_function : public basic_element {
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
+    /** @brief The function name. */
     std::string __name;
+    /** @brief Function parameters. */
     std::vector<std::shared_ptr<basic_variable>> __parameters;
+    /** @brief Return type string (used with trailing return syntax). */
     std::string __return_type;
+    /** @brief Modifier flags (VIRTUAL, CONST, OVERRIDE, etc.). */
     int __modifiers{ 0 };
+    /** @brief Function body code block (null for declarations without body). */
     std::shared_ptr<basic_code_block> __body{ nullptr };
 };
 
@@ -303,8 +350,13 @@ class basic_function : public basic_element {
  */
 class basic_variable : public basic_element {
   public:
+    /** @brief Shared pointer to a basic_variable. */
     using ptr = std::shared_ptr<basic_variable>;
 
+    /** @brief Constructs a variable AST node.
+     *  @param _name Variable name.
+     *  @param _type Variable type.
+     *  @param _modifiers Bitwise OR of CONST, EXTERN, PARAMETER, etc. */
     basic_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     virtual ~basic_variable() override = default;
 
@@ -319,9 +371,13 @@ class basic_variable : public basic_element {
     auto initialization() -> std::shared_ptr<basic_code_block>;
 
   protected:
+    /** @brief The variable name. */
     std::string __name;
+    /** @brief The variable type. */
     std::string __type;
+    /** @brief Modifier flags (CONST, EXTERN, PARAMETER, etc.). */
     int __modifiers{ 0 };
+    /** @brief Initialization code block (null if no initialization). */
     std::shared_ptr<basic_code_block> __initialization{ nullptr };
 };
 
@@ -333,8 +389,11 @@ class basic_variable : public basic_element {
  */
 class basic_instruction : public basic_element {
   public:
+    /** @brief Shared pointer to a basic_instruction. */
     using ptr = std::shared_ptr<basic_instruction>;
 
+    /** @brief Constructs a raw instruction AST node.
+     *  @param _code Literal code string. */
     basic_instruction(std::string const& _code);
     virtual ~basic_instruction() override = default;
 
@@ -347,7 +406,9 @@ class basic_instruction : public basic_element {
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
+    /** @brief The literal code string. */
     std::string __instruction;
+    /** @brief Body code block (null if no body). */
     std::shared_ptr<basic_code_block> __body{ nullptr };
 };
 } // namespace ast

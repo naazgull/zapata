@@ -24,6 +24,12 @@
 #include <zapata/lua.h>
 #include <zapata/startup.h>
 
+/**
+ * @brief System event handler that executes configured module:function pairs after boot.
+ *
+ * Iterates over the `exec` configuration entries and calls the specified Lua functions
+ * via the bridge. Removes itself from the event resolver after execution.
+ */
 class execute_after_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
@@ -48,6 +54,7 @@ class execute_after_boot : public zpt::system_event {
     }
 };
 
+/** @brief Plugin load callback: configures the Lua bridge and registers the `zpt` module. */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::LUA_BRIDGE();
     _bridge.set_options(_plugin.config());
@@ -68,6 +75,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 }
 
+/** @brief Plugin unload callback: cleans up the Lua bridge state. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zpt::LUA_BRIDGE().cleanup();
     zlog("Unloaded LUA bridge", zpt::info);

@@ -108,11 +108,20 @@ class catalog {
     auto get_provider(std::string const& _id) const -> zpt::json;
 
   private:
+    /** @brief This catalog's provider ID used for self-registered entries. */
     std::string __self_id;
+    /** @brief SQLite database connection handle. */
     mutable zpt::storage::connection __connection;
+    /** @brief Collection backing the catalog (key-value handler registrations). */
     mutable zpt::storage::collection __catalog;
+    /** @brief Collection backing the provider registry. */
     mutable zpt::storage::collection __provider;
 
+    /**
+     * @brief Executes a raw query against the catalog table.
+     * @param _query SQL-like query string.
+     * @return JSON array of matching entries.
+     */
     auto query(std::string const& _query) const -> zpt::json const;
 };
 

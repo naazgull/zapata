@@ -44,8 +44,10 @@ class FunctionalTokenizer {
   public:
     FunctionalTokenizer() = default;
 
+    /** @brief Parses one functional expression from d_scanner's current stream. */
     auto parse() -> int;
 
+    /** @brief The re2c lexer/tokenizer used for functional expression tokenization. */
     FunctionalTokenizerLexer d_scanner;
 };
 

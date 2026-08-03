@@ -174,20 +174,32 @@ class layer {
     auto resolve(std::string _uri) const -> zpt::transport;
 
   private:
+    /** @brief Map of registered transports keyed by URI scheme. */
     std::map<std::string, zpt::transport> __underlying;
+    /** @brief Map of MIME types to their serialize/deserialize function pairs. */
     std::map<std::string, std::tuple<translate_from_func, translate_to_func>> __content_providers;
+    /** @brief Global configuration passed at construction. */
     zpt::json __configuration;
 
+    /** @brief Registers a MIME type with its deserialization and serialization callbacks. */
     auto add_content_provider(std::string const& _mime,
                               translate_from_func _callback_from,
                               translate_to_func _callback_to) -> layer&;
+    /** @brief Default deserializer: tries JSON first, falls back to raw text. */
     static auto translate_from_default(std::istream& _io) -> zpt::json;
+    /** @brief Default serializer: tries JSON first, falls back to raw text. */
     static auto translate_to_default(std::ostream& _io, zpt::json _content) -> std::string;
+    /** @brief Deserializes JSON from the input stream. */
     static auto translate_from_json(std::istream& _io) -> zpt::json;
+    /** @brief Serializes JSON to the output stream. */
     static auto translate_to_json(std::ostream& _io, zpt::json _content) -> std::string;
+    /** @brief Deserializes raw text from the input stream as a string. */
     static auto translate_from_raw(std::istream& _io) -> zpt::json;
+    /** @brief Serializes raw text to the output stream. */
     static auto translate_to_raw(std::ostream& _io, zpt::json _content) -> std::string;
+    /** @brief Deserializes XML content from the input stream as a string. */
     static auto translate_from_xml(std::istream& _io) -> zpt::json;
+    /** @brief Serializes XML content to the output stream. */
     static auto translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string;
 };
 

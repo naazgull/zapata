@@ -56,15 +56,29 @@ class amqp : public zpt::basic_transport {
     amqp() = default;
     virtual ~amqp() = default;
 
+    /** @brief Returns whether the transport has the requested capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Creates a new request message with JSON payload. */
     auto make_request() const -> zpt::message override;
+    /** @brief Creates a new reply message, optionally using the allocator. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
+    /** @brief Creates a reply message derived from the given request. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
+    /** @brief Processes an incoming request message from the given stream. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
+    /** @brief Processes an incoming reply message from the given stream. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
+    /** @brief Publishes a message to the AMQP broker for distribution. */
     auto publish(zpt::message _to_publish) const -> void override;
 };
 } // namespace transport
 } // namespace net
+
+/** @brief Gets the AMQP stream singleton.
+
+Creates or returns a shared AMQP stream using global configuration.
+@param _config Optional config override; uses global config if undefined.
+@return A shared pointer to the AMQP stream singleton.
+*/
 auto AMQP_STREAM(zpt::json _config = zpt::undefined) -> zpt::amqp_stream::ptr;
 } // namespace zpt

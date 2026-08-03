@@ -42,10 +42,13 @@ namespace zpt {
 
 class URITokenizer {
   public:
+    /** @brief Default constructor. */
     URITokenizer() = default;
 
+    /** @brief Parses one URI from d_scanner's current stream. */
     auto parse() -> int;
 
+    /** @brief The re2c lexer/tokenizer used for URI tokenization. */
     URITokenizerLexer d_scanner;
 };
 

@@ -57,36 +57,91 @@ class amqp_stream : public basic_stream {
     auto operator=(int _rhs) -> amqp_stream&;
     /** @brief Applies a stream manipulator (e.g., std::flush). */
     auto operator<<(ostream_manipulator _in) -> amqp_stream&;
+    /** @brief Closes the AMQP connection, releasing all resources.
+
+     Unregisters subscriptions, closes the proton connection, and resets
+     all internal state.
+     @return Reference to this stream.
+     */
     auto close() -> amqp_stream& override;
+    /** @brief Shuts down the AMQP connection gracefully.
+
+     Sends close frames and releases resources without reconnecting.
+     @return Reference to this stream.
+     */
     auto shutdown() -> amqp_stream& override;
     /** @brief Reads content from the internal buffer without I/O. */
     auto read_without_io(std::any& _out) -> amqp_stream& override;
     /** @brief Writes content to the internal buffer without I/O. */
     auto write_without_io(std::any const& _in) -> amqp_stream& override;
+    /** @brief Returns true if there are buffered messages waiting to be read. */
     auto has_next() const -> bool override;
+    /** @brief Returns whether the stream maintains a persistent connection. */
     auto persistent() -> bool override;
+    /** @brief Establishes a connection to the AMQP broker using configuration.
+
+     Resolves the address, opens a TCP socket, initializes the proton connection
+     driver, creates sender/receiver links, and processes initial events.
+     @return Reference to this stream.
+     */
     auto connect() -> amqp_stream&;
+    /** @brief Returns whether the stream is currently connected to the broker. */
     auto is_connected() const -> bool;
+    /** @brief Subscribes to an AMQP topic/queue.
+
+     Creates a receiver link for the topic if already connected.
+     @param _topic The topic or queue name to subscribe to.
+     @return Reference to this stream.
+     @throws ClosedException if not connected.
+     */
     auto subscribe(std::string const& _topic) -> amqp_stream&;
+    /** @brief Publishes a message to the topic specified in the message URI.
+
+     Encodes the message as AMQP format and sends it via the sender link.
+     @param _payload The message to publish.
+     @return Reference to this stream.
+     @throws ClosedException if not connected.
+     */
     auto publish(zpt::message _payload) -> amqp_stream&;
+    /** @brief Processes pending I/O events without blocking.
+
+     Reads incoming data, dispatches proton events, and writes outgoing data.
+     @return Reference to this stream.
+     @throws ClosedException if not connected.
+     */
     auto loop_misc() -> amqp_stream&;
 
   private:
+    /** @brief Proton connection driver managing the AMQP connection state. */
     std::unique_ptr<pn_connection_driver_t> __driver{ nullptr };
+    /** @brief Mutex protecting access to the connection driver. */
     zpt::locks::spin_mutex __driver_mutex;
+    /** @brief Configuration used to establish and manage the connection. */
     zpt::json __config;
+    /** @brief Atomic flag indicating whether the connection is active. */
     zpt::padded_atomic<bool> __connected{ false };
+    /** @brief Proton sender link for publishing messages. */
     pn_link_t* __sender{ nullptr };
+    /** @brief Proton receiver link for subscribing to topics. */
     pn_link_t* __receiver{ nullptr };
+    /** @brief Set of topics currently subscribed to. */
     std::set<std::string> __subscriptions;
+    /** @brief Buffer of incoming messages waiting to be read. */
     std::vector<zpt::message> __buffer;
+    /** @brief Monotonically increasing tag for tracking deliveries. */
     std::uint64_t __delivery_tag{ 0 };
 
+    /** @brief Sets SASL credentials on the connection. */
     auto credentials(std::string const& _user, std::string const& _passwd) -> void;
+    /** @brief Sends a subscription request for a topic via proton. */
     auto send_subscribe(std::string const& _topic) -> amqp_stream&;
+    /** @brief Performs one cycle of socket I/O and proton event processing. */
     auto pump_io() -> void;
+    /** @brief Dispatches proton events and handles state transitions. */
     auto process_events() -> void;
+    /** @brief Handles an incoming delivery event, decoding and buffering the message. */
     auto on_delivery(pn_event_t* _event) -> void;
+    /** @brief Routes proton log messages through zapata's logging system. */
     auto on_log(std::string const& _message, zpt::LogLevel _level) -> void;
 };
 } // namespace zpt

@@ -109,7 +109,7 @@ class spin_mutex {
   private:
     zpt::padded_atomic<long> __shared_access{ 0 };        ///< Count of shared lock holders.
     zpt::padded_atomic<bool> __exclusive_access{ false }; ///< Exclusive lock flag.
-    std::thread::id __exclusive_owner;
+    std::thread::id __exclusive_owner; ///< Thread ID of exclusive lock holder.
 
     /** @brief Spins until shared lock can be acquired. */
     auto spin_shared_lock() -> void;

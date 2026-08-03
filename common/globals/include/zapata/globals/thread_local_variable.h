@@ -98,8 +98,17 @@ class thread_local_variable {
     auto dispose_local_image() -> void;
 
   private:
+    /** @brief The initial value used to create per-thread copies on first access. */
     type __initial_value;
 
+    /**
+     * @brief Returns the thread-local copy, creating one if it doesn't exist.
+     *
+     * Attempts to retrieve the value from the thread-local table. If no
+     * entry exists for this thread, allocates a new copy initialized from
+     * `__initial_value`.
+     * @return Reference to the thread-local value.
+     */
     auto get() -> reference;
 };
 } // namespace zpt
