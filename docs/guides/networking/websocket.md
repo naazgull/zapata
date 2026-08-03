@@ -97,25 +97,24 @@ resolver->add<ws_echo_handler>("/ws/echo");
 
 ## Configuration
 
-Configure WebSocket in your transport config:
+Configure WebSocket alongside HTTP. Add the `builtin:ws` plugin and set both `http` and `ws` config sections:
 
 ```json
 {
-    "transport": {
-        "type": "ws",
-        "bind": "tcp://0.0.0.0:8081"
-    }
-}
-```
-
-Or combine with HTTP:
-
-```json
-{
-    "transports": [
-        { "type": "http", "bind": "tcp://0.0.0.0:8080" },
-        { "type": "ws", "bind": "tcp://0.0.0.0:8081" }
-    ]
+    "identity": { "id": "uuid", "name": "my-app" },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:ws" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "ws": { "bind": "0.0.0.0", "port": 8081 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } }
 }
 ```
 

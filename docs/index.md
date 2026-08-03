@@ -1,17 +1,17 @@
 # Zapata Framework Documentation
 
-Zapata is a RESTful API development framework for C++20. It provides a complete ecosystem for building high-performance HTTP services with asynchronous programming, promises, and a modular plugin architecture.
+Zapata is a RESTful API development framework for C++20. It provides a complete ecosystem for building high-performance HTTP services with event-driven I/O, a modular plugin architecture, and a unified message abstraction across multiple transport protocols.
 
 ## Key Features
 
-- **RESTful API Development** - Build REST endpoints with minimal boilerplate
-- **Async/Await Programming** - Promise-based APIs with C++20 coroutine support
-- **JSON Support** - Native JSON parsing and serialization
-- **Database Connectivity** - SQLite and MySQL with abstract connector interface
-- **Multiple Transports** - HTTP, WebSocket, TCP, Unix sockets, named pipes
-- **Scripting Integration** - Lua and Prolog bridges for extensibility
-- **Lock-Free Concurrency** - Hazard pointer-based thread-safe data structures
-- **Plugin Architecture** - Extensible protocol and storage backends
+- **RESTful API Development** - Build REST endpoints with route matching and handler classes
+- **Event-Driven Architecture** - Asynchronous pub/sub with a dispatcher/consumer model
+- **JSON Everywhere** - All messages, configurations, and APIs use `zpt::json`
+- **Database Connectivity** - SQLite, MySQL, PostgreSQL, MongoDB via abstract connector interface
+- **Multiple Transports** - HTTP, WebSocket, TCP, AMQP, MQTT, Unix sockets, named pipes, UPnP
+- **Scripting Integration** - Lua and Prolog bridges for dynamic extensibility
+- **Lock-Free Queues** - Bounded ring buffer with 128-bit atomic mutation guard
+- **Plugin Architecture** - Extensible protocol and storage backends as shared libraries
 
 ## Documentation
 
@@ -45,7 +45,7 @@ Zapata is a RESTful API development framework for C++20. It provides a complete 
 
 - [Overview](architecture/overview.md) - High-level architecture
 - [Components](architecture/components.md) - Module relationships
-- [Concurrency Model](architecture/concurrency.md) - Async patterns and lock-free structures
+- [Concurrency Model](architecture/concurrency.md) - Event-driven I/O and lock-free structures
 - [Plugin System](architecture/plugins.md) - Extensibility architecture
 
 ### API Reference
@@ -80,9 +80,8 @@ Zapata is a RESTful API development framework for C++20. It provides a complete 
 - C++20 compatible compiler (GCC 10+, Clang 12+)
 - CMake 3.18+
 - OpenSSL
-- SQLite3 (optional)
-- MySQL client library (optional)
-- Lua (optional)
+
+Optional dependencies vary by module — see [Installation](getting-started/installation.md).
 
 ## License
 

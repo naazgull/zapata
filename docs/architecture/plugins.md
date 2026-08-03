@@ -63,28 +63,31 @@ The boot sequence:
 
 ## Configuration-Driven Loading
 
-Plugins are specified in configuration:
+Plugins are specified in the `load` array of the configuration:
 
 ```json
 {
-    "plugins": [
-        {
-            "name": "http-transport",
-            "path": "/usr/local/lib/libzapata-net-http.so",
-            "config": {
-                "bind": "tcp://0.0.0.0:8080"
-            }
-        },
-        {
-            "name": "sqlite-storage",
-            "path": "/usr/local/lib/libzapata-storage-sqlite.so",
-            "config": {
-                "path": "./data/app.db"
-            }
-        }
-    ]
+    "identity": { "id": "uuid", "name": "my-app" },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "http-transport", "source": "/usr/local/lib/libzapata-net-http.so",
+          "requires": [ "builtin:rest" ] },
+        { "name": "sqlite-storage", "source": "/usr/local/lib/libzapata-storage-sqlite.so",
+          "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } }
 }
 ```
+
+Each entry in `load` specifies:
+- `name` — plugin identifier (use `builtin:` prefix for built-in plugins)
+- `source` — path to the shared library (for custom plugins)
+- `requires` — array of plugin names that must be loaded first
 
 ## Writing a Custom Plugin
 
@@ -131,14 +134,22 @@ set_target_properties(my-plugin PROPERTIES PREFIX "")
 
 ### 3. Register in Configuration
 
+Add to the `load` array in your configuration file:
+
 ```json
 {
-    "plugins": [
-        {
-            "name": "my-plugin",
-            "path": "./libmy-plugin.so"
-        }
-    ]
+    "identity": { "id": "uuid", "name": "my-app" },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "my-plugin", "source": "./libmy-plugin.so",
+          "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } }
 }
 ```
 

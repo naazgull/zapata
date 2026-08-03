@@ -102,14 +102,27 @@ make -j$(nproc)
 ./my-api --config ../config.json
 ```
 
-Create a config file `../config.json`:
+Create `../config.json`:
 
 ```json
 {
-    "transport": {
-        "type": "http",
-        "bind": "tcp://0.0.0.0:8080"
-    }
+    "identity": {
+        "id": "my-api-uuid",
+        "name": "my-api"
+    },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" },
+        { "name": "my-api", "source": "libmy-api.so", "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } },
+    "rest": { "prefix": "/api" }
 }
 ```
 

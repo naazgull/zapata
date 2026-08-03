@@ -5,8 +5,8 @@ A simple real-time chat application using WebSocket transport.
 ## Files
 
 - `main.cpp` - Server with WebSocket message handling
-- `CMakeLists.txt` - Build configuration
 - `config.json` - Server configuration
+- `CMakeLists.txt` - Build configuration
 
 ## main.cpp
 
@@ -75,6 +75,31 @@ auto main(int _argc, char* _argv[]) -> int {
 }
 ```
 
+## config.json
+
+```json
+{
+    "identity": {
+        "id": "websocket-chat-uuid",
+        "name": "websocket-chat"
+    },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:ws" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" },
+        { "name": "websocket-chat", "source": "libwebsocket-chat.so",
+          "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 1048576 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } }
+}
+```
+
 ## CMakeLists.txt
 
 ```cmake
@@ -94,17 +119,6 @@ target_include_directories(websocket-chat PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(websocket-chat ${ZAPATA_LIBRARIES})
 ```
 
-## config.json
-
-```json
-{
-    "transport": {
-        "type": "ws",
-        "bind": "tcp://0.0.0.0:8081"
-    }
-}
-```
-
 ## Test
 
 Connect with a WebSocket client (e.g., `websocat`):
@@ -114,7 +128,7 @@ Connect with a WebSocket client (e.g., `websocat`):
 ./websocket-chat --config config.json
 
 # Terminal 2: Connect as user
-websocat ws://localhost:8081/ws/chat
+websocat ws://localhost:8080/ws/chat
 
 # Send JSON messages:
 {"from": "Alice", "text": "Hello everyone!"}

@@ -78,10 +78,10 @@ Message semantics and conversation tracking:
 - Message envelope structure
 
 **zapata-lockfree**
-Wait-free concurrent data structures:
-- Hazard pointer-based memory reclamation
+Lock-free concurrent data structures:
+- Bounded FIFO queue backed by a ring buffer with 128-bit atomic mutation guard (CAS-based, no hazard pointers)
 - Lock-free FIFO queue
-- Cache-line aligned atomics
+- Cache-line aligned atomics (`padded_atomic`)
 
 ### I/O Layer
 
@@ -196,25 +196,30 @@ Plugins are discovered and loaded at startup based on configuration.
 
 - **Automatic**: Shared pointers for most objects
 - **Pool Allocator**: Optional bounded memory pools
-- **Hazard Pointers**: Safe reclamation in lock-free structures
+- **Atomic CAS**: Lock-free queues use 128-bit compare-and-swap with mutation guard for safe concurrent access
 
 ## Configuration
 
-Configuration is JSON-based:
+Configuration is JSON-based, with top-level sections for identity, logging, plugin loading, and transport settings:
 
 ```json
 {
-    "transport": {
-        "bind": "tcp://0.0.0.0:8080"
+    "identity": {
+        "id": "service-uuid",
+        "name": "my-service"
     },
-    "storage": {
-        "sqlite": {
-            "path": "/var/lib/myapp/data.db"
-        }
-    },
-    "log": {
-        "level": "info"
-    }
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } },
+    "rest": { "prefix": "/api" }
 }
 ```
 
