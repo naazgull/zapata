@@ -42,45 +42,57 @@ The Lua bridge converts between `zpt::json` and Lua values transparently.
 
 ## Getting the Bridge Instance
 
+There are two ways to access the Lua bridge:
+
+**Global accessor (thread-local):**
 ```cpp
-// Global thread-local instance
 auto& lua = zpt::LUA_BRIDGE();
 ```
 
-Each thread gets its own Lua state to avoid synchronization issues.
+**Local instance (typical in a plugin or module):**
+```cpp
+// Thread-local instance
+static thread_local zpt::lua::bridge lua;
+
+// Or per-module instance
+zpt::lua::bridge lua;
+```
+
+Each thread should have its own Lua state to avoid synchronization issues.
 
 ## Loading Lua Modules
 
 ### From Files
 
+Create a Lua script file and load it:
+
 ```cpp
-lua.add_module("/path/to/script.lua")
-   .init();
+lua.add_module("/path/to/script.lua", zpt::json{ "module", "mymodule" });
 ```
 
 ### From C++ Callbacks
 
+Register C++ functions callable from Lua:
+
 ```cpp
 lua.add_module([](lua_State* L) {
-    // Register C++ functions callable from Lua
+    // Register C++ functions here
     lua_register(L, "greet", [](lua_State* L) -> int {
         const char* name = lua_tostring(L, 1);
         std::string result = std::string("Hello, ") + name + "!";
         lua_pushstring(L, result.c_str());
         return 1;  // Number of return values
     });
-}, zpt::json{ "name", "my_module" });
-
-lua.init();
+}, zpt::json{ "module", "builtin" });
 ```
 
 ## Calling Lua Functions
 
 ```cpp
-// Call a Lua function with JSON arguments
+// Call a Lua function with arguments
 auto result = lua.call(
-    zpt::json{ "function", "my_lua_func" },
-    zpt::json{ "arg1", "hello", "arg2", 42 }
+    zpt::json{ "module", "mymodule", "function", "my_func" },
+    zpt::json{ zpt::array, "arg1", "arg2" }
 );
 
 // Result is zpt::json
@@ -112,16 +124,19 @@ std::cout << result << std::endl;
 | `string` | `JSString` |
 | `table` | `JSObject` or `JSArray` |
 
-## Configuration and Options
+## Thread Safety
+
+Each thread should use its own bridge instance via `thread_instance()`:
 
 ```cpp
-auto& lua = zpt::LUA_BRIDGE();
+// In each thread, get the thread-local bridge
+auto& local_lua = lua.thread_instance();
 
-// Set configuration options
-lua.set_options(zpt::json{
-    "script_path", "/usr/local/share/myapp/scripts",
-    "preload", { zpt::array, "utils.lua", "config.lua" }
-});
+// Use it for calls
+auto result = local_lua.call(
+    zpt::json{ "module", "mymodule", "function", "my_func" },
+    zpt::json{ zpt::array, "arg" }
+);
 ```
 
 ## Stack Management
@@ -132,15 +147,51 @@ The bridge handles Lua stack management automatically, but you can manually clea
 lua.clear_stack();
 ```
 
-## Thread Safety
-
-Each thread gets its own Lua state via `thread_instance()`. Access the current thread's bridge:
+## Example: Multi-Threaded Lua Bridge
 
 ```cpp
-auto& local_lua = zpt::LUA_BRIDGE().thread_instance();
+#include <zapata/lua.h>
+
+zpt::lua::bridge _bridge;
+
+auto main(int, char**) -> int {
+    // Register a C++ function
+    _bridge.add_module([](lua_State* L) {
+        lua_register(L, "add", [](lua_State* L) -> int {
+            int a = lua_tointeger(L, 1);
+            int b = lua_tointeger(L, 2);
+            lua_pushinteger(L, a + b);
+            return 1;
+        });
+    }, zpt::json{ "module", "mathlib" });
+
+    // Call from multiple threads
+    std::thread t1([&]() {
+        auto& lua1 = _bridge.thread_instance();
+        auto result = lua1.call(
+            zpt::json{ "module", "mathlib", "function", "add" },
+            zpt::json{ zpt::array, 10, 20 }
+        );
+        std::cout << "Thread 1: " << int(result) << std::endl;
+    });
+
+    std::thread t2([&]() {
+        auto& lua2 = _bridge.thread_instance();
+        auto result = lua2.call(
+            zpt::json{ "module", "mathlib", "function", "add" },
+            zpt::json{ zpt::array, 30, 40 }
+        );
+        std::cout << "Thread 2: " << int(result) << std::endl;
+    });
+
+    t1.join();
+    t2.join();
+    return 0;
+}
 ```
 
 ## See Also
 
 - [Bridges & Generators API Reference](../../api-reference/bridges-generators.md) - Bridge API details
 - [Architecture Overview](../../architecture/overview.md) - Plugin architecture
+- [Creating Language Bridges](../../extending/bridges.md) - Custom bridge guide

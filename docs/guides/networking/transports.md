@@ -23,16 +23,21 @@ All transports implement `zpt::transport::basic_transport<T>` using CRTP:
 
 ```cpp
 template<typename T>
-class basic_transport {
+class basic_transport : public zpt::transport::base {
 public:
-    // Receive an incoming message
-    virtual auto receive(zpt::message _message) -> void = 0;
+    // Declare capabilities
+    virtual auto has_capability(std::uint64_t _capability) const -> bool = 0;
 
-    // Send an outgoing message
-    virtual auto send(zpt::message _message) -> void = 0;
+    // Create a request message
+    virtual auto make_request() const -> zpt::message = 0;
 
-    // Process a message through the handler chain
-    virtual auto process(zpt::message _message) -> void = 0;
+    // Create a reply message
+    virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
+    virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
+
+    // Receive/send from a stream
+    virtual auto receive(zpt::stream _stream) const -> zpt::message = 0;
+    virtual auto send(zpt::stream _stream, zpt::message _to_send) const -> void = 0;
 };
 ```
 
@@ -40,36 +45,41 @@ public:
 
 Each transport declares its capabilities:
 
-| Capability | Description |
-|-----------|-------------|
-| `BIND` | Can listen for incoming connections |
-| `CONNECT` | Can initiate outgoing connections |
+| Capability | Constant | Description |
+|-----------|----------|-------------|
+| Synchronous | `zpt::transport::SYNCHRONOUS` (1) | Supports request-response pattern |
+| Persistent | `zpt::transport::PERSISTENT` (2) | Maintains persistent connections |
 
-HTTP supports both. Self (in-process) supports only `CONNECT`.
+HTTP supports both. Self (in-process) supports only synchronous.
 
 ## Available Transports
 
-| Transport | Header | Bind | Connect | Description |
-|-----------|--------|:----:|:-------:|-------------|
-| HTTP | `<zapata/http.h>` | Yes | Yes | HTTP/1.1 with SSL/TLS |
-| WebSocket | `<zapata/websocket.h>` | Yes | Yes | RFC 6455 WebSockets |
-| TCP | `<zapata/tcp.h>` | Yes | Yes | Raw TCP sockets |
-| Local | `<zapata/local.h>` | Yes | Yes | Unix domain sockets |
-| Pipe | `<zapata/pipe.h>` | Yes | Yes | Named pipes (FIFO) |
-| Self | `<zapata/self.h>` | No | Yes | In-process callbacks |
-| UPnP | `<zapata/upnp.h>` | Yes | Yes | UPnP/SSDP discovery |
+| Transport | Header | Capabilities | Description |
+|-----------|--------|-------------|-------------|
+| HTTP | `<zapata/http.h>` | SYNCHRONOUS | HTTP/1.1 with SSL/TLS |
+| WebSocket | `<zapata/websocket.h>` | SYNCHRONOUS, PERSISTENT | RFC 6455 WebSockets |
+| TCP | `<zapata/tcp.h>` | SYNCHRONOUS, PERSISTENT | Raw TCP sockets |
+| Local | `<zapata/local.h>` | SYNCHRONOUS, PERSISTENT | Unix domain sockets |
+| Pipe | `<zapata/pipe.h>` | SYNCHRONOUS | Named pipes (FIFO) |
+| Self | `<zapata/self.h>` | SYNCHRONOUS | In-process callbacks |
+| UPnP | `<zapata/upnp.h>` | SYNCHRONOUS | UPnP/SSDP discovery |
 
 ## The Network Layer Registry
 
 `zpt::network::layer` manages transport registration and lookup:
 
 ```cpp
-// Transports register themselves
-zpt::network::layer::add("http", http_transport);
-zpt::network::layer::add("ws", ws_transport);
+// Get the global transport layer
+auto& layer = zpt::TRANSPORT_LAYER(config);
+
+// Transports register themselves by scheme
+layer.add("http", zpt::make_transport<zpt::net::transport::http>())
+     .add("https", zpt::make_transport<zpt::net::transport::http>())
+     .add("ws", zpt::make_transport<zpt::net::transport::websocket>())
+     .add("tcp", zpt::make_transport<zpt::net::transport::tcp>());
 
 // Look up a transport by scheme
-auto& transport = zpt::network::layer::get("http");
+auto http_transport = layer.get("http");
 ```
 
 ## Configuration
@@ -95,6 +105,15 @@ Bind transports to network addresses:
         { "type": "local", "bind": "unix:///tmp/myapp.sock" }
     ]
 }
+```
+
+## The Transport Engine
+
+The transport engine coordinates I/O with event dispatch:
+
+```cpp
+auto engine = zpt::TRANSPORT_ENGINE(config);
+engine->add_resolver(my_resolver);
 ```
 
 ## See Also

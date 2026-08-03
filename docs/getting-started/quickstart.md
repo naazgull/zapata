@@ -47,48 +47,48 @@ Create `src/main.cpp`:
 ```cpp
 #include <zapata/rest.h>
 
+// Handle GET /api/hello
+class hello_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        this->to_send()->status(200)->body() = zpt::json{
+            "message", "Hello from Zapata!"
+        };
+        return zpt::events::finish;
+    }
+};
+
+// Handle POST /api/greet
+class greet_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto name = std::string(this->received()->body()("name")->string());
+        this->to_send()->status(200)->body() = zpt::json{
+            "message", std::string("Hello, ") + name + "!"
+        };
+        return zpt::events::finish;
+    }
+};
+
 auto main(int _argc, char* _argv[]) -> int {
-    // Load configuration
-    auto _config = zpt::json::object();
-    _config["transport"] = {
-        "type", "http",
-        "bind", "tcp://0.0.0.0:8080"
-    };
-
-    // Bootstrap the framework
     zpt::BOOT(_argc, _argv);
-    auto& _boot = zpt::BOOT_ENGINE();
 
-    // Register a GET endpoint
-    _boot.add_handler(zpt::Get, "/api/hello",
-        [](zpt::performative _method,
-           zpt::json _envelope,
-           zpt::json _opts) -> zpt::json {
-            return {
-                "status", 200,
-                "body", {
-                    "message", "Hello from Zapata!"
-                }
-            };
-        });
+    auto& resolver = zpt::REST_RESOLVER();
 
-    // Register a POST endpoint with body
-    _boot.add_handler(zpt::Post, "/api/greet",
-        [](zpt::performative _method,
-           zpt::json _envelope,
-           zpt::json _opts) -> zpt::json {
-            auto _name = _envelope["body"]["name"];
-            return {
-                "status", 200,
-                "body", {
-                    "message",
-                    std::string("Hello, ") + std::string(_name) + "!"
-                }
-            };
-        });
+    // Register GET /api/hello
+    resolver->add<hello_handler>("/api/hello");
 
-    // Start the server
-    _boot.start();
+    // Register POST /api/greet
+    resolver->add<greet_handler>("/api/greet");
+
+    // Start the transport engine
+    zpt::TRANSPORT_ENGINE();
+    zpt::DISPATCHER()->trap();
+
     return 0;
 }
 ```
@@ -99,7 +99,18 @@ auto main(int _argc, char* _argv[]) -> int {
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-./my-api
+./my-api --config ../config.json
+```
+
+Create a config file `../config.json`:
+
+```json
+{
+    "transport": {
+        "type": "http",
+        "bind": "tcp://0.0.0.0:8080"
+    }
+}
 ```
 
 The server starts on port 8080.

@@ -26,7 +26,7 @@ Abstract base class for all language integrations.
 
 ```cpp
 class integration {
-public:
+  public:
     virtual auto name() const -> std::string = 0;
 };
 ```
@@ -38,7 +38,7 @@ CRTP base template for language bridges.
 ```cpp
 template<typename C, typename O>
 class bridge : public integration {
-public:
+  public:
     using class_type = C;   // Concrete bridge type
     using object_type = O;  // Native object type
 
@@ -91,7 +91,7 @@ RAII wrapper for `lua_State*`.
 
 ```cpp
 class lua_object {
-public:
+  public:
     lua_object();
     lua_object(lua_State* _rhs);
     lua_object(lua_object const& _rhs);
@@ -115,7 +115,7 @@ Lua scripting language bridge implementation.
 
 ```cpp
 class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object> {
-public:
+  public:
     using underlying_type = lua_State*;
     using callback_type = std::function<void(underlying_type)>;
     using lambda_type = std::function<int(underlying_type)>;
@@ -163,8 +163,8 @@ auto LUA_BRIDGE() -> zpt::lua::bridge&;
 ```cpp
 #include <zapata/lua.h>
 
-// Get the global bridge instance
-auto& lua = zpt::LUA_BRIDGE();
+// Local instance
+zpt::lua::bridge lua;
 
 // Configure and load a Lua module
 lua.add_module("/path/to/script.lua")
@@ -172,8 +172,8 @@ lua.add_module("/path/to/script.lua")
 
 // Call a Lua function
 auto result = lua.call(
-    zpt::json{ "function", "my_lua_func" },
-    zpt::json{ "arg", "hello" }
+    zpt::json{ "module", "mymodule", "function", "my_lua_func" },
+    zpt::json{ zpt::array, "arg1", "arg2" }
 );
 
 // Register a C++ callback callable from Lua
@@ -183,7 +183,10 @@ lua.add_module([](lua_State* L) {
         // Implementation
         return 1;  // Number of return values
     });
-}, zpt::json{ "name", "my_module" });
+}, zpt::json{ "module", "my_module" });
+
+// Get thread-local instance
+auto& local_lua = lua.thread_instance();
 ```
 
 ---
@@ -251,7 +254,7 @@ Abstract base class for all AST nodes.
 
 ```cpp
 class basic_element : public std::enable_shared_from_this<basic_element> {
-public:
+  public:
     std::shared_ptr<basic_element> __parent{ nullptr };
 
     virtual auto to_string() const -> std::string = 0;
@@ -269,7 +272,7 @@ Container for generated source files.
 
 ```cpp
 class basic_module {
-public:
+  public:
     using allowed_type = std::shared_ptr<basic_file>;
 
     basic_module(std::string const& _module_name);
@@ -291,7 +294,7 @@ Represents a source file containing classes, functions, and variables.
 
 ```cpp
 class basic_file {
-public:
+  public:
     using allowed_type = std::variant<
         std::shared_ptr<basic_class>,
         std::shared_ptr<basic_function>,
@@ -319,7 +322,7 @@ Represents a class definition with visibility sections.
 
 ```cpp
 class basic_class : public basic_element {
-public:
+  public:
     using allowed_type = std::variant<
         std::shared_ptr<basic_class>,
         std::shared_ptr<basic_function>,
@@ -342,7 +345,7 @@ Represents a function with parameters and optional body.
 
 ```cpp
 class basic_function : public basic_element {
-public:
+  public:
     basic_function(std::string const& _name,
                    std::string const& _return_type = "",
                    int _modifiers = 0);
@@ -362,7 +365,7 @@ Represents a variable declaration with optional initialization.
 
 ```cpp
 class basic_variable : public basic_element {
-public:
+  public:
     basic_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
 
     auto add(std::shared_ptr<basic_code_block> _initialization) -> basic_variable&;
@@ -379,7 +382,7 @@ Represents raw code instructions with optional body block.
 
 ```cpp
 class basic_instruction : public basic_element {
-public:
+  public:
     basic_instruction(std::string const& _code);
 
     auto add(std::shared_ptr<basic_code_block> _body) -> basic_instruction&;
@@ -395,7 +398,7 @@ Represents a block of statements (e.g., function body, if block).
 
 ```cpp
 class basic_code_block : public basic_element {
-public:
+  public:
     using allowed_type = std::variant<
         std::shared_ptr<basic_class>,
         std::shared_ptr<basic_code_block>,
@@ -423,7 +426,7 @@ C++-specific AST implementations that generate proper C++ syntax.
 
 ```cpp
 class cpp_class : public basic_class {
-public:
+  public:
     cpp_class(std::string const& _name, std::string const& _extends = "");
     auto to_string() const -> std::string override;
 };
@@ -433,7 +436,7 @@ public:
 
 ```cpp
 class cpp_function : public basic_function {
-public:
+  public:
     cpp_function(std::string const& _name,
                  std::string const& _return_type = "",
                  int _modifiers = 0);
@@ -445,7 +448,7 @@ public:
 
 ```cpp
 class cpp_variable : public basic_variable {
-public:
+  public:
     cpp_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     auto to_string() const -> std::string override;
 };
@@ -455,7 +458,7 @@ public:
 
 ```cpp
 class cpp_instruction : public basic_instruction {
-public:
+  public:
     cpp_instruction(std::string const& _code, bool _no_end_of_line = false);
     auto to_string() const -> std::string override;
 };
@@ -465,7 +468,7 @@ public:
 
 ```cpp
 class cpp_code_block : public basic_code_block {
-public:
+  public:
     cpp_code_block(std::string const& _prefix = "");
     auto to_string() const -> std::string override;
 };
@@ -477,7 +480,7 @@ For generating CMakeLists.txt files.
 
 ```cpp
 class cmake_instruction : public basic_instruction {
-public:
+  public:
     cmake_instruction(std::string const& _code);
     auto to_string() const -> std::string override;
 };
@@ -487,26 +490,26 @@ public:
 
 ```cpp
 namespace zpt {
-template<typename T, typename... Args>
-auto make_module(Args... _args) -> std::shared_ptr<ast::basic_module>;
+    template<typename T, typename... Args>
+    auto make_module(Args... _args) -> std::shared_ptr<ast::basic_module>;
 
-template<typename T, typename... Args>
-auto make_file(Args... _args) -> std::shared_ptr<ast::basic_file>;
+    template<typename T, typename... Args>
+    auto make_file(Args... _args) -> std::shared_ptr<ast::basic_file>;
 
-template<ast::BasicASTElement T, typename... Args>
-auto make_class(Args... _args) -> std::shared_ptr<ast::basic_class>;
+    template<ast::BasicASTElement T, typename... Args>
+    auto make_class(Args... _args) -> std::shared_ptr<ast::basic_class>;
 
-template<ast::BasicASTElement T, typename... Args>
-auto make_code_block(Args... _args) -> std::shared_ptr<ast::basic_code_block>;
+    template<ast::BasicASTElement T, typename... Args>
+    auto make_code_block(Args... _args) -> std::shared_ptr<ast::basic_code_block>;
 
-template<ast::BasicASTElement T, typename... Args>
-auto make_function(Args... _args) -> std::shared_ptr<ast::basic_function>;
+    template<ast::BasicASTElement T, typename... Args>
+    auto make_function(Args... _args) -> std::shared_ptr<ast::basic_function>;
 
-template<ast::BasicASTElement T, typename... Args>
-auto make_variable(Args... _args) -> std::shared_ptr<ast::basic_variable>;
+    template<ast::BasicASTElement T, typename... Args>
+    auto make_variable(Args... _args) -> std::shared_ptr<ast::basic_variable>;
 
-template<ast::BasicASTElement T, typename... Args>
-auto make_instruction(Args... _args) -> std::shared_ptr<ast::basic_instruction>;
+    template<ast::BasicASTElement T, typename... Args>
+    auto make_instruction(Args... _args) -> std::shared_ptr<ast::basic_instruction>;
 }
 ```
 

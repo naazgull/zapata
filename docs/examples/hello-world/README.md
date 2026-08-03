@@ -5,6 +5,7 @@ A minimal REST API with Zapata.
 ## Files
 
 - `main.cpp` - Application entry point
+- `config.json` - Server configuration
 - `CMakeLists.txt` - Build configuration
 
 ## main.cpp
@@ -12,33 +13,58 @@ A minimal REST API with Zapata.
 ```cpp
 #include <zapata/rest.h>
 
+// Simple handler — responds with a greeting
+class hello_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        this->to_send()->status(200)->body() = zpt::json{
+            "message", "Hello, World!"
+        };
+        return zpt::events::finish;
+    }
+};
+
+// Parameterized handler — greets by name from URI path
+class hello_name_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto name = this->received()->uri()("params")("name")->string();
+        this->to_send()->status(200)->body() = zpt::json{
+            "message", std::string("Hello, ") + name + "!"
+        };
+        return zpt::events::finish;
+    }
+};
+
 auto main(int _argc, char* _argv[]) -> int {
     zpt::BOOT(_argc, _argv);
-    auto& boot = zpt::BOOT_ENGINE();
 
-    boot.add_handler(zpt::Get, "/hello",
-        [](zpt::performative _method,
-           zpt::json _envelope,
-           zpt::json _opts) -> zpt::json {
-            return {
-                "status", 200,
-                "body", { "message", "Hello, World!" }
-            };
-        });
+    auto& resolver = zpt::REST_RESOLVER();
 
-    boot.add_handler(zpt::Get, "/hello/{name}",
-        [](zpt::performative _method,
-           zpt::json _envelope,
-           zpt::json _opts) -> zpt::json {
-            auto name = std::string(_envelope["params"]["name"]);
-            return {
-                "status", 200,
-                "body", { "message", "Hello, " + name + "!" }
-            };
-        });
+    // Register handlers by path
+    resolver->add<hello_handler>("/hello")
+        ->add<hello_name_handler>("/hello/{name}");
 
-    boot.start();
+    // Start transport engine and block until shutdown
+    zpt::TRANSPORT_ENGINE();
+    zpt::DISPATCHER()->trap();
+
     return 0;
+}
+```
+
+## config.json
+
+```json
+{
+    "transport": {
+        "type": "http",
+        "bind": "tcp://0.0.0.0:8080"
+    }
 }
 ```
 
@@ -78,3 +104,9 @@ curl http://localhost:8080/hello
 curl http://localhost:8080/hello/Zapata
 # {"message":"Hello, Zapata!"}
 ```
+
+## See Also
+
+- [Building REST APIs](../../guides/rest-api.md) - REST guide
+- [REST Engine API Reference](../../api-reference/rest.md) - API details
+- [Quickstart](../../getting-started/quickstart.md) - Getting started

@@ -10,11 +10,13 @@ The HTTP module includes:
 - Header management
 - SSL/TLS via OpenSSL
 - Keep-alive connection handling
+- HTTP client with `zpt::http::retrieve()`
 
 ## Headers
 
 ```cpp
 #include <zapata/http.h>      // HTTP parser
+#include <zapata/http/retrieve.h>  // HTTP client
 #include <zapata/net/http.h>  // HTTP transport
 ```
 
@@ -63,6 +65,22 @@ reply->body() = zpt::json{ "message", "OK" };
 output_stream << *reply;
 ```
 
+## HTTP Client
+
+Send an HTTP request and receive the response:
+
+```cpp
+#include <zapata/http/retrieve.h>
+
+auto request = zpt::allocate_message<zpt::http::basic_request>();
+request->performative(zpt::Get).uri("https://api.example.com/data");
+
+auto reply = zpt::http::retrieve(request);
+if (reply != nullptr) {
+    std::cout << *reply << std::endl;
+}
+```
+
 ## Status Codes
 
 Use standard HTTP status codes:
@@ -82,11 +100,10 @@ reply->status(500);  // Internal Server Error
 SSL is configured at the socket level via OpenSSL:
 
 ```cpp
-#include <zapata/net/socket/socket_stream.h>
+#include <zapata/net/socket.h>
 
 // Create an SSL socket stream
-zpt::stream::ssl_socket_stream ssl_stream;
-ssl_stream.open("example.com", 443);
+auto stream = zpt::make_stream<zpt::socketstream>("example.com", 443, zpt::USE_SSL, IPPROTO_TCP);
 ```
 
 Certificate and key paths are configured in the transport settings.

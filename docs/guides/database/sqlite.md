@@ -29,11 +29,15 @@ pkg_check_modules(ZAPATA REQUIRED zapata-storage-sqlite)
 ## Creating a Connection
 
 ```cpp
-auto config = zpt::json{
-    "path", "/var/lib/myapp/data.db"
-};
+// In-memory database
+auto config = zpt::json{ "storage", { "sqlite", { "memory", true } } };
+
+// File-based database
+auto config = zpt::json{ "storage", { "sqlite", { "path", "./data/app.db" } } };
 
 auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(config);
+auto session = conn->session();
+auto db = session->database("main");
 ```
 
 The database file is created if it doesn't exist. The connection uses `sqlite3_open_v2` internally with read-write-create flags.
@@ -43,43 +47,66 @@ The database file is created if it doesn't exist. The connection uses `sqlite3_o
 Create tables and initial schema:
 
 ```cpp
-auto session = zpt::storage::make_session(conn);
-auto db = zpt::storage::make_database(session, "main");
-
-// Execute raw SQL for schema setup
-db->execute("CREATE TABLE IF NOT EXISTS users ("
-            "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "  name TEXT NOT NULL,"
-            "  email TEXT UNIQUE,"
-            "  created_at TEXT DEFAULT CURRENT_TIMESTAMP"
-            ")");
+// Execute raw SQL
+db->sql("CREATE TABLE IF NOT EXISTS users ("
+        "  _id varchar PRIMARY KEY,"
+        "  name TEXT NOT NULL,"
+        "  email TEXT UNIQUE,"
+        "  created_at TEXT DEFAULT CURRENT_TIMESTAMP"
+        ")");
 ```
 
 ## CRUD Operations
 
 ```cpp
-auto users = zpt::storage::make_collection(db, "users");
+auto users = db->collection("users");
 
-// Insert
-users->insert({
-    "name", "Alice",
-    "email", "alice@example.com"
-});
+// Insert a single document
+users->add({ "_id", "1", "name", "Alice", "email", "alice@example.com" })->execute();
 
-// Find
-auto results = users->find({ "name", "Alice" })->execute();
-for (auto row : results) {
+// Insert multiple documents at once
+users->add({ "_id", "1", "name", "Alice" })
+     ->add({ "_id", "2", "name", "Bob" })
+     ->add({ "_id", "3", "name", "Charlie" })
+     ->execute();
+
+// Find all records
+auto results = users->find({})->execute();
+for (auto&& [_, __, row] : results->fetch()) {
     std::cout << row["email"] << std::endl;
 }
 
-// Update
-users->update(
-    { "name", "Alice" },           // WHERE
-    { "email", "new@example.com" } // SET
-);
+// Find by field
+auto results = users->find({ "_id", "1" })->execute();
+
+// Update using modify with SQL-like syntax
+users->modify({ "_id", "1" })
+    ->set("email", "new@example.com")
+    ->execute();
+
+// Update with parameter binding
+users->modify("_id = :id")
+    ->set("email", "updated@example.com")
+    ->bind({ "id", "1" })
+    ->execute();
+
+// Replace by ID
+users->replace("1", { "_id", "1", "name", "Alice Updated", "email", "new@example.com" })
+    ->execute();
 
 // Delete
-users->remove({ "name", "Alice" });
+users->remove({ "_id", "1" })->execute();
+
+// Delete with parameter binding
+users->remove("_id = :id")
+    ->bind({ "id", "1" })
+    ->execute();
+
+// Delete all
+users->remove({})->execute();
+
+// Count records
+auto count = users->count();
 ```
 
 ## Configuration
@@ -87,6 +114,7 @@ users->remove({ "name", "Alice" });
 | Key | Type | Description |
 |-----|------|-------------|
 | `path` | string | Path to SQLite database file |
+| `memory` | bool | Use in-memory database (default: `false`) |
 
 ```json
 {
