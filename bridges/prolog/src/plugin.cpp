@@ -25,6 +25,7 @@
 #include <zapata/startup.h>
 
 namespace {
+/** @brief Loads the dynamic Prolog bindings library (libzapata_bridge_prolog_bindings). */
 auto register_bindings() -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE();
     _bridge.call(zpt::prolog::term{ std::format(
@@ -32,6 +33,12 @@ auto register_bindings() -> void {
 }
 } // namespace
 
+/**
+ * @brief System event handler that executes configured Prolog goals after boot.
+ *
+ * Iterates over the `exec` configuration entries and calls the specified Prolog goals
+ * via the bridge. Removes itself from the event resolver after execution.
+ */
 class execute_after_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
@@ -52,6 +59,7 @@ class execute_after_boot : public zpt::system_event {
     }
 };
 
+/** @brief Plugin load callback: initializes the Prolog bridge and registers the `zpt` module. */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE(zpt::GLOBAL_CONFIG()("self")("cmd")->string());
     _bridge.set_options(_plugin.config());
@@ -73,6 +81,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Initialized PROLOG bridge", zpt::info);
 }
 
+/** @brief Plugin unload callback: cleans up the Prolog bridge state. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zpt::PROLOG_BRIDGE().cleanup();
     zlog("Unloaded PROLOG bridge", zpt::info);

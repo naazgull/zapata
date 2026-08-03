@@ -60,9 +60,11 @@ class pending_messages {
     auto clear() -> pending_messages&;
 
   private:
+    /** @brief Map of pending request callbacks, keyed by correlation ID. */
     std::unordered_map<std::string,
                        std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>>
       __pending;
+    /** @brief Mutex protecting the pending messages map. */
     zpt::locks::spin_mutex __pending_mutex;
 };
 } // namespace rest

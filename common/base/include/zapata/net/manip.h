@@ -53,6 +53,15 @@ namespace net {
  * @endcode
  */
 auto getip(std::string const& _if = "") -> std::string;
+/**
+ * @brief Finds an available TCP or UDP port number.
+ * @param _protocol Protocol name ("tcp" or "udp").
+ * @param _start_from Port number to start searching from (default 1024).
+ * @return An available port number, or 0 if none found.
+ *
+ * Scans sequentially from _start_from looking for a port that is not
+ * in use by the system.
+ */
 auto get_available_port(std::string const& _protocol, std::uint32_t _start_from = 1024)
   -> std::uint32_t;
 } // namespace net

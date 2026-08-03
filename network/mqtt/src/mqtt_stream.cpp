@@ -20,6 +20,11 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file mqtt_stream.cpp
+ * @brief MQTT stream implementation using the mosquitto client library.
+ */
+
 #include <zapata/net/transport/mqtt.h>
 
 namespace {

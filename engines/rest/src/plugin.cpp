@@ -26,6 +26,7 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
+/** @brief Plugin entry point: registers the REST resolver and builtin minion event handlers. */
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zpt::TRANSPORT_ENGINE() //
@@ -50,6 +51,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Added REST event resolver", zpt::info);
 }
 
+/** @brief Plugin unload entry point: removes REST resolver and builtin handlers. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zlog("Disposing REST event resolver", zpt::info);

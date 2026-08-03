@@ -30,7 +30,9 @@ namespace zpt {
 
 class FunctionalTokenizerLexer : public Re2cFunctionalLexer {
   public:
+    /** @brief Constructs with given input and output streams. */
     FunctionalTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    /** @brief Destructor. */
     virtual ~FunctionalTokenizerLexer();
 
     /** @brief Sets the JSON root node to populate during parsing. */
@@ -50,7 +52,9 @@ class FunctionalTokenizerLexer : public Re2cFunctionalLexer {
     auto add_param() -> void;
 
   private:
+    /** @brief The JSON root node being populated during parsing. */
     zpt::json __root;
+    /** @brief Stack for building the JSON AST during tokenization. */
     std::stack<zpt::json> __stack;
 };
 } // namespace zpt

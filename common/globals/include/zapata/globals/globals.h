@@ -89,6 +89,7 @@ class thread_local_table {
         auto is_null() const -> bool override;
 
       private:
+        /** @brief The stored per-thread value of type T. */
         T __underlying;
     };
 

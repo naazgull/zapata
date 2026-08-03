@@ -3,6 +3,7 @@
 #include <zapata/transport/engine.h>
 
 namespace {
+/** @brief Builds an error JSON body from an exception. */
 template<typename T>
 auto get_error_body(T const& _e) -> zpt::json {
     int _error{ 500 };
@@ -16,6 +17,7 @@ auto get_error_body(T const& _e) -> zpt::json {
     return _to_return;
 }
 
+/** @brief Reports an error by building and returning an error response message. */
 template<typename T>
 auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) -> zpt::message {
 #ifdef PROPAGATE_EXCEPTION

@@ -27,6 +27,7 @@
 #include <zapata/streams/streams.h>
 
 namespace {
+/** @brief Default poll wait timeout in milliseconds. */
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 1000 };
 }
 

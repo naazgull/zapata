@@ -65,8 +65,10 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
     using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Lua
     using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Lua C function
 
+    /** @brief Creates a new Lua state with standard libraries open. */
     bridge();
     bridge(bridge&& _rhs) = delete;
+    /** @brief Closes the Lua state if it is not null. */
     ~bridge();
 
     auto operator=(bridge const& _rhs) -> zpt::lua::bridge& = delete;
@@ -109,15 +111,19 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
 
     /** @brief Initializes the bridge (loads all modules). */
     auto initialize() -> zpt::lua::bridge&;
+    /** @brief Clears all loaded modules and resets the bridge state. */
     auto cleanup() -> zpt::lua::bridge&;
 
   private:
-    lua_State* __underlying{ nullptr };
-    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load;
-    std::map<std::string, zpt::json> __external_to_load;
+    lua_State* __underlying{ nullptr };                     ///< Raw Lua state
+    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load; ///< Built-in modules to register
+    std::map<std::string, zpt::json> __external_to_load; ///< External file modules to load
 
+    /** @brief Copy constructor for creating a new thread-local bridge instance. */
     bridge(bridge const& _rhs);
+    /** @brief Executes the Lua function currently on top of the stack. */
     auto execute() -> zpt::lua::bridge::object_type;
+    /** @brief Pushes all JSON array elements onto the Lua stack as function arguments. */
     auto to_args(zpt::json _to_convert) -> zpt::lua::bridge&;
 };
 } // namespace lua

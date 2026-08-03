@@ -157,12 +157,27 @@ class queue {
     }
 
   private:
+    /** @brief Fixed-size ring buffer allocated at construction. */
     zpt::allocator<ptr>::array_pointer __elements{ nullptr };
+    /** @brief Packed 128-bit atomic: lower 64 bits = lower index, upper 64 bits = upper index. Bits 126-127 are a mutation guard. */
     zpt::padded_atomic<__uint128_t> __boundaries{ 0 };
+    /** @brief Approximate element count, updated independently of the index CAS. */
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
+    /** @brief Maximum number of elements the queue can hold. */
     size_t __capacity{ 0 };
 
+    /**
+     * @brief Packs lower and upper indices into a 128-bit value.
+     * @param _lower Lower index (head / pop position).
+     * @param _upper Upper index (tail / push position).
+     * @return Packed 128-bit value with _lower in bits 0-63 and _upper in bits 64-127.
+     */
     auto serialize(std::uint64_t _lower, std::uint64_t _upper) const -> __uint128_t;
+    /**
+     * @brief Unpacks lower and upper indices from a 128-bit value.
+     * @param _value Packed value from serialize().
+     * @return Tuple of (lower, upper) indices.
+     */
     auto deserialize(__uint128_t _value) const -> std::tuple<std::uint64_t, std::uint64_t>;
 };
 } // namespace lf

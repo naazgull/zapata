@@ -50,8 +50,13 @@ class UPnPPtr;
 /** @brief Shared pointer wrapper for UPnP instances. */
 class UPnPPtr : public std::shared_ptr<zpt::UPnP> {
   public:
+    /** @brief Constructs an UPnPPtr with default options. */
     UPnPPtr();
+    /** @brief Constructs an UPnPPtr with the given options.
+     @param _options Configuration JSON for the UPnP channel.
+     */
     UPnPPtr(zpt::json _options);
+    /** @brief Destroys the UPnPPtr. */
     virtual ~UPnPPtr();
 };
 
@@ -67,37 +72,81 @@ typedef zpt::UPnPPtr broker;
  */
 class UPnP : public zpt::Channel {
   public:
+    /** @brief Constructs a UPnP/SSDP channel with the given configuration.
+     @param _options Configuration JSON for the UPnP channel.
+     */
     UPnP(zpt::json _options);
+    /** @brief Destroys the UPnP channel and cleans up resources. */
     virtual ~UPnP();
 
+    /** @brief Sends an SSDP NOTIFY message for service announcement.
+     @param _search The notification type (NNT header value).
+     @param _location The location URL where service details can be retrieved.
+     */
     virtual auto notify(std::string const& _search, std::string const& _location) -> void;
+    /** @brief Sends an SSDP M-SEARCH multicast request to discover services.
+     @param _search The search target (ST header value).
+     */
     virtual auto search(std::string const& _search) -> void;
+    /** @brief Listens for incoming SSDP messages on the multicast socket.
+     @return The parsed HTTP request from the incoming SSDP packet.
+     */
     virtual auto listen() -> zpt::http::req;
 
+    /** @brief Receives the next available message from the socket.
+     @return A JSON object containing the message data.
+     */
     virtual auto recv() -> zpt::json;
+    /** @brief Sends a message with the given performative, resource, and payload.
+     @param _performative The message performative (e.g., REQUEST, NOTIFICATION).
+     @param _resource The target resource path or search type.
+     @param _payload The JSON payload to send.
+     @return A JSON object containing the response.
+     */
     virtual auto send(zpt::performative _performative,
                       std::string const& _resource,
                       zpt::json _payload) -> zpt::json;
+    /** @brief Sends a message using a pre-built JSON envelope.
+     @param _envelope The complete JSON message envelope.
+     @return A JSON object containing the response.
+     */
     virtual auto send(zpt::json _envelope) -> zpt::json;
 
+    /** @brief Returns the unique identifier for this UPnP channel. */
     virtual auto id() -> std::string;
+    /** @brief Returns the underlying socket stream for the send connection. */
     virtual auto underlying() -> zpt::socketstream_ptr;
+    /** @brief Returns the multicast ZMQ socket used for UPnP communication. */
     virtual auto socket() -> zmq::socket_ptr;
+    /** @brief Returns the input ZMQ socket. */
     virtual auto in() -> zmq::socket_ptr;
+    /** @brief Returns the output ZMQ socket. */
     virtual auto out() -> zmq::socket_ptr;
+    /** @brief Returns the file descriptor of the underlying socket. */
     virtual auto fd() -> int;
+    /** @brief Returns a reference to the input mutex for thread synchronization. */
     virtual auto in_mtx() -> std::mutex&;
+    /** @brief Returns a reference to the output mutex for thread synchronization. */
     virtual auto out_mtx() -> std::mutex&;
+    /** @brief Returns the short integer type identifier for this channel. */
     virtual auto type() -> short int;
+    /** @brief Returns the protocol string for this channel. */
     virtual auto protocol() -> std::string;
+    /** @brief Closes the UPnP channel and releases associated resources. */
     virtual auto close() -> void;
+    /** @brief Returns whether there is data available to read. */
     virtual auto available() -> bool;
+    /** @brief Returns whether this channel instance can be reused. */
     virtual auto is_reusable() -> bool;
 
   private:
+    /** @brief Mutex protecting the underlying send socket. */
     std::mutex __mtx_underlying;
+    /** @brief Mutex protecting send operations. */
     std::mutex __mtx_send;
+    /** @brief The underlying socket stream for outgoing send operations. */
     zpt::socketstream_ptr __underlying;
+    /** @brief The socket stream used for sending. */
     zpt::socketstream_ptr __send;
 };
 } // namespace zpt

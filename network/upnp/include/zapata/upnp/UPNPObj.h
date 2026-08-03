@@ -41,7 +41,9 @@ class basic_request : public zpt::http::basic_request {
     using zpt::http::basic_request::basic_request;
     virtual ~basic_request() = default;
 
+    /** @brief Serializes the SSDP request to an output stream. */
     auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    /** @brief Deserializes the SSDP request from an input stream. */
     auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 using request = std::shared_ptr<zpt::upnp::basic_request>;
@@ -52,7 +54,9 @@ class basic_reply : public zpt::http::basic_reply {
     using zpt::http::basic_reply::basic_reply;
     virtual ~basic_reply() = default;
 
+    /** @brief Serializes the SSDP reply to an output stream. */
     auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+    /** @brief Deserializes the SSDP reply from an input stream. */
     auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 using reply = std::shared_ptr<zpt::upnp::basic_reply>;

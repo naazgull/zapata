@@ -110,11 +110,23 @@ class basic_message {
     /** @brief Returns true if message is empty/uninitialized. */
     virtual auto empty() const -> bool = 0;
 
+    /**
+     * @brief Serializes the message to the given output stream.
+     * @param _out Output stream.
+     * @param _in Message to serialize.
+     * @return Reference to the output stream.
+     */
     friend auto operator<<(std::ostream& _out, zpt::basic_message const& _in) -> std::ostream& {
         _in.to_stream(_out);
         return _out;
     }
 
+    /**
+     * @brief Deserializes a message from the given input stream.
+     * @param _in Input stream.
+     * @param _out Message to populate.
+     * @return Reference to the input stream.
+     */
     friend auto operator>>(std::istream& _in, zpt::basic_message& _out) -> std::istream& {
         _out.from_stream(_in);
         return _in;
@@ -156,7 +168,9 @@ class call_context {
     auto has_error() const -> bool;
 
   private:
+    /** @brief Current call state (UNPROCESSED, SENT, SUCCESS_REPLY, FAILURE_REPLY). */
     zpt::padded_atomic<int> __state{ zpt::CALL_STATE_SENT };
+    /** @brief The reply message, set when a response is received. */
     zpt::message __reply{ nullptr };
 };
 

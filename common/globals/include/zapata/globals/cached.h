@@ -93,10 +93,20 @@ class cached {
     auto operator*() -> T&;
 
   private:
+    /** @brief The shared value stored in the cache. */
     T __underlying;
+    /** @brief Spin mutex protecting writes to `__underlying`. */
     zpt::locks::spin_mutex __repository_lock{};
+    /** @brief Monotonically increasing version counter. Incremented on each commit. */
     zpt::padded_atomic<unsigned long long> __cache_version{ 0 };
 
+    /**
+     * @brief Returns the thread-local copy of the cached value.
+     *
+     * If the version has changed since the last access from this thread,
+     * acquires the shared lock and updates the local copy from `__underlying`.
+     * @return Reference to the thread-local value.
+     */
     auto instance() -> T&;
 };
 } // namespace zpt

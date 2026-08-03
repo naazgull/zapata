@@ -113,6 +113,7 @@ class resolver_t {
     virtual auto get_provider(std::string const& _id) const -> zpt::json = 0;
 
   protected:
+    /** @brief Total count of registered handlers (incremented on add, decremented on remove). */
     zpt::padded_atomic<size_t> __registered_callbacks{ 0 };
 };
 /** @brief Shared pointer type for resolvers. */

@@ -40,13 +40,28 @@ namespace zpt {
 /** @brief Factory for creating and managing UPnP socket channels. */
 class UPnPFactory : public zpt::ChannelFactory {
   public:
+    /** @brief Constructs the UPnP channel factory. */
     UPnPFactory();
+    /** @brief Destroys the UPnP channel factory. */
     virtual ~UPnPFactory();
+    /** @brief Creates a new UPnP socket channel.
+     @param _options Configuration JSON for the channel.
+     @return A new UPnP socket.
+     */
     virtual auto produce(zpt::json _options) -> zpt::socket;
+    /** @brief Checks whether a channel of the given type is reusable.
+     @param _type The channel type identifier.
+     @return True if channels of this type can be reused.
+     */
     virtual auto is_reusable(std::string const& _type) -> bool;
+    /** @brief Cleans up and removes a socket from the channel pool.
+     @param _socket The socket to clean up.
+     @return True if the socket was successfully cleaned.
+     */
     virtual auto clean(zpt::socket _socket) -> bool;
 
   private:
+    /** @brief Map of registered channel instances keyed by type. */
     std::map<std::string, zpt::socket> __channels;
 };
 } // namespace zpt

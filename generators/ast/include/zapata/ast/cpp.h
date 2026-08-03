@@ -57,11 +57,9 @@ namespace ast {
  */
 class cpp_class : public zpt::ast::basic_class {
   public:
-    /**
-     * @brief Constructs a C++ class AST node.
-     * @param _name Class name.
-     * @param _extends Optional base class for inheritance.
-     */
+    /** @brief Constructs a C++ class AST node.
+     *  @param _name Class name.
+     *  @param _extends Optional base class for inheritance. */
     cpp_class(std::string const& _name, std::string const& _extends = "");
     ~cpp_class() = default;
 
@@ -77,10 +75,8 @@ class cpp_class : public zpt::ast::basic_class {
  */
 class cpp_code_block : public zpt::ast::basic_code_block {
   public:
-    /**
-     * @brief Constructs a C++ code block.
-     * @param _prefix Optional prefix before opening brace (e.g., "else").
-     */
+    /** @brief Constructs a C++ code block.
+     *  @param _prefix Optional prefix before opening brace (e.g., "else"). */
     cpp_code_block(std::string const& _prefix = "");
     ~cpp_code_block() = default;
 
@@ -103,12 +99,10 @@ class cpp_code_block : public zpt::ast::basic_code_block {
  */
 class cpp_function : public zpt::ast::basic_function {
   public:
-    /**
-     * @brief Constructs a C++ function AST node.
-     * @param _name Function name.
-     * @param _return_type Return type (trailing return syntax).
-     * @param _modifiers Bitwise OR of VIRTUAL, CONST, OVERRIDE, etc.
-     */
+    /** @brief Constructs a C++ function AST node.
+     *  @param _name Function name.
+     *  @param _return_type Return type (trailing return syntax).
+     *  @param _modifiers Bitwise OR of VIRTUAL, CONST, OVERRIDE, etc. */
     cpp_function(std::string const& _name,
                  std::string const& _return_type = "",
                  int _modifiers = 0);
@@ -125,12 +119,10 @@ class cpp_function : public zpt::ast::basic_function {
  */
 class cpp_variable : public zpt::ast::basic_variable {
   public:
-    /**
-     * @brief Constructs a C++ variable AST node.
-     * @param _name Variable name.
-     * @param _type Variable type.
-     * @param _modifiers Bitwise OR of CONST, EXTERN, etc.
-     */
+    /** @brief Constructs a C++ variable AST node.
+     *  @param _name Variable name.
+     *  @param _type Variable type.
+     *  @param _modifiers Bitwise OR of CONST, EXTERN, etc. */
     cpp_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     ~cpp_variable() = default;
 
@@ -145,11 +137,9 @@ class cpp_variable : public zpt::ast::basic_variable {
  */
 class cpp_instruction : public zpt::ast::basic_instruction {
   public:
-    /**
-     * @brief Constructs a C++ instruction AST node.
-     * @param _code Raw C++ code.
-     * @param _no_end_of_line If true, omits trailing newline.
-     */
+    /** @brief Constructs a C++ instruction AST node.
+     *  @param _code Raw C++ code.
+     *  @param _no_end_of_line If true, omits trailing newline. */
     cpp_instruction(std::string const& _code, bool _no_end_of_line = false);
     ~cpp_instruction() = default;
 
@@ -157,6 +147,7 @@ class cpp_instruction : public zpt::ast::basic_instruction {
     auto to_string() const -> std::string override;
 
   private:
+    /** @brief If true, omits trailing newline after the instruction. */
     bool __no_endl_of_line;
 };
 
@@ -167,10 +158,8 @@ class cpp_instruction : public zpt::ast::basic_instruction {
  */
 class cmake_instruction : public zpt::ast::basic_instruction {
   public:
-    /**
-     * @brief Constructs a CMake instruction AST node.
-     * @param _code CMake command.
-     */
+    /** @brief Constructs a CMake instruction AST node.
+     *  @param _code CMake command. */
     cmake_instruction(std::string const& _code);
     ~cmake_instruction() = default;
 

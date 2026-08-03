@@ -29,19 +29,30 @@ namespace zpt {
 
 class HTTPTokenizerLexer : public Re2cHTTPLexer {
   public:
+    /** @brief Constructs with given input and output streams. */
     HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    /** @brief Destructor. */
     virtual ~HTTPTokenizerLexer();
 
+    /** @brief Sets the request object to populate during parsing. */
     auto switchRoots(zpt::http::basic_request& _root) -> void;
+    /** @brief Sets the reply object to populate during parsing. */
     auto switchRoots(zpt::http::basic_reply& _root) -> void;
+    /** @brief Calls leave(0) to signal lexing completion. */
     auto justLeave() -> void;
 
+    /** @brief Initializes the request/reply type based on the message. */
     auto init(int _in_type) -> void;
+    /** @brief Processes the HTTP version token. */
     auto version() -> void;
+    /** @brief Processes body content from the lexer. */
     auto body() -> void;
+    /** @brief Processes the URL/request-target token. */
     auto url() -> void;
+    /** @brief Processes the status code token. */
     auto status() -> void;
 
+    /** @brief Adds the current token to the appropriate data structure. */
     auto add() -> void;
 
     /**
@@ -53,9 +64,13 @@ class HTTPTokenizerLexer : public Re2cHTTPLexer {
      */
     auto finishMessage() -> void;
 
+    /** @brief Current header name being parsed. */
     std::string __header_name;
+    /** @brief Pointer to the request object being populated during parsing. */
     zpt::http::basic_request* __root_req{ nullptr };
+    /** @brief Pointer to the reply object being populated during parsing. */
     zpt::http::basic_reply* __root_rep{ nullptr };
+    /** @brief Type identifier for the current root (request or reply). */
     int __root_type;
 };
 } // namespace zpt

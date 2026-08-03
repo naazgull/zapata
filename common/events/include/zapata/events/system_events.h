@@ -75,8 +75,10 @@ class system_event {
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::system_event_type __type; ///< The lifecycle event type.
-    zpt::message __received;       ///< Associated message data.
+    /// @brief The lifecycle event type (BOOTING, SHUTTING_DOWN, etc.).
+    zpt::system_event_type __type;
+    /// @brief Associated message data that triggered this event.
+    zpt::message __received;
 };
 
 namespace system_events {
@@ -145,6 +147,7 @@ class resolver_t : public zpt::events::resolver_t {
     auto get_provider(std::string const& _id) const -> zpt::json override;
 
   private:
+    /** @brief Nested map: system event type -> handler ID -> resolver callback for creating events. */
     std::map<zpt::system_event_type, std::map<zpt::json, zpt::events::resolver_callback>>
       __callbacks;
 };

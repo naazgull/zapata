@@ -69,9 +69,13 @@ class engine : public std::enable_shared_from_this<engine> {
     auto shutdown() -> engine&;
 
   private:
+    /** @brief Configuration passed to the engine at construction. */
     zpt::json __configuration;
+    /** @brief List of event resolvers for message routing. */
     std::vector<zpt::events::resolver> __resolvers;
+    /** @brief Event dispatcher for triggering receive/send/process events. */
     zpt::events::dispatcher::ptr __dispatcher{ nullptr };
+    /** @brief Delegate function registered with the polling instance. */
     zpt::polling::delegate_fn_type __delegate_callback{ nullptr };
 };
 } // namespace transports

@@ -121,6 +121,7 @@ static auto get_value_for_key(term_t _to_search_pl /*+*/,
 }
 } // namespace
 
+/** @brief SWI-Prolog library initializer that registers all `zpt_*` foreign predicates. */
 extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_make_request", 2, (void*)::make_request, 0);
     PL_register_foreign("zpt_call", 2, (void*)::send_request, 0);

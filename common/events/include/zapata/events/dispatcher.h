@@ -53,6 +53,7 @@ using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
  */
 class event_initialization {
   public:
+    /** @brief Shared pointer type for event initialization data. */
     using ptr = std::shared_ptr<event_initialization>;
 };
 
@@ -135,14 +136,25 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     auto get_state() const -> zpt::json;
 
   public:
+    /** @brief Lock-free queue holding pending events. */
     zpt::lf::queue<zpt::abstract_event> __queue;
+    /** @brief Thread pool for processing events. */
     std::vector<std::thread> __consumers;
+    /** @brief Flag indicating shutdown has been initiated. */
     zpt::padded_atomic<bool> __shutdown{ false };
+    /** @brief Current number of running consumer threads. */
     zpt::padded_atomic<long> __running_consumers{ 0 };
+    /** @brief Maximum number of consumer threads allowed. */
     long __max_consumers{ 2 };
+    /** @brief Dispatcher name used for logging. */
     std::string __name{ "" };
+    /** @brief Initialization data forwarded to new events on creation. */
     zpt::event_initialization::ptr __event_init{ nullptr };
 
+    /**
+     * @brief Main consumer loop: dequeues and processes events until shutdown.
+     * @param _consumer_nr Consumer thread index (for logging).
+     */
     auto loop(long _consumer_nr) -> void;
 };
 
@@ -177,10 +189,24 @@ concept Operation = requires(T t,
 } // namespace events
 
 /**
+ * @name abstract_event
+ * @{
+ */
+
+/**
  * @brief Abstract base class for events processed by the dispatcher.
  *
  * Defines the interface that all events must implement. Use `zpt::event_t<T>`
  * or `zpt::make_event<T>()` to create concrete events from Operation types.
+ *
+ * @par Lifecycle
+ * 1. An event is created via `make_event<T>()` and optionally initialized
+ *    with `initialize()`.
+ * 2. The dispatcher's consumer threads call `blocked()` to check if the
+ *    event is ready for processing.
+ * 3. When not blocked, `operator()` is invoked to execute the event logic.
+ * 4. If an error occurs during processing, the appropriate `catch_error()`
+ *    overload is called; returning true re-triggers the event.
  */
 class abstract_event {
   public:
@@ -205,6 +231,7 @@ class abstract_event {
     /** @brief Executes the event operation. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
+/**@}*/
 using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 
 /**

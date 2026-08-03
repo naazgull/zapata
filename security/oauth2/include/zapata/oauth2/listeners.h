@@ -27,9 +27,17 @@
 namespace zpt {
 namespace auth {
 namespace oauth2 {
+/** @brief REST listener for the OAuth2 authorization endpoint. Dispatches to the OAuth2
+    server's authorize method based on the request performative. */
 auto authorize_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+/** @brief REST listener for the OAuth2 token endpoint. Exchanges an authorization code for
+    access and refresh tokens. */
 auto token_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+/** @brief REST listener for the OAuth2 refresh token endpoint. Exchanges a refresh token for
+    a new pair of access and refresh tokens. */
 auto refresh_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+/** @brief REST listener for the OAuth2 token validation endpoint. Verifies that an access
+    token is valid and has not expired. */
 auto validate_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
 } // namespace oauth2
 } // namespace auth

@@ -25,6 +25,7 @@
 #include <zapata/transport.h>
 
 namespace {
+/** @brief Builtin plugin definitions with source libraries and dependency metadata. */
 zpt::json __builtins = R"({
         "builtin:testing": { "name": "builtin:testing", "source": "libzapata-common-testing-plugin.so",
             "requires" : [ "builtin:lua", "builtin:rest", "builtin:transport" ] },
@@ -123,6 +124,7 @@ auto zpt::plugin::is_loaded() -> bool { return this->__state->load() == PLUGIN_S
 
 auto zpt::plugin::is_unloaded() -> bool { return this->__state->load() == PLUGIN_STATE_UNLOADED; }
 
+/** @brief Registers a worker thread with the plugin. */
 auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin& {
     this->__threads.emplace_back(_callback);
     return (*this);

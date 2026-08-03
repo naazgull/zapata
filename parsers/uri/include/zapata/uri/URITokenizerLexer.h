@@ -29,7 +29,9 @@ namespace zpt {
 
 class URITokenizerLexer : public Re2cURILexer {
   public:
+    /** @brief Constructs with given input and output streams. */
     URITokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    /** @brief Destructor. */
     virtual ~URITokenizerLexer();
 
     /** @brief Sets the JSON root node to populate during parsing. */
@@ -43,6 +45,7 @@ class URITokenizerLexer : public Re2cURILexer {
     auto operator*() -> zpt::json&;
 
   private:
+    /** @brief The JSON object being populated during URI parsing. */
     zpt::json __root;
 };
 } // namespace zpt

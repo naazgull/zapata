@@ -22,6 +22,7 @@
 
 #include <zapata/runtime.h>
 
+/** @brief Program entry point. Initializes the runtime and returns 0. */
 auto main(int _argc, char* _argv[]) -> int {
     zpt::runtime::initialize(_argc, _argv);
     return 0;

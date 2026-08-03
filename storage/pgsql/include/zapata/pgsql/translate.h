@@ -66,7 +66,9 @@ class result_set_metadata {
     auto get_integer(PGresult* _result, int _row, int _column) const -> T;
 
   private:
+    /** @brief Cached PGresult handle for retrieving column metadata. */
     PGresult* __metadata{ nullptr };
+    /** @brief Number of columns in the result set. */
     int __column_count{ 0 };
 };
 

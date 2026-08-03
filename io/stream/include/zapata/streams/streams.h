@@ -141,14 +141,22 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto metadata() const -> std::any const&;
 
   protected:
+    /** @brief Underlying iostream wrapped by this stream. */
     zpt::allocator<std::iostream>::unique_pointer __underlying{ nullptr };
+    /** @brief File descriptor associated with this stream. */
     int __fd{ -1 };
+    /** @brief Transport scheme (e.g., "tcp", "udp", "unix"). */
     std::string __transport{ "" };
+    /** @brief URI string representation of this stream. */
     std::string __uri{ "" };
+    /** @brief Current stream processing state. */
     zpt::stream_state __state{ zpt::stream_state::IDLE };
+    /** @brief Arbitrary metadata attached to this stream. */
     std::any __metadata;
+    /** @brief Whether this stream is currently muted (not monitored by polling). */
     bool __muted{ true };
 
+    /** @brief Extracts the URI from the underlying iostream. */
     auto extract_uri() -> void;
 };
 
@@ -214,11 +222,16 @@ class polling : public std::enable_shared_from_this<polling> {
     auto is_in_shutdown() const -> bool;
 
   private:
+    /** @brief Epoll file descriptor for I/O multiplexing. */
     int __epoll_fd{ -1 };
+    /** @brief Mutex protecting the polled streams map. */
     zpt::locks::spin_mutex __poll_lock;
     // std::shared_mutex __poll_lock;
+    /** @brief Map of file descriptors to stream pointers currently being monitored. */
     std::map<int, zpt::stream> __polled_streams;
+    /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
+    /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
     /** @brief Registers a stream with epoll (called by listen_on). */
