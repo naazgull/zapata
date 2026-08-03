@@ -56,14 +56,26 @@ layer.add("myproto", zpt::make_transport<myproto::transport>());
 
 ## Step 3: Configure
 
+Add your transport plugin to the `load` array, and add transport-specific config:
+
 ```json
 {
-    "transport": {
-        "type": "myproto",
-        "bind": "myproto://0.0.0.0:9000"
-    }
+    "identity": { "id": "uuid", "name": "my-app" },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:myproto" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "myproto": { "bind": "0.0.0.0", "port": 9000 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "myproto", "limits": { "max_workers": 16 } }
 }
 ```
+
+Set `transport.default` to your protocol name to make it the primary transport.
 
 ## Transport Capabilities
 

@@ -111,20 +111,22 @@ auto count = users->count();
 
 ## Configuration
 
+Storage configuration is passed directly to `make_connection`, not through the main JSON config file:
+
+```cpp
+// File-based database
+auto config = zpt::json{ "path", "./data/app.db" };
+auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(config);
+
+// In-memory database
+auto config = zpt::json{ "memory", true };
+auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(config);
+```
+
 | Key | Type | Description |
 |-----|------|-------------|
 | `path` | string | Path to SQLite database file |
 | `memory` | bool | Use in-memory database (default: `false`) |
-
-```json
-{
-    "storage": {
-        "sqlite": {
-            "path": "./data/app.db"
-        }
-    }
-}
-```
 
 ## See Also
 

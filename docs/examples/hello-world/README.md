@@ -61,10 +61,23 @@ auto main(int _argc, char* _argv[]) -> int {
 
 ```json
 {
-    "transport": {
-        "type": "http",
-        "bind": "tcp://0.0.0.0:8080"
-    }
+    "identity": {
+        "id": "hello-world-uuid",
+        "name": "hello-world"
+    },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" },
+        { "name": "hello-world", "source": "libhello-world.so", "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } },
+    "rest": { "prefix": "/api" }
 }
 ```
 
@@ -98,10 +111,10 @@ cmake .. && make
 ## Test
 
 ```bash
-curl http://localhost:8080/hello
+curl http://localhost:8080/api/hello
 # {"message":"Hello, World!"}
 
-curl http://localhost:8080/hello/Zapata
+curl http://localhost:8080/api/hello/Zapata
 # {"message":"Hello, Zapata!"}
 ```
 

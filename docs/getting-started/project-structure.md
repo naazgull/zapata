@@ -31,19 +31,22 @@ Zapata uses JSON-based configuration. Place config files in a `config/` director
 
 ```json
 {
-    "transport": {
-        "type": "http",
-        "bind": "tcp://0.0.0.0:8080"
+    "identity": {
+        "id": "my-project-uuid",
+        "name": "my-project"
     },
-    "storage": {
-        "sqlite": {
-            "path": "./data/app.db"
-        }
-    },
-    "log": {
-        "level": "info",
-        "file": "./logs/app.log"
-    }
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } },
+    "rest": { "prefix": "/api" }
 }
 ```
 
@@ -106,12 +109,27 @@ Each plugin is built as a shared library and loaded at startup based on configur
 
 ```json
 {
-    "plugins": [
-        { "path": "./plugins/libauth-plugin.so" },
-        { "path": "./plugins/libcache-plugin.so" }
-    ]
+    "identity": { "id": "my-project-uuid", "name": "my-project" },
+    "log": { "level": 6, "format": 1 },
+    "load": [
+        { "name": "builtin:http" },
+        { "name": "builtin:rest" },
+        { "name": "builtin:upnp" },
+        { "name": "auth-plugin", "source": "./plugins/libauth-plugin.so",
+          "requires": [ "builtin:rest" ] },
+        { "name": "cache-plugin", "source": "./plugins/libcache-plugin.so",
+          "requires": [ "builtin:rest" ] }
+    ],
+    "resources": { "limits": { "max_heap_allocation": 0 } },
+    "dispatcher": { "limits": { "max_workers": 4 } },
+    "http": { "bind": "0.0.0.0", "port": 8080 },
+    "upnp": { "bind": "239.192.1.2", "port": 7979 },
+    "transport": { "default": "http", "limits": { "max_workers": 16 } },
+    "rest": { "prefix": "/api" }
 }
 ```
+
+Plugins are loaded in dependency order. The `requires` field ensures dependencies are loaded first. Built-in plugins use the `builtin:` prefix (e.g., `builtin:rest`, `builtin:http`) and don't need a `source` path.
 
 ## Module Organization
 
