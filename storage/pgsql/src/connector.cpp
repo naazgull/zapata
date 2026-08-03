@@ -326,9 +326,11 @@ auto zpt::storage::pgsql::action_add::bind(zpt::json) -> zpt::storage::action::t
 auto zpt::storage::pgsql::action_add::execute() -> zpt::storage::result {
     std::ostringstream _oss;
     for (auto&& [_, __, _record] : this->__underlying) {
-        auto _id = zpt::uuid{}.to_base64_string();
-        _record << "_id" << _id;
-        this->__generated_ids << _id;
+        if (!_record("_id")->ok()) {
+            auto _id = zpt::uuid{}.to_base64_string();
+            _record << "_id" << _id;
+            this->__generated_ids << _id;
+        }
         _oss << std::vformat(zpt::storage::pgsql::to_insert(_record),
                              std::make_format_args(this->__schema, this->__table));
     }
