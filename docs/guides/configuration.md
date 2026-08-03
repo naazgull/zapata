@@ -38,7 +38,7 @@ A typical configuration file:
         "sqlite": {
             "path": "/var/lib/myapp/data.db"
         },
-        "mysql": {
+        "mysqlx": {
             "host": "localhost",
             "port": 3306,
             "database": "myapp",
@@ -88,11 +88,12 @@ Bind addresses support network interface placeholders that resolve at startup:
 | Key | Type | Description |
 |-----|------|-------------|
 | `storage.sqlite.path` | string | SQLite database file path |
-| `storage.mysql.host` | string | MySQL server hostname |
-| `storage.mysql.port` | int | MySQL server port |
-| `storage.mysql.database` | string | Database name |
-| `storage.mysql.user` | string | Authentication user |
-| `storage.mysql.password` | string | Authentication password |
+| `storage.sqlite.memory` | bool | Use in-memory database |
+| `storage.mysqlx.host` | string | MySQL server hostname |
+| `storage.mysqlx.port` | int | MySQL server port |
+| `storage.mysqlx.database` | string | Database name |
+| `storage.mysqlx.user` | string | Authentication user |
+| `storage.mysqlx.password` | string | Authentication password |
 
 ### Logging
 
@@ -125,8 +126,10 @@ zpt::json defaults = {
     "log", { "level", "info" }
 };
 
+// Load from file
+std::ifstream file(config_file);
 zpt::json overrides;
-overrides.load_from(config_file);
+file >> overrides;
 
 // Merge: overrides win on conflicts
 auto config = defaults | overrides;

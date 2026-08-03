@@ -1,66 +1,76 @@
 # WebSocket Chat Example
 
-A simple real-time chat using WebSocket transport.
+A simple real-time chat application using WebSocket transport.
 
 ## Files
 
 - `main.cpp` - Server with WebSocket message handling
 - `CMakeLists.txt` - Build configuration
+- `config.json` - Server configuration
 
 ## main.cpp
 
 ```cpp
 #include <zapata/rest.h>
-#include <zapata/websocket.h>
+#include <vector>
+
+// Store connected clients
+static std::shared_ptr<std::vector<zpt::message>> g_clients;
+
+// Handle incoming chat messages — POST /ws/chat
+class chat_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto& clients = *g_clients;
+        auto message = this->received()->body();
+        auto sender = std::string(message("from")->string());
+        auto text = std::string(message("text")->string());
+
+        zlog("Chat: " + sender + ": " + text, zpt::info);
+
+        // Broadcast to all connected clients
+        auto response = zpt::json{
+            "type", "message",
+            "from", sender,
+            "text", text,
+            "timestamp", zpt::json::date()
+        };
+        this->to_send()->status(200)->body() = response;
+        return zpt::events::finish;
+    }
+};
+
+// Handle join events — POST /ws/join
+class join_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto username = std::string(this->received()->body()("username")->string());
+        zlog("User joined: " + username, zpt::info);
+
+        this->to_send()->status(200)->body() = zpt::json{
+            "type", "system",
+            "text", username + " has joined the chat"
+        };
+        return zpt::events::finish;
+    }
+};
 
 auto main(int _argc, char* _argv[]) -> int {
     zpt::BOOT(_argc, _argv);
-    auto& boot = zpt::BOOT_ENGINE();
 
-    // Store connected clients
-    auto clients = zpt::allocate_shared<std::vector<zpt::json>>();
+    g_clients = std::make_shared<std::vector<zpt::message>>();
 
-    // Handle incoming chat messages
-    boot.add_handler(zpt::Post, "/ws/chat",
-        [clients](zpt::performative _method,
-                  zpt::json _envelope,
-                  zpt::json _opts) -> zpt::json {
-            auto message = _envelope["body"];
-            auto sender = std::string(message["from"]);
-            auto text = std::string(message["text"]);
+    auto& resolver = zpt::REST_RESOLVER();
+    resolver->add<chat_handler>("/ws/chat")
+        ->add<join_handler>("/ws/join");
 
-            zlog("Chat: " + sender + ": " + text, zpt::info);
+    zpt::TRANSPORT_ENGINE();
+    zpt::DISPATCHER()->trap();
 
-            // Broadcast to all clients
-            return {
-                "status", 200,
-                "body", {
-                    "type", "message",
-                    "from", sender,
-                    "text", text,
-                    "timestamp", zpt::json::date()
-                }
-            };
-        });
-
-    // Handle join events
-    boot.add_handler(zpt::Post, "/ws/join",
-        [](zpt::performative _method,
-           zpt::json _envelope,
-           zpt::json _opts) -> zpt::json {
-            auto username = std::string(_envelope["body"]["username"]);
-            zlog("User joined: " + username, zpt::info);
-
-            return {
-                "status", 200,
-                "body", {
-                    "type", "system",
-                    "text", username + " has joined the chat"
-                }
-            };
-        });
-
-    boot.start();
     return 0;
 }
 ```
@@ -84,16 +94,14 @@ target_include_directories(websocket-chat PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(websocket-chat ${ZAPATA_LIBRARIES})
 ```
 
-## Configuration
-
-`config.json`:
+## config.json
 
 ```json
 {
-    "transports": [
-        { "type": "http", "bind": "tcp://0.0.0.0:8080" },
-        { "type": "ws", "bind": "tcp://0.0.0.0:8081" }
-    ]
+    "transport": {
+        "type": "ws",
+        "bind": "tcp://0.0.0.0:8081"
+    }
 }
 ```
 
@@ -111,3 +119,8 @@ websocat ws://localhost:8081/ws/chat
 # Send JSON messages:
 {"from": "Alice", "text": "Hello everyone!"}
 ```
+
+## See Also
+
+- [WebSocket Guide](../../guides/networking/websocket.md) - WebSocket details
+- [Transport Guide](../../guides/networking/transports.md) - Transport layer

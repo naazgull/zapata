@@ -105,12 +105,12 @@ virtual auto count() -> size_t = 0;
 
 | Method | Description |
 |--------|-------------|
-| `add` | Creates an INSERT action |
-| `modify` | Creates an UPDATE action with search criteria |
-| `remove` | Creates a DELETE action with search criteria |
-| `replace` | Creates a REPLACE action for a specific ID |
-| `find` | Creates a SELECT action with search criteria |
-| `count` | Returns total document count |
+| `add(doc)` | Creates an INSERT action; supports chaining for batch inserts |
+| `modify(search)` | Creates an UPDATE action with search criteria |
+| `remove(search)` | Creates a DELETE action with search criteria |
+| `replace(id, doc)` | Creates a REPLACE action for a specific ID |
+| `find(search)` | Creates a SELECT action with search criteria |
+| `count()` | Returns total document count |
 
 ---
 
@@ -121,8 +121,10 @@ Query builder with fluent API.
 ### Inner Class: `type`
 
 ```cpp
-// Chain operations
+// Chain operations (for insert batching)
 virtual auto add(zpt::json _document) -> type* = 0;
+
+// Query operations
 virtual auto modify(zpt::json _search) -> type* = 0;
 virtual auto remove(zpt::json _search) -> type* = 0;
 virtual auto replace(std::string const& _id, zpt::json _document) -> type* = 0;
@@ -140,7 +142,7 @@ virtual auto offset(size_t _rows) -> type* = 0;
 virtual auto limit(size_t _number) -> type* = 0;
 virtual auto bind(zpt::json _map) -> type* = 0;
 
-// Execution
+// Execute the query
 virtual auto execute() -> zpt::storage::result = 0;
 ```
 
@@ -187,7 +189,7 @@ virtual auto to_json() const -> zpt::json = 0;
 
 ## Factory Functions
 
-### `zpt::make_connection`
+### `zpt::storage::make_connection`
 
 ```cpp
 template<typename T, typename... Args>
@@ -196,7 +198,7 @@ auto make_connection(Args&... _args) -> zpt::storage::connection;
 
 Creates a thread-local connection of type T.
 
-### `zpt::make_session`
+### `zpt::storage::make_session`
 
 ```cpp
 template<typename T, typename... Args>
@@ -242,14 +244,10 @@ auto filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> 
 ### Connection Options
 
 ```cpp
-auto options = zpt::json{
-    "path", "/path/to/database.db",
-    // or for in-memory
-    "path", ":memory:"
-};
-
-auto conn = zpt::make_connection<zpt::storage::sqlite::connection>(options);
-conn->open(options);
+auto options = zpt::json{ "storage", { "sqlite", { "path", "/path/to/database.db" } } };
+auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(options);
+auto session = conn->session();
+auto db = session->database("main");
 ```
 
 ### SQLite-Specific Types
@@ -257,14 +255,6 @@ conn->open(options);
 ```cpp
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
 using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
-```
-
-### Helper Functions
-
-```cpp
-auto is_error(long _error) -> bool;
-auto from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
-auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
 ```
 
 ---
@@ -278,17 +268,15 @@ auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> vo
 ### Connection Options
 
 ```cpp
-auto options = zpt::json{
+auto options = zpt::json{ "storage", { "mysqlx", {
     "host", "localhost",
     "port", 3306,
+    "database", "mydb",
     "user", "username",
-    "password", "password",
-    "database", "mydb"
-};
+    "password", "password"
+}}}
 
-zpt::storage::mysqlx::init();  // Initialize library once
-auto conn = zpt::make_connection<zpt::storage::mysqlx::connection>(options);
-conn->open(options);
+auto conn = zpt::storage::make_connection<zpt::storage::mysqlx::connection>(options);
 ```
 
 ### MySQL-Specific Types
@@ -297,14 +285,6 @@ conn->open(options);
 using mysql_ptr = std::shared_ptr<MYSQL>;
 using mysql_stmt_ptr = std::shared_ptr<MYSQL_STMT>;
 ```
-
-### Library Initialization
-
-```cpp
-auto init() -> library&;
-```
-
-Must be called once before using MySQL connections.
 
 ---
 
@@ -316,24 +296,22 @@ Must be called once before using MySQL connections.
 #include <zapata/sqlite.h>
 
 // Create connection
-auto options = zpt::json{ "path", "mydb.sqlite3" };
-auto conn = zpt::make_connection<zpt::storage::sqlite::connection>(options);
-conn->open(options);
-
-// Get session and database
+auto options = zpt::json{ "storage", { "sqlite", { "path", "mydb.sqlite3" } } };
+auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(options);
 auto session = conn->session();
 auto db = session->database("main");
+
+// Create table
+db->sql("CREATE TABLE IF NOT EXISTS users (_id varchar PRIMARY KEY, name TEXT, email TEXT)");
+
+// Get collection
 auto users = db->collection("users");
 
 // INSERT
-users->add({
-    "name", "John Doe",
-    "email", "john@example.com",
-    "active", true
-})->execute();
+users->add({ "_id", "1", "name", "John Doe", "email", "john@example.com" })->execute();
 
 // SELECT
-auto results = users->find({ "active", true })
+auto results = users->find({})
     ->fields({ "name", "email" })
     ->sort("name", true)
     ->limit(10)
@@ -341,16 +319,16 @@ auto results = users->find({ "active", true })
 
 auto docs = results->fetch();
 for (auto&& [_, __, doc] : docs) {
-    std::cout << doc("name")->string() << std::endl;
+    std::cout << doc("name") << std::endl;
 }
 
 // UPDATE
-users->modify({ "email", "john@example.com" })
-    ->set("active", false)
+users->modify({ "_id", "1" })
+    ->set("email", "new@example.com")
     ->execute();
 
 // DELETE
-users->remove({ "active", false })->execute();
+users->remove({ "_id", "1" })->execute();
 ```
 
 ### Transactions
@@ -361,10 +339,10 @@ auto db = session->database("main");
 
 try {
     auto users = db->collection("users");
-    users->add({ "name", "Alice" })->execute();
+    users->add({ "_id", "1", "name", "Alice" })->execute();
 
     auto orders = db->collection("orders");
-    orders->add({ "user", "alice", "total", 99.99 })->execute();
+    orders->add({ "_id", "1", "user", "alice", "total", 99.99 })->execute();
 
     session->commit();
 } catch (...) {
@@ -386,8 +364,8 @@ db->sql("CREATE INDEX idx_users_name ON users(name)");
 ### Query with Parameters
 
 ```cpp
-auto results = users->find({ "status", ":status" })
-    ->bind({ "status", "active" })
+auto results = users->find("_id = :id")
+    ->bind({ "id", "1" })
     ->execute();
 ```
 
@@ -422,6 +400,16 @@ auto results = users->find({})
     ->offset((page - 1) * page_size)
     ->limit(page_size)
     ->execute();
+```
+
+### Batch Insert
+
+```cpp
+// Insert multiple documents in one query
+users->add({ "_id", "1", "name", "Alice" })
+     ->add({ "_id", "2", "name", "Bob" })
+     ->add({ "_id", "3", "name", "Charlie" })
+     ->execute();
 ```
 
 ---

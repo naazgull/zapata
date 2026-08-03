@@ -57,42 +57,66 @@ WebSocket messages are sent as frames:
 | Ping (0x9) | Keepalive request |
 | Pong (0xA) | Keepalive response |
 
-## Configuration
+## WebSocket Utilities
 
-```json
-{
-    "transports": [
-        {
-            "type": "ws",
-            "bind": "tcp://0.0.0.0:8081"
-        }
-    ]
+```cpp
+namespace zpt::net::ws {
+    // Perform the WebSocket handshake
+    auto handshake(zpt::stream& _stream) -> void;
+
+    // Read a WebSocket frame
+    auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
+
+    // Write a WebSocket frame
+    auto write(zpt::stream& _stream, std::string const& _in) -> void;
 }
 ```
 
 ## Handling WebSocket Messages
 
-WebSocket messages are delivered through the same event system as HTTP:
+WebSocket connections use the same event system as HTTP. Register handlers for WebSocket paths:
 
 ```cpp
-auto& boot = zpt::BOOT_ENGINE();
+#include <zapata/rest.h>
 
-// Handle incoming WebSocket messages
-boot.add_handler(zpt::Post, "/ws/chat",
-    [](zpt::performative _method,
-       zpt::json _envelope,
-       zpt::json _opts) -> zpt::json {
-        auto message = _envelope["body"]["message"];
-
-        // Process and respond
-        return {
-            "status", 200,
-            "body", {
-                "type", "message",
-                "content", message
-            }
+class ws_echo_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        this->to_send()->status(200)->body() = zpt::json{
+            "echo", this->received()->body()
         };
-    });
+        return zpt::events::finish;
+    }
+};
+
+auto& resolver = zpt::REST_RESOLVER();
+resolver->add<ws_echo_handler>("/ws/echo");
+```
+
+## Configuration
+
+Configure WebSocket in your transport config:
+
+```json
+{
+    "transport": {
+        "type": "ws",
+        "bind": "tcp://0.0.0.0:8081"
+    }
+}
+```
+
+Or combine with HTTP:
+
+```json
+{
+    "transports": [
+        { "type": "http", "bind": "tcp://0.0.0.0:8080" },
+        { "type": "ws", "bind": "tcp://0.0.0.0:8081" }
+    ]
+}
 ```
 
 ## Use Cases

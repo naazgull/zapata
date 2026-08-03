@@ -48,7 +48,7 @@ The main dynamic JSON value type.
 ### Type Aliases
 
 ```cpp
-using map = std::map<std::string, zpt::json>;
+using map = std::map<zpt::json, int>;  // JSON can be used as map key
 using element = std::tuple<size_t, std::string, zpt::json>;
 using iterator = zpt::JSONIterator;
 using const_iterator = const zpt::JSONIterator;
@@ -106,7 +106,7 @@ template<typename T> json(T const& _rhs);         // From any type
 | `operator<<(T)` | Append/push value |
 | `operator+`, `+=` | Union |
 | `operator-`, `-=` | Difference |
-| `operator\|`, `\|=` | Merge |
+| `operator\|`, `\|=` | Merge (deep merge for objects) |
 | `operator&`, `&=` | Intersection |
 
 #### Type Conversion Operators

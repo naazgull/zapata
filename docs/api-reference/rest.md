@@ -7,6 +7,7 @@ This document provides the API reference for Zapata's REST engine.
 ```cpp
 #include <zapata/rest.h>         // REST resolver
 #include <zapata/startup.h>      // Application startup
+#include <zapata/transport/engine.h> // Process class
 ```
 
 ---
@@ -27,24 +28,37 @@ resolver_t(zpt::json _rest_config);
 
 ### Handler Registration
 
+**Template-based (Operation classes):**
+```cpp
+auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+auto add(zpt::performative _performative,
+         zpt::json const& _id,
+         zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+```
+Registers a handler Operation class. `zpt::events::Operation` types are registered with `resolver->add<MyHandler>("/path")`.
+
+**Callback-based:**
+```cpp
+auto add(zpt::message _sent,
+         zpt::events::resolver_callback callback) -> resolver_t&;
+auto add(zpt::performative _performative,
+         zpt::json const& _id,
+         zpt::json const& _metadata,
+         zpt::events::resolver_callback callback) -> resolver_t&;
+```
+Registers a callback function.
+
+**Service descriptor:**
 ```cpp
 auto add(zpt::json const& _service_description) -> resolver_t&;
-auto add(zpt::performative _performative, zpt::json const& _id,
-         zpt::json const& _metadata, zpt::events::resolver_callback _callback) -> resolver_t&;
-auto add(zpt::message _sent, zpt::events::resolver_callback callback) -> resolver_t&;
 ```
-
-| Method | Description |
-|--------|-------------|
-| `add(description)` | Register from service descriptor JSON |
-| `add(method, path, meta, callback)` | Register handler for method + path |
-| `add(message, callback)` | Register response handler for pending request |
+Registers from a service descriptor JSON object.
 
 ### Handler Removal
 
 ```cpp
-auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t&;
 auto remove(zpt::message _sent) -> resolver_t&;
+auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t&;
 ```
 
 ### Resolution
@@ -53,7 +67,6 @@ auto remove(zpt::message _sent) -> resolver_t&;
 auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
     -> std::list<zpt::event>;
 ```
-
 Resolves an incoming message to matching event handlers.
 
 ### Service Discovery
@@ -72,7 +85,6 @@ auto clear() -> resolver_t&;
 ```cpp
 auto REST_RESOLVER(zpt::json _config = nullptr) -> zpt::events::resolver;
 ```
-
 Returns the global REST resolver instance.
 
 ---
@@ -100,7 +112,6 @@ Handles service listing requests.
 ```cpp
 auto broadcast(std::string const& _path, zpt::json const& _config) -> void;
 ```
-
 Broadcasts service availability to other nodes.
 
 ---
@@ -188,7 +199,6 @@ auto to_string() -> std::string;
 ```cpp
 auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
 ```
-
 Returns the global boot manager instance.
 
 ### `zpt::GLOBAL_CONFIG`
@@ -196,7 +206,6 @@ Returns the global boot manager instance.
 ```cpp
 auto GLOBAL_CONFIG() -> zpt::json;
 ```
-
 Returns the global configuration.
 
 ### `zpt::IDENTITY`
@@ -204,7 +213,6 @@ Returns the global configuration.
 ```cpp
 auto IDENTITY() -> zpt::json const&;
 ```
-
 Returns the service identity JSON.
 
 ### `zpt::get_default_uri`
@@ -212,7 +220,6 @@ Returns the service identity JSON.
 ```cpp
 auto get_default_uri() -> std::string;
 ```
-
 Returns the default URI for this service instance.
 
 ---
@@ -224,7 +231,6 @@ Returns the default URI for this service instance.
 ```cpp
 auto load(zpt::json _parameters, zpt::json& _output) -> void;
 ```
-
 Loads configuration from files and environment.
 
 ---
@@ -238,17 +244,15 @@ Loads configuration from files and environment.
 #include <zapata/transport/engine.h>
 
 class GetUserHandler : public zpt::events::process {
-public:
-    GetUserHandler(zpt::message req) : process(req) {}
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
 
-    bool blocked() const override { return false; }
-
-    zpt::events::state operator()(zpt::events::dispatcher::ptr d) override {
-        auto user_id = received()->uri()("params")("id")->string();
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto user_id = this->received()->uri()("params")("id");
 
         // Fetch user from database...
-        to_send()->status(200);
-        to_send()->body() = {
+        this->to_send()->status(200)->body() = {
             "id", user_id,
             "name", "John Doe"
         };
@@ -258,25 +262,14 @@ public:
 };
 
 int main() {
-    auto config = zpt::json::object();
-    auto& boot = zpt::BOOT(config);
+    zpt::BOOT();
 
-    auto resolver = zpt::REST_RESOLVER(config);
+    auto& resolver = zpt::REST_RESOLVER();
+    resolver->add<GetUserHandler>("/api/users/:id");
 
-    // Register handlers
-    resolver->add(zpt::Get, "/api/users/:id", {},
-        [](zpt::message req) {
-            return zpt::make_event<GetUserHandler>(req);
-        });
-
-    // Start the transport engine
-    auto engine = zpt::TRANSPORT_ENGINE(config);
-    engine->add_resolver(resolver);
-
-    boot.load();
-
-    // Run until shutdown
-    engine->dispatcher()->trap();
+    // Start transport engine
+    zpt::TRANSPORT_ENGINE();
+    zpt::DISPATCHER()->trap();
 }
 ```
 
@@ -287,34 +280,31 @@ int main() {
 #include <zapata/rest.h>
 
 class MyHandler : public zpt::events::process {
-public:
-    MyHandler(zpt::message req) : process(req) {}
-    bool blocked() const override { return false; }
-    zpt::events::state operator()(zpt::events::dispatcher::ptr d) override {
-        to_send()->status(200);
-        to_send()->body() = { "plugin", "working" };
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        this->to_send()->status(200)->body() = zpt::json{ "plugin", "working" };
         return zpt::events::finish;
     }
 };
 
-extern "C" bool _zpt_load_(zpt::plugin& plugin) {
-    auto& config = plugin.config();
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
+    auto& config = _plugin.config();
 
     // Register REST endpoints
-    auto resolver = zpt::REST_RESOLVER();
-    resolver->add(zpt::Get, "/api/my-endpoint", {},
-        [](zpt::message req) {
-            return zpt::make_event<MyHandler>(req);
-        });
+    auto& resolver = zpt::REST_RESOLVER();
+    resolver->add<MyHandler>("/api/my-endpoint");
 
     // Start a worker thread
-    plugin.add_thread([&plugin]() {
-        while (!plugin.is_shutdown_ongoing()) {
-            // Background work
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
+    _plugin.add_thread([&]() {
+        // Background work
     });
 
+    return true;
+}
+
+extern "C" auto _zpt_unload_(zpt::plugin&) -> bool {
     return true;
 }
 ```
@@ -322,10 +312,10 @@ extern "C" bool _zpt_load_(zpt::plugin& plugin) {
 ### Service Discovery
 
 ```cpp
-auto resolver = zpt::REST_RESOLVER(config);
+auto& resolver = zpt::REST_RESOLVER();
 
 // Register this node as a provider
-resolver->register_provider({
+resolver.register_provider({
     "_id", "node-1",
     "protocols", {
         "default", "http",
@@ -339,13 +329,41 @@ resolver->register_provider({
 });
 
 // Search for services
-auto services = resolver->search({ "path", "/api/users" });
+auto services = resolver.search({ "path", "/api/users" });
 for (auto&& [_, __, svc] : services) {
-    std::cout << "Found: " << svc("provider_id")->string() << std::endl;
+    std::cout << "Found: " << svc("provider_id") << std::endl;
 }
 
 // List all services
-auto all = resolver->list();
+auto all = resolver.list();
+```
+
+### Making Outbound Calls
+
+```cpp
+#include <zapata/transport/engine.h>
+#include <zapata/rest/services.h>
+
+// Create request
+auto request = zpt::make_message<zpt::json_message>();
+request->performative(zpt::Post);
+request->uri("/remote/endpoint");
+request->body() = { "data", "value" };
+
+// Make async call with response handler
+class ResponseHandler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        // Handle the response
+        this->to_send()->status(200)
+            ->body() = this->received()->body();
+        return zpt::events::finish;
+    }
+};
+
+zpt::make_call<ResponseHandler>(zpt::REST_RESOLVER(), request);
 ```
 
 ---

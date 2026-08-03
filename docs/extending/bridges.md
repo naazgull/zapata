@@ -32,7 +32,7 @@ namespace mylang {
 using native_object = MyLangValue*;
 
 class bridge : public zpt::programming::bridge<mylang::bridge, native_object> {
-public:
+  public:
     bridge();
     ~bridge();
 
@@ -106,9 +106,10 @@ auto bridge::execute(zpt::json _func, zpt::json _args) -> native_object {
 ## Step 4: Provide a Global Accessor
 
 ```cpp
+static thread_local bridge _instance;
+
 auto MYLANG_BRIDGE() -> mylang::bridge& {
-    static thread_local mylang::bridge instance;
-    return instance;
+    return _instance;
 }
 ```
 

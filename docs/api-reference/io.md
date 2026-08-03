@@ -48,7 +48,6 @@ basic_stream();
 basic_stream(std::ios& _rhs);
 basic_stream(std::unique_ptr<std::iostream> _underlying);
 ```
-
 **Note:** Copy and move constructors are deleted.
 
 ### Operators
@@ -103,7 +102,6 @@ virtual auto state() -> stream_state&;
 ```cpp
 using stream = std::shared_ptr<zpt::basic_stream>;
 ```
-
 Shared pointer to a stream, used throughout the framework.
 
 ---
@@ -130,7 +128,6 @@ constexpr static int MAX_EVENT_PER_POLL{ 100 };
 ```cpp
 polling();
 ```
-
 Creates an epoll instance.
 
 ### Lifecycle Methods
@@ -160,7 +157,6 @@ auto unmute(zpt::stream _stream) -> zpt::polling&;
 ```cpp
 auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
 ```
-
 Registers a callback invoked when streams are ready. The delegate receives the polling instance and the ready stream.
 
 **Delegate return value:**
@@ -172,7 +168,6 @@ Registers a callback invoked when streams are ready. The delegate receives the p
 ```cpp
 auto poll() -> zpt::polling&;
 ```
-
 Waits for I/O events and dispatches to registered delegates.
 
 ---
@@ -186,7 +181,6 @@ Stream wrapper for `eventfd`-based signaling without I/O.
 ```cpp
 event_stream();
 ```
-
 Creates an `eventfd` for inter-thread signaling.
 
 ### Methods
@@ -195,7 +189,6 @@ Creates an `eventfd` for inter-thread signaling.
 auto read_without_io(std::any& _out) -> event_stream& override;
 auto write_without_io(std::any const& _in) -> event_stream& override;
 ```
-
 Transfers data via internal storage without actual I/O operations.
 
 ---
@@ -207,7 +200,6 @@ Transfers data via internal storage without actual I/O operations.
 ```cpp
 auto STREAM_POLLING() -> zpt::polling::ptr;
 ```
-
 Returns the global stream polling instance.
 
 ### `zpt::make_stream`
@@ -216,7 +208,6 @@ Returns the global stream polling instance.
 template<typename T, typename... Args>
 static auto make_stream(Args... _args) -> zpt::stream;
 ```
-
 Creates a stream wrapping a specific iostream type.
 
 **Template parameters:**
@@ -236,7 +227,6 @@ auto pipe = zpt::make_stream<zpt::pipestream>("my-pipe");
 template<typename T>
 auto stream_cast(zpt::stream& _rhs) -> T&;
 ```
-
 Casts a stream to access its underlying iostream type.
 
 ---

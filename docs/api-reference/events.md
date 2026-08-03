@@ -9,6 +9,7 @@ This document provides the API reference for the Zapata event dispatch system.
 #include <zapata/events/dispatcher.h> // Dispatcher only
 #include <zapata/events/resolver.h>   // Resolver interface
 #include <zapata/ontology.h>          // Message types
+#include <zapata/transport/engine.h>  // Process base class
 ```
 
 ---
@@ -42,15 +43,13 @@ C++20 concept defining the interface for event operation types.
 template<typename T>
 concept Operation = requires(T t,
                              zpt::event_initialization& _i,
-                             zpt::events::dispatcher::ptr _d,
-                             std::exception const& _e,
-                             std::bad_alloc const& _bae,
-                             zpt::failed_expectation const& _fe) {
+                             zpt::events::dispatcher::ptr _d) {
     { t.initialize(_i) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
-    { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
-    { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
-    { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
+    { t.authorized() } -> std::convertible_to<bool>;
+    { t.catch_error(std::declval<std::exception const&>(), _d) } -> std::convertible_to<bool>;
+    { t.catch_error(std::declval<std::bad_alloc const&>(), _d) } -> std::convertible_to<bool>;
+    { t.catch_error(std::declval<zpt::failed_expectation const&>(), _d) } -> std::convertible_to<bool>;
     { t(_d) } -> std::convertible_to<zpt::events::state>;
 };
 ```
@@ -61,6 +60,7 @@ concept Operation = requires(T t,
 |--------|-------------|
 | `initialize(event_initialization&)` | Called when event is created |
 | `blocked() -> bool` | Return true if event should wait (re-queued) |
+| `authorized() -> bool` | Return true if event is authorized to execute |
 | `catch_error(exception, dispatcher) -> bool` | Handle errors; return true to retry |
 | `operator()(dispatcher) -> state` | Execute the event operation |
 
@@ -72,30 +72,37 @@ struct MyOperation {
 
     MyOperation(std::string d) : data(std::move(d)) {}
 
-    void initialize(zpt::event_initialization& init) {
-        // Access initialization data if needed
-    }
-
-    bool blocked() const {
-        return false;  // Not blocked
-    }
+    void initialize(zpt::event_initialization& init) {}
+    bool blocked() const { return false; }
+    bool authorized() const { return true; }
 
     bool catch_error(std::exception const& e, zpt::events::dispatcher::ptr d) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return false;  // Don't retry
-    }
-
-    bool catch_error(std::bad_alloc const& e, zpt::events::dispatcher::ptr d) {
-        return true;  // Retry on memory error
-    }
-
-    bool catch_error(zpt::failed_expectation const& e, zpt::events::dispatcher::ptr d) {
         return false;
     }
+    bool catch_error(std::bad_alloc const& e, zpt::events::dispatcher::ptr d) { return true; }
+    bool catch_error(zpt::failed_expectation const& e, zpt::events::dispatcher::ptr d) { return false; }
 
     zpt::events::state operator()(zpt::events::dispatcher::ptr d) {
-        // Process event...
         std::cout << "Processing: " << data << std::endl;
+        return zpt::events::finish;
+    }
+};
+```
+
+### Using zpt::events::process
+
+The easiest way to implement an operation is to extend `zpt::events::process`:
+
+```cpp
+class my_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        // this->received() gives access to the request
+        // this->to_send() gives the response message
+        this->to_send()->status(200)->body() = zpt::json{ "status", "ok" };
         return zpt::events::finish;
     }
 };
@@ -134,8 +141,6 @@ auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dis
 
 Sets initialization data passed to all new events.
 
----
-
 #### `start_consumers`
 
 ```cpp
@@ -147,8 +152,6 @@ Starts consumer threads.
 **Parameters:**
 - `n_consumers` - Number to start (0 = max_consumers)
 
----
-
 #### `stop_consumers`
 
 ```cpp
@@ -156,8 +159,6 @@ auto stop_consumers() -> dispatcher&;
 ```
 
 Signals consumers to stop and waits for them to complete.
-
----
 
 #### `trigger`
 
@@ -172,8 +173,6 @@ Enqueues an event for processing.
 
 **Template version:** Creates an event of type T with forwarded arguments.
 
----
-
 #### `trap`
 
 ```cpp
@@ -181,8 +180,6 @@ auto trap() -> dispatcher&;
 ```
 
 Blocks the calling thread until the dispatcher is shut down.
-
----
 
 #### `is_in_shutdown`
 
@@ -204,6 +201,7 @@ Abstract base class for dispatchable events.
 |--------|-------------|
 | `initialize(event_initialization&)` | Initialize from shared data |
 | `blocked() -> bool` | Check if blocked waiting |
+| `authorized() -> bool` | Check authorization |
 | `catch_error(exception, dispatcher) -> bool` | Handle error |
 | `operator()(dispatcher) -> state` | Execute event |
 
@@ -235,7 +233,7 @@ Constructs the underlying Operation with forwarded arguments.
 ### `zpt::DISPATCHER`
 
 ```cpp
-auto DISPATCHER(long int _consumers = 0, long int _max_queue_size = 10000)
+auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
     -> zpt::events::dispatcher::ptr;
 ```
 
@@ -243,9 +241,7 @@ Creates a dispatcher with the specified capacity.
 
 **Parameters:**
 - `_consumers` - Number of consumer threads
-- `_producers` - Maximum producer threads (for queue)
-
----
+- `_max_queue_size` - Maximum queue size
 
 ### `zpt::make_event`
 
@@ -259,8 +255,6 @@ auto make_event(Args&&... _args) -> zpt::event;
 
 Creates an event from an Operation type.
 
----
-
 ### `zpt::event_cast`
 
 ```cpp
@@ -270,6 +264,15 @@ auto event_cast(zpt::event& _event) -> T&;
 
 Casts an event to access its underlying Operation.
 
+### `zpt::make_call`
+
+```cpp
+template<typename T, typename... Args>
+auto make_call(zpt::events::resolver_t& _resolver, zpt::message _request, Args... _args);
+```
+
+Creates an outbound call event. `T` is the response handler type.
+
 ---
 
 ## Class: `zpt::events::resolver_t`
@@ -278,20 +281,31 @@ Abstract interface for mapping messages to event handlers.
 
 ### Methods
 
-#### `add`
+#### `add` (template, Operation class)
 
 ```cpp
 template<zpt::events::Operation T>
 auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
 
 template<zpt::events::Operation T>
-auto add(zpt::performative _performative, zpt::json const& _id,
+auto add(zpt::performative _performative,
+         zpt::json const& _id,
          zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
 ```
 
-Registers an event handler.
+Registers an Operation class as an event handler.
 
----
+#### `add` (callback)
+
+```cpp
+virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
+virtual auto add(zpt::message _sent,
+                 zpt::events::resolver_callback callback) -> resolver_t& = 0;
+virtual auto add(zpt::performative _performtive,
+                 zpt::json const& _id,
+                 zpt::json const& _metadata,
+                 zpt::events::resolver_callback _callback) -> resolver_t& = 0;
+```
 
 #### `remove`
 
@@ -304,8 +318,6 @@ auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t
 ```
 
 Unregisters an event handler.
-
----
 
 #### `resolve`
 
@@ -358,36 +370,35 @@ Returns the global system events resolver.
 
 ---
 
-## Ontology Types
+## Process Base Class
 
-### `zpt::performative`
+`zpt::events::process` (from `<zapata/transport/engine.h>`) provides a ready-made implementation of the Operation concept for REST handlers.
 
-HTTP-like method constants.
+### Methods
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `Get` | 0 | Retrieve resource |
-| `Put` | 1 | Replace resource |
-| `Post` | 2 | Create resource |
-| `Delete` | 3 | Remove resource |
-| `Head` | 4 | Metadata only |
-| `Options` | 5 | Capability query |
-| `Patch` | 6 | Partial update |
-| `Reply` | 7 | Response |
-| `Msearch` | 8 | Discovery search |
-| `Notify` | 9 | Announcement |
-| `Trace` | 10 | Diagnostic |
-| `Connect` | 11 | Tunnel |
-| `Subscribe` | 12 | Pub/sub subscribe |
-| `Inform` | 13 | Push notification |
+| Method | Description |
+|--------|-------------|
+| `received() const` | Get the received message |
+| `to_send()` | Get the response message |
+| `context() const` | Get the call context |
+| `context(ptr)` | Set the call context |
 
-### `zpt::basic_message`
+### Usage Pattern
 
-Abstract message interface for transport-agnostic messaging.
-
-### `zpt::json_message`
-
-JSON-based message implementation.
+```cpp
+class my_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        // Access request
+        auto body = this->received()->body();
+        // Send response
+        this->to_send()->status(200)->body() = body;
+        return zpt::events::finish;
+    }
+};
+```
 
 ---
 
@@ -405,12 +416,12 @@ struct ProcessRequest {
 
     void initialize(zpt::event_initialization&) {}
     bool blocked() const { return false; }
+    bool authorized() const { return true; }
     bool catch_error(std::exception const&, zpt::events::dispatcher::ptr) { return false; }
     bool catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) { return true; }
     bool catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) { return false; }
 
     zpt::events::state operator()(zpt::events::dispatcher::ptr d) {
-        // Process request...
         if (request->performative() == zpt::Get) {
             handle_get();
         }
@@ -425,12 +436,11 @@ int main() {
     auto dispatcher = zpt::DISPATCHER(4);
     dispatcher->start_consumers();
 
-    // Queue events
     auto msg = zpt::make_message<zpt::json_message>();
     msg->performative(zpt::Get);
     dispatcher->trigger<ProcessRequest>(msg);
 
-    dispatcher->trap();  // Wait for shutdown
+    dispatcher->trap();
 }
 ```
 
@@ -443,9 +453,10 @@ struct RetryableOperation {
 
     void initialize(zpt::event_initialization&) {}
     bool blocked() const { return false; }
+    bool authorized() const { return true; }
 
     bool catch_error(std::exception const& e, zpt::events::dispatcher::ptr d) {
-        return attempts < max_attempts;  // Retry on error
+        return attempts < max_attempts;
     }
     bool catch_error(std::bad_alloc const&, zpt::events::dispatcher::ptr) { return true; }
     bool catch_error(zpt::failed_expectation const&, zpt::events::dispatcher::ptr) { return false; }
@@ -453,7 +464,7 @@ struct RetryableOperation {
     zpt::events::state operator()(zpt::events::dispatcher::ptr d) {
         ++attempts;
         if (some_transient_condition()) {
-            return zpt::events::retrigger;  // Re-queue for later
+            return zpt::events::retrigger;
         }
         do_work();
         return zpt::events::finish;
@@ -465,9 +476,23 @@ private:
 };
 ```
 
+### Making Outbound Calls
+
+```cpp
+// Create request
+auto request = zpt::make_message<zpt::json_message>();
+request->performative(zpt::Post);
+request->uri("/remote/endpoint");
+request->body() = { "data", "value" };
+
+// Call with response handler
+zpt::make_call<response_handler>(resolver, request);
+```
+
 ---
 
 ## See Also
 
 - [Lock-Free API](lockfree.md) - Queue implementation
 - [JSON API](json.md) - Message body handling
+- [Transport API](transport.md) - Transport events

@@ -27,9 +27,9 @@ Create storage objects using factory functions:
 #include <zapata/connector.h>
 
 auto conn = zpt::storage::make_connection<MyBackend>(config);
-auto session = zpt::storage::make_session(conn);
-auto db = zpt::storage::make_database(session, "mydb");
-auto coll = zpt::storage::make_collection(db, "users");
+auto session = conn->session();
+auto db = session->database("mydb");
+auto coll = db->collection("users");
 ```
 
 ## Query Builder Pattern
@@ -37,7 +37,7 @@ auto coll = zpt::storage::make_collection(db, "users");
 The `action` class provides a fluent interface for building queries:
 
 ```cpp
-auto users = zpt::storage::make_collection(db, "users");
+auto users = db->collection("users");
 
 // SELECT * FROM users WHERE age > 21 ORDER BY name LIMIT 10
 auto results = users
@@ -47,7 +47,7 @@ auto results = users
     ->execute();
 
 // Iterate results
-for (auto row : results) {
+for (auto&& [_, __, row] : results->fetch()) {
     auto name = std::string(row["name"]);
     auto age = int(row["age"]);
 }
@@ -56,17 +56,37 @@ for (auto row : results) {
 ## CRUD Operations
 
 ```cpp
-// Create
-coll->insert({ "name", "Alice", "age", 30 });
+auto users = db->collection("users");
 
-// Read
-auto result = coll->find({ "id", 1 })->execute();
+// Create (insert)
+users->add({ "name", "Alice", "age", 30 })->execute();
+
+// Read (find)
+auto result = users->find({ "id", 1 })->execute();
 
 // Update
-coll->update({ "id", 1 }, { "age", 31 });
+users->modify({ "id", 1 })->set("age", 31)->execute();
 
 // Delete
-coll->remove({ "id", 1 });
+users->remove({ "id", 1 })->execute();
+```
+
+### Inserting Multiple Documents
+
+```cpp
+// Add multiple documents in one query
+users->add({ "name", "Alice" })
+     ->add({ "name", "Bob" })
+     ->add({ "name", "Charlie" })
+     ->execute();
+```
+
+### Raw SQL
+
+```cpp
+// Execute raw SQL on session or database
+session->sql("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)");
+db->sql("CREATE INDEX idx_users_name ON users(name)");
 ```
 
 ## Available Backends

@@ -14,13 +14,13 @@ Custom transports implement `zpt::transport::basic_transport<T>` using the CRTP 
 namespace myproto {
 
 class transport : public zpt::transport::basic_transport<myproto::transport> {
-public:
+  public:
     transport() = default;
     ~transport() = default;
 
     // Declare supported capabilities
-    auto capabilities() const -> int override {
-        return zpt::transport::BIND | zpt::transport::CONNECT;
+    auto has_capability(std::uint64_t _capability) const -> bool override {
+        return _capability == zpt::transport::SYNCHRONOUS;
     }
 
     // Receive an incoming message
@@ -46,9 +46,12 @@ public:
 
 ## Step 2: Register the Transport
 
+Transports register themselves with the transport layer:
+
 ```cpp
 // In your plugin initialization
-zpt::network::layer::add("myproto", zpt::allocate_shared<myproto::transport>());
+auto& layer = zpt::TRANSPORT_LAYER();
+layer.add("myproto", zpt::make_transport<myproto::transport>());
 ```
 
 ## Step 3: Configure
@@ -66,10 +69,10 @@ zpt::network::layer::add("myproto", zpt::allocate_shared<myproto::transport>());
 
 | Capability | Constant | Description |
 |-----------|----------|-------------|
-| Bind | `zpt::transport::BIND` | Can accept incoming connections |
-| Connect | `zpt::transport::CONNECT` | Can initiate outgoing connections |
+| Synchronous | `zpt::transport::SYNCHRONOUS` (1) | Supports request-response pattern |
+| Persistent | `zpt::transport::PERSISTENT` (2) | Maintains persistent connections |
 
-Return a bitwise OR of supported capabilities from `capabilities()`.
+Return true from `has_capability()` for each capability your transport supports.
 
 ## Message Conversion
 
@@ -90,6 +93,20 @@ auto send(zpt::message _message) -> void override {
     auto uri = _message->uri();
     auto body = _message->body();
     // Serialize and send...
+}
+```
+
+## Message Factory
+
+Override `make_request()` and `make_reply()` to create protocol-appropriate messages:
+
+```cpp
+auto make_request() const -> zpt::message override {
+    return zpt::make_message<zpt::json_message>();
+}
+
+auto make_reply(bool _with_allocator = true) const -> zpt::message override {
+    return zpt::make_message<zpt::json_message>();
 }
 ```
 

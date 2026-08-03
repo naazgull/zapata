@@ -32,43 +32,65 @@ pkg_check_modules(ZAPATA REQUIRED zapata-storage-mysqlx)
 
 ```cpp
 auto config = zpt::json{
-    "host", "localhost",
-    "port", 3306,
-    "database", "myapp",
-    "user", "root",
-    "password", ""
+    "storage", { "mysqlx", {
+        "host", "localhost",
+        "port", 3306,
+        "database", "myapp",
+        "user", "root",
+        "password", ""
+    }}
 };
 
 auto conn = zpt::storage::make_connection<zpt::storage::mysqlx::connection>(config);
+auto session = conn->session();
+auto db = session->database("myapp");
 ```
 
-## Executing Queries
+## Database Bootstrapping
+
+Create tables using raw SQL:
 
 ```cpp
-auto session = zpt::storage::make_session(conn);
-auto db = zpt::storage::make_database(session, "myapp");
-auto users = zpt::storage::make_collection(db, "users");
+// Create schema
+session->sql("CREATE SCHEMA IF NOT EXISTS myapp");
+
+// Create tables
+db->sql("CREATE TABLE IF NOT EXISTS users ("
+        "  _id varchar(36) PRIMARY KEY,"
+        "  name TEXT NOT NULL,"
+        "  email TEXT UNIQUE"
+        ")");
+```
+
+## CRUD Operations
+
+```cpp
+auto users = db->collection("users");
 
 // Insert
-users->insert({
-    "name", "Bob",
-    "email", "bob@example.com"
-});
+users->add({ "_id", "1", "name", "Bob", "email", "bob@example.com" })->execute();
 
 // Find
-auto results = users->find({ "name", "Bob" })->execute();
-for (auto row : results) {
+auto results = users->find("_id = \"1\"")->execute();
+for (auto&& [_, __, row] : results->fetch()) {
     std::cout << row["email"] << std::endl;
 }
 
 // Update
-users->update(
-    { "name", "Bob" },
-    { "email", "newemail@example.com" }
-);
+users->modify("_id = \"1\"")
+    ->set("email", "newemail@example.com")
+    ->execute();
+
+// Patch (partial update)
+users->modify("_id = \"1\"")
+    ->patch({ "email", "patched@example.com" })
+    ->execute();
 
 // Delete
-users->remove({ "name", "Bob" });
+users->remove("_id = \"1\"")->execute();
+
+// Count
+auto count = users->count();
 ```
 
 ## Column Type Handling
@@ -99,7 +121,7 @@ Unrecognized column types are silently skipped with a warning.
 ```json
 {
     "storage": {
-        "mysql": {
+        "mysqlx": {
             "host": "localhost",
             "port": 3306,
             "database": "myapp",

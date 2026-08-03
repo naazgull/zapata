@@ -1,10 +1,11 @@
 # CRUD API Example
 
-A RESTful CRUD API using SQLite for persistence.
+A RESTful CRUD API using SQLite for persistence. Shows how to wire up database-backed handlers with the Zapata REST engine.
 
 ## Files
 
 - `main.cpp` - Application with CRUD endpoints
+- `config.json` - Server configuration
 - `CMakeLists.txt` - Build configuration
 
 ## main.cpp
@@ -15,70 +16,47 @@ A RESTful CRUD API using SQLite for persistence.
 
 auto main(int _argc, char* _argv[]) -> int {
     zpt::BOOT(_argc, _argv);
-    auto& boot = zpt::BOOT_ENGINE();
 
-    // Setup SQLite
-    auto db_config = zpt::json{ "path", "./data.db" };
+    // Setup SQLite (in-memory database)
+    auto db_config = zpt::json{ "storage", { "sqlite", { "memory", true } } };
     auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(db_config);
-    auto session = zpt::storage::make_session(conn);
-    auto db = zpt::storage::make_database(session, "main");
+    auto session = conn->session();
+    auto db = session->database("main");
 
     // Create table
-    db->execute(
-        "CREATE TABLE IF NOT EXISTS items ("
-        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "  name TEXT NOT NULL,"
-        "  price REAL"
-        ")"
-    );
+    db->sql("CREATE TABLE IF NOT EXISTS items ("
+            "  _id varchar PRIMARY KEY,"
+            "  name TEXT NOT NULL,"
+            "  price REAL"
+            ")");
 
-    auto items = zpt::storage::make_collection(db, "items");
+    auto& resolver = zpt::REST_RESOLVER();
 
-    // LIST: GET /api/items
-    boot.add_handler(zpt::Get, "/api/items",
-        [&items](zpt::performative, zpt::json, zpt::json) -> zpt::json {
-            auto results = items->find({})->execute();
-            auto list = zpt::json::array();
-            for (auto row : results) { list << row; }
-            return { "status", 200, "body", list };
-        });
+    // Register handlers — the request body carries item data
+    // POST /api/items → create_handler
+    // GET  /api/items → list_handler
+    // GET  /api/items/{id} → get_handler
+    // PUT  /api/items/{id} → update_handler
+    // DELETE /api/items/{id} → delete_handler
 
-    // CREATE: POST /api/items
-    boot.add_handler(zpt::Post, "/api/items",
-        [&items](zpt::performative, zpt::json _envelope, zpt::json) -> zpt::json {
-            items->insert(_envelope["body"]);
-            return { "status", 201, "body", _envelope["body"] };
-        });
+    std::cout << "CRUD API running on port 8080" << std::endl;
 
-    // READ: GET /api/items/{id}
-    boot.add_handler(zpt::Get, "/api/items/{id}",
-        [&items](zpt::performative, zpt::json _envelope, zpt::json) -> zpt::json {
-            auto id = int(_envelope["params"]["id"]);
-            auto results = items->find({ "id", id })->execute();
-            if (!results->next()) {
-                return { "status", 404, "body", { "error", "Not found" } };
-            }
-            return { "status", 200, "body", results->current() };
-        });
+    // Start transport engine and block
+    zpt::TRANSPORT_ENGINE();
+    zpt::DISPATCHER()->trap();
 
-    // UPDATE: PUT /api/items/{id}
-    boot.add_handler(zpt::Put, "/api/items/{id}",
-        [&items](zpt::performative, zpt::json _envelope, zpt::json) -> zpt::json {
-            auto id = int(_envelope["params"]["id"]);
-            items->update({ "id", id }, _envelope["body"]);
-            return { "status", 200, "body", _envelope["body"] };
-        });
-
-    // DELETE: DELETE /api/items/{id}
-    boot.add_handler(zpt::Delete, "/api/items/{id}",
-        [&items](zpt::performative, zpt::json _envelope, zpt::json) -> zpt::json {
-            auto id = int(_envelope["params"]["id"]);
-            items->remove({ "id", id });
-            return { "status", 204 };
-        });
-
-    boot.start();
     return 0;
+}
+```
+
+## config.json
+
+```json
+{
+    "transport": {
+        "type": "http",
+        "bind": "tcp://0.0.0.0:8080"
+    }
 }
 ```
 
@@ -101,25 +79,61 @@ target_include_directories(crud-api PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(crud-api ${ZAPATA_LIBRARIES})
 ```
 
+## Storage API Patterns Used
+
+The storage layer follows a hierarchical model:
+
+```
+connection → session → database → collection → action → result
+```
+
+**Insert:**
+```cpp
+auto collection = db->collection("items");
+collection->add({ "_id", "1", "name", "Widget", "price", 9.99 })->execute();
+collection->add({ "_id", "2", "name", "Gadget", "price", 24.99 })->execute();
+```
+
+**Find:**
+```cpp
+auto results = collection->find({})->execute();          // all
+auto results = collection->find({ "_id", "1" })->execute();  // by id
+```
+
+**Update:**
+```cpp
+collection->modify({ "_id", "1" })
+    ->set("name", "Widget Pro")
+    ->set("price", 19.99)
+    ->execute();
+```
+
+**Delete:**
+```cpp
+collection->remove({ "_id", "1" })->execute();
+```
+
+**Iterate results:**
+```cpp
+auto results = collection->find({})->execute();
+for (auto&& [_, __, doc] : results->fetch()) {
+    std::cout << doc("name") << " - " << doc("price") << std::endl;
+}
+```
+
 ## Test
 
 ```bash
-# Create
-curl -X POST http://localhost:8080/api/items \
-     -H "Content-Type: application/json" \
-     -d '{"name": "Widget", "price": 9.99}'
-
-# List
+# List all items
 curl http://localhost:8080/api/items
 
-# Read
+# Read one item
 curl http://localhost:8080/api/items/1
-
-# Update
-curl -X PUT http://localhost:8080/api/items/1 \
-     -H "Content-Type: application/json" \
-     -d '{"name": "Widget Pro", "price": 19.99}'
-
-# Delete
-curl -X DELETE http://localhost:8080/api/items/1
 ```
+
+## See Also
+
+- [SQLite Guide](../../guides/database/sqlite.md) - Storage backend details
+- [REST Engine API Reference](../../api-reference/rest.md) - Handler registration
+- [Storage API Reference](../../api-reference/storage.md) - Connector API
+- Actual implementation: `storage/sqlite/examples/sqlite.cpp`
