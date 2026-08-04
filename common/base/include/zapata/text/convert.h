@@ -117,7 +117,8 @@ auto fromstr(T _in) -> std::string;
 /** @brief Standard Base64 encoding lookup table (64 characters plus null terminator). */
 const char encodeCharacterTable[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-/** @brief Standard Base64 decoding lookup table (maps each byte to its 6-bit value, or -1 if invalid). */
+/** @brief Standard Base64 decoding lookup table (maps each byte to its 6-bit value, or -1 if
+ * invalid). */
 const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,

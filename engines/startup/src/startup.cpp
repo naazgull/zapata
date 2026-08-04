@@ -67,7 +67,7 @@ zpt::json __builtins = R"({
         "builtin:identity": { "name": "builtin:identity",
             "source": "libzapata-net-identity-plugin.so", "requires" : [ "builtin:transport" ] }
    })"_JSON;
-}
+} // namespace
 
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
   : __config{ _config } {
