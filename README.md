@@ -5,18 +5,19 @@
 
 A RESTful API development framework for C++20.
 
-Zapata provides a complete ecosystem for building high-performance HTTP services with asynchronous programming, lambda functions, and promises. It features a modular plugin architecture with built-in support for multiple databases, authentication mechanisms, and network protocols.
+Zapata provides a complete ecosystem for building high-performance HTTP services with an event-driven architecture and a modular plugin system. It features built-in support for multiple database backends, authentication mechanisms, network protocols, and scripting bridges.
 
 ## Features
 
-- **REST API Development** - Build RESTful endpoints with minimal boilerplate
-- **Modern C++20** - Lambda functions, concepts, async/await patterns
-- **JSON Support** - Native JSON parsing and serialization
-- **Database Connectivity** - SQLite, MySQL with abstract connector interface
-- **Multiple Transports** - HTTP, WebSocket, TCP, Unix sockets, UPnP
-- **Scripting Bridges** - Lua and Prolog integration
-- **Lock-Free Concurrency** - Thread-safe data structures using hazard pointers
-- **Plugin Architecture** - Extensible protocols and storage backends
+- **REST API Development** - Build RESTful endpoints using typed handler classes that extend `zpt::events::process`
+- **Modern C++20** - Concepts, ranges, coroutines-ready design (callback-based event dispatch, no runtime coroutine support)
+- **JSON Support** - Native JSON parsing and serialization via the built-in JSON parser
+- **Database Connectivity** - SQLite, MySQL, PostgreSQL, MongoDB with a unified abstract connector interface
+- **Multiple Transports** - HTTP, WebSocket, TCP, UPnP, Unix pipes, local, AMQP, MQTT, identity-aware
+- **Scripting Bridges** - Lua and Prolog integration for dynamic logic
+- **Lock-Free Concurrency** - Thread-safe data structures using a 128-bit atomic mutation guard (CAS-based)
+- **Plugin Architecture** - Extensible protocols and storage backends with load-time dependency resolution
+- **Ontology & Graph** - Graph processing and ontology management utilities
 
 ## Requirements
 
@@ -27,6 +28,8 @@ Zapata provides a complete ecosystem for building high-performance HTTP services
 Optional dependencies:
 - SQLite3
 - MySQL client library
+- PostgreSQL client library
+- MongoDB C++ driver
 - Lua
 - libmagic
 
@@ -47,56 +50,62 @@ sudo make install
 | `WITH_ASAN` | `OFF` | Enable Address Sanitizer |
 | `WITH_TSAN` | `OFF` | Enable Thread Sanitizer |
 | `WITH_UBSAN` | `OFF` | Enable UndefinedBehavior Sanitizer |
+| `WITH_EXCEPTION_PROPAGATION` | `OFF` | Propagate exceptions instead of catching them |
+| `WITH_ALLOCATOR_DEBUGGING` | `OFF` | Keep allocation list for debugging |
 
 ## Quick Example
 
+A minimal Zapata handler is a class that extends `zpt::events::process` and implements the `Operation` concept:
+
 ```cpp
 #include <zapata/rest.h>
+#include <zapata/startup.h>
 
-int main(int argc, char* argv[]) {
-    // Initialize the framework
-    zpt::json _config = zpt::load_config(argc, argv);
+class hello_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
 
-    // Create REST engine
-    auto _engine = zpt::make_engine(_config);
+    auto blocked() const -> bool { return false; }
 
-    // Register endpoint
-    _engine->on("GET", "/hello/{name}",
-        [](zpt::performative _performative,
-           zpt::json _envelope,
-           zpt::rest::engine::ptr _engine) -> zpt::json {
-            auto _name = _envelope["params"]["name"];
-            return { "message", std::string("Hello, ") + _name->string() };
-        });
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto _name = this->received()->params()["name"];
+        this->to_send()
+            ->status(200)
+            .body() = { "message", "Hello, " + _name->string() };
+        return zpt::events::finish;
+    }
+};
 
-    // Start server
-    _engine->start();
-    return 0;
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->add<hello_handler>("/hello/{name}");
 }
 ```
+
+Register this handler class with the REST resolver — the framework handles dispatch, threading, and lifecycle automatically.
 
 ## Documentation
 
 Full documentation is available in the [docs/](docs/index.md) directory:
 
-- [Getting Started](docs/getting-started/installation.md) - Installation and quickstart
+- [Getting Started](docs/getting-started/quickstart.md) - Installation and quickstart
 - [Guides](docs/guides/rest-api.md) - In-depth usage guides
 - [Architecture](docs/architecture/overview.md) - System design and concepts
-- [API Reference](docs/api-reference/base.md) - Detailed API documentation
-- [Examples](docs/examples/) - Working code examples
+- [API Reference](docs/api-reference/rest.md) - Detailed API documentation
 
 ## Project Structure
 
 ```
 zapata/
 ├── bridges/          # Language integration (Lua, Prolog)
-├── common/           # Core utilities, events, lock-free structures
-├── engines/          # REST, transport, and event engines
-├── generators/       # Code generation tools
+├── common/           # Core utilities, events, lock-free structures, ontology
+├── engines/          # REST, transport, runtime, and startup engines
+├── generators/       # Code generation tools (AST, REST)
 ├── io/               # Stream, socket, pipe abstractions
-├── network/          # Protocol implementations (HTTP, WebSocket, TCP)
-├── parsers/          # JSON, HTTP, URI parsers
-├── storage/          # Database connectors (SQLite, MySQL)
+├── network/          # Protocol implementations (HTTP, WebSocket, TCP, AMQP, MQTT, etc.)
+├── parsers/          # JSON, HTTP, URI, functional parsers
+├── security/         # Security utilities (OAuth2, Redis - disabled)
+├── storage/          # Database connectors (SQLite, MySQL, PostgreSQL, MongoDB)
 └── docs/             # Documentation
 ```
 
