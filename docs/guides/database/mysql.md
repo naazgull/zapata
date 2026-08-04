@@ -73,7 +73,7 @@ users->add({ "_id", "1", "name", "Bob", "email", "bob@example.com" })->execute()
 // Find
 auto results = users->find("_id = \"1\"")->execute();
 for (auto&& [_, __, row] : results->fetch()) {
-    std::cout << row["email"] << std::endl;
+    std::cout << row("email") << std::endl;
 }
 
 // Update
