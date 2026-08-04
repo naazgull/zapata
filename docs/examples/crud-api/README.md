@@ -4,7 +4,7 @@ A RESTful CRUD API using SQLite for persistence. Shows how to wire up database-b
 
 ## Files
 
-- `plugin.cpp` - Plugin with CRUD handlers and database setup
+- `plugin.cpp` - Plugin with CRUD handlers
 - `config.json` - Server configuration
 - `CMakeLists.txt` - Plugin build configuration
 
@@ -20,9 +20,12 @@ class list_handler : public zpt::events::process {
     using zpt::events::process::process;
     auto blocked() const -> bool { return false; }
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto _db = zpt::GLOBAL_CONFIG()("storage")("sqlite")("session");
-        auto items = _db->collection("items");
-        auto results = items->find({})->execute();
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto db_config = _config("storage");
+        auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
+        auto _session = _conn->session();
+        auto _db = _session->database("zapata");
+        auto results = _db->collection("items")->find({})->execute();
         zpt::json items_list = { zpt::array };
         for (auto&& [_, __, doc] : results->fetch()) {
             items_list << doc;
@@ -32,39 +35,110 @@ class list_handler : public zpt::events::process {
     }
 };
 
-// GET  /api/items/{} → get_handler
-// POST /api/items   → create_handler
-// PUT  /api/items/{} → update_handler
-// DELETE /api/items/{} → delete_handler
-// ... (similar handlers)
+class get_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto db_config = _config("storage");
+        auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
+        auto _session = _conn->session();
+        auto _db = _session->database("zapata");
+
+        auto _path = this->received()->uri()("path");
+        auto _id = _path(3);
+        auto results = _db->collection("items")->find({ "_id", _id })->execute();
+        zpt::json doc;
+        for (auto&& [_, __, d] : results->fetch()) {
+            doc = d;
+            break;
+        }
+        this->to_send()->status(200)->body() = doc;
+        return zpt::events::finish;
+    }
+};
+
+class create_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto db_config = _config("storage");
+        auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
+        auto _session = _conn->session();
+        auto _db = _session->database("zapata");
+        auto _result = _db->collection("items")
+                           ->add(this->received()->body())
+                           ->execute();
+        this->to_send()->status(201)->body() = _result->to_json();
+        return zpt::events::finish;
+    }
+};
+
+class update_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto db_config = _config("storage");
+        auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
+        auto _session = _conn->session();
+        auto _db = _session->database("zapata");
+
+        auto _path = this->received()->uri()("path");
+        auto _id = _path(3);
+        auto _result = _db->collection("items")
+                           ->modify({ "_id", _id })
+                           ->set("name", this->received()->body()("name"))
+                           ->set("price", this->received()->body()("price"))
+                           ->execute();
+        this->to_send()->status(200)->body() = _result->to_json();
+        return zpt::events::finish;
+    }
+};
+
+class delete_handler : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+        auto _config = zpt::GLOBAL_CONFIG();
+        auto db_config = _config("storage");
+        auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
+        auto _session = _conn->session();
+        auto _db = _session->database("zapata");
+
+        auto _path = this->received()->uri()("path");
+        auto _id = _path(3);
+        auto _result = _db->collection("items")
+                           ->remove({ "_id", _id })
+                           ->execute();
+        this->to_send()->status(200)->body() = _result->to_json();
+        return zpt::events::finish;
+    }
+};
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Loading crud-api plugin", zpt::info);
-
-    // Setup SQLite database
-    auto _config = zpt::GLOBAL_CONFIG();
-    auto db_config = _config("storage");
-    auto conn = zpt::storage::make_connection<zpt::storage::sqlite::connection>(db_config);
-    auto session = conn->session();
-    auto db = session->database("main");
-
-    // Create table
-    db->sql("CREATE TABLE IF NOT EXISTS items ("
-            "  _id varchar PRIMARY KEY,"
-            "  name TEXT NOT NULL,"
-            "  price REAL"
-            ")");
-
     auto _resolver = zpt::REST_RESOLVER();
     _resolver->add<list_handler>("/api/items")
-             // ... register other handlers
+             ->add<create_handler>("/api/items")
+             ->add<get_handler>("/api/items/{}")
+             ->add<update_handler>("/api/items/{}")
+             ->add<delete_handler>("/api/items/{}");
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading crud-api plugin", zpt::info);
     auto _resolver = zpt::REST_RESOLVER();
     _resolver->remove<list_handler>("/api/items")
-             // ... remove other handlers
+             ->remove<create_handler>("/api/items")
+             ->remove<get_handler>("/api/items/{}")
+             ->remove<update_handler>("/api/items/{}")
+             ->remove<delete_handler>("/api/items/{}");
 }
 ```
 
@@ -84,7 +158,8 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     "dispatcher": { "limits": { "max_workers": 4 } },
     "http": { "bind": "0.0.0.0", "port": 8080 },
     "transport": { "default": "http", "limits": { "max_workers": 16 } },
-    "rest": { "prefix": "/api" }
+    "rest": { "prefix": "/api" },
+    "storage": { "sqlite": { "path": "./data/app.db" } }
 }
 ```
 
@@ -114,6 +189,8 @@ The storage layer follows a hierarchical model:
 ```
 connection → session → database → collection → action → result
 ```
+
+Each handler creates its own connection via `make_connection<sqlite::connection>(config)`, uses it, and it is destroyed when the handler finishes. For higher throughput, a connection pool should be used instead of creating connections per-request.
 
 **Insert:**
 ```cpp
