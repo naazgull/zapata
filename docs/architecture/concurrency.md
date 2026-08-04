@@ -96,7 +96,7 @@ For short critical sections where contention is low, `zpt::spin_mutex` provides 
 ```cpp
 // Safe: read-only access from multiple threads
 auto config = load_config();  // Shared across threads
-auto value = config["key"];   // OK: read-only
+auto value = config("key");   // OK: read-only
 
 // Unsafe: concurrent modification
 // Use clone() or external synchronization

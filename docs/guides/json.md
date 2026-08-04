@@ -97,12 +97,61 @@ zpt::json ts = zpt::json::date("2024-01-15T10:30:00Z"); // ISO 8601
 zpt::json obj = { "name", "John", "age", 30 };
 
 // By key (for objects)
-std::string name = obj["name"];
-int age = obj["age"];
+std::string name = obj("name");
+int age = obj("age");
 
 // By index (for arrays)
 zpt::json arr = { zpt::array, "a", "b", "c" };
-std::string first = arr[0];  // "a"
+std::string first = arr(0);  // "a"
+```
+
+### Read vs Write Access
+
+Understanding the difference between the `()` and `[]` operators is critical: they have fundamentally different semantics.
+
+```cpp
+zpt::json obj = { "name", "John" };
+
+// Read-only access — returns the value or undefined if not found.
+// Does NOT modify the object.
+auto name = obj("name");
+auto missing = obj("age");         // returns undefined, does not create "age"
+
+// Create-or-access — returns a reference to the value.
+// If the key does not exist, it creates the entry first (auto-vivification).
+// If the index does not exist, it fills with undefined values.
+obj["age"] = 30;                   // creates "age" if it didn't exist
+obj["address"]["city"] = "Berlin"; // creates "address" (object) and "city" recursively
+
+// Chained [] creates every missing level:
+obj["a"]["b"]["c"] = 1;  // creates {"a": {"b": {"c": 1}}} from scratch
+```
+
+**Rule of thumb:** use `()` when reading, `[]` only when you intend to write or create entries.
+
+```cpp
+// Correct: read-only, safe to call multiple times
+auto count = data("count");
+auto label = data("label");
+
+// Dangerous: accidental creation — the object grows with every call
+// with a missing key. Use this only when you explicitly want to create:
+auto count = data("count");   // obj is unchanged if "count" is missing
+auto count2 = data("count");  // still unchanged
+```
+
+Using `[]` for read-only access silently mutates the JSON tree, which can cause subtle bugs:
+
+```cpp
+zpt::json config = { "server", { "host", "localhost" } };
+
+// This reads "host" correctly, but does NOT mutate config.
+auto host = config("server")("host");
+
+// This ALSO reads "host" correctly, but creates "cache" inside
+// the "server" object if it doesn't exist — mutating config unexpectedly.
+auto host2 = config("server")["host"];  // creates "host" if it doesn't exist
+auto cache = config("server")["cache"]; // creates "cache": undefined!
 ```
 
 ### Type Conversion
@@ -113,16 +162,16 @@ Values automatically convert to C++ types:
 zpt::json data = { "count", 42, "ratio", 0.5, "label", "test" };
 
 // Numeric conversions
-int i = data["count"];           // 42
-long l = data["count"];          // 42L
-double d = data["count"];        // 42.0
-size_t sz = data["count"];       // 42
+int i = data("count");           // 42
+long l = data("count");          // 42L
+double d = data("count");        // 42.0
+size_t sz = data("count");       // 42
 
 // String conversion
-std::string s = data["label"];   // "test"
+std::string s = data("label");   // "test"
 
 // Boolean (non-zero/non-empty = true)
-bool b = data["count"];          // true
+bool b = data("count");          // true
 ```
 
 ### Safe Access
@@ -133,26 +182,26 @@ Check if a value exists and has the expected type:
 zpt::json obj = { "name", "John" };
 
 // Check for key existence
-if (obj["name"]->ok()) {
+if (obj("name")->ok()) {
     // Key exists and is not null/undefined
 }
 
 // Check type
-if (obj["name"]->is_string()) {
-    std::string name = obj["name"];
+if (obj("name")->is_string()) {
+    std::string name = obj("name");
 }
 
 // Type checking methods
-obj["x"]->is_object();
-obj["x"]->is_array();
-obj["x"]->is_string();
-obj["x"]->is_integer();
-obj["x"]->is_floating();
-obj["x"]->is_number();   // integer or floating
-obj["x"]->is_bool();
-obj["x"]->is_date();
-obj["x"]->is_nil();
-obj["x"]->is_undefined();
+obj("x")->is_object();
+obj("x")->is_array();
+obj("x")->is_string();
+obj("x")->is_integer();
+obj("x")->is_floating();
+obj("x")->is_number();   // integer or floating
+obj("x")->is_bool();
+obj("x")->is_date();
+obj("x")->is_nil();
+obj("x")->is_undefined();
 ```
 
 ### Path-Based Access
@@ -369,7 +418,7 @@ Store callable references in JSON:
 ```cpp
 // Register a lambda
 zpt::lambda::add("greet/1", [](zpt::json args, zpt::context ctx) -> zpt::json {
-    return zpt::json{ "Hello, " + std::string(args[0]) + "!" };
+    return zpt::json{ "Hello, " + std::string(args(0)) + "!" };
 });
 
 // Create a lambda reference

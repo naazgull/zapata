@@ -100,8 +100,8 @@ template<typename T> json(T const& _rhs);         // From any type
 | `operator=(T)` | Assign value |
 | `operator->()` | Access element pointer |
 | `operator*()` | Dereference element |
-| `operator[](T)` | Access by key or index |
-| `operator()(T)` | Access by key (const) |
+| `operator[](T)` | Access by key or index — creates the entry if it does not exist |
+| `operator()(T)` | Access by key (const) — returns the value or undefined; does not modify |
 | `operator==`, `!=`, `<`, `>`, `<=`, `>=` | Comparison |
 | `operator<<(T)` | Append/push value |
 | `operator+`, `+=` | Union |
@@ -239,7 +239,7 @@ JSON object wrapper (shared pointer to `JSONObjT`).
 | `hash() -> size_t` | Hash value |
 | `operator->()` | Access `JSONObjT` |
 | `operator*()` | Dereference `JSONObjT` |
-| `operator[](T)` | Access element |
+| `operator[](T)` | Access element — creates if missing |
 | `operator<<(T)` | Push key or value |
 
 ---
@@ -276,7 +276,7 @@ JSON array wrapper (shared pointer to `JSONArrT`).
 | `hash() -> size_t` | Hash value |
 | `operator->()` | Access `JSONArrT` |
 | `operator*()` | Dereference `JSONArrT` |
-| `operator[](T)` | Access element |
+| `operator[](T)` | Access element — creates if missing |
 | `operator<<(T)` | Append value |
 
 ---

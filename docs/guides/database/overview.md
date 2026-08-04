@@ -48,8 +48,8 @@ auto results = users
 
 // Iterate results
 for (auto&& [_, __, row] : results->fetch()) {
-    auto name = std::string(row["name"]);
-    auto age = int(row["age"]);
+    auto name = std::string(row("name"));
+    auto age = int(row("age"));
 }
 ```
 

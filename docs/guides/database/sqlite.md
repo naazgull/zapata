@@ -73,7 +73,7 @@ users->add({ "_id", "1", "name", "Alice" })
 // Find all records
 auto results = users->find({})->execute();
 for (auto&& [_, __, row] : results->fetch()) {
-    std::cout << row["email"] << std::endl;
+    std::cout << row("email") << std::endl;
 }
 
 // Find by field

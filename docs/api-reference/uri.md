@@ -212,9 +212,9 @@ std::string request_uri = "/api/users?page=2&limit=50";
 auto uri = zpt::uri::parse(request_uri);
 
 // Access components
-std::string path = uri["path"];
-int page = uri["params"]["page"];
-int limit = uri["params"]["limit"];
+std::string path = uri("path");
+int page = uri("params")("page");
+int limit = uri("params")("limit");
 ```
 
 ### Building URIs
@@ -242,7 +242,7 @@ auto pattern = zpt::uri::to_regex(zpt::uri::parse("/users/:userId/posts/:postId"
 
 // Match incoming request
 auto request_uri = zpt::uri::parse("/users/42/posts/100");
-if (pattern["regex"] == request_uri["path"]) {
+if (pattern("regex") == request_uri("path")) {
     // Extract parameters from match groups
 }
 ```

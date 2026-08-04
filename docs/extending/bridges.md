@@ -97,7 +97,7 @@ auto bridge::to_json(native_object _to_convert) -> zpt::json {
 
 ```cpp
 auto bridge::execute(zpt::json _func, zpt::json _args) -> native_object {
-    auto func_name = std::string(_func["function"]);
+    auto func_name = std::string(_func("function"));
     auto native_args = to_object(_args);
     return mylang_call(this->state(), func_name.c_str(), native_args);
 }
