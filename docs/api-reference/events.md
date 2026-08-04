@@ -432,15 +432,10 @@ private:
     void handle_get() { /* ... */ }
 };
 
-int main() {
-    auto dispatcher = zpt::DISPATCHER(4);
-    dispatcher->start_consumers();
-
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto msg = zpt::make_message<zpt::json_message>();
     msg->performative(zpt::Get);
-    dispatcher->trigger<ProcessRequest>(msg);
-
-    dispatcher->trap();
+    zpt::DISPATCHER()->trigger<ProcessRequest>(msg);
 }
 ```
 

@@ -249,7 +249,8 @@ class GetUserHandler : public zpt::events::process {
     auto blocked() const -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto user_id = this->received()->uri()("params")("id");
+        auto _path = this->received()->uri()("path");
+        auto user_id = _path(2);
 
         // Fetch user from database...
         this->to_send()->status(200)->body() = {
@@ -261,15 +262,9 @@ class GetUserHandler : public zpt::events::process {
     }
 };
 
-int main() {
-    zpt::BOOT();
-
-    auto& resolver = zpt::REST_RESOLVER();
-    resolver->add<GetUserHandler>("/api/users/:id");
-
-    // Start transport engine
-    zpt::TRANSPORT_ENGINE();
-    zpt::DISPATCHER()->trap();
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->add<GetUserHandler>("/api/users/{}");
 }
 ```
 

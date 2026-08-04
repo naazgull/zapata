@@ -4,14 +4,15 @@ A minimal REST API with Zapata.
 
 ## Files
 
-- `main.cpp` - Application entry point
+- `plugin.cpp` - Plugin with REST handler
 - `config.json` - Server configuration
-- `CMakeLists.txt` - Build configuration
+- `CMakeLists.txt` - Plugin build configuration
 
-## main.cpp
+## plugin.cpp
 
 ```cpp
 #include <zapata/rest.h>
+#include <zapata/startup.h>
 
 // Simple handler — responds with a greeting
 class hello_handler : public zpt::events::process {
@@ -32,7 +33,8 @@ class hello_name_handler : public zpt::events::process {
     using zpt::events::process::process;
     auto blocked() const -> bool { return false; }
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto name = this->received()->uri()("params")("name")->string();
+        auto _path = this->received()->uri()("path");
+        auto name = _path(1)->string();
         this->to_send()->status(200)->body() = zpt::json{
             "message", std::string("Hello, ") + name + "!"
         };
@@ -40,20 +42,18 @@ class hello_name_handler : public zpt::events::process {
     }
 };
 
-auto main(int _argc, char* _argv[]) -> int {
-    zpt::BOOT(_argc, _argv);
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zlog("Loading hello-world plugin", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->add<hello_handler>("/hello")
+             ->add<hello_name_handler>("/hello/{}");
+}
 
-    auto& resolver = zpt::REST_RESOLVER();
-
-    // Register handlers by path
-    resolver->add<hello_handler>("/hello")
-        ->add<hello_name_handler>("/hello/{name}");
-
-    // Start transport engine and block until shutdown
-    zpt::TRANSPORT_ENGINE();
-    zpt::DISPATCHER()->trap();
-
-    return 0;
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zlog("Unloading hello-world plugin", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->remove<hello_handler>("/hello")
+             ->remove<hello_name_handler>("/hello/{}");
 }
 ```
 
@@ -69,13 +69,11 @@ auto main(int _argc, char* _argv[]) -> int {
     "load": [
         { "name": "builtin:http" },
         { "name": "builtin:rest" },
-        { "name": "builtin:upnp" },
         { "name": "hello-world", "source": "libhello-world.so", "requires": [ "builtin:rest" ] }
     ],
     "resources": { "limits": { "max_heap_allocation": 0 } },
     "dispatcher": { "limits": { "max_workers": 4 } },
     "http": { "bind": "0.0.0.0", "port": 8080 },
-    "upnp": { "bind": "239.192.1.2", "port": 7979 },
     "transport": { "default": "http", "limits": { "max_workers": 16 } },
     "rest": { "prefix": "/api" }
 }
@@ -95,18 +93,22 @@ pkg_check_modules(ZAPATA REQUIRED
     zapata-engine-startup zapata-engine-rest zapata-engine-transport
 )
 
-add_executable(hello-world main.cpp)
+add_library(hello-world SHARED plugin.cpp)
 target_include_directories(hello-world PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(hello-world ${ZAPATA_LIBRARIES})
 ```
 
 ## Build and Run
 
+The plugin builds as a shared library (`libhello-world.so`). It is loaded by the Zapata host process at runtime via the `load` configuration.
+
 ```bash
 mkdir build && cd build
 cmake .. && make
-./hello-world --config ../config.json
+zpt --config ../config.json
 ```
+
+No bootstrap or `main` is needed — the framework's host process loads plugins through `_zpt_load_` and manages the event loop.
 
 ## Test
 

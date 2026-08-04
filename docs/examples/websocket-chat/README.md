@@ -4,11 +4,11 @@ A simple real-time chat application using WebSocket transport.
 
 ## Files
 
-- `main.cpp` - Server with WebSocket message handling
+- `plugin.cpp` - Plugin with WebSocket message handlers
 - `config.json` - Server configuration
-- `CMakeLists.txt` - Build configuration
+- `CMakeLists.txt` - Plugin build configuration
 
-## main.cpp
+## plugin.cpp
 
 ```cpp
 #include <zapata/rest.h>
@@ -59,19 +59,20 @@ class join_handler : public zpt::events::process {
     }
 };
 
-auto main(int _argc, char* _argv[]) -> int {
-    zpt::BOOT(_argc, _argv);
-
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zlog("Loading websocket-chat plugin", zpt::info);
     g_clients = std::make_shared<std::vector<zpt::message>>();
 
-    auto& resolver = zpt::REST_RESOLVER();
-    resolver->add<chat_handler>("/ws/chat")
-        ->add<join_handler>("/ws/join");
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->add<chat_handler>("/ws/chat")
+             ->add<join_handler>("/ws/join");
+}
 
-    zpt::TRANSPORT_ENGINE();
-    zpt::DISPATCHER()->trap();
-
-    return 0;
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zlog("Unloading websocket-chat plugin", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->remove<chat_handler>("/ws/chat")
+             ->remove<join_handler>("/ws/join");
 }
 ```
 
@@ -88,14 +89,12 @@ auto main(int _argc, char* _argv[]) -> int {
         { "name": "builtin:http" },
         { "name": "builtin:ws" },
         { "name": "builtin:rest" },
-        { "name": "builtin:upnp" },
         { "name": "websocket-chat", "source": "libwebsocket-chat.so",
           "requires": [ "builtin:rest" ] }
     ],
     "resources": { "limits": { "max_heap_allocation": 1048576 } },
     "dispatcher": { "limits": { "max_workers": 4 } },
     "http": { "bind": "0.0.0.0", "port": 8080 },
-    "upnp": { "bind": "239.192.1.2", "port": 7979 },
     "transport": { "default": "http", "limits": { "max_workers": 16 } }
 }
 ```
@@ -114,7 +113,7 @@ pkg_check_modules(ZAPATA REQUIRED
     zapata-engine-startup zapata-engine-rest zapata-engine-transport
 )
 
-add_executable(websocket-chat main.cpp)
+add_library(websocket-chat SHARED plugin.cpp)
 target_include_directories(websocket-chat PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(websocket-chat ${ZAPATA_LIBRARIES})
 ```
@@ -124,8 +123,8 @@ target_link_libraries(websocket-chat ${ZAPATA_LIBRARIES})
 Connect with a WebSocket client (e.g., `websocat`):
 
 ```bash
-# Terminal 1: Start server
-./websocket-chat --config config.json
+# Terminal 1: Start server with the Zapata host
+zpt --config config.json
 
 # Terminal 2: Connect as user
 websocat ws://localhost:8080/ws/chat

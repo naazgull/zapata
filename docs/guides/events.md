@@ -70,7 +70,7 @@ Events can be routed by URI patterns:
 ```cpp
 // Match specific paths
 resolver->add<users_handler>("/api/users");
-resolver->add<user_handler>("/api/users/{id}");
+resolver->add<user_handler>("/api/users/{}");
 ```
 
 ### Performative-Based Routing

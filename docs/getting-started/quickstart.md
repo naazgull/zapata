@@ -35,17 +35,18 @@ pkg_check_modules(ZAPATA REQUIRED
     zapata-engine-transport
 )
 
-add_executable(my-api src/main.cpp)
+add_library(my-api SHARED plugin.cpp)
 target_include_directories(my-api PRIVATE ${ZAPATA_INCLUDE_DIRS})
 target_link_libraries(my-api ${ZAPATA_LIBRARIES})
 ```
 
 ## Write Your API
 
-Create `src/main.cpp`:
+Create `plugin.cpp`:
 
 ```cpp
 #include <zapata/rest.h>
+#include <zapata/startup.h>
 
 // Handle GET /api/hello
 class hello_handler : public zpt::events::process {
@@ -74,22 +75,22 @@ class greet_handler : public zpt::events::process {
     }
 };
 
-auto main(int _argc, char* _argv[]) -> int {
-    zpt::BOOT(_argc, _argv);
-
-    auto& resolver = zpt::REST_RESOLVER();
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zlog("Loading my-api plugin", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
 
     // Register GET /api/hello
-    resolver->add<hello_handler>("/api/hello");
+    _resolver->add<hello_handler>("/api/hello");
 
     // Register POST /api/greet
-    resolver->add<greet_handler>("/api/greet");
+    _resolver->add<greet_handler>("/api/greet");
+}
 
-    // Start the transport engine
-    zpt::TRANSPORT_ENGINE();
-    zpt::DISPATCHER()->trap();
-
-    return 0;
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zlog("Unloading my-api plugin", zpt::info);
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver->remove<hello_handler>("/api/hello")
+             ->remove<greet_handler>("/api/greet");
 }
 ```
 
@@ -99,10 +100,9 @@ auto main(int _argc, char* _argv[]) -> int {
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-./my-api --config ../config.json
 ```
 
-Create `../config.json`:
+Create `config.json`:
 
 ```json
 {
@@ -114,16 +114,20 @@ Create `../config.json`:
     "load": [
         { "name": "builtin:http" },
         { "name": "builtin:rest" },
-        { "name": "builtin:upnp" },
         { "name": "my-api", "source": "libmy-api.so", "requires": [ "builtin:rest" ] }
     ],
     "resources": { "limits": { "max_heap_allocation": 0 } },
     "dispatcher": { "limits": { "max_workers": 4 } },
     "http": { "bind": "0.0.0.0", "port": 8080 },
-    "upnp": { "bind": "239.192.1.2", "port": 7979 },
     "transport": { "default": "http", "limits": { "max_workers": 16 } },
     "rest": { "prefix": "/api" }
 }
+```
+
+Run with the `zpt` host process:
+
+```bash
+zpt --config config.json
 ```
 
 The server starts on port 8080.

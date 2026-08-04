@@ -49,10 +49,10 @@ class list_handler : public zpt::events::process {
 ```cpp
 resolver->add<list_handler>    ("/api/items");
 resolver->add<create_handler>  ("/api/items");
-resolver->add<get_handler>     ("/api/items/{id}");
-resolver->add<replace_handler> ("/api/items/{id}");
-resolver->add<update_handler>  ("/api/items/{id}");
-resolver->add<delete_handler>  ("/api/items/{id}");
+resolver->add<get_handler>     ("/api/items/{}");
+resolver->add<replace_handler> ("/api/items/{}");
+resolver->add<update_handler>  ("/api/items/{}");
+resolver->add<delete_handler>  ("/api/items/{}");
 ```
 
 ## Request Handling
@@ -63,12 +63,14 @@ Every handler receives a `zpt::message` accessible via `this->received()`. The m
 
 ```cpp
 auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-    // URI and path parameters
-    auto uri = this->received()->uri();
-    auto params = uri("params");   // Path params like {id}
+    // URI path (array of segments: ["api", "users", "42"])
+    auto path = this->received()->uri()("path");
+    auto segment1 = path(0);  // "api"
+    auto segment2 = path(1);  // "users"
+    auto segment3 = path(2);  // "42" — path parameter from {}
 
     // Query parameters
-    auto query = uri("query");     // ?key=value
+    auto params = this->received()->uri()("params");     // ?key=value
 
     // Headers
     auto headers = this->received()->headers();
@@ -84,19 +86,20 @@ auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
 
 ### Path Parameters
 
-URI templates with `{param}` are extracted into the URI's `params` field:
+Route patterns use `{}` as a wildcard that matches any non-slash segment. Path segments are stored in the `path` field of the URI as a JSON array, so the parameter value is accessed by indexing into `uri("path")`:
 
 ```cpp
-// Route: /api/users/{user_id}/posts/{post_id}
-resolver->add<post_handler>("/api/users/{user_id}/posts/{post_id}");
+// Route: /api/users/{}/posts/{}
+resolver->add<post_handler>("/api/users/{}/posts/{}");
 
 class post_handler : public zpt::events::process {
   public:
     using zpt::events::process::process;
     auto blocked() const -> bool { return false; }
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto user_id = this->received()->uri()("params")("user_id");
-        auto post_id = this->received()->uri()("params")("post_id");
+        auto _path = this->received()->uri()("path");
+        auto user_id = _path(2);  // segment index 2: the first {} value
+        auto post_id = _path(4);  // segment index 4: the second {} value
         return zpt::events::finish;
     }
 };
@@ -113,8 +116,9 @@ class search_handler : public zpt::events::process {
     using zpt::events::process::process;
     auto blocked() const -> bool { return false; }
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto query = std::string(this->received()->uri()("query")("q"));
-        auto page = int(this->received()->uri()("query")("page"));
+        auto params = this->received()->uri()("params");
+        auto query = std::string(params("q"));
+        auto page = int(params("page"));
         return zpt::events::finish;
     }
 };
@@ -179,7 +183,7 @@ this->to_send()->status(200)
 `zpt::rest::resolver_t` manages route matching and dispatch, inheriting from `zpt::events::resolver_t`.
 
 - Routes are matched in registration order
-- Path parameters (`{id}`) match any non-slash segment
+- Route patterns use `{}` as a wildcard matching any non-slash segment, accessed via `uri("path")(index)`
 - The resolver selects the most specific matching route
 
 ### Handler Registration Patterns

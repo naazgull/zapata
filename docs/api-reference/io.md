@@ -501,7 +501,7 @@ auto stream = zpt::make_stream<zpt::socketstream>(
 #include <zapata/streams.h>
 #include <zapata/net/socket.h>
 
-int main() {
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto poll = zpt::STREAM_POLLING();
 
     // Set up delegate

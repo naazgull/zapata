@@ -147,16 +147,19 @@ The bridge handles Lua stack management automatically, but you can manually clea
 lua.clear_stack();
 ```
 
-## Example: Multi-Threaded Lua Bridge
+## Example: Lua Bridge in a Plugin
+
+The Lua bridge is typically used within a plugin's load function. Each thread gets its own bridge instance via `thread_instance()`:
 
 ```cpp
 #include <zapata/lua.h>
+#include <zapata/startup.h>
 
-zpt::lua::bridge _bridge;
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    static thread_local zpt::lua::bridge lua;
 
-auto main(int, char**) -> int {
     // Register a C++ function
-    _bridge.add_module([](lua_State* L) {
+    lua.add_module([](lua_State* L) {
         lua_register(L, "add", [](lua_State* L) -> int {
             int a = lua_tointeger(L, 1);
             int b = lua_tointeger(L, 2);
@@ -165,9 +168,9 @@ auto main(int, char**) -> int {
         });
     }, zpt::json{ "module", "mathlib" });
 
-    // Call from multiple threads
+    // Call from multiple threads — each uses its own bridge instance
     std::thread t1([&]() {
-        auto& lua1 = _bridge.thread_instance();
+        auto& lua1 = lua.thread_instance();
         auto result = lua1.call(
             zpt::json{ "module", "mathlib", "function", "add" },
             zpt::json{ zpt::array, 10, 20 }
@@ -176,7 +179,7 @@ auto main(int, char**) -> int {
     });
 
     std::thread t2([&]() {
-        auto& lua2 = _bridge.thread_instance();
+        auto& lua2 = lua.thread_instance();
         auto result = lua2.call(
             zpt::json{ "module", "mathlib", "function", "add" },
             zpt::json{ zpt::array, 30, 40 }
@@ -186,7 +189,10 @@ auto main(int, char**) -> int {
 
     t1.join();
     t2.join();
-    return 0;
+}
+
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    // Bridge cleanup is handled automatically
 }
 ```
 

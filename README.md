@@ -68,7 +68,8 @@ class hello_handler : public zpt::events::process {
     auto blocked() const -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-        auto _name = this->received()->params()["name"];
+        auto _path = this->received()->uri()("path");
+        auto _name = _path(1);
         this->to_send()
             ->status(200)
             .body() = { "message", "Hello, " + _name->string() };
@@ -78,7 +79,7 @@ class hello_handler : public zpt::events::process {
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     auto _resolver = zpt::REST_RESOLVER();
-    _resolver->add<hello_handler>("/hello/{name}");
+    _resolver->add<hello_handler>("/hello/{}");
 }
 ```
 
