@@ -31,6 +31,20 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
           "description",
           "configuration directory, all the files in it are assumed to be configuration "
           "files" },
+        "--help",
+        { "options",
+          { zpt::array, "optional", "single" },
+          "type",
+          "bool",
+          "description",
+          "Print this message" },
+        "--print-config",
+        { "options",
+          { zpt::array, "optional", "single" },
+          "type",
+          "bool",
+          "description",
+          "Prints the processed configuration" },
         "--terminate",
         { "options",
           { zpt::array, "optional", "single" },
@@ -61,6 +75,11 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
+
+    if (_parameters("--print-config")->ok()) {
+        std::cout << zpt::pretty{ _config } << std::flush;
+        return;
+    }
 
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
     zpt::log_format =

@@ -115,8 +115,9 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
     auto cleanup() -> zpt::lua::bridge&;
 
   private:
-    lua_State* __underlying{ nullptr };                     ///< Raw Lua state
-    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load; ///< Built-in modules to register
+    lua_State* __underlying{ nullptr }; ///< Raw Lua state
+    std::map<std::string, std::tuple<callback_type, zpt::json>>
+      __builtin_to_load;                                 ///< Built-in modules to register
     std::map<std::string, zpt::json> __external_to_load; ///< External file modules to load
 
     /** @brief Copy constructor for creating a new thread-local bridge instance. */

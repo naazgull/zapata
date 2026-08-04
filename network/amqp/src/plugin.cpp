@@ -38,14 +38,14 @@ class plugin_amqp_execute_after_boot : public zpt::system_event {
         auto _stream = zpt::AMQP_STREAM();
         auto const& _subscriptions = _config("amqp")("subscribe");
 
+        zpt::SYSTEM_EVENTS_RESOLVER() //
+          ->remove<plugin_amqp_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+
         if (_subscriptions->is_array()) {
             for (auto&& [_, __, _subscription] : _subscriptions) {
                 _stream->subscribe(_subscription->string());
             }
         }
-
-        zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<plugin_amqp_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
 
         return zpt::events::finish;
     }

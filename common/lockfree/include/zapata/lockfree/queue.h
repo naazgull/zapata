@@ -159,7 +159,8 @@ class queue {
   private:
     /** @brief Fixed-size ring buffer allocated at construction. */
     zpt::allocator<ptr>::array_pointer __elements{ nullptr };
-    /** @brief Packed 128-bit atomic: lower 64 bits = lower index, upper 64 bits = upper index. Bits 126-127 are a mutation guard. */
+    /** @brief Packed 128-bit atomic: lower 64 bits = lower index, upper 64 bits = upper index. Bits
+     * 126-127 are a mutation guard. */
     zpt::padded_atomic<__uint128_t> __boundaries{ 0 };
     /** @brief Approximate element count, updated independently of the index CAS. */
     zpt::padded_atomic<std::uint64_t> __size{ 0 };

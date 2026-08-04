@@ -87,9 +87,10 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
     auto cleanup() -> zpt::prolog::bridge&;
 
   private:
-    std::string __engine_args; ///< Command-line arguments for the Prolog engine
+    std::string __engine_args;   ///< Command-line arguments for the Prolog engine
     bool __main_engine{ false }; ///< Whether this instance owns the main Prolog engine
-    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load; ///< Built-in modules to register
+    std::map<std::string, std::tuple<callback_type, zpt::json>>
+      __builtin_to_load;                                 ///< Built-in modules to register
     std::map<std::string, zpt::json> __external_to_load; ///< External file modules to load
 
     /** @brief Copy constructor for creating a new thread-local bridge instance. */

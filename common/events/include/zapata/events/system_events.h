@@ -147,7 +147,8 @@ class resolver_t : public zpt::events::resolver_t {
     auto get_provider(std::string const& _id) const -> zpt::json override;
 
   private:
-    /** @brief Nested map: system event type -> handler ID -> resolver callback for creating events. */
+    /** @brief Nested map: system event type -> handler ID -> resolver callback for creating events.
+     */
     std::map<zpt::system_event_type, std::map<zpt::json, zpt::events::resolver_callback>>
       __callbacks;
 };

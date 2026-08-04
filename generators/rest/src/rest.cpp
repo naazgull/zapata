@@ -13,13 +13,15 @@ zpt::gen::rest::unit::unit(std::string const& _module_name,
                            : std::string{ "" }) +
                         zpt::r_replace(this->__module.name(), "/", "::");
 
-    if (this->__schema("info")("database")->ok()) {
-        this->__schema["info"]["database"] =
-          std::format("\"{}\"", this->__schema("info")("database")->string());
-    }
-    else {
-        this->__schema["info"]["database"] =
-          "_config(\"storage\")(db_driver_type)(\"database\")->string()";
+    if (this->__schema("info")("dbDriver")->ok()) {
+        if (this->__schema("info")("database")->ok()) {
+            this->__schema["info"]["database"] =
+              std::format("\"{}\"", this->__schema("info")("database")->string());
+        }
+        else {
+            this->__schema["info"]["database"] =
+              "_config(\"storage\")(db_driver_type)(\"database\")->string()";
+        }
     }
 }
 
@@ -254,15 +256,18 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
                                          this->__schema("info")("namespace")->string(),
                                          this->__module.name(),
                                          _def(_method)("operationId")->string());
-        auto _db_driver = this->__schema("info")("dbDriver")->string();
-        _file->add<zpt::ast::cpp_instruction>(std::format(
-          "#include <{}>\n#include <zapata/connector.h>\n#include <zapata/uri.h>\n#include "
-          "<zapata/{}.h>\n\nusing db_connection_type = zpt::storage::{}::connection;\nconstexpr "
-          "char const* db_driver_type = \"{}\";\n",
-          _include_path,
-          _db_driver,
-          _db_driver,
-          _db_driver));
+        _file->add<zpt::ast::cpp_instruction>(
+          std::format("#include <{}>\n#include <zapata/uri.h>\n", _include_path));
+        if (this->__schema("info")("dbDriver")->is_string()) {
+            auto _db_driver = this->__schema("info")("dbDriver")->string();
+            _file->add<zpt::ast::cpp_instruction>(std::format(
+              "#include <zapata/connector.h>\n#include <zapata/{}.h>\n\nusing "
+              "db_connection_type = zpt::storage::{}::connection;\nconstexpr char const* "
+              "db_driver_type = \"{}\";\n",
+              _db_driver,
+              _db_driver,
+              _db_driver));
+        }
 
         std::cout << "> Generating " << _file_path << "." << std::endl;
         return _file;
@@ -462,12 +467,14 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
               .add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state")
               .add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "remove_element", "zpt::events::state");
-            auto _retrieve_element =
-              zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
-            _retrieve_element //
-              ->add<zpt::ast::cpp_variable>("_session", "zpt::storage::session&")
-              .add<zpt::ast::cpp_variable>("_params", "zpt::json");
-            _class->add(_retrieve_element, zpt::ast::PRIVATE);
+            if (_def("*")("requestBody")("dbCollection")->is_string()) {
+                auto _retrieve_element =
+                  zpt::make_function<zpt::ast::cpp_function>("retrieve_element", "zpt::json");
+                _retrieve_element //
+                  ->add<zpt::ast::cpp_variable>("_session", "zpt::storage::session&")
+                  .add<zpt::ast::cpp_variable>("_params", "zpt::json");
+                _class->add(_retrieve_element, zpt::ast::PRIVATE);
+            }
         }
 
         _namespace->add(_class);
@@ -841,19 +848,26 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
             std::format("_received += {}", this->get_bind_expression(_def)));
     }
 
-    if (!this->has_id(_def)) {
-        _method_try_body //
-          ->add<zpt::ast::cpp_instruction>(
-            "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
-          .add<zpt::ast::cpp_instruction>("_session->commit()")
-          .add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        if (!this->has_id(_def)) {
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>(
+                "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
+              .add<zpt::ast::cpp_instruction>("_session->commit()")
+              .add<zpt::ast::cpp_instruction>(
+                "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+        }
+        else {
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>("_collection //\n->add(_received)->execute()")
+              .add<zpt::ast::cpp_instruction>("_session->commit()")
+              .add<zpt::ast::cpp_instruction>(
+                "this //\n->to_send()->status(201).body() = _received");
+        }
     }
     else {
         _method_try_body //
-          ->add<zpt::ast::cpp_instruction>("_collection //\n->add(_received)->execute()")
-          .add<zpt::ast::cpp_instruction>("_session->commit()")
-          .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(201).body() = _received");
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(201).body() = _received");
     }
     _method_body->add(_method_try_body);
 
@@ -891,19 +905,30 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
       ->add<zpt::ast::cpp_instruction>(
         std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
       .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
-                                      "_params) //\n->fields(_fields)->execute()->fetch()");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
-    _if_block //
-      ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(200).body() = { \"items\", "
-        "_result, \"size\", _collection->count(zpt::storage::extract_find(_params)) }")
-      .add<zpt::ast::cpp_instruction>("zpt::storage::reply_find(this->to_send()->body(), _params)");
-    _method_try_body->add(_if_block);
-    auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(204)");
-    _method_try_body->add(_else_block);
+      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def));
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
+                                           "_params) //\n->fields(_fields)->execute()->fetch()");
+        auto _if_block =
+          zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
+        _if_block //
+          ->add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(200).body() = { \"items\", "
+            "_result, \"size\", _collection->count(zpt::storage::extract_find(_params)) }")
+          .add<zpt::ast::cpp_instruction>(
+            "zpt::storage::reply_find(this->to_send()->body(), _params)");
+        _method_try_body->add(_if_block);
+
+        auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
+        _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(204)");
+        _method_try_body->add(_else_block);
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = { "
+                                           "\"items\", zpt::json::array(), \"size\", 0 }");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -936,12 +961,20 @@ auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _c
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _result = zpt::storage::filter_remove(_collection, _params) //\n->execute()->count()")
-      .add<zpt::ast::cpp_instruction>("_session->commit()")
-      .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = { "
-                                      "\"removed_for\", _params, \"removed_count\", _result }");
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _result = zpt::storage::filter_remove(_collection, _params) "
+            "//\n->execute()->count()")
+          .add<zpt::ast::cpp_instruction>("_session->commit()")
+          .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = { "
+                                          "\"removed_for\", _params, \"removed_count\", _result }");
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = { "
+                                           "\"removed_for\", _params, \"removed_count\", 0 }");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -960,6 +993,8 @@ auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _c
 auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _cpp_file,
                                                      zpt::json _def,
                                                      zpt::json) -> void {
+    if (!_def("*")("requestBody")("dbCollection")->is_string()) { return; }
+
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -1012,19 +1047,26 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
     this->add_generated(_method_body, _def, "update");
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_modify(_collection, "
-                                       "_params) //\n->patch(_received)->execute()->count()")
-      .add<zpt::ast::cpp_instruction>("_session->commit()");
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _result = zpt::storage::filter_modify(_collection, "
+            "_params) //\n->patch(_received)->execute()->count()")
+          .add<zpt::ast::cpp_instruction>("_session->commit()");
 
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
-    _if_block //
-      ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _params)");
-    _method_try_body->add(_if_block);
-    auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
-    _method_try_body->add(_else_block);
+        auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
+        _if_block //
+          ->add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _params)");
+        _method_try_body->add(_if_block);
+        auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
+        _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
+        _method_try_body->add(_else_block);
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = _received");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -1057,15 +1099,22 @@ auto zpt::gen::rest::unit::generate_get_element(zpt::ast::basic_file::ptr _cpp_f
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>("auto _result = this->retrieve_element(_session, _params)");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
-    _if_block //
-      ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
-    _method_try_body->add(_if_block);
-    auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
-    _method_try_body->add(_else_block);
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _result = this->retrieve_element(_session, _params)");
+        auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
+        _if_block //
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _result");
+        _method_try_body->add(_if_block);
+        auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
+        _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
+        _method_try_body->add(_else_block);
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(200).body() = _received");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -1098,18 +1147,26 @@ auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cp
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        "auto _result = zpt::storage::filter_remove(_collection, _params) //\n->execute()->count()")
-      .add<zpt::ast::cpp_instruction>("_session->commit()");
-    auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
-    _if_block //
-      ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(202).body() = { \"removed_count\", _result }");
-    _method_try_body->add(_if_block);
-    auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
-    _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
-    _method_try_body->add(_else_block);
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _result = zpt::storage::filter_remove(_collection, _params) "
+            "//\n->execute()->count()")
+          .add<zpt::ast::cpp_instruction>("_session->commit()");
+        auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
+        _if_block //
+          ->add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(202).body() = { \"removed_count\", _result }");
+        _method_try_body->add(_if_block);
+        auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
+        _else_block->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(404)");
+        _method_try_body->add(_else_block);
+    }
+    else {
+        _method_try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "this //\n->to_send()->status(202).body() = { \"removed_count\", 0 }");
+    }
     _method_body->add(_method_try_body);
 
     auto _method_catch_body =
@@ -1228,15 +1285,17 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
                                                 zpt::json _def,
                                                 bool _with_collection) -> void {
     _block //
-      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _session = zpt::make_connection<db_connection_type>(_config)->session()");
-    if (_with_collection) {
-        _block-> //
-          add<zpt::ast::cpp_instruction>(
-            std::format("auto _collection = _session->database({})->collection(\"{}\")",
-                        this->__schema("info")("database")->string(),
-                        _def("*")("requestBody")("dbCollection")->string()));
+      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()");
+    if (this->__schema("info")("database")->is_string()) {
+        _block->add<zpt::ast::cpp_instruction>(
+          "auto _session = zpt::make_connection<db_connection_type>(_config)->session()");
+        if (_with_collection) {
+            _block-> //
+              add<zpt::ast::cpp_instruction>(
+                std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                            this->__schema("info")("database")->string(),
+                            _def("*")("requestBody")("dbCollection")->string()));
+        }
     }
 }
 
@@ -1401,6 +1460,11 @@ auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
             if (_object("properties")("_id")->ok()) { return true; }
         }
     }
+    if (_def("allOf")->ok()) {
+        for (auto const& [_, __, _object] : _def("allOf")) {
+            if (_object("properties")("_id")->ok()) { return true; }
+        }
+    }
     return false;
 }
 
@@ -1425,7 +1489,7 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     }
     _oss << "drop table if exists " << _collection << ";" << std::endl
          << "create table " << _collection << " (\n";
-    if (!_def("allOf")("properties")("_id")->ok()) { _oss << "_id varchar(22) not null,\n"; }
+    if (!this->has_id(_def)) { _oss << "_id varchar(22) not null,\n"; }
 
     for (auto const& [_, __, _object] : _def("allOf")) {
         for (auto const& [_, _name, _field] : _object("properties")) {

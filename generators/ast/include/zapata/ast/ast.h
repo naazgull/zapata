@@ -312,7 +312,8 @@ class basic_function : public basic_element {
     /** @brief Constructs a function AST node.
      *  @param _name Function name.
      *  @param _return_type Return type string (for trailing return syntax).
-     *  @param _modifiers Bitwise OR of VIRTUAL, CONST, OVERRIDE, FINAL, DEFAULT, DELETE, ABSTRACT. */
+     *  @param _modifiers Bitwise OR of VIRTUAL, CONST, OVERRIDE, FINAL, DEFAULT, DELETE, ABSTRACT.
+     */
     basic_function(std::string const& _name,
                    std::string const& _return_type = "",
                    int _modifiers = 0);

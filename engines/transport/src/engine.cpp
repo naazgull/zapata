@@ -26,9 +26,7 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_stream->transport());
 
-    if (_polling->is_in_shutdown()) {
-        return nullptr;
-    }
+    if (_polling->is_in_shutdown()) { return nullptr; }
     if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         _polling->unmute(_stream);
         zlog(_e.what(), zpt::error);

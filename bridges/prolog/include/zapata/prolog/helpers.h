@@ -86,7 +86,7 @@ class term {
     }
 
   private:
-    term_t __underlying{ 0 }; ///< Raw SWI-Prolog term reference
+    term_t __underlying{ 0 };     ///< Raw SWI-Prolog term reference
     std::vector<term> __children; ///< Child terms
     std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr }; ///< Shared reference count
 };
