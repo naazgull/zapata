@@ -43,7 +43,14 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
         }
     }
     else { _to_return = this->process_incoming_request(_stream); }
-    zlog("Received message via '" << _stream->uri() << "': \n" << _to_return, zpt::trace);
+    zlog("Received message via '" << _stream->uri()
+                                  << "': " << zpt::ontology::to_str(_to_return->performative())
+                                  << " " << zpt::uri::to_string(_to_return->uri()) << " -> "
+                                  << (_to_return->performative() == zpt::Reply
+                                        ? std::to_string(_to_return->status()) + " "
+                                        : "")
+                                  << _to_return->body(),
+         zpt::trace);
     return _to_return;
 }
 
@@ -57,7 +64,14 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
                  _stream->state() == zpt::stream_state::ERRORING_OUT,
                "Stream not in a valid state for sending");
     }
-    zlog("Sending message via '" << _stream->uri() << "' : \n" << _to_send, zpt::trace);
+    zlog("Sending message via '" << _stream->uri()
+                                 << "': " << zpt::ontology::to_str(_to_send->performative()) << " "
+                                 << zpt::uri::to_string(_to_send->uri()) << " -> "
+                                 << (_to_send->performative() == zpt::Reply
+                                       ? std::to_string(_to_send->status()) + " "
+                                       : "")
+                                 << _to_send->body(),
+         zpt::trace);
 
     _stream->write<zpt::message>(_to_send);
 
