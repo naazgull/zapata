@@ -67,7 +67,7 @@ Database session with transaction support.
 
 ```cpp
 virtual auto is_open() const -> bool = 0;
-virtual auto sql(std::string const& _statement) -> type* = 0;
+virtual auto sql(std::string const& _statement) -> zpt::storage::result = 0;
 virtual auto commit() -> type* = 0;
 virtual auto rollback() -> type* = 0;
 virtual auto database(std::string const& _db) const -> zpt::storage::database = 0;
@@ -82,7 +82,7 @@ Database namespace container.
 ### Inner Class: `type`
 
 ```cpp
-virtual auto sql(std::string const& _statement) -> type* = 0;
+virtual auto sql(std::string const& _statement) -> zpt::storage::result = 0;
 virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
 ```
 

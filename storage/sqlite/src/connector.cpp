@@ -218,9 +218,9 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::session::type* {
+auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::result {
     expect(false, "Session `sql` method not implemented for SQLite, use database's");
-    return this;
+    return zpt::make_result<zpt::storage::sqlite::result>(zpt::undefined);
 }
 
 auto zpt::storage::sqlite::session::database(std::string const& _db) const
@@ -249,8 +249,8 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _s
       this->__underlying);
 }
 
-auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
-  -> zpt::storage::database::type* {
+auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt::storage::result {
+    std::vector<sqlite3_stmt_ptr> _prepared;
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(
       sqlite3_prepare_v2(
@@ -258,9 +258,10 @@ auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
       "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
     sqlite_expect(sqlite3_step(_stmt),
                   "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(sqlite3_finalize(_stmt),
-                  "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
-    return this;
+    _prepared.push_back(sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
+
+    zpt::json _result{ "state", zpt::json::object(), "generated", zpt::json::array() };
+    return zpt::make_result<zpt::storage::sqlite::result>(_result, _prepared);
 }
 
 auto zpt::storage::sqlite::database::connection() const -> sqlite3_ptr {

@@ -315,6 +315,11 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "list_elements", "zpt::events::state");
+        }
         else {
             _class //
               ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
@@ -362,12 +367,16 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            this->generate_list_elements(_cpp_file, _def, _path);
+        }
         else {
             this->generate_add_element(_cpp_file, _def, _path);
             this->generate_list_elements(_cpp_file, _def, _path);
             this->generate_remove_elements(_cpp_file, _def, _path);
         }
 
+        std::string _allowed{ "GET, POST, DELETE" };
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
@@ -391,6 +400,14 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
               .add(_cpp_operator_case_get)
               .add(_cpp_operator_case_delete);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            auto _cpp_operator_case_get =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
+            _cpp_operator_case_get->add<zpt::ast::cpp_instruction>("return this->list_elements()");
+            _cpp_operator_switch //
+              ->add(_cpp_operator_case_get);
+            _allowed.assign("GET");
+        }
         else {
             auto _cpp_operator_case_get =
               zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
@@ -411,8 +428,9 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, POST, "
-            "DELETE allowed to use with a collection\" }")
+            std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
+                        "allowed to use with a collection\" }}",
+                        _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
@@ -459,6 +477,10 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
             _class //
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+        }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            _class //
+              ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "get_element", "zpt::events::state");
         }
         else {
             _class //
@@ -516,12 +538,16 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            this->generate_get_element(_cpp_file, _def, _path);
+        }
         else {
             this->generate_update_element(_cpp_file, _def, _path);
             this->generate_get_element(_cpp_file, _def, _path);
             this->generate_remove_element(_cpp_file, _def, _path);
         }
 
+        std::string _allowed{ "GET, PATCH, DELETE" };
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
@@ -545,6 +571,16 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
               .add(_cpp_operator_case_get)
               .add(_cpp_operator_case_delete);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            auto _cpp_operator_case_get =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
+            _cpp_operator_case_get->add<zpt::ast::cpp_instruction>("return this->get_element()");
+            _cpp_operator_switch //
+              ->add(_cpp_operator_case_get);
+
+            this->generate_retrieve_element(_cpp_file, _def, _path);
+            _allowed.assign("GET");
+        }
         else {
             auto _cpp_operator_case_get =
               zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
@@ -561,13 +597,16 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
               .add(_cpp_operator_case_get)
               .add(_cpp_operator_case_delete);
 
-            this->generate_retrieve_element(_cpp_file, _def, _path);
+            if (_def("*")("requestBody")("dbCollection")->is_string()) {
+                this->generate_retrieve_element(_cpp_file, _def, _path);
+            }
         }
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, PATCH, "
-            "DELETE allowed to use with a document\" }")
+            std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
+                        "allowed to use with a document\" }}",
+                        _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
@@ -717,6 +756,11 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            _class //
+              ->add<zpt::ast::cpp_function>(
+                zpt::ast::PUBLIC, "list_elements", "zpt::events::state");
+        }
         else {
             _class //
               ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "add_element", "zpt::events::state")
@@ -764,12 +808,16 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         if (_def("*")("requestBody")("zpt:redirect")->ok()) {
             this->generate_redirect(_cpp_file, _def, _path);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            this->generate_list_elements(_cpp_file, _def, _path);
+        }
         else {
             this->generate_add_element(_cpp_file, _def, _path);
             this->generate_list_elements(_cpp_file, _def, _path);
             this->generate_remove_elements(_cpp_file, _def, _path);
         }
 
+        std::string _allowed{ "GET, POST, DELETE" };
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
@@ -793,6 +841,14 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
               .add(_cpp_operator_case_get)
               .add(_cpp_operator_case_delete);
         }
+        else if (_def("*")("requestBody")("zpt:view")->ok()) {
+            auto _cpp_operator_case_get =
+              zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
+            _cpp_operator_case_get->add<zpt::ast::cpp_instruction>("return this->list_elements()");
+            _cpp_operator_switch //
+              ->add(_cpp_operator_case_get);
+            _allowed.assign("GET");
+        }
         else {
             auto _cpp_operator_case_get =
               zpt::make_code_block<zpt::ast::cpp_code_block>("case zpt::Get :");
@@ -812,8 +868,9 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
         _cpp_operator_body //
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(405).body() = { \"message\", \"Only GET, PUT, "
-            "DELETE allowed to use with a store\" }")
+            std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
+                        "allowed to use with a store\" }}",
+                        _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
@@ -901,15 +958,32 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    _method_try_body //
-      ->add<zpt::ast::cpp_instruction>(
-        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
-      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def));
-    if (_def("*")("requestBody")("dbCollection")->is_string()) {
-        _method_try_body //
-          ->add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
-                                           "_params) //\n->fields(_fields)->execute()->fetch()");
+    if (_def("*")("requestBody")("dbCollection")->is_string() ||
+        _def("*")("requestBody")("zpt:view")->ok()) {
+
+        if (_def("*")("requestBody")("dbCollection")->is_string()) {
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>(
+                std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+              .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+              .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def));
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>(
+                "auto _result = zpt::storage::filter_find(_collection, "
+                "_params) //\n->fields(_fields)->execute()->fetch()");
+        }
+        else if (_def("*")("requestBody")("zpt:view")->is_string()) {
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>(
+                "auto _result = zpt::storage::filter_find(_collection, "
+                "_params) //\n->execute()->fetch()");
+        }
+        else {
+            _method_try_body //
+              ->add<zpt::ast::cpp_instruction>(
+                "auto _result = _database //\n->sql(\"STATEMTENT HERE\")->fetch()");
+        }
+
         auto _if_block =
           zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
         _if_block //
@@ -993,8 +1067,6 @@ auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _c
 auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _cpp_file,
                                                      zpt::json _def,
                                                      zpt::json) -> void {
-    if (!_def("*")("requestBody")("dbCollection")->is_string()) { return; }
-
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def("*")("operationId")->string());
 
@@ -1005,18 +1077,39 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
       .add<zpt::ast::cpp_variable>("_params", "zpt::json");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
 
-    _method_body //
-      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>(
-        std::format("auto _collection = _session->database({})->collection(\"{}\")",
-                    this->__schema("info")("database")->string(),
-                    _def("*")("requestBody")("dbCollection")->string()))
-      .add<zpt::ast::cpp_instruction>(
-        std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
-      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
-      .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
-      .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
-                                      "_params) //\n->fields(_fields)->execute()->fetch(1)");
+    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+        _method_body //
+          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          .add<zpt::ast::cpp_instruction>(
+            std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                        this->__schema("info")("database")->string(),
+                        _def("*")("requestBody")("dbCollection")->string()))
+          .add<zpt::ast::cpp_instruction>(
+            std::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+          .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+          .add<zpt::ast::cpp_instruction>(this->remove_hidden_fields(_def))
+          .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
+                                          "_params) //\n->fields(_fields)->execute()->fetch(1)");
+    }
+    else if (_def("*")("requestBody")("zpt:view")->is_string()) {
+        _method_body //
+          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          .add<zpt::ast::cpp_instruction>(
+            std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                        this->__schema("info")("database")->string(),
+                        _def("*")("requestBody")("zpt:view")->string()))
+          .add<zpt::ast::cpp_instruction>("auto _result = zpt::storage::filter_find(_collection, "
+                                          "_params) //\n->execute()->fetch(1)");
+    }
+    else {
+        _method_body //
+          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          .add<zpt::ast::cpp_instruction>(std::format("auto _database = _session->database({})",
+                                                      this->__schema("info")("database")->string()))
+          .add<zpt::ast::cpp_instruction>(
+            "auto _result = _database //\n->sql(\"SQL STATEMENT HERE\")->fetch(1)");
+    }
+
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->size() != 0)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
@@ -1099,7 +1192,8 @@ auto zpt::gen::rest::unit::generate_get_element(zpt::ast::basic_file::ptr _cpp_f
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
-    if (_def("*")("requestBody")("dbCollection")->is_string()) {
+    if (_def("*")("requestBody")("dbCollection")->is_string() ||
+        _def("*")("requestBody")("zpt:view")->ok()) {
         _method_try_body //
           ->add<zpt::ast::cpp_instruction>(
             "auto _result = this->retrieve_element(_session, _params)");
@@ -1290,11 +1384,26 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
         _block->add<zpt::ast::cpp_instruction>(
           "auto _session = zpt::make_connection<db_connection_type>(_config)->session()");
         if (_with_collection) {
-            _block-> //
-              add<zpt::ast::cpp_instruction>(
-                std::format("auto _collection = _session->database({})->collection(\"{}\")",
-                            this->__schema("info")("database")->string(),
-                            _def("*")("requestBody")("dbCollection")->string()));
+            if (_def("*")("requestBody")("dbCollection")->is_string()) {
+                _block-> //
+                  add<zpt::ast::cpp_instruction>(
+                    std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                                this->__schema("info")("database")->string(),
+                                _def("*")("requestBody")("dbCollection")->string()));
+            }
+            else if (_def("*")("requestBody")("zpt:view")->is_string()) {
+                _block-> //
+                  add<zpt::ast::cpp_instruction>(
+                    std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                                this->__schema("info")("database")->string(),
+                                _def("*")("requestBody")("zpt:view")->string()));
+            }
+            else {
+                _block-> //
+                  add<zpt::ast::cpp_instruction>(
+                    std::format("auto _database = _session->database({})",
+                                this->__schema("info")("database")->string()));
+            }
         }
     }
 }

@@ -144,8 +144,7 @@ auto zpt::storage::pgsql::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::pgsql::session::sql(std::string const& _statement)
-  -> zpt::storage::session::type* {
+auto zpt::storage::pgsql::session::sql(std::string const& _statement) -> zpt::storage::result {
     auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
     if (!_ok) {
@@ -153,8 +152,12 @@ auto zpt::storage::pgsql::session::sql(std::string const& _statement)
         PQclear(_res);
         expect(false, std::format("SQL failed: {} — {}", _err, _statement));
     }
-    PQclear(_res);
-    return this;
+
+    pgsql_result_ptr _result{ _res, zpt::storage::pgsql::pgsql_result_deinit{} };
+
+    zpt::storage::result _to_return =
+      zpt::make_result<zpt::storage::pgsql::result>(this->__pgsql, _result);
+    return _to_return;
 }
 
 auto zpt::storage::pgsql::session::database(std::string const& _db) const
@@ -169,11 +172,31 @@ auto zpt::storage::pgsql::session::pgsql() const -> pgsql_ptr { return this->__p
 zpt::storage::pgsql::database::database(zpt::storage::pgsql::session const& _session,
                                         std::string const& _db)
   : __pgsql{ _session.pgsql() }
-  , __schema{ _db } {}
+  , __schema{ _db } {
+    auto* _res = PQexec(
+      this->__pgsql.get(),
+      std::format("SET search_path TO {}", zpt::storage::pgsql::quote(this->__schema)).data());
+    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
+    PQclear(_res);
+    expect(_ok,
+           std::format("Failed to set search path to current database: {}",
+                       PQerrorMessage(this->__pgsql.get())));
+}
 
-auto zpt::storage::pgsql::database::sql(std::string const&) -> zpt::storage::database::type* {
-    expect(false, "database `sql` method not implemented for PostgreSQL, use session's");
-    return this;
+auto zpt::storage::pgsql::database::sql(std::string const& _statement) -> zpt::storage::result {
+    auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
+    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
+    if (!_ok) {
+        auto _err = std::string{ PQerrorMessage(this->__pgsql.get()) };
+        PQclear(_res);
+        expect(false, std::format("SQL failed: {} — {}", _err, _statement));
+    }
+
+    pgsql_result_ptr _result{ _res, zpt::storage::pgsql::pgsql_result_deinit{} };
+
+    zpt::storage::result _to_return =
+      zpt::make_result<zpt::storage::pgsql::result>(this->__pgsql, _result);
+    return _to_return;
 }
 
 auto zpt::storage::pgsql::database::collection(std::string const& _collection) const
@@ -771,9 +794,12 @@ auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
 
 // ---- result ----
 
+zpt::storage::pgsql::result::result(pgsql_ptr _pgsql, pgsql_result_ptr _result)
+  : __pgsql{ _pgsql }
+  , __result{ _result } {}
+
 zpt::storage::pgsql::result::result(zpt::storage::pgsql::action& _action)
-  : __pgsql{ _action.pgsql() }
-  , __result{ _action.result() } {}
+  : zpt::storage::pgsql::result{ _action.pgsql(), _action.result() } {}
 
 zpt::storage::pgsql::result::result(zpt::storage::pgsql::action_add& _action)
   : zpt::storage::pgsql::result{ static_cast<zpt::storage::pgsql::action&>(_action) } {

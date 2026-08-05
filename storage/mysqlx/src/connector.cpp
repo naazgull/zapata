@@ -119,8 +119,7 @@ auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
-  -> zpt::storage::session::type* {
+auto zpt::storage::mysqlx::session::sql(std::string const& _statement) -> zpt::storage::result {
     mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
                              zpt::storage::mysqlx::mysql_stmt_end{} };
     expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
@@ -129,7 +128,9 @@ auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
     expect(0 == mysql_stmt_execute(_to_exec.get()),
            std::format(
              "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
-    return this;
+    zpt::storage::result _to_return =
+      zpt::make_result<zpt::storage::mysqlx::result>(this->__mysql, _to_exec);
+    return _to_return;
 }
 
 auto zpt::storage::mysqlx::session::database(std::string const& _db) const
@@ -149,9 +150,18 @@ zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session const& _s
              "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
 }
 
-auto zpt::storage::mysqlx::database::sql(std::string const&) -> zpt::storage::database::type* {
-    expect(false, "database `sql` method not implemented for MySQL XDevAPI, use session's");
-    return this;
+auto zpt::storage::mysqlx::database::sql(std::string const& _statement) -> zpt::storage::result {
+    mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
+                             zpt::storage::mysqlx::mysql_stmt_end{} };
+    expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
+           std::format(
+             "failed to prepare statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    expect(0 == mysql_stmt_execute(_to_exec.get()),
+           std::format(
+             "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
+    zpt::storage::result _to_return =
+      zpt::make_result<zpt::storage::mysqlx::result>(this->__mysql, _to_exec);
+    return _to_return;
 }
 
 auto zpt::storage::mysqlx::database::collection(std::string const& _collection) const
@@ -732,13 +742,16 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action& _action)
-  : __mysql{ _action.mysql() }
-  , __statement{ _action.statement() }
-  , __metadata{ _action.statement().get() } {
+zpt::storage::mysqlx::result::result(mysql_ptr _mysql, mysql_stmt_ptr _statement)
+  : __mysql{ _mysql }
+  , __statement{ _statement }
+  , __metadata{ _statement.get() } {
     mysql_stmt_bind_result(this->__statement.get(), this->__metadata.__bind.get());
     mysql_stmt_store_result(this->__statement.get());
 }
+
+zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action& _action)
+  : zpt::storage::mysqlx::result{ _action.mysql(), _action.statement() } {}
 
 zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_add& _action)
   : zpt::storage::mysqlx::result{ static_cast<zpt::storage::mysqlx::action&>(_action) } {

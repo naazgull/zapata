@@ -117,7 +117,7 @@ class session : public zpt::storage::session::type {
     /** @brief Rolls back the current transaction on all underlying SQLite connections. */
     virtual auto rollback() -> zpt::storage::session::type* override;
     /** @brief Executes a raw SQL statement directly on the session's connections. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Selects and returns the named database (SQLite file) within this session. */
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
     /** @brief Registers an additional SQLite database handle with this session. */
@@ -138,7 +138,7 @@ class database : public zpt::storage::database::type {
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
     /** @brief Executes a raw SQL statement directly against the SQLite database file. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Returns a collection (table) accessor for the given table name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
     /** @brief Returns the underlying sqlite3 handle for this database. */

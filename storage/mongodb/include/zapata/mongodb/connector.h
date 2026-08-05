@@ -114,7 +114,7 @@ class session : public zpt::storage::session::type {
     /** @brief No-op for MongoDB (transactions require replica sets). */
     virtual auto rollback() -> zpt::storage::session::type* override;
     /** @brief Not supported for MongoDB; always throws. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Selects a database within this session. */
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
 
@@ -135,7 +135,7 @@ class database : public zpt::storage::database::type {
     /** @brief Destructor. */
     virtual ~database() override = default;
     /** @brief Not supported for MongoDB; always throws. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Returns a collection handle for the given name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
 
@@ -438,6 +438,8 @@ class action_find : public zpt::storage::mongodb::action {
 /** @brief MongoDB query result set. */
 class result : public zpt::storage::result::type {
   public:
+    /** @brief Constructs a result from a cursor. */
+    result(mongodb_cursor_ptr __cursor);
     /** @brief Constructs a result from a generic action (cursor and client only). */
     result(zpt::storage::mongodb::action& _action);
     /** @brief Constructs a result from an insert action, capturing generated IDs. */

@@ -21,6 +21,10 @@ auto main(int, char**) -> int {
         _id2.assign(_result->to_json()("generated")(0)->string());
         zlog("---- There are " << _collection->count() << " records in the collection.", zpt::info);
     }
+    std::cout << _database //
+                   ->sql("select * from users")
+                   ->fetch()
+              << std::endl;
     {
         auto _result = _collection //
                          ->find({})
@@ -96,5 +100,6 @@ auto main(int, char**) -> int {
                          ->execute();
         zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
     }
+
     return 0;
 }
