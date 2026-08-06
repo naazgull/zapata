@@ -101,9 +101,10 @@ auto zpt::storage::mongodb::session::commit() -> zpt::storage::session::type* { 
 auto zpt::storage::mongodb::session::rollback() -> zpt::storage::session::type* { return this; }
 
 auto zpt::storage::mongodb::session::sql([[maybe_unused]] std::string const& _statement)
-  -> zpt::storage::session::type* {
+  -> zpt::storage::result {
     expect(false, "SQL is not supported for MongoDB");
-    return this;
+    mongodb_cursor_ptr _cursor{ nullptr };
+    return zpt::make_result<zpt::storage::mongodb::result>(_cursor);
 }
 
 auto zpt::storage::mongodb::session::database(std::string const& _db) const
@@ -121,9 +122,10 @@ zpt::storage::mongodb::database::database(zpt::storage::mongodb::session const& 
   , __db{ _db } {}
 
 auto zpt::storage::mongodb::database::sql([[maybe_unused]] std::string const& _statement)
-  -> zpt::storage::database::type* {
+  -> zpt::storage::result {
     expect(false, "SQL is not supported for MongoDB");
-    return this;
+    mongodb_cursor_ptr _cursor{ nullptr };
+    return zpt::make_result<zpt::storage::mongodb::result>(_cursor);
 }
 
 auto zpt::storage::mongodb::database::collection(std::string const& _collection) const
@@ -661,9 +663,11 @@ auto zpt::storage::mongodb::action_find::execute() -> zpt::storage::result {
 }
 
 // ---- result ----
+zpt::storage::mongodb::result::result(mongodb_cursor_ptr _cursor)
+  : __cursor{ _cursor } {}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action& _action)
-  : __cursor{ _action.cursor() } {}
+  : zpt::storage::mongodb::result{ _action.cursor() } {}
 
 zpt::storage::mongodb::result::result(zpt::storage::mongodb::action_add& _action)
   : zpt::storage::mongodb::result{ static_cast<zpt::storage::mongodb::action&>(_action) } {

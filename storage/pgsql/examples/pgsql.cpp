@@ -7,8 +7,8 @@ auto main(int, char**) -> int {
     _session->sql("create schema if not exists test");
     _session->sql("create table if not exists test.users (_id varchar(36) primary key, name TEXT, "
                   "address TEXT)");
-
-    auto _collection = _session->database("test")->collection("users");
+    auto _database = _session->database("test");
+    auto _collection = _database->collection("users");
     _collection //
       ->remove({})
       ->execute();
@@ -21,6 +21,16 @@ auto main(int, char**) -> int {
     std::cout << _collection //
                    ->find(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
                    ->execute()
+                   ->fetch()
+              << std::endl;
+
+    std::cout << _session //
+                   ->sql("select * from test.users where address like '%Down%'")
+                   ->fetch()
+              << std::endl;
+
+    std::cout << _database //
+                   ->sql("select * from users where address like '%Down%'")
                    ->fetch()
               << std::endl;
 

@@ -134,7 +134,7 @@ class session {
         /** @brief Returns true if session is open. */
         virtual auto is_open() const -> bool = 0;
         /** @brief Executes raw SQL statement. */
-        virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* = 0;
+        virtual auto sql(std::string const& _statement) -> zpt::storage::result = 0;
         /** @brief Commits the current transaction. */
         virtual auto commit() -> zpt::storage::session::type* = 0;
         /** @brief Rolls back the current transaction. */
@@ -182,7 +182,7 @@ class database {
         virtual ~type() = default;
 
         /** @brief Executes raw SQL statement. */
-        virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* = 0;
+        virtual auto sql(std::string const& _statement) -> zpt::storage::result = 0;
         /** @brief Gets a collection/table by name. */
         virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
     };

@@ -121,7 +121,7 @@ auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert, int _i
             return lua_tonumber(_to_convert, _index);
         }
         case LUA_TBOOLEAN: {
-            return static_cast<bool>(lua_toboolean(_to_convert, _index));
+            return zpt::json::boolean(static_cast<bool>(lua_toboolean(_to_convert, _index)));
         }
         case LUA_TSTRING: {
             return lua_tostring(_to_convert, _index);

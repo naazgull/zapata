@@ -125,7 +125,7 @@ class session : public zpt::storage::session::type {
     /** @brief Rolls back the current transaction. */
     virtual auto rollback() -> zpt::storage::session::type* override;
     /** @brief Executes a raw SQL statement on this session. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Selects a database (schema) within this session. */
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
 
@@ -145,7 +145,7 @@ class database : public zpt::storage::database::type {
     /** @brief Destructor. */
     virtual ~database() override = default;
     /** @brief Executes a raw SQL statement on this database. */
-    virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::result override;
     /** @brief Returns a collection (table) handle for the given name. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
 
@@ -430,7 +430,9 @@ class action_find : public zpt::storage::mysqlx::action {
 /** @brief MySQL query result set. */
 class result : public zpt::storage::result::type {
   public:
-    /** @brief Constructs a result from a generic action (executes the statement). */
+    /** @brief Constructs a result from the structures resulting from an SQL execution. */
+    result(mysql_ptr _mysql, mysql_stmt_ptr _statement);
+    /** @brief Constructs a result from a generic action. */
     result(zpt::storage::mysqlx::action& _action);
     /** @brief Constructs a result from an INSERT action, capturing generated IDs. */
     result(zpt::storage::mysqlx::action_add& _action);
