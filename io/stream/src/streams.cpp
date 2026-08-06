@@ -156,6 +156,12 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
+auto zpt::polling::mute(zpt::uuid _id) -> zpt::stream {
+    auto _stream = this->get(_id);
+    this->mute(_stream);
+    return _stream;
+}
+
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     if (!_stream->persistent()) {
         this->erase(_stream);

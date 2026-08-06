@@ -216,6 +216,8 @@ class polling : public std::enable_shared_from_this<polling> {
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     /** @brief Temporarily stops monitoring a stream. */
     auto mute(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Temporarily stops monitoring a stream. */
+    auto mute(zpt::uuid _id) -> zpt::stream;
     /** @brief Resumes monitoring a muted stream. */
     auto unmute(zpt::stream _stream) -> zpt::polling&;
 
