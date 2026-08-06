@@ -286,6 +286,10 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
     this->__to_send->status(0);
 }
 
+auto zpt::events::process::blocked() const -> bool {
+    return this->__context != nullptr && !this->__context->is_replied();
+}
+
 auto zpt::events::process::authorized() const -> bool { return true; }
 
 auto zpt::events::process::catch_error(std::exception const& _e, zpt::events::dispatcher::ptr)

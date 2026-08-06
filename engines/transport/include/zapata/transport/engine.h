@@ -229,6 +229,8 @@ class process {
 
     /** @brief Stores dispatcher, polling, and stream from initialization data. */
     virtual auto initialize(zpt::event_initialization& init) -> void final;
+    /** @brief Returns true if processing is blocked waiting for something. */
+    virtual auto blocked() const -> bool;
     /** @brief Returns true if the request is authorized. Default returns true. */
     virtual auto authorized() const -> bool;
     /** @brief Handles generic exceptions. Sends error response. Returns false. */
@@ -240,9 +242,6 @@ class process {
     /** @brief Handles expectation failures. Sends error response. Returns false. */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool final;
-
-    /** @brief Returns true if processing is blocked waiting for something. */
-    virtual auto blocked() const -> bool = 0;
     /** @brief Executes the message processing logic. */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 
