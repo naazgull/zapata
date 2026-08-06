@@ -8,6 +8,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "config", zpt::lua::bindings::get_config },
                            { "log", zpt::lua::bindings::log },
                            { "to_json", zpt::lua::bindings::to_json_str },
+                           { "sleep", zpt::lua::bindings::sleep },
                            { nullptr, nullptr } };
 }
 
@@ -62,10 +63,8 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
                             _reply->body() },
                           _state);
     }
-    else {
-        zpt::make_call(zpt::REST_RESOLVER(), _request);
-    }
-        
+    else { zpt::make_call(zpt::REST_RESOLVER(), _request); }
+
     return 1;
 }
 
@@ -94,6 +93,13 @@ auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
     _bridge.json_to_object(static_cast<std::string>(_args));
+    return 1;
+}
+
+auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+    std::this_thread::sleep_for(std::chrono::seconds{ static_cast<unsigned long>(_args) });
     return 1;
 }
 
