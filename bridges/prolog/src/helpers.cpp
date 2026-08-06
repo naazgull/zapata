@@ -82,11 +82,11 @@ auto zpt::prolog::term::operator=(term&& _rhs) -> term& {
     return (*this);
 }
 
-auto zpt::prolog::term::operator==(term const& _rhs) -> bool {
+auto zpt::prolog::term::operator==(term const& _rhs) const -> bool {
     return this->__underlying == _rhs.__underlying;
 }
 
-auto zpt::prolog::term::operator!=(term const& _rhs) -> bool { return !((*this) == _rhs); }
+auto zpt::prolog::term::operator!=(term const& _rhs) const -> bool { return !((*this) == _rhs); }
 
 auto zpt::prolog::term::emplace() -> term { return this->__children.emplace_back(); }
 

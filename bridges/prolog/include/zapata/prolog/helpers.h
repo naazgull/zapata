@@ -67,9 +67,9 @@ class term {
     /** @brief Moves assignment from another term. */
     auto operator=(term&& _rhs) -> term&;
     /** @brief Compares underlying term references for equality. */
-    auto operator==(term const& _rhs) -> bool;
+    auto operator==(term const& _rhs) const -> bool;
     /** @brief Compares underlying term references for inequality. */
-    auto operator!=(term const& _rhs) -> bool;
+    auto operator!=(term const& _rhs) const -> bool;
     /** @brief Emplaces a new child term and returns a reference to it. */
     auto emplace() -> term;
     /** @brief Appends a child term to this term's children list. */

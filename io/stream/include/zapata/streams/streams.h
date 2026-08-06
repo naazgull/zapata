@@ -43,6 +43,7 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/locks/spin_mutex.h>
 #include <zapata/text/convert.h>
+#include <zapata/uuid.h>
 
 namespace zpt {
 
@@ -129,13 +130,15 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     /** @brief Sets the peer address and port on the underlying socket. */
     template<typename IOStream>
     auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
+    virtual auto uuid() const -> zpt::uuid const& final;
     virtual auto close() -> basic_stream&;
     virtual auto shutdown() -> basic_stream&;
     virtual auto transport(const std::string& _rhs) -> basic_stream&;
     virtual auto transport() -> std::string&;
     virtual auto uri(const std::string& _rhs) -> basic_stream&;
     virtual auto uri() -> std::string&;
-    virtual auto state() -> stream_state&;
+    virtual auto state(stream_state _rhs) -> basic_stream&;
+    virtual auto state() -> stream_state;
     virtual auto persistent() -> bool;
     virtual auto metadata(std::any _metadata) -> basic_stream&;
     virtual auto metadata() const -> std::any const&;
@@ -145,16 +148,18 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     zpt::allocator<std::iostream>::unique_pointer __underlying{ nullptr };
     /** @brief File descriptor associated with this stream. */
     int __fd{ -1 };
+    /** @brief The stream's unique identifier */
+    zpt::uuid __uuid;
+    /** @brief Current stream processing state. */
+    std::atomic<zpt::stream_state> __state{ zpt::stream_state::IDLE };
     /** @brief Transport scheme (e.g., "tcp", "udp", "unix"). */
     std::string __transport{ "" };
     /** @brief URI string representation of this stream. */
     std::string __uri{ "" };
-    /** @brief Current stream processing state. */
-    zpt::stream_state __state{ zpt::stream_state::IDLE };
     /** @brief Arbitrary metadata attached to this stream. */
     std::any __metadata;
     /** @brief Whether this stream is currently muted (not monitored by polling). */
-    bool __muted{ true };
+    std::atomic<bool> __muted{ true };
 
     /** @brief Extracts the URI from the underlying iostream. */
     auto extract_uri() -> void;
@@ -226,9 +231,10 @@ class polling : public std::enable_shared_from_this<polling> {
     int __epoll_fd{ -1 };
     /** @brief Mutex protecting the polled streams map. */
     zpt::locks::spin_mutex __poll_lock;
-    // std::shared_mutex __poll_lock;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
     std::map<int, zpt::stream> __polled_streams;
+    /** @brief Map of file descriptors to stream pointers currently being monitored. */
+    std::map<zpt::uuid, zpt::stream> __polled_streams_by_uuid;
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
     /** @brief Flag indicating that shutdown has been initiated. */
@@ -236,10 +242,12 @@ class polling : public std::enable_shared_from_this<polling> {
 
     /** @brief Registers a stream with epoll (called by listen_on). */
     auto insert(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Retrieves the stream associated with the given identifier. */
-    auto get(int _stream_id) -> zpt::stream;
     /** @brief Removes a stream from epoll and the polled map. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Retrieves the stream associated with the given file descriptor. */
+    auto get(int _stream_fd) -> zpt::stream;
+    /** @brief Retrieves the stream associated with the given identifier. */
+    auto get(zpt::uuid const& _stream_id) -> zpt::stream;
     /** @brief Dispatches a ready stream to all registered delegates. */
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };

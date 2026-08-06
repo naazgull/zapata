@@ -60,9 +60,11 @@ auto zpt::uuid::operator=(uuid&& _rhs) -> uuid& {
     return (*this);
 }
 
-auto zpt::uuid::operator==(uuid const& _rhs) -> bool { return (this->__base == _rhs.__base); }
+auto zpt::uuid::operator==(uuid const& _rhs) const -> bool { return (this->__base == _rhs.__base); }
 
-auto zpt::uuid::operator!=(uuid const& _rhs) -> bool { return !((*this) == _rhs); }
+auto zpt::uuid::operator!=(uuid const& _rhs) const -> bool { return !((*this) == _rhs); }
+
+auto zpt::uuid::operator<(uuid const& _rhs) const -> bool { return this->__base < _rhs.__base; }
 
 zpt::uuid::operator std::string() { return this->to_string(); }
 

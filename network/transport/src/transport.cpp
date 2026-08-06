@@ -34,11 +34,11 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
                "Stream not in a valid state for receiving");
 
         if (_stream->state() == zpt::stream_state::IDLE) {
-            _stream->state() = zpt::stream_state::PROCESSING;
+            _stream->state(zpt::stream_state::PROCESSING);
             _to_return = this->process_incoming_request(_stream);
         }
         else if (_stream->state() == zpt::stream_state::WAITING) {
-            _stream->state() = zpt::stream_state::IDLE;
+            _stream->state(zpt::stream_state::IDLE);
             _to_return = this->process_incoming_reply(_stream);
         }
     }
@@ -77,11 +77,11 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
 
     if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         if (_stream->state() == zpt::stream_state::IDLE) {
-            _stream->state() = zpt::stream_state::WAITING;
+            _stream->state(zpt::stream_state::WAITING);
         }
         else if (_stream->state() == zpt::stream_state::PROCESSING ||
                  _stream->state() == zpt::stream_state::ERRORING_OUT) {
-            _stream->state() = zpt::stream_state::IDLE;
+            _stream->state(zpt::stream_state::IDLE);
         }
     }
 }

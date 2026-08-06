@@ -100,14 +100,14 @@ class padded_atomic {
      * @param _rhs The value to compare against.
      * @return True if the stored value equals _rhs.
      */
-    auto operator==(T const& _rhs) -> bool;
+    auto operator==(T const& _rhs) const -> bool;
 
     /**
      * @brief Inequality comparison with a value.
      * @param _rhs The value to compare against.
      * @return True if the stored value does not equal _rhs.
      */
-    auto operator!=(T const& _rhs) -> bool;
+    auto operator!=(T const& _rhs) const -> bool;
 
     /**
      * @brief Implicit conversion to the underlying type.
@@ -163,12 +163,12 @@ template<typename T>
 zpt::padded_atomic<T>::~padded_atomic() {}
 
 template<typename T>
-auto zpt::padded_atomic<T>::operator==(T const& _rhs) -> bool {
+auto zpt::padded_atomic<T>::operator==(T const& _rhs) const -> bool {
     return (this->__underlying.load(std::memory_order_relaxed)) == _rhs;
 }
 
 template<typename T>
-auto zpt::padded_atomic<T>::operator!=(T const& _rhs) -> bool {
+auto zpt::padded_atomic<T>::operator!=(T const& _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 

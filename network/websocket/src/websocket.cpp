@@ -169,13 +169,13 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
     try {
         auto _message = zpt::allocate_message<request_type>();
         (*_stream) >> std::noskipws >> _message;
-        _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
+        _message->header("X-Socket-ID", _stream->uuid().to_string());
         return _message;
     }
     catch (::non_json_message const& _e) {
         auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
         _message //
-          ->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)))
+          ->header("X-Socket-ID", _stream->uuid().to_string())
           .body() = _e.__original;
         return _message;
     }

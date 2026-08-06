@@ -65,6 +65,8 @@ auto zpt::basic_stream::write_without_io(std::any const&) -> basic_stream& {
 
 auto zpt::basic_stream::has_next() const -> bool { return false; }
 
+auto zpt::basic_stream::uuid() const -> zpt::uuid const& { return this->__uuid; }
+
 auto zpt::basic_stream::close() -> zpt::basic_stream& {
     zlog("Closing connection to " << this->uri(), zpt::trace);
     this->__underlying.reset(nullptr);
@@ -95,7 +97,12 @@ auto zpt::basic_stream::uri(const std::string& _rhs) -> zpt::basic_stream& {
 
 auto zpt::basic_stream::uri() -> std::string& { return this->__uri; }
 
-auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
+auto zpt::basic_stream::state(zpt::stream_state _rhs) -> basic_stream& {
+    this->__state.store(_rhs);
+    return (*this);
+}
+
+auto zpt::basic_stream::state() -> zpt::stream_state { return this->__state; }
 
 auto zpt::basic_stream::persistent() -> bool { return true; }
 
@@ -117,6 +124,7 @@ zpt::polling::~polling() {
 auto zpt::polling::close() -> zpt::polling& {
     for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
     this->__polled_streams.clear();
+    this->__polled_streams_by_uuid.clear();
     return (*this);
 }
 
@@ -141,16 +149,14 @@ auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
-    if (_stream->__muted) { return (*this); }
+    expect(!_stream->__muted.exchange(true), "Stream is already muted");
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
-    _stream->__muted = true;
     return (*this);
 }
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
-    if (!_stream->__muted) { return (*this); }
     if (!_stream->persistent()) {
         this->erase(_stream);
         return (*this);
@@ -160,7 +166,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
 
-    _stream->__muted = false;
+    expect(_stream->__muted.exchange(false), "Stream is already unmuted");
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -177,7 +183,8 @@ auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     _new_event.data.ptr = _stream.get();
     {
         std::unique_lock _sentry{ this->__poll_lock };
-        this->__polled_streams[static_cast<int>(*_stream)] = _stream;
+        this->__polled_streams.insert(std::make_pair(static_cast<int>(*_stream), _stream));
+        this->__polled_streams_by_uuid.insert(std::make_pair(_stream->uuid(), _stream));
     }
     _stream->__muted = false;
     auto _fd = static_cast<int>(*_stream);
@@ -191,15 +198,23 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     {
         std::unique_lock _sentry{ this->__poll_lock };
         this->__polled_streams.erase(this->__polled_streams.find(_fd));
+        this->__polled_streams_by_uuid.erase(this->__polled_streams_by_uuid.find(_stream->uuid()));
     }
     _stream->shutdown();
     return (*this);
 }
 
-auto zpt::polling::get(int _stream_id) -> zpt::stream {
+auto zpt::polling::get(int _stream_fd) -> zpt::stream {
     std::shared_lock _sentry{ this->__poll_lock };
-    auto _found = this->__polled_streams.find(_stream_id);
+    auto _found = this->__polled_streams.find(_stream_fd);
     expect(_found != this->__polled_streams.end(), "no such stream");
+    return _found->second;
+}
+
+auto zpt::polling::get(zpt::uuid const& _stream_id) -> zpt::stream {
+    std::shared_lock _sentry{ this->__poll_lock };
+    auto _found = this->__polled_streams_by_uuid.find(_stream_id);
+    expect(_found != this->__polled_streams_by_uuid.end(), "no such stream");
     return _found->second;
 }
 
