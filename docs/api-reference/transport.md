@@ -274,8 +274,6 @@ Raw TCP with JSON message framing.
 
 WebSocket (RFC 6455) bidirectional messaging.
 
-**Server socket:** `zpt::WEBSOCKET_SERVER_SOCKET(port)`
-
 #### WebSocket Utilities
 
 ```cpp

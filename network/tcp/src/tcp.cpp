@@ -62,6 +62,6 @@ auto zpt::net::transport::tcp::process_incoming_reply(zpt::stream _stream) const
 
 auto zpt::TCP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
   -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _address, _port };
+    static zpt::serversocketstream _global{ "tcp", _address, _port };
     return _global;
 }

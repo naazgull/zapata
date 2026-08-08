@@ -142,8 +142,14 @@ auto zpt::net::ws::write(std::ostream& _stream, std::string const& _in, bool _ma
     _stream.flush();
 }
 
+auto zpt::net::transport::websocket::upgraded_from() const -> std::string const& {
+    static std::string _return{ "http" };
+    return _return;
+}
+
 auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) const -> bool {
-    static constexpr std::uint64_t _capabilities = zpt::transport_capability::PERSISTENT;
+    static constexpr std::uint64_t _capabilities =
+      zpt::transport_capability::PERSISTENT | zpt::transport_capability::UPGRADED;
     return (_capabilities & _capability) == _capability;
 }
 
@@ -169,14 +175,11 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
     try {
         auto _message = zpt::allocate_message<request_type>();
         (*_stream) >> std::noskipws >> _message;
-        _message->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)));
         return _message;
     }
     catch (::non_json_message const& _e) {
         auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
-        _message //
-          ->header("X-Socket-ID", std::to_string(static_cast<int>(*_stream)))
-          .body() = _e.__original;
+        _message->body() = _e.__original;
         return _message;
     }
 }
@@ -184,10 +187,4 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
 auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
     return this->process_incoming_request(_stream);
-}
-
-auto zpt::WEBSOCKET_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
-  -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _address, _port };
-    return _global;
 }

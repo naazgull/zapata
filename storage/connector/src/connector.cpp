@@ -34,14 +34,18 @@ auto value_output(zpt::json _value, std::ostream& _find) -> void {
     else { _find << _value << std::flush; }
 }
 auto func_default(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void {
-    bool _first{ true };
     _find << "(";
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
+    _find << " = " << _functor << "(";
+    size_t _idx{ 0 };
     for (auto&& [_, __, _value] : _params) {
-        if (!_first) { _find << " " << _functor << " "; }
-        zpt::storage::functional_to_sql(_value, _find, ::value_output);
-        _first = false;
+        if (_idx != 0) {
+            if (_idx != 1) { _find << ", "; }
+            zpt::storage::functional_to_sql(_value, _find, ::value_output);
+        }
+        ++_idx;
     }
-    _find << ")" << std::flush;
+    _find << "))" << std::flush;
 }
 auto func_lower(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
@@ -189,13 +193,30 @@ auto func_like(zpt::json _params, std::ostream& _find) -> void {
         _find << ")" << std::flush;
     }
 }
+auto func_in(zpt::json _params, std::ostream& _find) -> void {
+    _find << "(";
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
+    _find << " in (";
+    size_t _idx{ 0 };
+    for (auto&& [_, __, _value] : _params) {
+        if (_idx != 0) {
+            if (_idx != 1) { _find << ", "; }
+            zpt::storage::functional_to_sql(_value, _find, ::value_output);
+        }
+        ++_idx;
+    }
+    _find << "))" << std::flush;
+}
 auto functors() -> std::map<std::string, zpt::storage::functor>& {
     static std::map<std::string, zpt::storage::functor> _funcs = {
-        { "lower", ::func_lower },     { "upper", ::func_upper },     { "boolean", ::func_boolean },
-        { "date", ::func_date },       { "integer", ::func_integer }, { "float", ::func_floating },
-        { "double", ::func_floating }, { "string", ::func_string },   { "ne", ::func_ne },
-        { "gt", ::func_gt },           { "gte", ::func_gte },         { "lt", ::func_lt },
-        { "lte", ::func_lte },         { "between", ::func_between }, { "like", ::func_like }
+        { "lower", ::func_lower },     { "upper", ::func_upper },
+        { "boolean", ::func_boolean }, { "date", ::func_date },
+        { "integer", ::func_integer }, { "float", ::func_floating },
+        { "double", ::func_floating }, { "string", ::func_string },
+        { "ne", ::func_ne },           { "gt", ::func_gt },
+        { "gte", ::func_gte },         { "lt", ::func_lt },
+        { "lte", ::func_lte },         { "between", ::func_between },
+        { "like", ::func_like },       { "in", ::func_in }
     };
     return _funcs;
 }

@@ -8,6 +8,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "config", zpt::lua::bindings::get_config },
                            { "log", zpt::lua::bindings::log },
                            { "to_json", zpt::lua::bindings::to_json_str },
+                           { "sleep", zpt::lua::bindings::sleep },
                            { nullptr, nullptr } };
 }
 
@@ -25,9 +26,10 @@ auto zpt::lua::bindings::make_request(lua_State* _state) -> int {
 auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
-    auto _request = zpt::TRANSPORT_LAYER() //
-                      .get(_args("protocol")->string())
-                      ->make_request();
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(_args("protocol")->string());
+
+    auto _request = _transport->make_request();
     _request //
       ->performative(zpt::ontology::from_str(_args("performative")->string()))
       .uri(_args("uri"))
@@ -35,30 +37,34 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
 
     if (_args("body")->ok()) { _request->body() = _args("body"); }
 
-    static constexpr long long _timeout{ 20 };
-    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now().time_since_epoch())
-                    .count();
-    auto _context = zpt::make_call<>(zpt::REST_RESOLVER(), _request);
-    while (_context->state() <= zpt::CALL_STATE_SENT) {
-        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
-                      std::chrono::steady_clock::now().time_since_epoch())
-                      .count();
-        if (_lap - _start > _timeout) {
-            _bridge.to_object({ "status", 408 }, _state);
-            return 0;
+    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+        auto _context = zpt::make_call(zpt::REST_RESOLVER(), _request);
+        static constexpr long long _timeout{ 20 };
+        auto _start = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::steady_clock::now().time_since_epoch())
+                        .count();
+        while (_context->state() <= zpt::CALL_STATE_SENT) {
+            auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
+                          std::chrono::steady_clock::now().time_since_epoch())
+                          .count();
+            if (_lap - _start > _timeout) {
+                _bridge.to_object({ "status", 408 }, _state);
+                return 0;
+            }
+            std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
         }
-        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
-    }
 
-    auto _reply = _context->reply();
-    _bridge.to_object({ "status", //
-                        _reply->status(),
-                        "headers",
-                        _reply->headers(),
-                        "body",
-                        _reply->body() },
-                      _state);
+        auto _reply = _context->reply();
+        _bridge.to_object({ "status", //
+                            _reply->status(),
+                            "headers",
+                            _reply->headers(),
+                            "body",
+                            _reply->body() },
+                          _state);
+    }
+    else { zpt::make_call(zpt::REST_RESOLVER(), _request); }
+
     return 1;
 }
 
@@ -87,6 +93,13 @@ auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
     _bridge.json_to_object(static_cast<std::string>(_args));
+    return 1;
+}
+
+auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+    std::this_thread::sleep_for(std::chrono::seconds{ static_cast<unsigned long>(_args) });
     return 1;
 }
 

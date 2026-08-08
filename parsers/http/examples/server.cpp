@@ -31,7 +31,7 @@ auto main(int argc, char* argv[]) -> int {
         std::uint16_t _port{ 0 };
         _iss >> _port;
 
-        zpt::serversocketstream _ssock{ "0.0.0.0", _port };
+        zpt::serversocketstream _ssock{ "http", "0.0.0.0", _port };
         do {
             auto _csock = _ssock->accept();
             auto _t1 = std::chrono::high_resolution_clock::now();

@@ -35,10 +35,9 @@ auto main(int argc, char* argv[]) -> int {
 
         if (_type == "server") {
 
-            zpt::serversocketstream _ssock{ "0.0.0.0", _port };
+            zpt::serversocketstream _ssock{ "tcp", "0.0.0.0", _port };
             do {
                 auto _stream = _ssock->accept();
-                _stream->transport("tcp");
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 auto _received = _transport->receive(_stream);
                 auto _t2 = std::chrono::high_resolution_clock::now();
@@ -64,10 +63,8 @@ auto main(int argc, char* argv[]) -> int {
               .body() =
               R"({"services":[{"_id":"/NOTIFY/minions/boot","hash":0,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"},{"_id":"/POST/minions/hello","hash":1,"metadata":"{\"host\":\"localhost\"}","provider":"<self>"}],"headers":{"Cache-Control":"no-store","Content-Type":"application/json","Date":"Sun, 10 Aug 2025 15:17:01 WEST","Host":"192.168.50.11:8083","X-Conversation-ID":"26a97074-a68d-4227-a6fd-fdfd2d6f6369","X-Version":"1.1"},"performative":"POST","uri":{"domain":"192.168.50.11","is_relative":false,"path":["minions","hello"],"port":8083,"raw_path":"/minions/hello","scheme":"tcp"}})"_JSON;
 
-            auto _stream =
-              zpt::make_stream<zpt::socketstream>("127.0.0.1", _port, zpt::NO_SSL, IPPROTO_TCP);
-            _stream //
-              ->transport("tcp");
+            auto _stream = zpt::make_stream<zpt::socketstream>(
+              "tcp", "127.0.0.1", _port, zpt::NO_SSL, IPPROTO_TCP);
 
             _transport->send(_stream, _message);
             std::this_thread::sleep_for(std::chrono::seconds{ 60 });

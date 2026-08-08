@@ -15,8 +15,7 @@ auto zpt::http::retrieve(zpt::message _to_send) -> zpt::message {
     auto _port = _to_send->uri()("port")->ok() ? _to_send->uri()("port")->integer() : 0;
 
     auto _stream = zpt::make_stream<zpt::socketstream>(
-      _domain, (_port == 0 ? (_use_ssl ? 443 : 80) : _port), _use_ssl, IPPROTO_TCP);
-
+      "http", _domain, (_port == 0 ? (_use_ssl ? 443 : 80) : _port), _use_ssl, IPPROTO_TCP);
     _stream //
       ->write<zpt::message>(_to_send);
 

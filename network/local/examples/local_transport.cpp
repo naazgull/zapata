@@ -31,10 +31,9 @@ auto main(int argc, char* argv[]) -> int {
 
         if (_scheme == "unix") {
             zpt::transport _transport{ new zpt::net::transport::unix_socket{} };
-            zpt::serversocketstream _ssock{ _path };
+            zpt::serversocketstream _ssock{ _scheme, _path };
             do {
                 auto _stream = _ssock->accept();
-                _stream->transport("unix");
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 auto _received = _transport->receive(_stream);
                 auto _t2 = std::chrono::high_resolution_clock::now();
@@ -53,11 +52,9 @@ auto main(int argc, char* argv[]) -> int {
         }
         if (_scheme == "file") {
             zpt::transport _transport{ new zpt::net::transport::file{} };
-            auto _in = zpt::make_stream<std::fstream>(_path, std::ios_base::in);
+            auto _in = zpt::make_stream<std::fstream>("file", _path, std::ios_base::in);
             auto _out = zpt::make_stream<std::fstream>(
-              _path, std::ios_base::out | std::ios_base::ate | std::ios_base::app);
-            _in->transport("file");
-            _out->transport("file");
+              "file", _path, std::ios_base::out | std::ios_base::ate | std::ios_base::app);
             auto _t1 = std::chrono::high_resolution_clock::now();
             auto _received = _transport->receive(_in);
             auto _t2 = std::chrono::high_resolution_clock::now();

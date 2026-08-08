@@ -74,6 +74,6 @@ auto zpt::net::transport::http::process_incoming_reply(zpt::stream _stream) cons
 
 auto zpt::HTTP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
   -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _address, _port };
+    static zpt::serversocketstream _global{ "http", _address, _port };
     return _global;
 }

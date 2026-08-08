@@ -33,7 +33,7 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
         return nullptr;
     }
 
-    _stream->state() = zpt::stream_state::ERRORING_OUT;
+    _stream->state(zpt::stream_state::ERRORING_OUT);
     auto _reply = _transport->make_reply(false);
     auto _body = ::get_error_body(_e);
     _reply //
@@ -89,39 +89,47 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
     auto _upgrade = _received->headers()("Upgrade");
     if (_upgrade->ok()) {
         auto _value = _upgrade->string();
-        auto _transport = zpt::TRANSPORT_LAYER() //
-                            .get(this->__stream->transport());
-        auto _reply = _transport->make_reply(false);
-        _reply //
-          ->status(101)
-          .header("Upgrade", _value)
-          .header("Connection", "upgrade");
 
-        if (_value == "websocket") {
-            _value = "ws";
+        if (_received->performative() == zpt::Reply) {
+            expect(_received->status() == 101, "Server didn't comply with the upgrade request");
+            _received->body() = { "stream", this->__stream->uuid() };
 
-            std::string _key;
-            if (_received->headers()("Sec-WebSocket-Key")->ok()) {
-                _key.assign(_received->headers()("Sec-WebSocket-Key")->string());
-            }
-            _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-            _reply->header("Sec-WebSocket-Accept",
-                           zpt::base64::r_encode(zpt::crypto::sha1_bytes(_key)));
+            if (_value == "websocket") { _value = "ws"; }
+            this->__polling->upgrade(this->__stream, _value);
+            return false;
         }
+        else {
+            auto _transport = zpt::TRANSPORT_LAYER() //
+                                .get(this->__stream->transport());
+            auto _reply = _transport->make_reply(_received);
+            _reply //
+              ->status(101)
+              .header("Upgrade", _value)
+              .header("Connection", "upgrade");
 
-        _transport->send(this->__stream, _reply);
-        auto _metadata = _received->clone();
-        _metadata //
-          ->headers()
-          ->object()
-          ->pop("Connection")
-          .pop("Upgrade");
-        this
-          ->__stream //
-          ->transport(_value)
-          .metadata(std::make_any<zpt::message>(_metadata));
+            if (_value == "websocket") {
+                _value = "ws";
 
-        return true;
+                std::string _key;
+                if (_received->headers()("Sec-WebSocket-Key")->ok()) {
+                    _key.assign(_received->headers()("Sec-WebSocket-Key")->string());
+                }
+                _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+                _reply->header("Sec-WebSocket-Accept",
+                               zpt::base64::r_encode(zpt::crypto::sha1_bytes(_key)));
+            }
+
+            _transport->send(this->__stream, _reply);
+            auto _metadata = _received->clone();
+            _metadata //
+              ->headers()
+              ->object()
+              ->pop("Connection")
+              .pop("Upgrade");
+            this->__stream->metadata(std::make_any<zpt::message>(_metadata));
+            this->__polling->upgrade(this->__stream, _value);
+            return true;
+        }
     }
     return false;
 }
@@ -264,6 +272,8 @@ auto zpt::events::process::transport_type() const -> std::string const& {
     return this->__stream->transport();
 }
 
+auto zpt::events::process::stream() const -> zpt::stream { return this->__stream; }
+
 auto zpt::events::process::received() const -> zpt::message const { return this->__received; }
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
@@ -284,6 +294,10 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
                         .get(this->__stream->transport());
     this->__to_send = _transport->make_reply(this->__received);
     this->__to_send->status(0);
+}
+
+auto zpt::events::process::blocked() const -> bool {
+    return this->__context != nullptr && !this->__context->is_replied();
 }
 
 auto zpt::events::process::authorized() const -> bool { return true; }

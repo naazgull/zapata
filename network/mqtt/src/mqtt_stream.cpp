@@ -32,10 +32,9 @@ auto check_error(std::string const& _operation, int _return, int _errno) -> void
 }
 
 zpt::mqtt_stream::mqtt_stream(zpt::json _config)
-  : __mosq{ nullptr }
-  , __config{ _config } {
-    this->__transport = "mqtt";
-}
+  : zpt::basic_stream{ "mqtt" }
+  , __mosq{ nullptr }
+  , __config{ _config } {}
 
 auto zpt::mqtt_stream::operator=(int) -> zpt::mqtt_stream& { return (*this); }
 
@@ -102,7 +101,7 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
     auto _tls = this->__config("ssl")->is_bool() && this->__config("ssl")->boolean();
     auto _port = this->__config("port")->integer();
     auto _keep_alive = 1000;
-    this->__uri = std::format("{}://{}:{}", _tls ? "mqtts" : "mqtt", _host, _port);
+    this->__uri = std::format("mqtt{}://{}:{}", _tls ? "+ssl" : "", _host, _port);
     {
         std::unique_lock _guard{ this->__mosq_mutex };
         // Init mosquitto.

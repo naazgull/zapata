@@ -63,6 +63,6 @@ auto zpt::net::transport::unix_socket::process_incoming_reply(zpt::stream _strea
 }
 
 auto zpt::UNIX_SERVER_SOCKET(std::string const& _path) -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ _path };
+    static zpt::serversocketstream _global{ "unix", _path };
     return _global;
 }

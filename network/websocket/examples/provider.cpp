@@ -27,6 +27,11 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
+namespace {
+inline std::shared_mutex ___mutex;
+inline zpt::uuid ___stream_id;
+} // namespace
+
 class ws_example_endpoint : public zpt::events::process {
   public:
     using zpt::events::process::process;
@@ -36,6 +41,8 @@ class ws_example_endpoint : public zpt::events::process {
 
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
+        std::unique_lock _guard{ ::___mutex };
+        ::___stream_id = this->stream()->uuid();
         this
           ->to_send() //
           ->status(200)
@@ -44,14 +51,43 @@ class ws_example_endpoint : public zpt::events::process {
     }
 };
 
-extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Registering listeners for module 'ws_test'", zpt::info);
     auto _resolver = zpt::REST_RESOLVER();
-    _resolver->add<ws_example_endpoint>("/ws/echo");
+    _resolver->add<ws_example_endpoint>("/ws/chat");
+
+    auto _null_id = ___stream_id;
+    _plugin.add_thread([=]() mutable -> void {
+        zpt::this_thread::name("ws_test_sender");
+        auto _polling = zpt::STREAM_POLLING();
+        auto _transport = zpt::TRANSPORT_LAYER() //
+                            .get("ws");
+
+        while (!_polling->is_in_shutdown()) {
+            std::shared_lock _guard{ ::___mutex };
+            if (___stream_id != _null_id) {
+                try {
+                    auto _stream = _polling->mute(___stream_id);
+                    auto _message = _transport->make_request();
+                    _message //
+                      ->performative(zpt::Post)
+                      .uri("/ws/chat")
+                      .body() = { "echo", std::format("Message for {}", ___stream_id.to_string()) };
+
+                    _transport->send(_stream, _message);
+                    _polling->unmute(_stream);
+                    _null_id = ___stream_id;
+                }
+                catch (...) {
+                }
+            }
+            std::this_thread::yield();
+        }
+    });
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading module 'ws_test'", zpt::info);
     auto _resolver = zpt::REST_RESOLVER();
-    _resolver->remove<ws_example_endpoint>("/ws/echo");
+    _resolver->remove<ws_example_endpoint>("/ws/chat");
 }

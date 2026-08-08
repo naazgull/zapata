@@ -34,9 +34,8 @@ auto check_error(std::string const& _operation, int _errno) -> void;
 }
 
 zpt::amqp_stream::amqp_stream(zpt::json _config)
-  : __config{ _config } {
-    this->__transport = "amqp";
-}
+  : zpt::basic_stream{ "amqp" }
+  , __config{ _config } {}
 
 auto zpt::amqp_stream::operator=(int) -> zpt::amqp_stream& { return (*this); }
 

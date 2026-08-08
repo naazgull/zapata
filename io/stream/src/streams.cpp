@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <systemd/sd-daemon.h>
+#include <zapata/exceptions/NoSuchElementException.h>
 #include <zapata/streams/streams.h>
 
 namespace {
@@ -31,11 +32,8 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 1000 };
 } // namespace
 
-zpt::basic_stream::basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying)
-  : __underlying{ std::move(_underlying) }
-  , __fd{ -1 } {
-    this->__underlying->exceptions(std::ios_base::failbit);
-}
+zpt::basic_stream::basic_stream(std::string const& _transport)
+  : __transport{ _transport } {}
 
 zpt::basic_stream::~basic_stream() { this->close(); }
 
@@ -65,6 +63,8 @@ auto zpt::basic_stream::write_without_io(std::any const&) -> basic_stream& {
 
 auto zpt::basic_stream::has_next() const -> bool { return false; }
 
+auto zpt::basic_stream::uuid() const -> zpt::uuid const& { return this->__uuid; }
+
 auto zpt::basic_stream::close() -> zpt::basic_stream& {
     zlog("Closing connection to " << this->uri(), zpt::trace);
     this->__underlying.reset(nullptr);
@@ -81,21 +81,23 @@ auto zpt::basic_stream::shutdown() -> zpt::basic_stream& {
     return (*this);
 }
 
-auto zpt::basic_stream::transport(const std::string& _rhs) -> zpt::basic_stream& {
+auto zpt::basic_stream::upgrade(const std::string& _rhs) -> zpt::basic_stream& {
     this->__transport = _rhs;
+    this->__uri =
+      std::format("{}{}", this->__transport, this->__uri.substr(this->__uri.find("://")));
     return (*this);
 }
 
 auto zpt::basic_stream::transport() -> std::string& { return this->__transport; }
 
-auto zpt::basic_stream::uri(const std::string& _rhs) -> zpt::basic_stream& {
-    this->__uri = _rhs;
+auto zpt::basic_stream::uri() -> std::string& { return this->__uri; }
+
+auto zpt::basic_stream::state(zpt::stream_state _rhs) -> basic_stream& {
+    this->__state.store(_rhs);
     return (*this);
 }
 
-auto zpt::basic_stream::uri() -> std::string& { return this->__uri; }
-
-auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
+auto zpt::basic_stream::state() -> zpt::stream_state { return this->__state; }
 
 auto zpt::basic_stream::persistent() -> bool { return true; }
 
@@ -117,6 +119,8 @@ zpt::polling::~polling() {
 auto zpt::polling::close() -> zpt::polling& {
     for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
     this->__polled_streams.clear();
+    this->__polled_streams_by_uuid.clear();
+    this->__polled_streams_by_uri.clear();
     return (*this);
 }
 
@@ -141,16 +145,26 @@ auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
 }
 
 auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
-    if (_stream->__muted) { return (*this); }
+    expect(!_stream->__muted.exchange(true), "Stream is already muted");
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
-    _stream->__muted = true;
     return (*this);
 }
 
+auto zpt::polling::mute(zpt::uuid const& _id) -> zpt::stream {
+    auto _stream = this->get(_id);
+    this->mute(_stream);
+    return _stream;
+}
+
+auto zpt::polling::mute(std::string const& _uri) -> zpt::stream {
+    auto _stream = this->get(_uri);
+    this->mute(_stream);
+    return _stream;
+}
+
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
-    if (!_stream->__muted) { return (*this); }
     if (!_stream->persistent()) {
         this->erase(_stream);
         return (*this);
@@ -160,7 +174,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
 
-    _stream->__muted = false;
+    expect(_stream->__muted.exchange(false), "Stream is already unmuted");
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -171,13 +185,23 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
+auto zpt::polling::upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling& {
+    std::unique_lock _sentry{ this->__poll_lock };
+    this->__polled_streams_by_uri.erase(this->__polled_streams_by_uri.find(_stream->uri()));
+    _stream->upgrade(_transport);
+    this->__polled_streams_by_uri.insert(std::make_pair(_stream->uri(), _stream));
+    return (*this);
+}
+
 auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = _stream.get();
     {
         std::unique_lock _sentry{ this->__poll_lock };
-        this->__polled_streams[static_cast<int>(*_stream)] = _stream;
+        this->__polled_streams.insert(std::make_pair(static_cast<int>(*_stream), _stream));
+        this->__polled_streams_by_uuid.insert(std::make_pair(_stream->uuid(), _stream));
+        this->__polled_streams_by_uri.insert(std::make_pair(_stream->uri(), _stream));
     }
     _stream->__muted = false;
     auto _fd = static_cast<int>(*_stream);
@@ -191,15 +215,37 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     {
         std::unique_lock _sentry{ this->__poll_lock };
         this->__polled_streams.erase(this->__polled_streams.find(_fd));
+        this->__polled_streams_by_uuid.erase(this->__polled_streams_by_uuid.find(_stream->uuid()));
+        this->__polled_streams_by_uri.erase(this->__polled_streams_by_uri.find(_stream->uri()));
     }
     _stream->shutdown();
     return (*this);
 }
 
-auto zpt::polling::get(int _stream_id) -> zpt::stream {
+auto zpt::polling::get(int _stream_fd) const -> zpt::stream {
     std::shared_lock _sentry{ this->__poll_lock };
-    auto _found = this->__polled_streams.find(_stream_id);
-    expect(_found != this->__polled_streams.end(), "no such stream");
+    auto _found = this->__polled_streams.find(_stream_fd);
+    if (_found == this->__polled_streams.end()) {
+        throw zpt::NoSuchElementException{ "No such stream" };
+    }
+    return _found->second;
+}
+
+auto zpt::polling::get(zpt::uuid const& _stream_id) const -> zpt::stream {
+    std::shared_lock _sentry{ this->__poll_lock };
+    auto _found = this->__polled_streams_by_uuid.find(_stream_id);
+    if (_found == this->__polled_streams_by_uuid.end()) {
+        throw zpt::NoSuchElementException{ "No such stream" };
+    }
+    return _found->second;
+}
+
+auto zpt::polling::get(std::string const& _uri) const -> zpt::stream {
+    std::shared_lock _sentry{ this->__poll_lock };
+    auto _found = this->__polled_streams_by_uri.find(_uri);
+    if (_found == this->__polled_streams_by_uri.end()) {
+        throw zpt::NoSuchElementException{ "No such stream" };
+    }
     return _found->second;
 }
 

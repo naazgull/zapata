@@ -79,6 +79,8 @@ class websocket : public zpt::basic_transport {
 
     /** @brief Returns true for SYNCHRONOUS capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Parses an incoming reply message from the WebSocket stream. */
+    auto upgraded_from() const -> std::string const& override;
     /** @brief Creates a new request message with JSON payload. */
     auto make_request() const -> zpt::message override;
     /** @brief Creates a new reply message, optionally using the allocator. */
@@ -92,11 +94,4 @@ class websocket : public zpt::basic_transport {
 };
 } // namespace transport
 } // namespace net
-
-/**
- * @brief Returns the global WebSocket server socket.
- * @param _port Port to bind (0 for configured default).
- */
-auto WEBSOCKET_SERVER_SOCKET(std::string const& _address = "0.0.0.0", std::uint16_t _port = 0)
-  -> zpt::serversocketstream&;
 } // namespace zpt

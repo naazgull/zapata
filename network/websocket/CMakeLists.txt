@@ -190,12 +190,84 @@ set_target_properties(zapata-example-ws-provider
   LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
+add_library(zapata-example-ws-consumer SHARED)
+add_dependencies(zapata-example-ws-consumer
+  zapata-base
+  zapata-engine-startup
+  zapata-engine-transport
+  zapata-engine-rest
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-common-catalog
+)
+target_sources(zapata-example-ws-consumer
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/examples/consumer.cpp
+)
+target_include_directories(zapata-example-ws-consumer
+  PRIVATE
+  zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-engine-transport
+  zapata-storage-sqlite
+  zapata-storage-connector
+  zapata-common-catalog
+  ${ENGINE_REST_INCLUDE_DIR}
+)
+target_link_libraries(zapata-example-ws-consumer
+  PRIVATE
+  zapata-base
+  zapata-engine-startup
+  zapata-engine-rest
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-io-socket
+  zapata-lockfree
+  zapata-net-transport
+  zapata-ontology
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-parser-http
+  zapata-storage-connector
+  ${SQLite3_LIBRARIES}
+  zapata-storage-sqlite
+  zapata-engine-transport
+  zapata-common-catalog
+)
+set_target_properties(zapata-example-ws-consumer
+  PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+  COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+  LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+)
+
 include(GNUInstallDirs)
 install(
   TARGETS
     zapata-net-websocket
     zapata-net-websocket-plugin
     zapata-example-ws-provider
+    zapata-example-ws-consumer
   LIBRARY
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
