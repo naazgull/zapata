@@ -87,12 +87,16 @@ zpt::serversocketstream::serversocketstream()
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>() } {}
 
 /** @brief Binds to a TCP port. */
-zpt::serversocketstream::serversocketstream(std::string const& _address, std::uint16_t _port)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_address, _port) } {}
+zpt::serversocketstream::serversocketstream(std::string const& _transport,
+                                            std::string const& _address,
+                                            std::uint16_t _port)
+  : __underlying{
+      zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_transport, _address, _port)
+  } {}
 
 /** @brief Binds to a Unix domain socket path. */
-zpt::serversocketstream::serversocketstream(std::string const& _path)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_path) } {}
+zpt::serversocketstream::serversocketstream(std::string const& _transport, std::string const& _path)
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<char>>(_transport, _path) } {}
 
 /** @brief Copy constructor. */
 zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs) { (*this) = _rhs; }
@@ -129,12 +133,18 @@ zpt::wserversocketstream::wserversocketstream()
   : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
 
 /** @brief Binds to a TCP port. */
-zpt::wserversocketstream::wserversocketstream(std::string const& _address, std::uint16_t _port)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_address, _port) } {}
+zpt::wserversocketstream::wserversocketstream(std::string const& _transport,
+                                              std::string const& _address,
+                                              std::uint16_t _port)
+  : __underlying{
+      zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_transport, _address, _port)
+  } {}
 
 /** @brief Binds to a Unix domain socket path. */
-zpt::wserversocketstream::wserversocketstream(std::string const& _path)
-  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}
+zpt::wserversocketstream::wserversocketstream(std::string const& _transport,
+                                              std::string const& _path)
+  : __underlying{ zpt::allocate_shared<zpt::basic_serversocketstream<wchar_t>>(_transport,
+                                                                               _path) } {}
 
 /** @brief Copy constructor. */
 zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _rhs) {

@@ -47,7 +47,6 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             try {
                 do {
                     auto _client = _server_sock->accept();
-                    _client->transport("tcp");
                     _polling->listen_on(std::move(_client));
                 } while (true);
             }

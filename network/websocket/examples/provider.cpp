@@ -42,7 +42,7 @@ class ws_example_endpoint : public zpt::events::process {
     auto operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
       -> zpt::events::state {
         std::unique_lock _guard{ ::___mutex };
-        ::___stream_id = this->received()->headers()("X-Socket-ID")->string();
+        ::___stream_id = this->stream()->uuid();
         this
           ->to_send() //
           ->status(200)

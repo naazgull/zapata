@@ -24,6 +24,11 @@
 #include <zapata/transport/transport.h>
 #include <zapata/uri/uri.h>
 
+auto zpt::basic_transport::upgraded_from() const -> std::string const& {
+    static std::string _default;
+    return _default;
+}
+
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
     if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {

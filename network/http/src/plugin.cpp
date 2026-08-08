@@ -48,7 +48,6 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             do {
                 try {
                     auto _client = _server_sock->accept();
-                    _client->transport("http");
                     _polling->listen_on(std::move(_client));
                 }
                 catch (zpt::ClosedException const& _e) {

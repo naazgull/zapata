@@ -280,6 +280,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
   protected:
     __buf_type __buf;
     bool __is_error{ false };
+    bool __is_accepted{ false };
 
   private:
     auto open_ip() -> bool;
@@ -318,9 +319,11 @@ class basic_serversocketstream {
     /** @brief Default constructor (unbound). */
     basic_serversocketstream();
     /** @brief Binds to a TCP port. */
-    basic_serversocketstream(std::string const& _address, std::uint16_t _port);
+    basic_serversocketstream(std::string const& _transport,
+                             std::string const& _address,
+                             std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
-    basic_serversocketstream(std::string const& _path);
+    basic_serversocketstream(std::string const& _transport, std::string const& _path);
     virtual ~basic_serversocketstream();
 
     /** @brief Returns a URI representation (e.g., "tcp://host:port"). */
@@ -356,6 +359,7 @@ class basic_serversocketstream {
     std::string __address{ "" };
     std::string __path{ "" };
     std::uint16_t __port{ 0 };
+    std::string __transport{ "" };
 };
 
 /**
@@ -368,9 +372,11 @@ class serversocketstream {
   public:
     serversocketstream();
     /** @brief Binds to a TCP port. */
-    serversocketstream(std::string const& _address, std::uint16_t _port);
+    serversocketstream(std::string const& _transport,
+                       std::string const& _address,
+                       std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
-    serversocketstream(std::string const& _path);
+    serversocketstream(std::string const& _transport, std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
     serversocketstream(serversocketstream&& _rhs);
     virtual ~serversocketstream() = default;
@@ -396,9 +402,11 @@ class wserversocketstream {
   public:
     wserversocketstream();
     /** @brief Binds to a TCP port. */
-    wserversocketstream(std::string const& _address, std::uint16_t _port);
+    wserversocketstream(std::string const& _transport,
+                        std::string const& _address,
+                        std::uint16_t _port);
     /** @brief Binds to a Unix domain socket path. */
-    wserversocketstream(std::string const& _path);
+    wserversocketstream(std::string const& _transport, std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
     wserversocketstream(zpt::wserversocketstream&& _rhs);
     virtual ~wserversocketstream() = default;
@@ -755,6 +763,7 @@ zpt::basic_socketstream<Char>::basic_socketstream(int s,
     _in_addr.sin_port = _address.sin_port;
     _in_addr.sin_addr.s_addr = _address.sin_addr.s_addr;
     this->extract_ip();
+    this->__is_accepted = true;
 }
 
 template<typename Char>
@@ -811,8 +820,9 @@ zpt::basic_socketstream<Char>::operator std::string() {
     std::ostringstream _oss;
     switch (this->__buf.protocol()) {
         case IPPROTO_TCP: {
-            _oss << "tcp" << (this->__buf.ssl() ? "+ssl" : "") << "://" << this->host() << ":"
-                 << this->port();
+            _oss << "tcp" << (this->__buf.ssl() ? "+ssl" : "") << "://"
+                 << (this->__is_accepted ? std::format("{}@", this->__buf.get_socket()) : "")
+                 << this->host() << ":" << this->port();
             break;
         }
         case IPPROTO_UDP: {
@@ -821,7 +831,8 @@ zpt::basic_socketstream<Char>::operator std::string() {
             break;
         }
         case UNIXPROTO_RAW: {
-            _oss << "unix:" << this->host();
+            _oss << "unix:" << this->host()
+                 << (this->__is_accepted ? std::format("@{}", this->__buf.get_socket()) : "");
             break;
         }
         default: {
@@ -1098,16 +1109,20 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream()
   : __sockfd{ 0 } {}
 
 template<typename Char>
-zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _address,
+zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _transport,
+                                                              std::string const& _address,
                                                               std::uint16_t _port)
   : __sockfd{ 0 }
-  , __address{ _address } {
+  , __address{ _address }
+  , __transport{ _transport } {
     this->bind(_address, _port);
 }
 
 template<typename Char>
-zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _path)
-  : __sockfd{ 0 } {
+zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _transport,
+                                                              std::string const& _path)
+  : __sockfd{ 0 }
+  , __transport{ _transport } {
     this->bind(_path);
 }
 
@@ -1239,7 +1254,7 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
             _so_linger.l_linger = 30;
             ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
             return zpt::make_stream<zpt::basic_socketstream<Char>>(
-              _newsockfd, _cli_addr, zpt::NO_SSL, this->__protocol);
+              this->__transport, _newsockfd, _cli_addr, zpt::NO_SSL, this->__protocol);
         }
         case UNIXPROTO_RAW: {
             zpt::sockaddrun_t _cli_addr{};
@@ -1254,7 +1269,8 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
 
             expect(_newsockfd > 0, "error while accepting new connection");
 
-            return zpt::make_stream<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+            return zpt::make_stream<zpt::basic_socketstream<Char>>(
+              this->__transport, _newsockfd, _cli_addr);
         }
     }
     return nullptr;

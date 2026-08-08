@@ -19,35 +19,9 @@
   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+#include <zapata/exceptions/NoSuchElementException.h>
 
-#include <zapata/streams/event_stream.h>
+zpt::NoSuchElementException::NoSuchElementException(std::string const& _what)
+  : zpt::exception{ _what } {}
 
-constexpr unsigned short FINAL_REPLY_RECEIVED{ 2 };
-
-zpt::event_stream::event_stream()
-  : zpt::basic_stream{ "self" } {
-    this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
-    this->__uri = std::format("self://fd@{}", this->__fd);
-}
-
-zpt::event_stream::~event_stream() {}
-
-auto zpt::event_stream::operator=(int) -> zpt::event_stream& { return (*this); }
-
-auto zpt::event_stream::operator<<(ostream_manipulator) -> zpt::event_stream& { return (*this); }
-
-auto zpt::event_stream::read_without_io(std::any& _out) -> zpt::event_stream& {
-    _out = this->__content;
-    std::uint64_t _val;
-    eventfd_read(this->__fd, &_val);
-    ++this->__reads;
-    return (*this);
-}
-
-auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stream& {
-    this->__content = _in;
-    eventfd_write(this->__fd, 1);
-    return (*this);
-}
-
-auto zpt::event_stream::persistent() -> bool { return this->__reads != FINAL_REPLY_RECEIVED; }
+zpt::NoSuchElementException::~NoSuchElementException() throw() {}

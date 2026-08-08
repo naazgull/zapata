@@ -37,9 +37,11 @@ auto main(int _argc, char* _argv[]) -> int {
         zpt::transport _transport{ new zpt::net::transport::upnp{} };
 
         if (_role == "server") {
-            auto _stream = zpt::make_stream<zpt::socketstream>(
-              _config("bind")->string(), _config("port")->integer(), zpt::NO_SSL, IPPROTO_UDP);
-            _stream->transport("upnp");
+            auto _stream = zpt::make_stream<zpt::socketstream>("upnp",
+                                                               _config("bind")->string(),
+                                                               _config("port")->integer(),
+                                                               zpt::NO_SSL,
+                                                               IPPROTO_UDP);
 
             zpt::polling::ptr _polling = zpt::allocate_shared<zpt::polling>();
             _polling //
@@ -66,11 +68,10 @@ auto main(int _argc, char* _argv[]) -> int {
               .uri("*");
             zlog(_upnp, zpt::debug);
 
-            auto _stream = zpt::make_stream<zpt::socketstream>(zpt::NO_SSL, IPPROTO_UDP);
+            auto _stream = zpt::make_stream<zpt::socketstream>("upnp", zpt::NO_SSL, IPPROTO_UDP);
             _stream //
-              ->transport("upnp")
-              .set_peer<zpt::socketstream>(_config("address")->string(),
-                                           _config("port")->integer());
+              ->set_peer<zpt::socketstream>(_config("address")->string(),
+                                            _config("port")->integer());
 
             _transport->send(_stream, _message);
 

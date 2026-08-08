@@ -87,10 +87,10 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
 
-    /** @brief Default constructor. */
-    basic_stream() = default;
+    basic_stream(std::string const& _transport);
     /** @brief Constructs from a unique pointer to a stream. */
-    basic_stream(zpt::allocator<std::iostream>::unique_pointer _underlying);
+    template<typename T, typename... Args>
+    basic_stream(std::in_place_type_t<T>, std::string const& _transport, Args... _args);
     basic_stream(basic_stream const& _rhs) = delete;
     basic_stream(basic_stream&& _rhs) = delete;
     /** @brief Destructor. Closes the stream. */
@@ -133,11 +133,10 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     virtual auto uuid() const -> zpt::uuid const& final;
     virtual auto close() -> basic_stream&;
     virtual auto shutdown() -> basic_stream&;
-    virtual auto transport(const std::string& _rhs) -> basic_stream&;
+    virtual auto upgrade(std::string const& _to_transport) -> basic_stream&;
     virtual auto transport() -> std::string&;
-    virtual auto uri(const std::string& _rhs) -> basic_stream&;
     virtual auto uri() -> std::string&;
-    virtual auto state(stream_state _rhs) -> basic_stream&;
+    virtual auto state(stream_state _state) -> basic_stream&;
     virtual auto state() -> stream_state;
     virtual auto persistent() -> bool;
     virtual auto metadata(std::any _metadata) -> basic_stream&;
@@ -217,9 +216,13 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Temporarily stops monitoring a stream. */
     auto mute(zpt::stream _stream) -> zpt::polling&;
     /** @brief Temporarily stops monitoring a stream. */
-    auto mute(zpt::uuid _id) -> zpt::stream;
+    auto mute(zpt::uuid const& _id) -> zpt::stream;
+    /** @brief Temporarily stops monitoring a stream. */
+    auto mute(std::string const& _uri) -> zpt::stream;
     /** @brief Resumes monitoring a muted stream. */
     auto unmute(zpt::stream _stream) -> zpt::polling&;
+    /** @brief Changes the underlying transport of a stream. */
+    auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
 
     /** @brief Waits for I/O events and dispatches to delegates. */
     auto poll() -> zpt::polling&;
@@ -232,11 +235,13 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Epoll file descriptor for I/O multiplexing. */
     int __epoll_fd{ -1 };
     /** @brief Mutex protecting the polled streams map. */
-    zpt::locks::spin_mutex __poll_lock;
+    mutable zpt::locks::spin_mutex __poll_lock;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
     std::map<int, zpt::stream> __polled_streams;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
     std::map<zpt::uuid, zpt::stream> __polled_streams_by_uuid;
+    /** @brief Map of file descriptors to stream pointers currently being monitored. */
+    std::map<std::string, zpt::stream> __polled_streams_by_uri;
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
     /** @brief Flag indicating that shutdown has been initiated. */
@@ -247,9 +252,11 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Removes a stream from epoll and the polled map. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
     /** @brief Retrieves the stream associated with the given file descriptor. */
-    auto get(int _stream_fd) -> zpt::stream;
+    auto get(int _stream_fd) const -> zpt::stream;
     /** @brief Retrieves the stream associated with the given identifier. */
-    auto get(zpt::uuid const& _stream_id) -> zpt::stream;
+    auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
+    /** @brief Retrieves the stream associated with the given identifier. */
+    auto get(std::string const& _uri) const -> zpt::stream;
     /** @brief Dispatches a ready stream to all registered delegates. */
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
@@ -268,7 +275,7 @@ auto STREAM_POLLING() -> zpt::polling::ptr;
  * @return Shared pointer to the stream.
  */
 template<typename T, typename... Args>
-static auto make_stream(Args... _args) -> zpt::stream;
+static auto make_stream(std::string const& _transport, Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
 
@@ -283,6 +290,25 @@ auto stream_cast(zpt::stream& _rhs) -> T& {
     return static_cast<T&>(**_rhs);
 }
 } // namespace zpt
+
+template<typename T, typename... Args>
+zpt::basic_stream::basic_stream(std::in_place_type_t<T>,
+                                std::string const& _transport,
+                                Args... _args)
+  : __underlying{ zpt::allocate_unique<T>(std::forward<Args>(_args)...) }
+  , __transport{ _transport } {
+    if constexpr (std::is_convertible<T, int>::value) {
+        this->__fd = static_cast<int>(static_cast<T&>(*this->__underlying));
+    }
+    if constexpr (std::is_convertible<T, std::string>::value) {
+        auto _socket_uri = static_cast<std::string>(static_cast<T&>(*this->__underlying));
+        this->__uri =
+          std::format("{}{}", this->__transport, _socket_uri.substr(_socket_uri.find("://")));
+    }
+    zlog("Opening connection to " << this->__uri, zpt::trace);
+    expect(!this->__underlying->fail() && !this->__underlying->bad(),
+           "unable to open underlying `std::iostream` named '" << this->__uri << "'");
+}
 
 template<typename T>
 auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
@@ -336,16 +362,8 @@ auto zpt::basic_stream::set_peer(std::string const& _address, unsigned int _port
 }
 
 template<typename T, typename... Args>
-auto zpt::make_stream(Args... _args) -> zpt::stream {
+auto zpt::make_stream(std::string const& _transport, Args... _args) -> zpt::stream {
     zpt::stream _to_return{ new zpt::basic_stream{
-      zpt::allocate_unique<T>(std::forward<Args>(_args)...) } };
-    if constexpr (std::is_convertible<T, int>::value) {
-        (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));
-    }
-    if constexpr (std::is_convertible<T, std::string>::value) {
-        _to_return->uri(static_cast<std::string>(static_cast<T&>(**_to_return)));
-    }
-    expect(!(**_to_return.get()).fail() && !(**_to_return.get()).bad(),
-           "unable to open underlying `std::iostream` named '" << _to_return->uri() << "'");
+      std::in_place_type_t<T>{}, _transport, std::forward<Args>(_args)... } };
     return _to_return;
 }

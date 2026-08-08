@@ -56,7 +56,8 @@ namespace zpt {
 enum transport_capability {
     SYNCHRONOUS = 1, ///< Transport supports request-response pattern
     PERSISTENT = 2,  ///< Transport maintains persistent connections
-    PUB_SUB = 4      ///< Transport follows pub/sub flow
+    PUB_SUB = 4,     ///< Transport follows pub/sub flow
+    UPGRADED = 8     ///< Transport is upgraded from another transport
 };
 
 /**
@@ -105,6 +106,8 @@ class basic_transport {
     virtual auto process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
     /** @brief Parses an incoming reply from a stream. */
     virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message = 0;
+    /** @brief Retrieves from which transport this was upgraded. */
+    virtual auto upgraded_from() const -> std::string const&;
     /** @brief Receives a message from a stream (request or reply based on context). */
     virtual auto receive(zpt::stream _stream) const -> zpt::message final;
     /** @brief Sends a message to a stream. */
