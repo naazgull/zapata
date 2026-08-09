@@ -27,6 +27,12 @@
 #include <zapata/transport.h>
 #include <zapata/uuid.h>
 
+namespace {
+constexpr unsigned int IS_SELF = 1;
+constexpr unsigned int IS_EXTERNAL = 2;
+constexpr unsigned int HAS_PUB_SUB = 3;
+} // namespace
+
 namespace zpt {
 namespace transports {
 
@@ -340,10 +346,12 @@ class call {
     zpt::polling::ptr __polling{ nullptr };
     zpt::message __to_send{ nullptr };
     zpt::call_context::ptr __context{ nullptr };
+    bool __resolved{ false };
 
-    auto call_internally() -> call&;
-    auto send_externally() -> call&;
-    auto publish_externally() -> call&;
+    auto resolve_uri() -> unsigned int;
+    auto call_internally() -> zpt::events::state;
+    auto send_externally() -> zpt::events::state;
+    auto publish_externally() -> zpt::events::state;
 };
 
 /**
@@ -383,6 +391,9 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
   , __context{ _context } {
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
+    }
+    if (!this->__to_send->headers()("Content-type")->ok()) {
+        this->__to_send->header("Content-Type", "application/json");
     }
 }
 
@@ -426,6 +437,35 @@ auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::even
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    unsigned int _which{ 0 };
+    try {
+        _which = this->resolve_uri();
+    }
+    catch (...) {
+        auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
+        _reply->status(404);
+        this->__context->reply(_reply);
+        return zpt::events::finish;
+    }
+
+    switch (_which) {
+        case ::HAS_PUB_SUB: {
+            return this->publish_externally();
+        }
+        case ::IS_SELF: {
+            return this->call_internally();
+        }
+        default: {
+            return this->send_externally();
+        }
+    }
+    return zpt::events::finish;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::resolve_uri() -> unsigned int {
+    if (this->__resolved) { return ::IS_EXTERNAL; }
+
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
 
@@ -434,8 +474,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         auto _transport = zpt::TRANSPORT_LAYER().get(_uri("scheme")->string());
 
         if (_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
-            this->publish_externally();
-            return zpt::events::finish;
+            return ::HAS_PUB_SUB;
         }
         if (_transport->has_capability(zpt::transport_capability::UPGRADED)) {
             _upgraded_from_scheme = _transport->upgraded_from();
@@ -444,106 +483,93 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
-        try {
-            auto _found = this->__resolver->search(
-              std::format("/{}{}",
-                          zpt::ontology::to_str(this->__to_send->performative()),
-                          _uri("raw_path")->string()));
-            expect(_found->ok() && _found->size() != 0,
-                   "Couldn't find a provider of '" << _uri("path")->string());
+        auto _found = this->__resolver->search(
+          std::format("/{}{}",
+                      zpt::ontology::to_str(this->__to_send->performative()),
+                      _uri("raw_path")->string()));
+        expect(_found->ok() && _found->size() != 0,
+               "Couldn't find a provider of '" << _uri("path")->string());
 
-            for (auto&& [_, __, _service] : _found) {
-                if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
-            }
-
-            if (!_is_self) {
-                auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
-                expect(_provider->ok() && _provider->size() != 0,
-                       "Couldn't find a provider of '" << _uri("path")->string());
-                if (!_uri("scheme")->ok()) {
-                    _uri["scheme"] = _provider(0)("protocols")("default");
-                }
-                auto _scheme =
-                  _upgraded_from_scheme.empty() ? _uri("scheme")->string() : _upgraded_from_scheme;
-                _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
-                _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
-            }
+        for (auto&& [_, __, _service] : _found) {
+            if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
         }
-        catch (...) {
-            auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
-            _reply->status(404);
-            this->__context->reply(_reply);
-            return zpt::events::finish;
+
+        if (!_is_self) {
+            auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
+            expect(_provider->ok() && _provider->size() != 0,
+                   "Couldn't find a provider of '" << _uri("path")->string());
+            if (!_uri("scheme")->ok()) { _uri["scheme"] = _provider(0)("protocols")("default"); }
+            auto _scheme =
+              _upgraded_from_scheme.empty() ? _uri("scheme")->string() : _upgraded_from_scheme;
+            _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
+            _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
         }
     }
 
-    if (_is_self) { this->call_internally(); }
-    else { this->send_externally(); }
+    return _is_self ? ::IS_SELF : ::IS_EXTERNAL;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::call_internally() -> zpt::events::state {
+    if (!this->__resolved) {
+        this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+        this->__resolved = true;
+    }
+
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get("self");
+    auto _stream = zpt::allocate_shared<zpt::event_stream>();
+    this->__polling->listen_on(_stream);
+    _transport->send(_stream, this->__to_send);
 
     return zpt::events::finish;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::call_internally() -> call& {
-    this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
-
-    auto _transport = zpt::TRANSPORT_LAYER() //
-                        .get("self");
-    auto _stream = zpt::allocate_shared<zpt::event_stream>();
-    this->__to_send->header("Content-Type", "application/json");
-    this->__polling->listen_on(_stream);
-    _transport->send(_stream, this->__to_send);
-
-    return (*this);
-}
-
-template<ProcessOperation T>
-auto zpt::events::call<T>::send_externally() -> call& {
+auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     auto& _uri = this->__to_send->uri();
     auto _scheme = _uri("scheme")->string();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
-    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+
+    if (!this->__resolved) {
+        if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+            this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+        }
+        this->__resolved = true;
     }
 
     auto _host = _uri("domain")->string();
     auto _port = _uri("port")->integer();
-    this->__to_send->header("Content-Type", "application/json");
-
     zpt::stream _stream{ nullptr };
-    while (!this->__polling->is_in_shutdown()) {
-        try {
-            _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
-            break;
-        }
-        catch (zpt::NoSuchElementException const& _e) {
-            _stream =
-              zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
-            this
-              ->__polling //
-              ->listen_on(_stream)
-              .mute(_stream);
-            break;
-        }
-        catch (zpt::failed_expectation const& _e) {
-        }
-        std::this_thread::yield();
+    try {
+        _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
+    }
+    catch (zpt::NoSuchElementException const& _e) {
+        _stream =
+          zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
+        this
+          ->__polling //
+          ->listen_on(_stream)
+          .mute(_stream);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return zpt::events::retrigger;
     }
 
     _transport->send(_stream, this->__to_send);
     this->__polling->unmute(_stream);
 
-    return (*this);
+    return zpt::events::finish;
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::publish_externally() -> call& {
+auto zpt::events::call<T>::publish_externally() -> zpt::events::state {
+    this->__resolved = true;
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__to_send->uri()("scheme")->string());
-    this->__to_send->header("Content-Type", "application/json");
     _transport->publish(this->__to_send);
-    return (*this);
+    return zpt::events::finish;
 }
 
 template<ProcessOperation T>

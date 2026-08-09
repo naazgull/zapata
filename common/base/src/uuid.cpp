@@ -44,6 +44,8 @@ zpt::uuid::uuid(uuid&& _rhs)
     _rhs.__base = 0;
 }
 
+zpt::uuid::operator __uint128_t() const { return this->__base; }
+
 auto zpt::uuid::operator=(__uint128_t _rhs) -> uuid& {
     this->__base = _rhs;
     return (*this);
@@ -151,4 +153,9 @@ auto zpt::uuid::from_stream(std::istream& _in) -> uuid& {
     }
 
     return (*this);
+}
+
+auto std::hash<zpt::uuid>::operator()(zpt::uuid const& _uuid) const noexcept -> std::size_t {
+    __uint128_t _base = static_cast<__uint128_t>(_uuid);
+    return static_cast<std::uint64_t>(_base) ^ static_cast<std::uint64_t>(_base >> 64);
 }

@@ -197,6 +197,9 @@ using stream = std::shared_ptr<zpt::basic_stream>;
 class polling : public std::enable_shared_from_this<polling> {
   public:
     using ptr = std::shared_ptr<polling>;
+    using polled_streams_type = std::unordered_map<int, zpt::stream>;
+    using polled_streams_by_uuid_type = std::unordered_map<zpt::uuid, zpt::stream>;
+    using polled_streams_by_uri_type = std::unordered_map<std::string, zpt::stream>;
     /** @brief Delegate function signature: returns true to keep stream, false to remove. */
     using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
     /** @brief Maximum events processed per poll() call. */
@@ -237,11 +240,11 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Mutex protecting the polled streams map. */
     mutable zpt::locks::spin_mutex __poll_lock;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    std::map<int, zpt::stream> __polled_streams;
+    polled_streams_type __polled_streams;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    std::map<zpt::uuid, zpt::stream> __polled_streams_by_uuid;
+    polled_streams_by_uuid_type __polled_streams_by_uuid;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    std::map<std::string, zpt::stream> __polled_streams_by_uri;
+    polled_streams_by_uri_type __polled_streams_by_uri;
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
     /** @brief Flag indicating that shutdown has been initiated. */

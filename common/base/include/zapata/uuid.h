@@ -75,6 +75,10 @@ class uuid {
     uuid(uuid&& _rhs);
     ~uuid() = default;
     /**
+     * @brief Retrieves the unsigned 128-bit integer representing this UUID.
+     */
+    operator __uint128_t() const;
+    /**
      * @brief Copy assignment operator.
      * @param _rhs UUID to copy.
      * @return Reference to this UUID.
@@ -175,5 +179,21 @@ class uuid {
   private:
     __uint128_t __base; ///< 128-bit UUID value.
 };
-
 } // namespace zpt
+
+namespace std {
+/**
+ * @brief std::hash specialization for zpt::uuid.
+ *
+ * Enables using UUID values as keys in unordered containers.
+ *
+ * @par Example
+ * @code
+ * std::unordered_map<zpt::uuid, int> cache;
+ * @endcode
+ */
+template<>
+struct hash<zpt::uuid> {
+    auto operator()(zpt::uuid const& _uuid) const noexcept -> std::size_t;
+};
+} // namespace std
