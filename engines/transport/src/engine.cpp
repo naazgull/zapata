@@ -92,7 +92,7 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
 
         if (_received->performative() == zpt::Reply) {
             expect(_received->status() == 101, "Server didn't comply with the upgrade request");
-            _received->body() = { "stream", this->__stream->uuid() };
+            _received->body() = { "stream", this->__stream->uuid().to_string() };
 
             if (_value == "websocket") { _value = "ws"; }
             this->__polling->upgrade(this->__stream, _value);

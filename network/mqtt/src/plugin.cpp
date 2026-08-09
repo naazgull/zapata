@@ -40,7 +40,7 @@ class plugin_mqtt_execute_after_boot : public zpt::system_event {
 
         for (auto&& [_, __, _service] : _services) {
             if (_service("_id")->string().find("/minions") != std::string::npos) { continue; }
-            auto _topic = zpt::r_replace(_service("_id")->string(), "{}", "*");
+            auto _topic = zpt::r_replace(_service("_id")->string(), "{}", "+");
             _stream->subscribe(_topic);
         }
 
@@ -62,7 +62,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                                         << _config("port")->integer() << "`",
              zpt::trace);
 
-        if (!_config("subscribe")->is_bool() || _config("subscribe")->boolean()) {
+        if (_config("subscribe")->is_bool() && _config("subscribe")->boolean()) {
             zpt::SYSTEM_EVENTS_RESOLVER() //
               ->add<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
         }
