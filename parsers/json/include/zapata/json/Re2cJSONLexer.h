@@ -91,19 +91,27 @@ class Re2cJSONLexer {
     Re2cJSONLexer(Re2cJSONLexer const&) = delete;
     auto operator=(Re2cJSONLexer const&) -> Re2cJSONLexer& = delete;
 
-    /** @brief Returns the next token, or a value <= 0 at end-of-message/EOF. */
+    /** @brief Returns the next token, or a value <= 0 at end-of-message/EOF.
+     * @return Token value (POSIX yylex convention). */
     auto lex() -> int;
 
-    /** @brief Text of the most recently completed token (mirrors flexc++'s matched()). */
+    /** @brief Text of the most recently completed token (mirrors flexc++'s matched()).
+     * @return Const reference to matched text. */
     auto matched() const -> std::string const&;
-    /** @brief Overwrites the current matched text (mirrors flexc++'s setMatched()). */
+    /** @brief Overwrites the current matched text (mirrors flexc++'s setMatched()).
+     * @param _text New matched text. */
     auto setMatched(std::string const& _text) -> void;
-    /** @brief Marks that the next match should append to, not replace, matched(). */
+    /**
+     * @brief Marks that the next match should append to, not replace, matched().
+     * @return void (internal state flag set).
+     */
     auto more() -> void;
 
-    /** @brief Current lexer start condition. */
+    /** @brief Current lexer start condition.
+     * @return Current start condition. */
     auto startCondition() const -> re2c_json_cond;
-    /** @brief Switches the lexer start condition. */
+    /** @brief Switches the lexer start condition.
+     * @param _condition New start condition. */
     auto begin(re2c_json_cond _condition) -> void;
 
     /**
@@ -114,13 +122,18 @@ class Re2cJSONLexer {
      * condition is now an ordinary C++ method, a rule that wants to stop simply
      * returns directly. justLeave() (called once by the grammar after the
      * top-level rule reduces) just makes that final/idempotent.
+     * @param _retValue The value that lex() will return when called after this.
+     * @return void (internal __left flag set).
      */
     auto leave(int _retValue) -> void;
 
-    /** @brief 1-based input line number, for diagnostics. */
+    /** @brief 1-based input line number, for diagnostics.
+     * @return Current line number. */
     auto lineNr() const -> std::size_t;
 
-    /** @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state. */
+    /** @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state.
+     * @param _in New input stream (default std::cin).
+     * @param _out New output stream (default std::cout). */
     auto switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout) -> void;
 
     /**
@@ -129,6 +142,7 @@ class Re2cJSONLexer {
      * Must be called once after parse() returns (success or failure) so the
      * istream's read position ends up exactly at the first byte after the
      * parsed JSON value.
+     * @return void (internal buffer state adjusted).
      */
     auto syncBackToStream() -> void;
 
@@ -148,6 +162,8 @@ class Re2cJSONLexer {
      *
      * Loops over istream reads (handling short reads). Returns false if true
      * stream EOF is reached before `_need` real bytes could be supplied.
+     * @param _need Number of bytes to ensure availability for.
+     * @return True if enough bytes were supplied, false on stream EOF.
      */
     auto fill(std::size_t _need) -> bool;
 
@@ -158,6 +174,8 @@ class Re2cJSONLexer {
      * stream EOF), zero-pads up to `_need` bytes so the DFA's bounds checks
      * can still succeed. __data_limit tracks where the real bytes end, so
      * syncBackToStream() never pushes these synthetic bytes back.
+     * @param _need Number of bytes to fill.
+     * @return void (internal buffer extended).
      */
     auto yyfill(std::size_t _need) -> void;
 
@@ -166,6 +184,7 @@ class Re2cJSONLexer {
      *
      * Mirrors flexc++'s more()/matched() contract: if more() was called since
      * the last match, the new text is appended instead of replacing matched().
+     * @return void (internal __matched string updated).
      */
     auto captureMatch() -> void;
 
@@ -182,6 +201,7 @@ class Re2cJSONLexer {
      * completing terminal is returned, arms leave() one call early so the
      * *next* lex() call (the lookahead) short-circuits without touching the
      * stream.
+     * @return void (internal __left flag set if complete).
      */
     auto leaveIfComplete() -> void;
 
@@ -221,6 +241,10 @@ class Re2cJSONLexer {
     std::size_t __line_nr{ 1 };
 
   private:
+    /**
+     * @brief Resets the internal buffer and cursor state.
+     * @return void (internal lexer state cleared).
+     */
     auto resetBuffer() -> void;
 };
 

@@ -47,7 +47,10 @@ class thread_local_table_entry {
   public:
     virtual ~thread_local_table_entry() = default;
 
-    /** @brief Returns true if the entry holds no value. */
+    /**
+     * @brief Returns true if the entry holds no value.
+     * @return True if the entry is null, false otherwise.
+     */
     virtual auto is_null() const -> bool = 0;
 };
 
@@ -75,17 +78,33 @@ class thread_local_table {
     template<typename T>
     class entry : public thread_local_table_entry {
       public:
-        /** @brief Constructs an entry, forwarding args to T's constructor. */
+        /**
+         * @brief Constructs an entry, forwarding args to T's constructor.
+         * @tparam Args Constructor argument types.
+         * @param _args Arguments forwarded to T's constructor.
+         */
         template<typename... Args>
         entry(Args... _args);
-        /** @brief Destructor. */
+        /**
+         * @brief Destructor.
+         * @return void (destructors implicitly clean up the object).
+         */
         virtual ~entry() override;
 
-        /** @brief Dereferences to the stored value. */
+        /**
+         * @brief Dereferences to the stored value.
+         * @return Reference to the stored value.
+         */
         auto operator*() -> T&;
-        /** @brief Member access to the stored value. */
+        /**
+         * @brief Member access to the stored value.
+         * @return Pointer to the stored value.
+         */
         auto operator->() -> T*;
-        /** @brief Returns false (typed entries always hold a value). */
+        /**
+         * @brief Returns false (typed entries always hold a value).
+         * @return False, as typed entries always hold a valid value.
+         */
         auto is_null() const -> bool override;
 
       private:

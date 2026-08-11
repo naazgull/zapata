@@ -49,17 +49,40 @@ class result_set_metadata {
     /** @brief Number of columns in the result set. */
     size_t __column_count{ 0 };
 
+    /** @brief Constructs metadata for the given MySQL statement.
+     * @param _statement The prepared MySQL statement to bind.
+     * @return void (constructors implicitly initialize the object). */
     result_set_metadata(MYSQL_STMT* _statement);
+    /** @brief Move constructor.
+     * @param _rhs The result_set_metadata to move from.
+     * @return void (constructors implicitly initialize the object). */
     result_set_metadata(result_set_metadata&& _rhs);
+    /** @brief Destroys the metadata, freeing bound buffers.
+     * @return void (destructors implicitly clean up the object). */
     ~result_set_metadata();
 
     result_set_metadata(result_set_metadata const&) = delete;
     auto operator=(result_set_metadata const&) -> result_set_metadata& = delete;
 
+    /** @brief Move assignment operator.
+     * @param _rhs The result_set_metadata to move from.
+     * @return Reference to this result_set_metadata. */
     auto operator=(result_set_metadata&& _rhs) -> result_set_metadata&;
+    /** @brief Returns the column name by index.
+     * @param _column Zero-based column index.
+     * @return Column name string. */
     auto name(size_t _column) const -> std::string;
+    /** @brief Returns the column type by index.
+     * @param _column Zero-based column index.
+     * @return MySQL field type enum. */
     auto type(size_t _column) const -> enum_field_types;
+    /** @brief Returns the column flags by index.
+     * @param _column Zero-based column index.
+     * @return Column flags bitmask. */
     auto flags(size_t _column) const -> unsigned int;
+    /** @brief Returns the column character set by index.
+     * @param _column Zero-based column index.
+     * @return Character set ID. */
     auto charset(size_t _column) const -> unsigned int;
     template<typename T>
     auto get(MYSQL_STMT* _statement, size_t _column) const -> T;
@@ -67,22 +90,43 @@ class result_set_metadata {
   private:
     MYSQL_RES* __metadata{ nullptr };
 };
-/** @brief Converts a MySQL result row to JSON using column metadata. */
+/** @brief Converts a MySQL result row to JSON using column metadata.
+ * @param _statement The prepared MySQL statement with fetched data.
+ * @param _cols Reference to the result set metadata with column bindings.
+ * @return JSON object representing the result row. */
 auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::result_set_metadata& _cols) -> zpt::json;
-/** @brief Generates a SELECT SQL query from JSON field/filter descriptions. */
+/** @brief Generates a SELECT SQL query from JSON field/filter descriptions.
+ * @param _fields JSON object specifying selected columns and options.
+ * @param _filter JSON object specifying WHERE clause conditions.
+ * @return Generated SELECT SQL query string. */
 auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
-/** @brief Generates an INSERT SQL statement from a JSON document. */
+/** @brief Generates an INSERT SQL statement from a JSON document.
+ * @param _to_insert JSON object containing column values to insert.
+ * @return Generated INSERT SQL statement string. */
 auto to_insert(zpt::json _to_insert) -> std::string;
-/** @brief Generates an UPDATE SQL statement from JSON update/pattern descriptions. */
+/** @brief Generates an UPDATE SQL statement from JSON update/pattern descriptions.
+ * @param _to_update JSON object containing update fields and values.
+ * @param _pattern JSON object specifying WHERE clause conditions.
+ * @return Generated UPDATE SQL statement string. */
 auto to_update(zpt::json _to_update, zpt::json _pattern) -> std::string;
-/** @brief Generates a REPLACE SQL statement from a JSON document. */
+/** @brief Generates a REPLACE SQL statement from a JSON document.
+ * @param _to_replace JSON object containing column values to replace.
+ * @return Generated REPLACE SQL statement string. */
 auto to_replace(zpt::json _to_replace) -> std::string;
-/** @brief Generates a DELETE SQL statement from a JSON filter pattern. */
+/** @brief Generates a DELETE SQL statement from a JSON filter pattern.
+ * @param _pattern JSON object specifying WHERE clause conditions.
+ * @return Generated DELETE SQL statement string. */
 auto to_delete(zpt::json _pattern) -> std::string;
-/** @brief Writes a comma-separated assignment list (col=val) to the stream. */
+/** @brief Writes a comma-separated assignment list (col=val) to the stream.
+ * @param _to_convert JSON object containing columns and values.
+ * @param _out Output stream to write assignments to.
+ * @param _separator String separator between assignments.
+ * @return void */
 auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
   -> void;
-/** @brief Wraps a value in single quotes for SQL string literal output. */
+/** @brief Wraps a value in single quotes for SQL string literal output.
+ * @param _to_quote JSON value to quote.
+ * @return SQL string literal with single quotes. */
 auto quote(zpt::json _to_quote) -> std::string;
 } // namespace mysqlx
 } // namespace storage

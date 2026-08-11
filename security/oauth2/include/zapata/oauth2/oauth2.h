@@ -30,10 +30,12 @@
 
 namespace zpt {
 /** @brief Global accessor for the OAuth2 token provider index. Used internally by the plugin
-    to pass a token provider instance to the OAuth2 server. */
+    to pass a token provider instance to the OAuth2 server.
+ * @return Reference to the token provider index variable. */
 auto OAUTH2_TOKEN_PROVIDER() -> ssize_t&;
 /** @brief Global accessor for the OAuth2 server instance. Used by all listeners to dispatch
-    requests to the server. */
+    requests to the server.
+ * @return Reference to the OAuth2 server instance variable. */
 auto OAUTH2_SERVER() -> ssize_t&;
 
 namespace auth {
@@ -123,7 +125,8 @@ class server {
         for storage and lookup. @param _options Server configuration options including domain and
         URL settings. */
     server(zpt::auth::oauth2::token_provider_ptr _token_provider, zpt::json _options);
-    /** @brief Virtual destructor. */
+    /** @brief Virtual destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~server();
 
     /** @brief Return the server's configuration options. @return JSON containing server options. */
@@ -179,26 +182,51 @@ class server {
     /** @brief Server configuration options. */
     zpt::json __options;
 
-    /** @brief Handle the authorization code grant flow. Prompts the owner to authenticate
-        if needed, then generates a code token. */
+    /**
+     * @brief Handle the authorization code grant flow. Prompts the owner to authenticate
+     * if needed, then generates a code token.
+     * @param _performative The HTTP method (Get or Post).
+     * @param _request The HTTP request envelope.
+     * @param _envelope The request envelope containing OAuth2 parameters.
+     * @param _opts Server configuration options.
+     * @return JSON response with redirect URL or authorization code.
+     */
     auto authorize_with_code(zpt::performative _performative,
                              zpt::json _request,
                              zpt::json _envelope,
                              zpt::json _opts) -> zpt::json;
-    /** @brief Handle the password grant flow. Authenticates the owner with username and
-        password, then generates an access token. */
+    /**
+     * @brief Handle the password grant flow. Authenticates the owner with username and
+     * password, then generates an access token.
+     * @param _performative The HTTP method (Get or Post).
+     * @param _request The HTTP request envelope.
+     * @param _envelope The request envelope containing credentials.
+     * @param _opts Server configuration options.
+     * @return JSON response with redirect URL or access token data.
+     */
     auto authorize_with_password(zpt::performative _performative,
                                  zpt::json _request,
                                  zpt::json _envelope,
                                  zpt::json _opts) -> zpt::json;
-    /** @brief Handle the client credentials grant flow. Authenticates the client with
-        its credentials and generates an access token. */
+    /**
+     * @brief Handle the client credentials grant flow. Authenticates the client with
+     * its credentials and generates an access token.
+     * @param _performative The HTTP method (Get or Post).
+     * @param _request The HTTP request envelope.
+     * @param _envelope The request envelope containing client credentials.
+     * @param _opts Server configuration options.
+     * @return JSON response with redirect URL or access token data.
+     */
     auto authorize_with_client_credentials(zpt::performative _performative,
                                            zpt::json _request,
                                            zpt::json _envelope,
                                            zpt::json _opts) -> zpt::json;
-    /** @brief Generate a new token with access token, refresh token, code, and 90-day
-        expiration. Enriches the token with roles/permissions from the provider. */
+    /**
+     * @brief Generate a new token with access token, refresh token, code, and 90-day
+     * expiration. Enriches the token with roles/permissions from the provider.
+     * @param _data Token data payload.
+     * @return JSON containing the generated token(s) and metadata.
+     */
     auto generate_token(zpt::json _data) -> zpt::json;
 };
 } // namespace oauth2

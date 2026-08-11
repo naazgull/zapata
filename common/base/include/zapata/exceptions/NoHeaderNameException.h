@@ -44,10 +44,12 @@ class NoHeaderNameException : public zpt::exception {
     /**
      * @brief Constructs a NoHeaderNameException.
      * @param _what Description of the error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws NoHeaderNameException Always (the constructor itself throws).
      */
     NoHeaderNameException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~NoHeaderNameException() throw();
 };
 } // namespace zpt

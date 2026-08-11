@@ -91,6 +91,7 @@ class SHA512 {
 
     /**
      * @brief Initializes the hash state.
+     * @return void
      */
     void init();
 
@@ -98,12 +99,14 @@ class SHA512 {
      * @brief Updates the hash with additional data.
      * @param message Pointer to the data to hash.
      * @param len Length of the data in bytes.
+     * @return void
      */
     void update(const unsigned char* message, unsigned int len);
 
     /**
      * @brief Finalizes the hash and outputs the digest.
      * @param digest Buffer to receive the 64-byte hash digest.
+     * @return void
      */
     void finalize(unsigned char* digest);
 

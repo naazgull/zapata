@@ -54,7 +54,13 @@ class execute_after_boot : public zpt::system_event {
     }
 };
 
-/** @brief Plugin load callback: configures the Lua bridge and registers the `zpt` module. */
+/**
+ * @brief Plugin load callback: configures the Lua bridge and registers the `zpt` module.
+ * @param _plugin The plugin instance providing configuration.
+ *
+ * Sets bridge options, registers the `zpt` module bindings, loads optional
+ * external modules, and registers the post-boot execution handler if configured.
+ */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::LUA_BRIDGE();
     _bridge.set_options(_plugin.config());
@@ -75,7 +81,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 }
 
-/** @brief Plugin unload callback: cleans up the Lua bridge state. */
+/**
+ * @brief Plugin unload callback: cleans up the Lua bridge state.
+ * @param _plugin The plugin instance being unloaded.
+ *
+ * Calls the Lua bridge's cleanup method to release resources.
+ */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zpt::LUA_BRIDGE().cleanup();
     zlog("Unloaded LUA bridge", zpt::info);

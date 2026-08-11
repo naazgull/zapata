@@ -43,7 +43,10 @@ class integration {
     integration() = default;
     virtual ~integration() = default;
 
-    /** @brief Returns the integration name (e.g., "lua", "prolog"). */
+    /**
+     * @brief Returns the integration name (e.g., "lua", "prolog").
+     * @return The name of the integration.
+     */
     virtual auto name() const -> std::string = 0;
 };
 
@@ -89,31 +92,79 @@ class bridge : public zpt::programming::integration {
     auto operator=(bridge<C, O> const& _rhs) = delete;
     auto operator=(bridge<C, O>&& _rhs) = delete;
 
-    /** @brief Sets bridge configuration options. */
+    /**
+     * @brief Sets bridge configuration options.
+     * @param _conf Configuration options as JSON.
+     * @return Reference to this bridge instance.
+     */
     auto set_options(zpt::json _conf) -> bridge<C, O>&;
-    /** @brief Returns current configuration options. */
+    /**
+     * @brief Returns current configuration options.
+     * @return Current configuration options as JSON.
+     */
     auto options() const -> zpt::json;
 
-    /** @brief Adds an external module from a file path. */
+    /**
+     * @brief Adds an external module from a file path.
+     * @param _external_path File path to the external module.
+     * @param _conf Optional configuration for the module.
+     * @return Reference to this bridge instance.
+     * @throws std::runtime_error if the file cannot be loaded.
+     */
     auto add_module(std::string _external_path, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
-    /** @brief Adds a module via callback. */
+    /**
+     * @brief Adds a module via callback.
+     * @param _callback The callback function to register as a module.
+     * @param _conf Optional configuration for the module.
+     * @return Reference to this bridge instance.
+     */
     template<typename Callback>
     auto add_module(Callback _callback, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
-    /** @brief Registers a lambda function. */
+    /**
+     * @brief Registers a lambda function.
+     * @param _lambda The lambda function to register.
+     * @param _conf Optional configuration for the lambda.
+     * @return Reference to this bridge instance.
+     */
     template<typename Lambda>
     auto add_lambda(Lambda _lambda, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
-    /** @brief Initializes the bridge after configuration. */
+    /**
+     * @brief Initializes the bridge after configuration.
+     * @return Reference to this bridge instance.
+     * @throws std::runtime_error if initialization fails.
+     */
     auto init() -> bridge<C, O>&;
 
-    /** @brief Locates an object by path. */
+    /**
+     * @brief Locates an object by path.
+     * @param _to_locate JSON object describing the path to locate.
+     * @return The located object of native type.
+     * @throws std::out_of_range if the path does not exist.
+     */
     auto locate(zpt::json _to_locate) -> object_type;
 
-    /** @brief Converts JSON to native object. */
+    /**
+     * @brief Converts JSON to native object.
+     * @param _to_convert JSON object to convert.
+     * @return The native object representation.
+     */
     auto json_to_object(zpt::json _to_convert) -> object_type;
-    /** @brief Converts native object to JSON. */
+    /**
+     * @brief Converts native object to JSON.
+     * @param _to_convert Native object to convert.
+     * @return The JSON representation.
+     */
     auto object_to_json(object_type _to_convert) -> zpt::json;
 
-    /** @brief Calls a function and returns the result as JSON. */
+    /**
+     * @brief Calls a function and returns the result as JSON.
+     * @tparam Term The type of the function/method to call.
+     * @tparam Args The types of the arguments to pass.
+     * @param _to_call The function or method to call.
+     * @param _arg Arguments to pass to the function.
+     * @return The result of the call as JSON.
+     * @throws std::runtime_error if the call fails.
+     */
     template<typename Term, typename... Args>
     auto call(Term _to_call, Args... _arg) -> zpt::json;
 

@@ -56,22 +56,35 @@ namespace transport {
  */
 class http : public zpt::basic_transport {
   public:
-    /** @brief Default constructor. */
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object) */
     http() = default;
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object) */
     virtual ~http() = default;
 
-    /** @brief Returns true for SYNCHRONOUS capability. */
+    /** @brief Returns true for SYNCHRONOUS capability.
+     * @param _capability Capability flag to check.
+     * @return True if checking for SYNCHRONOUS. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
-    /** @brief Creates a new HTTP request message. */
+    /** @brief Creates a new HTTP request message.
+     * @return Shared pointer to the new request message. */
     auto make_request() const -> zpt::message override;
-    /** @brief Creates a new HTTP reply message. */
+    /** @brief Creates a new HTTP reply message.
+     * @param _with_allocator If true, uses the memory pool allocator.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
-    /** @brief Creates an HTTP reply for a given request. */
+    /** @brief Creates an HTTP reply for a given request.
+     * @param _request The request message to reply to.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    /** @brief Parses an incoming HTTP request from a stream. */
+    /** @brief Parses an incoming HTTP request from a stream.
+     * @param _stream Input stream containing the serialized HTTP request.
+     * @return Parsed request message. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
-    /** @brief Parses an incoming HTTP reply from a stream. */
+    /** @brief Parses an incoming HTTP reply from a stream.
+     * @param _stream Input stream containing the serialized HTTP reply.
+     * @return Parsed reply message. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport
@@ -79,7 +92,9 @@ class http : public zpt::basic_transport {
 
 /**
  * @brief Returns the global HTTP server socket.
+ * @param _address Address to bind (default: "0.0.0.0").
  * @param _port Port to bind (0 for configured default).
+ * @return Reference to the global server socket stream.
  */
 auto HTTP_SERVER_SOCKET(std::string const& _address = "0.0.0.0", std::uint16_t _port = 0)
   -> zpt::serversocketstream&;

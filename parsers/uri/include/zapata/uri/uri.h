@@ -53,10 +53,18 @@ auto to_string(zpt::json const& _uri) -> std::string;
  */
 auto to_regex(zpt::json const& _in) -> zpt::json;
 
-/** @brief Converts URI to regex for object format. */
+/**
+ * @brief Converts a URI to a regex pattern for object format.
+ * @param _in URI JSON containing template variables.
+ * @return JSON object with the generated regex pattern.
+ */
 auto to_regex_object(zpt::json const& _in) -> zpt::json;
 
-/** @brief Converts URI to regex for array format. */
+/**
+ * @brief Converts a URI to a regex pattern for array format.
+ * @param _in URI JSON containing template variables.
+ * @return JSON object with the generated regex pattern.
+ */
 auto to_regex_array(zpt::json const& _in) -> zpt::json;
 
 /**

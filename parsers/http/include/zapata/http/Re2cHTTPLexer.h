@@ -82,23 +82,45 @@ class Re2cHTTPLexer {
     Re2cHTTPLexer(Re2cHTTPLexer const&) = delete;
     auto operator=(Re2cHTTPLexer const&) -> Re2cHTTPLexer& = delete;
 
-    /** @brief Returns the next token, or a value <= 0 at end-of-message/EOF. */
+    /**
+     * @brief Returns the next token, or a value <= 0 at end-of-message/EOF.
+     * @return Token value (positive integer), or 0 or negative at end-of-message/EOF.
+     *
+     * Advances the lexer through the input stream using the current start condition,
+     * performing state transitions based on the Re2c-generated DFA.
+     */
     auto lex() -> int;
 
-    /** @brief Text of the most recently completed token (mirrors flexc++'s matched()). */
+    /**
+     * @brief Text of the most recently completed token (mirrors flexc++'s matched()).
+     * @return Const reference to the matched string.
+     */
     auto matched() const -> std::string const&;
-    /** @brief Overwrites the current matched text (mirrors flexc++'s setMatched()). */
+    /**
+     * @brief Overwrites the current matched text (mirrors flexc++'s setMatched()).
+     * @param _text New matched text.
+     */
     auto setMatched(std::string const& _text) -> void;
-    /** @brief Marks that the next match should append to, not replace, matched(). */
+    /**
+     * @brief Marks that the next match should append to, not replace, matched().
+     * @return void (internal state flag set).
+     */
     auto more() -> void;
 
-    /** @brief Current lexer start condition. */
+    /**
+     * @brief Current lexer start condition.
+     * @return Current lexer start condition enum value.
+     */
     auto startCondition() const -> re2c_cond;
-    /** @brief Switches the lexer start condition. */
+    /**
+     * @brief Switches the lexer start condition.
+     * @param _condition New start condition to switch to.
+     */
     auto begin(re2c_cond _condition) -> void;
 
     /**
      * @brief Marks lexing as finished for this message; lex() will return <= 0 from now on.
+     * @param _retValue The value that lex() will return when called after this.
      *
      * Unlike flexc++'s exception-based leave() (which threw to unwind out of a
      * shared state-machine loop), this is a plain flag: since each start
@@ -108,14 +130,23 @@ class Re2cHTTPLexer {
      */
     auto leave(int _retValue) -> void;
 
-    /** @brief 1-based input line number, for diagnostics. */
+    /**
+     * @brief 1-based input line number, for diagnostics.
+     * @return Current line number in the input stream.
+     */
     auto lineNr() const -> std::size_t;
 
-    /** @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state. */
+    /**
+     * @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state.
+     * @param _in Input stream to read from.
+     * @param _out Output stream for errors.
+     */
     auto switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout) -> void;
 
     /**
      * @brief Reads exactly `_n` raw bytes regardless of content, bypassing the DFA.
+     * @param _n Number of bytes to read.
+     * @return String of the raw bytes read.
      *
      * Used for content-length bodies and chunked chunk-data, where the byte count
      * is known up front and the bytes themselves may be arbitrary (including CR/LF).
@@ -128,6 +159,7 @@ class Re2cHTTPLexer {
      * Must be called once after parse() returns (success or failure) so the
      * istream's read position ends up exactly at the first byte after the HTTP
      * message - this is the fix for the historical trailing-byte bug.
+     * @return void (internal buffer state adjusted).
      */
     auto syncBackToStream() -> void;
 
@@ -148,6 +180,8 @@ class Re2cHTTPLexer {
      * stream EOF is reached before `_need` real bytes could be supplied - the
      * caller (readRaw()) must then stop, since there is no more real content
      * to give back as body/chunk data.
+     * @param _need Number of bytes to ensure availability for.
+     * @return True if enough bytes were supplied, false on stream EOF.
      */
     auto fill(std::size_t _need) -> bool;
 
@@ -160,6 +194,8 @@ class Re2cHTTPLexer {
      * a no-body reply on a closing connection) match correctly instead of
      * forcing an artificial failure. syncBackToStream() never pushes back
      * these synthetic padding bytes (tracked via __data_limit).
+     * @param _need Number of bytes to fill.
+     * @return void (internal buffer extended).
      */
     auto yyfill(std::size_t _need) -> void;
 
@@ -172,6 +208,7 @@ class Re2cHTTPLexer {
      * before returning a token - this is the single point where the DFA's
      * pointer-range result becomes a std::string, replacing flexc++'s
      * incrementally-built d_matched.
+     * @return void (internal __matched string updated).
      */
     auto captureMatch() -> void;
 

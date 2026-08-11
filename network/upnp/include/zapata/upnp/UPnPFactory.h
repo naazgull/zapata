@@ -40,9 +40,15 @@ namespace zpt {
 /** @brief Factory for creating and managing UPnP socket channels. */
 class UPnPFactory : public zpt::ChannelFactory {
   public:
-    /** @brief Constructs the UPnP channel factory. */
+    /**
+     * @brief Constructs the UPnP channel factory.
+     * @return void (constructors implicitly initialize the object).
+     */
     UPnPFactory();
-    /** @brief Destroys the UPnP channel factory. */
+    /**
+     * @brief Destroys the UPnP channel factory.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~UPnPFactory();
     /** @brief Creates a new UPnP socket channel.
      @param _options Configuration JSON for the channel.

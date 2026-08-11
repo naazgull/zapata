@@ -39,7 +39,8 @@
 #include <zapata/transport.h>
 
 namespace zpt {
-/** @brief Returns reference to the internal server stream counter. */
+/** @brief Returns reference to the internal server stream counter.
+ * @return Reference to the server stream counter. */
 auto INTERNAL_SERVER_STREAM() -> ssize_t&;
 namespace net {
 namespace transport {
@@ -55,17 +56,28 @@ class pipe_stream : public zpt::basic_transport {
     pipe_stream() = default;
     virtual ~pipe_stream() = default;
 
-    /** @brief Returns true for SYNCHRONOUS capability. */
+    /** @brief Returns true for SYNCHRONOUS capability.
+     * @param _capability Capability flag to check.
+     * @return True if checking for SYNCHRONOUS. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
-    /** @brief Creates a new request message with JSON payload. */
+    /** @brief Creates a new request message with JSON payload.
+     * @return Shared pointer to the new request message. */
     auto make_request() const -> zpt::message override;
-    /** @brief Creates a new reply message, optionally using the allocator. */
+    /** @brief Creates a new reply message, optionally using the allocator.
+     * @param _with_allocator If true, uses the memory pool allocator.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
-    /** @brief Creates a reply message derived from the given request. */
+    /** @brief Creates a reply message derived from the given request.
+     * @param _request The request message to reply to.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    /** @brief Parses an incoming request message from the pipe stream. */
+    /** @brief Parses an incoming request message from the pipe stream.
+     * @param _stream Input stream containing the serialized request.
+     * @return Parsed request message. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
-    /** @brief Parses an incoming reply message from the pipe stream. */
+    /** @brief Parses an incoming reply message from the pipe stream.
+     * @param _stream Input stream containing the serialized reply.
+     * @return Parsed reply message. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
 };
 } // namespace transport

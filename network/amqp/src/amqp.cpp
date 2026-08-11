@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file amqp.cpp
+ * @brief AMQP transport implementation.
+ *
+ * Implements the zpt::net::transport::amqp class with JSON framing
+ * and the AMQP_STREAM() singleton accessor.
+ */
+
 #include <zapata/base.h>
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>

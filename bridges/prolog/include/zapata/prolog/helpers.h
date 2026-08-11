@@ -43,43 +43,73 @@ namespace prolog {
  */
 class term {
   public:
-    /** @brief Constructs an empty term reference using `PL_new_term_ref`. */
+    /** @brief Constructs an empty term reference using `PL_new_term_ref`.
+     * @return void (constructors implicitly initialize the object). */
     term();
-    /** @brief Constructs a term from an existing SWI-Prolog term reference. */
+    /** @brief Constructs a term from an existing SWI-Prolog term reference.
+     * @param _to_assign Raw term reference to adopt.
+     * @return void (constructors implicitly initialize the object). */
     term(term_t _to_assign);
-    /** @brief Parses a Prolog string expression (e.g. "foo(1, 2)") into a new term. */
+    /** @brief Parses a Prolog string expression (e.g. "foo(1, 2)") into a new term.
+     * @param _to_parse Prolog string expression.
+     * @return void (constructors implicitly initialize the object). */
     term(std::string const& _to_parse);
-    /** @brief Copies a term, incrementing the shared reference count. */
+    /** @brief Copies a term, incrementing the shared reference count.
+     * @param _rhs Term to copy.
+     * @return void (constructors implicitly initialize the object). */
     term(term const& _rhs);
-    /** @brief Moves a term, transferring ownership of the underlying reference. */
+    /** @brief Moves a term, transferring ownership of the underlying reference.
+     * @param _rhs Term to move from.
+     * @return void (constructors implicitly initialize the object). */
     term(term&& _rhs);
-    /** @brief Frees the underlying term reference when the reference count reaches zero. */
+    /** @brief Frees the underlying term reference when the reference count reaches zero.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~term();
 
-    /** @brief Implicit conversion to the raw SWI-Prolog `term_t` type. */
+    /** @brief Implicit conversion to the raw SWI-Prolog `term_t` type.
+     * @return Underlying term reference. */
     operator term_t();
-    /** @brief Returns a reference to the underlying `term_t` pointer. */
+    /** @brief Returns a reference to the underlying `term_t` pointer.
+     * @return Reference to the underlying term_t. */
     auto operator*() -> term_t&;
-    /** @brief Assigns a raw `term_t` to this term. Must not be currently shared. */
+    /** @brief Assigns a raw `term_t` to this term. Must not be currently shared.
+     * @param _rhs Raw term reference to assign.
+     * @return Reference to this term. */
     auto operator=(term_t _rhs) -> term&;
-    /** @brief Assigns from another term, sharing the underlying reference. */
+    /** @brief Assigns from another term, sharing the underlying reference.
+     * @param _rhs Term to copy from.
+     * @return Reference to this term. */
     auto operator=(term const& _rhs) -> term&;
-    /** @brief Moves assignment from another term. */
+    /** @brief Moves assignment from another term.
+     * @param _rhs Term to move from.
+     * @return Reference to this term. */
     auto operator=(term&& _rhs) -> term&;
-    /** @brief Compares underlying term references for equality. */
+    /** @brief Compares underlying term references for equality.
+     * @param _rhs Term to compare with.
+     * @return True if term references are equal. */
     auto operator==(term const& _rhs) const -> bool;
-    /** @brief Compares underlying term references for inequality. */
+    /** @brief Compares underlying term references for inequality.
+     * @param _rhs Term to compare with.
+     * @return True if term references differ. */
     auto operator!=(term const& _rhs) const -> bool;
-    /** @brief Emplaces a new child term and returns a reference to it. */
+    /** @brief Emplaces a new child term and returns a reference to it.
+     * @return New child term. */
     auto emplace() -> term;
-    /** @brief Appends a child term to this term's children list. */
+    /** @brief Appends a child term to this term's children list.
+     * @param _to_add Child term to append.
+     * @return Reference to this term. */
     auto add(term const& _to_add) -> term&;
-    /** @brief Serializes the underlying Prolog term to a string representation. */
+    /** @brief Serializes the underlying Prolog term to a string representation.
+     * @return String representation of the term. */
     auto to_string() const -> std::string;
-    /** @brief Returns a static null term (underlying pointer is 0). */
+    /** @brief Returns a static null term (underlying pointer is 0).
+     * @return Reference to the static null term. */
     static auto null() -> term&;
 
-    /** @brief Streams the term's string representation into an output stream. */
+    /** @brief Streams the term's string representation into an output stream.
+     * @param _os Output stream to write to.
+     * @param _in Term to stream.
+     * @return Output stream with term representation. */
     friend auto operator<<(std::ostream& _os, term const& _in) -> std::ostream& {
         _os << _in.to_string();
         return _os;
@@ -91,7 +121,9 @@ class term {
     std::shared_ptr<zpt::padded_atomic<size_t>> __references{ nullptr }; ///< Shared reference count
 };
 
-/** @brief Converts a raw SWI-Prolog term to a string representation using `PL_write_term`. */
+/** @brief Converts a raw SWI-Prolog term to a string representation using `PL_write_term`.
+ * @param _to_convert Raw term to convert.
+ * @return String representation of the term. */
 auto term_to_string(term_t _to_convert) -> std::string;
 } // namespace prolog
 } // namespace zpt

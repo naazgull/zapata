@@ -44,10 +44,12 @@ class CastException : public zpt::exception {
     /**
      * @brief Constructs a CastException.
      * @param _what Description of the cast failure.
+     * @return void (constructors implicitly initialize the object).
+     * @throws CastException Always (the constructor itself throws).
      */
     CastException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~CastException() throw();
 };
 

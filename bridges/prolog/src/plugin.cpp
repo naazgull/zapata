@@ -25,7 +25,10 @@
 #include <zapata/startup.h>
 
 namespace {
-/** @brief Loads the dynamic Prolog bindings library (libzapata_bridge_prolog_bindings). */
+/**
+ * @brief Loads the dynamic Prolog bindings library (libzapata_bridge_prolog_bindings).
+ * @return void (global Prolog bridge initialized with external library).
+ */
 auto register_bindings() -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE();
     _bridge.call(zpt::prolog::term{ std::format(
@@ -59,7 +62,14 @@ class execute_after_boot : public zpt::system_event {
     }
 };
 
-/** @brief Plugin load callback: initializes the Prolog bridge and registers the `zpt` module. */
+/**
+ * @brief Plugin load callback: initializes the Prolog bridge and registers the `zpt` module.
+ * @param _plugin The plugin instance providing configuration.
+ *
+ * Initializes the Prolog bridge with command-line options, sets bridge configuration,
+ * registers the `zpt` module bindings, loads optional external modules, and registers
+ * the post-boot execution handler if configured.
+ */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::PROLOG_BRIDGE(zpt::GLOBAL_CONFIG()("self")("cmd")->string());
     _bridge.set_options(_plugin.config());
@@ -81,7 +91,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Initialized PROLOG bridge", zpt::info);
 }
 
-/** @brief Plugin unload callback: cleans up the Prolog bridge state. */
+/**
+ * @brief Plugin unload callback: cleans up the Prolog bridge state.
+ * @param _plugin The plugin instance being unloaded.
+ *
+ * Calls the Prolog bridge's cleanup method to release resources.
+ */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zpt::PROLOG_BRIDGE().cleanup();
     zlog("Unloaded PROLOG bridge", zpt::info);

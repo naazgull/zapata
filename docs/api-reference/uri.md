@@ -116,6 +116,130 @@ auto to_regex_array(zpt::json const& _in) -> zpt::json;
 
 ---
 
+## Class: `zpt::URIParser`
+
+Wrapper around the re2c/bison generated parser for URIs. Provides programmatic access to URI parsing with configurable input/output streams.
+
+**Header:** `<zapata/uri/URIParser.h>`
+
+### Constructor
+
+```cpp
+URIParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+```
+
+**Parameters:**
+- `_in` - Input stream to read URI strings from (default: stdin)
+- `_out` - Output stream for parser logging (default: stdout)
+
+### Destructor
+
+```cpp
+virtual ~URIParser();
+```
+
+### Methods
+
+#### `switchRoots`
+
+Sets the JSON root node to populate during parsing.
+
+The parser will write URI components into this JSON object.
+
+**Parameters:**
+- `_root` - JSON object to populate with URI components
+
+**Example:**
+```cpp
+zpt::json root;
+auto parser = zpt::URIParser(std::cin, std::cout);
+parser->switchRoots(root);
+parser->parse();
+// root now contains: { "scheme", "http", "host", "example.com", ... }
+```
+
+---
+
+#### `switchStreams`
+
+Switches the input/output streams for parsing.
+
+Allows reusing the parser instance with different streams without recreating it.
+
+**Parameters:**
+- `_in` - Input stream to read URI strings from
+- `_out` - Output stream for parser logging
+
+**Example:**
+```cpp
+std::ifstream file("uris.txt");
+std::ofstream log("parser.log");
+
+auto parser = zpt::URIParser();
+parser->switchStreams(file, log);
+parser->parse();  // Parses from file, logs to log file
+```
+
+---
+
+#### `clear`
+
+Clears the internal structures after parsing.
+
+Resets parser state for reuse with a new URI string.
+
+**Example:**
+```cpp
+zpt::json root;
+auto parser = zpt::URIParser();
+
+parser->switchRoots(root);
+parser->parse();  // Parses first URI
+parser->clear();  // Reset for next URI
+
+parser->parse();  // Parses second URI
+```
+
+---
+
+### Usage Pattern
+
+```cpp
+#include <zapata/uri/URIParser.h>
+#include <fstream>
+
+// Parse multiple URIs from a file
+std::ifstream input("uris.txt");
+std::ofstream output("parsed_uris.json");
+
+zpt::json results = zpt::json::array();
+
+auto parser = zpt::URIParser(input, output);
+parser->switchRoots(results);
+
+std::string uri;
+while (std::getline(input, uri)) {
+    // Clear for next URI
+    parser->clear();
+    // Parse
+    parser->parse(uri);
+    // Access parsed result
+    if (!results->is_null()) {
+        std::cout << "Scheme: " << results("scheme") << std::endl;
+        std::cout << "Host: " << results("host") << std::endl;
+    }
+}
+```
+
+### Notes
+
+- The URIParser uses the re2c/bison generated parser (`URITokenizer` base class)
+- Each call to `parse()` consumes exactly one URI string
+- For streaming URI input, consider using `zpt::uri::parse()` instead which reads from streams
+- The parser is not thread-safe; create separate instances for each thread
+
+---
+
 ## Namespace: `zpt::uri::path`
 
 Path-specific serialization.

@@ -39,14 +39,21 @@ namespace zpt {
 namespace storage {
 namespace mongodb {
 
-/** @brief Converts a zpt::json object to a bsoncxx document value. */
+/** @brief Converts a zpt::json object to a bsoncxx document value.
+ * @param _doc JSON object to convert
+ * @return bsoncxx document value representing the converted JSON
+ */
 auto to_bson(zpt::json _doc) -> bsoncxx::document::value;
 
-/** @brief Converts a bsoncxx document view to a zpt::json object. */
+/** @brief Converts a bsoncxx document view to a zpt::json object.
+ * @param _doc BSON document view to convert.
+ * @return JSON object representing the BSON document. */
 auto from_bson(bsoncxx::document::view _doc) -> zpt::json;
 
 /**
  * @brief Converts a zpt::json filter to a bsoncxx document value.
+ * @param _filter Filter JSON object to convert.
+ * @return bsoncxx document value representing the filter.
  *
  * An undefined or non-object filter produces an empty document (match all).
  */
@@ -56,16 +63,27 @@ auto to_filter(zpt::json _filter) -> bsoncxx::document::value;
  * @brief Converts a zpt::json update object to a MongoDB update document.
  *
  * Defined values go into `$set`, undefined values go into `$unset`.
+ * @param _to_update JSON object containing update fields with defined/undefined values
+ * @return bsoncxx document value representing the MongoDB update document
  */
 auto to_update_doc(zpt::json _to_update) -> bsoncxx::document::value;
 
-/** @brief Converts a zpt::json field list to a MongoDB projection document. */
+/** @brief Converts a zpt::json field list to a MongoDB projection document.
+ * @param _fields JSON object or array specifying which fields to include/exclude
+ * @return bsoncxx document value representing the MongoDB projection document
+ */
 auto to_projection(zpt::json _fields) -> bsoncxx::document::value;
 
-/** @brief Converts a zpt::json sort spec to a MongoDB sort document. */
+/** @brief Converts a zpt::json sort spec to a MongoDB sort document.
+ * @param _sort JSON sort specification (field -> direction map).
+ * @return BSON document value representing the sort document. */
 auto to_sort(zpt::json _sort) -> bsoncxx::document::value;
 
-/** @brief Appends a single zpt::json value into a bsoncxx document builder under key. */
+/** @brief Appends a single zpt::json value into a bsoncxx document builder under key.
+ * @param _doc Reference to the BSON document builder.
+ * @param _key Key to store the value under.
+ * @param _value JSON value to append.
+ * @return void */
 auto append_value(bsoncxx::builder::basic::document& _doc,
                   std::string const& _key,
                   zpt::json _value) -> void;

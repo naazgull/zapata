@@ -30,25 +30,47 @@ namespace zpt {
 
 class FunctionalTokenizerLexer : public Re2cFunctionalLexer {
   public:
-    /** @brief Constructs with given input and output streams. */
+    /** @brief Constructs with given input and output streams.
+     * @param _in Input stream to read from (default std::cin).
+     * @param _out Output stream for errors (default std::cout). */
     FunctionalTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~FunctionalTokenizerLexer();
 
-    /** @brief Sets the JSON root node to populate during parsing. */
+    /** @brief Sets the JSON root node to populate during parsing.
+     * @param _root JSON object to populate with parsed data. */
     auto switchRoots(zpt::json& _root) -> void;
-    /** @brief Calls leave(0) to signal lexing completion. */
+    /**
+     * @brief Calls leave(0) to signal lexing completion.
+     * @return void (internal __left flag set).
+     */
     auto justLeave() -> void;
-    /** @brief Empties the working value stack. */
+    /**
+     * @brief Empties the working value stack.
+     * @return void (internal __stack cleared).
+     */
     auto clear() -> void;
 
-    /** @brief Pushes a string literal (the de-quoted matched() text) onto the stack. */
+    /**
+     * @brief Pushes a string literal (the de-quoted matched() text) onto the stack.
+     * @return void (stack updated).
+     */
     auto set_string() -> void;
-    /** @brief Pushes an integer or floating-point literal parsed from matched(). */
+    /**
+     * @brief Pushes an integer or floating-point literal parsed from matched().
+     * @return void (stack updated).
+     */
     auto set_number() -> void;
-    /** @brief Pushes a function-call node (or the root, for the first token) with `functor` set. */
+    /**
+     * @brief Pushes a function-call node (or the root, for the first token) with `functor` set.
+     * @return void (stack updated with a new object containing the `functor` field).
+     */
     auto set_variable() -> void;
-    /** @brief Pops the top of the stack and appends it as a param of the new top. */
+    /**
+     * @brief Pops the top of the stack and appends it as a param of the new top.
+     * @return void (stack structure updated with new argument).
+     */
     auto add_param() -> void;
 
   private:

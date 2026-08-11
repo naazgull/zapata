@@ -73,12 +73,16 @@ namespace zpt {
 template<typename T>
 class padded_atomic {
   public:
-    /** @brief Default constructor. */
+    /**
+     * @brief Default constructor.
+     * @return none
+     */
     padded_atomic();
 
     /**
      * @brief Constructs with an initial value.
      * @param _value The initial value.
+     * @return none
      */
     padded_atomic(T _value);
 
@@ -87,6 +91,7 @@ class padded_atomic {
     /**
      * @brief Move constructor.
      * @param _rhs The source to move from.
+     * @return none
      */
     padded_atomic(zpt::padded_atomic<T>&& _rhs);
 
@@ -112,6 +117,7 @@ class padded_atomic {
     /**
      * @brief Implicit conversion to the underlying type.
      * @return The current value (relaxed memory order).
+     * @throws none
      */
     operator T();
 
@@ -128,7 +134,10 @@ class padded_atomic {
      */
     auto operator->() -> std::atomic<T>*;
 
-    /** @copydoc operator->() */
+    /**
+     * @brief Arrow operator (const overload).
+     * @return Pointer to the underlying atomic.
+     */
     auto operator->() const -> std::atomic<T> const*;
 
     /**
@@ -137,7 +146,10 @@ class padded_atomic {
      */
     auto operator*() -> std::atomic<T>&;
 
-    /** @copydoc operator*() */
+    /**
+     * @brief Dereference operator (const overload).
+     * @return Const reference to the underlying atomic.
+     */
     auto operator*() const -> std::atomic<T> const&;
 
   private:

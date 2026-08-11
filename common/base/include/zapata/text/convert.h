@@ -64,32 +64,149 @@ namespace zpt {
  * Functions for converting various types to strings.
  * @{
  */
+/**
+ * @brief Converts an integer to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Integer value to convert.
+ */
 auto tostr(std::string& s, int i) -> void;
+/**
+ * @brief Converts a boolean to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Boolean value to convert.
+ */
 auto tostr(std::string& s, bool i) -> void;
+/**
+ * @brief Converts an integer with a custom stream manipulator to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param manip Stream manipulator function for formatting.
+ */
 auto tostr(std::string&, int, std::ios_base& (&)(std::ios_base&)) -> void;
 #ifdef __LP64__
+/**
+ * @brief Converts an unsigned integer to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Unsigned integer value to convert.
+ */
 auto tostr(std::string& s, unsigned int i) -> void;
 #endif
+/**
+ * @brief Converts a size_t to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Size value to convert.
+ */
 auto tostr(std::string& s, size_t i) -> void;
+/**
+ * @brief Converts a long to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Long integer value to convert.
+ */
 auto tostr(std::string& s, long i) -> void;
+/**
+ * @brief Converts a long long to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Long long integer value to convert.
+ */
 auto tostr(std::string& s, long long i) -> void;
+/**
+ * @brief Converts a float to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Float value to convert.
+ * @param precision Number of decimal digits (default: 0).
+ */
 auto tostr(std::string& s, float i, int precision = 0) -> void;
+/**
+ * @brief Converts a double to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Double value to convert.
+ * @param precision Number of decimal digits (default: 0).
+ */
 auto tostr(std::string& s, double i, int precision = 0) -> void;
+/**
+ * @brief Converts a char to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Character value to convert.
+ */
 auto tostr(std::string& s, char i) -> void;
+/**
+ * @brief Converts a time_t to a string (in-place).
+ * @param s Output string receiving the converted value.
+ * @param i Time value to convert.
+ * @param f Format string passed to strftime.
+ */
 auto tostr(std::string& s, time_t i, const char* f) -> void;
 
+/**
+ * @brief Converts an integer to a string (returns copy).
+ * @param i Integer value to convert.
+ * @return String representation of the integer.
+ */
 auto tostr(int i) -> std::string;
+/**
+ * @brief Converts a boolean to a string (returns copy).
+ * @param i Boolean value to convert.
+ * @return String representation ("true" or "false").
+ */
 auto tostr(bool i) -> std::string;
+/**
+ * @brief Converts an integer with a custom stream manipulator to a string (returns copy).
+ * @param i Integer value to convert.
+ * @param manip Stream manipulator function for formatting.
+ * @return String representation of the integer.
+ */
 auto tostr(int, std::ios_base& (&)(std::ios_base&)) -> std::string;
 #ifdef __LP64__
+/**
+ * @brief Converts an unsigned integer to a string (returns copy).
+ * @param i Unsigned integer value to convert.
+ * @return String representation of the integer.
+ */
 auto tostr(unsigned int i) -> std::string;
 #endif
+/**
+ * @brief Converts a size_t to a string (returns copy).
+ * @param i Size value to convert.
+ * @return String representation of the size.
+ */
 auto tostr(size_t i) -> std::string;
+/**
+ * @brief Converts a long to a string (returns copy).
+ * @param i Long integer value to convert.
+ * @return String representation of the integer.
+ */
 auto tostr(long i) -> std::string;
+/**
+ * @brief Converts a long long to a string (returns copy).
+ * @param i Long long integer value to convert.
+ * @return String representation of the integer.
+ */
 auto tostr(long long i) -> std::string;
+/**
+ * @brief Converts a float to a string (returns copy).
+ * @param i Float value to convert.
+ * @param precision Number of decimal digits (default: 0).
+ * @return String representation of the float.
+ */
 auto tostr(float i, int precision = 0) -> std::string;
+/**
+ * @brief Converts a double to a string (returns copy).
+ * @param i Double value to convert.
+ * @param precision Number of decimal digits (default: 0).
+ * @return String representation of the double.
+ */
 auto tostr(double i, int precision = 0) -> std::string;
+/**
+ * @brief Converts a char to a string (returns copy).
+ * @param i Character value to convert.
+ * @return String representation of the character.
+ */
 auto tostr(char i) -> std::string;
+/**
+ * @brief Converts a time_t to a string (returns copy).
+ * @param i Time value to convert.
+ * @param f Format string passed to strftime.
+ * @return String representation of the time.
+ */
 auto tostr(time_t i, const char* f) -> std::string;
 
 /** @} */
@@ -98,18 +215,75 @@ auto tostr(time_t i, const char* f) -> std::string;
  * Functions for parsing strings into various types.
  * @{
  */
+/**
+ * @brief Parses an integer from a string.
+ * @param s String containing the integer to parse.
+ * @param i Pointer to store the parsed integer.
+ */
 auto fromstr(std::string s, int* i) -> void;
 #ifdef __LP64__
+/**
+ * @brief Parses an unsigned integer from a string.
+ * @param s String containing the unsigned integer to parse.
+ * @param i Pointer to store the parsed integer.
+ */
 auto fromstr(std::string s, unsigned int* i) -> void;
 #endif
+/**
+ * @brief Parses a size_t from a string.
+ * @param s String containing the size value to parse.
+ * @param i Pointer to store the parsed size.
+ */
 auto fromstr(std::string s, size_t* i) -> void;
+/**
+ * @brief Parses a long from a string.
+ * @param s String containing the long to parse.
+ * @param i Pointer to store the parsed integer.
+ */
 auto fromstr(std::string s, long* i) -> void;
+/**
+ * @brief Parses a long long from a string.
+ * @param s String containing the long long to parse.
+ * @param i Pointer to store the parsed integer.
+ */
 auto fromstr(std::string s, long long* i) -> void;
+/**
+ * @brief Parses a float from a string.
+ * @param s String containing the float to parse.
+ * @param i Pointer to store the parsed value.
+ */
 auto fromstr(std::string s, float* i) -> void;
+/**
+ * @brief Parses a double from a string.
+ * @param s String containing the double to parse.
+ * @param i Pointer to store the parsed value.
+ */
 auto fromstr(std::string s, double* i) -> void;
+/**
+ * @brief Parses a char from a string.
+ * @param s String containing the character to parse.
+ * @param i Pointer to store the parsed character.
+ */
 auto fromstr(std::string s, char* i) -> void;
+/**
+ * @brief Parses a boolean from a string.
+ * @param s String containing the boolean to parse.
+ * @param i Pointer to store the parsed boolean.
+ */
 auto fromstr(std::string s, bool* i) -> void;
+/**
+ * @brief Parses a time_t from a string.
+ * @param s String containing the time value to parse.
+ * @param i Pointer to store the parsed time.
+ * @param f Format string used for parsing.
+ */
 auto fromstr(std::string s, time_t* i, const char* f) -> void;
+/**
+ * @brief Converts a value of type T to its string representation.
+ * @tparam T Type of the value to convert.
+ * @param _in Value to convert.
+ * @return String representation of the input value.
+ */
 template<typename T>
 auto fromstr(T _in) -> std::string;
 /** @} */
@@ -187,32 +361,93 @@ auto get_backtrace(int _skip = 0) -> std::string;
  * Includes URL-safe Base64 variants that use - and _ instead of + and /.
  */
 namespace base64 {
-/** @brief Encodes a string to Base64 (in-place). */
+/**
+ * @brief Encodes a string to Base64 (in-place).
+ * @param _out String to encode; overwritten with the Base64-encoded result.
+ */
 void encode(std::string& _out);
-/** @brief Decodes a Base64 string (in-place). */
+/**
+ * @brief Decodes a Base64 string (in-place).
+ * @param _out String to decode; overwritten with the decoded bytes.
+ */
 void decode(std::string& _out);
-/** @brief Encodes stream data to Base64. */
+/**
+ * @brief Encodes stream data to Base64.
+ * @param _in Input stream containing raw bytes to encode.
+ * @param _out Output stream receiving the Base64-encoded result.
+ */
 void encode(std::istream& _in, std::ostream& _out);
-/** @brief Decodes Base64 stream data. */
+/**
+ * @brief Decodes Base64 stream data.
+ * @param _in Input stream containing Base64-encoded text.
+ * @param _out Output stream receiving the decoded bytes.
+ */
 void decode(std::istream& _in, std::ostream& _out);
+/**
+ * @brief Encodes a byte vector to Base64.
+ * @param _in Byte vector to encode.
+ * @param _out String receiving the Base64-encoded result.
+ */
 auto encode(std::vector<unsigned char> const& _in, std::string& _out) -> void;
+/**
+ * @brief Decodes a Base64 string into a byte vector.
+ * @param _in Base64-encoded string.
+ * @param _out Vector receiving the decoded bytes.
+ */
 auto decode(std::string const& _in, std::vector<unsigned char>& _out) -> void;
+/**
+ * @brief Encodes a byte vector to URL-safe Base64.
+ * @param _in Byte vector to encode.
+ * @param _out String receiving the URL-safe Base64-encoded result.
+ * @param _pad Whether to include padding characters (`=`).
+ */
 auto url_encode(std::vector<unsigned char> const& _in, std::string& _out, bool _pad = true) -> void;
+/**
+ * @brief Decodes URL-safe Base64 into a byte vector.
+ * @param _in URL-safe Base64-encoded string.
+ * @param _out Vector receiving the decoded bytes.
+ */
 auto url_decode(std::string const& _in, std::vector<unsigned char>& _out) -> void;
-/** @brief Encodes to URL-safe Base64 (in-place). */
+/**
+ * @brief Encodes to URL-safe Base64 (in-place).
+ * @param _out String to encode; overwritten with the URL-safe Base64 result.
+ */
 void url_encode(std::string& _out);
-/** @brief Decodes URL-safe Base64 (in-place). */
+/**
+ * @brief Decodes URL-safe Base64 (in-place).
+ * @param _out String to decode; overwritten with the decoded bytes.
+ */
 void url_decode(std::string& _out);
 
-/** @brief Returns Base64 encoded copy. */
+/**
+ * @brief Returns Base64 encoded copy.
+ * @param _in String to encode.
+ * @return Base64-encoded string.
+ */
 auto r_encode(std::string const& _in) -> std::string;
-/** @brief Returns Base64 encoded copy. */
+/**
+ * @brief Returns Base64 encoded copy of a byte vector.
+ * @param _in Byte vector to encode.
+ * @return Base64-encoded string.
+ */
 auto r_encode(std::vector<unsigned char> const& _in) -> std::string;
-/** @brief Returns Base64 decoded copy. */
+/**
+ * @brief Returns Base64 decoded copy.
+ * @param _in Base64-encoded string.
+ * @return Decoded string.
+ */
 auto r_decode(std::string const& _in) -> std::string;
-/** @brief Returns URL-safe Base64 encoded copy. */
+/**
+ * @brief Returns URL-safe Base64 encoded copy.
+ * @param _in String to encode.
+ * @return URL-safe Base64-encoded string.
+ */
 auto r_url_encode(std::string const& _in) -> std::string;
-/** @brief Returns URL-safe Base64 decoded copy. */
+/**
+ * @brief Returns URL-safe Base64 decoded copy.
+ * @param _in URL-safe Base64-encoded string.
+ * @return Decoded string.
+ */
 auto r_url_decode(std::string const& _in) -> std::string;
 } // namespace base64
 
@@ -222,10 +457,35 @@ using uchar = unsigned char; ///< Unsigned char alias.
  * @brief UTF-8 encoding and decoding functions.
  */
 namespace utf8 {
+/**
+ * @brief Converts a wide string to a UTF-8 encoded string.
+ * @param ws Wide string to convert.
+ * @return Dynamically allocated UTF-8 encoded string (caller must free with delete[]).
+ */
 char* wstring_to_utf8(std::wstring ws);
+/**
+ * @brief Converts a UTF-8 encoded string to a wide string.
+ * @param s UTF-8 encoded string to convert.
+ * @return Dynamically allocated wide string (caller must free with delete[]).
+ */
 wchar_t* utf8_to_wstring(std::string s);
+/**
+ * @brief Encodes a wide string as UTF-8.
+ * @param s Wide string to encode.
+ * @param _out Output string receiving the UTF-8 encoded result.
+ * @param quote Optional quote character to wrap the output (default: none).
+ */
 void encode(std::wstring s, std::string& _out, char quote = '\0');
+/**
+ * @brief Encodes the current string as UTF-8 (in-place).
+ * @param _out String to encode; overwritten with the UTF-8 encoded result.
+ * @param quote Optional quote character to wrap the output (default: none).
+ */
 void encode(std::string& _out, char quote = '\0');
+/**
+ * @brief Decodes a UTF-8 encoded string in-place.
+ * @param _out UTF-8 encoded string to decode; overwritten with the decoded wide string.
+ */
 void decode(std::string& _out);
 } // namespace utf8
 
@@ -233,12 +493,31 @@ void decode(std::string& _out);
  * @brief Unicode escape sequence functions.
  */
 namespace unicode {
-/** @brief Escapes non-ASCII characters as \\uXXXX sequences (in-place). */
+/**
+ * @brief Escapes non-ASCII characters as \uXXXX sequences (in-place).
+ * @param _out String to escape; modified in place.
+ * @return void (input string modified in place).
+ */
 void escape(std::string& _out);
 } // namespace unicode
 
+/**
+ * @brief Quoted-printable encoding functions.
+ */
 namespace quoted_printable {
+/**
+ * @brief Encodes a string in quoted-printable format.
+ * @param _quote The input string to encode.
+ * @param _charset The character set of the input string.
+ * @param _out Output string receiving the quoted-printable encoded result.
+ */
 auto encode(std::string const& _quote, std::string const& _charset, std::string& _out) -> void;
+/**
+ * @brief Returns a quoted-printable encoded copy.
+ * @param _quote The input string to encode.
+ * @param _charset The character set of the input string.
+ * @return Quoted-printable encoded string.
+ */
 auto r_encode(std::string const& _quote, std::string const& _charset) -> std::string;
 } // namespace quoted_printable
 
@@ -248,19 +527,45 @@ auto r_encode(std::string const& _quote, std::string const& _charset) -> std::st
  * Converts special characters to %XX format for safe inclusion in URLs.
  */
 namespace url {
-/** @brief URL-encodes a wide string to a stream. */
+/**
+ * @brief URL-encodes a wide string to a stream.
+ * @param s Wide string to encode.
+ * @param out Output stream to write the encoded result.
+ */
 auto encode(std::wstring s, std::ostream& out) -> void;
-/** @brief URL-encodes a string (in-place). */
+/**
+ * @brief URL-encodes a string (in-place).
+ * @param out String to encode; overwritten with URL-encoded result.
+ */
 auto encode(std::string& out) -> void;
-/** @brief URL-decodes a string (in-place). */
+/**
+ * @brief URL-decodes a string (in-place).
+ * @param out String to decode; overwritten with URL-decoded result.
+ */
 auto decode(std::string& out) -> void;
-/** @brief Returns URL-encoded copy. */
+/**
+ * @brief Returns a URL-encoded copy.
+ * @param _out String to encode.
+ * @return URL-encoded string.
+ */
 auto r_encode(std::string const& _out) -> std::string;
-/** @brief Returns URL-decoded copy. */
+/**
+ * @brief Returns a URL-decoded copy.
+ * @param _out String to decode.
+ * @return URL-decoded string.
+ */
 auto r_decode(std::string const& _out) -> std::string;
 } // namespace url
 
+/**
+ * @brief ASCII encoding functions.
+ */
 namespace ascii {
+/**
+ * @brief Encodes a string for safe ASCII output.
+ * @param out String to encode.
+ * @param quote Whether to include surrounding quotes (default: true).
+ */
 void encode(std::string& out, bool quote = true);
 }
 
@@ -268,21 +573,49 @@ void encode(std::string& out, bool quote = true);
  * @brief Random key and identifier generation functions.
  */
 namespace generate {
-/** @brief Generates a random key of specified size (in-place). */
+/**
+ * @brief Generates a random key of specified size (in-place).
+ * @param _out String receiving the random key.
+ * @param _size Number of random bytes to generate.
+ */
 auto key(std::string& _out, size_t _size = 24) -> void;
-/** @brief Returns a random key of specified size. */
+/**
+ * @brief Returns a random key of specified size.
+ * @param _size Number of random bytes to generate.
+ * @return Random key string.
+ */
 auto r_key(size_t _size) -> std::string;
-/** @brief Returns a random key (default size). */
+/**
+ * @brief Returns a random key (default size).
+ * @return Random key string (24 bytes).
+ */
 auto r_key() -> std::string;
-/** @brief Generates a random pin of specified size (in-place). */
+/**
+ * @brief Generates a random pin of specified size (in-place).
+ * @param _out String receiving the random pin.
+ * @param _size Number of random digits to generate.
+ */
 auto pin(std::string& _out, size_t _size = 6) -> void;
-/** @brief Returns a random pin of specified size. */
+/**
+ * @brief Returns a random pin of specified size.
+ * @param _size Number of random digits to generate.
+ * @return Random pin string.
+ */
 auto r_pin(size_t _size) -> std::string;
-/** @brief Returns a random pin (default size). */
+/**
+ * @brief Returns a random pin (default size).
+ * @return Random pin string (6 digits).
+ */
 auto r_pin() -> std::string;
-/** @brief Generates a random hash (in-place). */
+/**
+ * @brief Generates a random hash (in-place).
+ * @param _out String receiving the random hash.
+ */
 auto hash(std::string& _out) -> void;
-/** @brief Returns a random hash string. */
+/**
+ * @brief Returns a random hash string.
+ * @return Random hash string.
+ */
 auto r_hash() -> std::string;
 } // namespace generate
 
@@ -292,23 +625,60 @@ auto r_hash() -> std::string;
  * Functions to validate various string formats.
  */
 namespace test {
-/** @brief Validates a UUID string format. */
+/**
+ * @brief Validates a UUID string format.
+ * @param _uuid UUID string to validate.
+ * @return True if the string matches a valid UUID format.
+ */
 auto uuid(std::string const& _uuid) -> bool;
-/** @brief Validates UTF-8 encoding. */
+/**
+ * @brief Validates UTF-8 encoding.
+ * @param _uri UTF-8 string to validate.
+ * @return True if the string is valid UTF-8.
+ */
 auto utf8(std::string const& _uri) -> bool;
-/** @brief Validates ASCII-only string. */
+/**
+ * @brief Validates ASCII-only string.
+ * @param _ascii String to validate.
+ * @return True if all bytes are in the ASCII range (0-127).
+ */
 auto ascii(std::string const& _ascii) -> bool;
-/** @brief Validates token format. */
+/**
+ * @brief Validates token format.
+ * @param _token Token string to validate.
+ * @return True if the token matches the expected format.
+ */
 auto token(std::string const& _token) -> bool;
-/** @brief Validates URI format. */
+/**
+ * @brief Validates URI format.
+ * @param _uri URI string to validate.
+ * @return True if the string matches a valid URI format.
+ */
 auto uri(std::string _uri) -> bool;
-/** @brief Validates email address format. */
+/**
+ * @brief Validates email address format.
+ * @param _email Email address to validate.
+ * @return True if the string matches a valid email format.
+ */
 auto email(std::string const& _email) -> bool;
-/** @brief Validates phone number format. */
+/**
+ * @brief Validates phone number format.
+ * @param _phone Phone number to validate.
+ * @return True if the string matches a valid phone number format.
+ */
 auto phone(std::string const& _phone) -> bool;
-/** @brief Tests if string matches a regex pattern. */
+/**
+ * @brief Tests if string matches a regex pattern.
+ * @param _target String to test against the pattern.
+ * @param _regex Regular expression pattern to match.
+ * @return True if the target string matches the pattern.
+ */
 auto regex(std::string const& _target, std::string const& _regex) -> bool;
-/** @brief Validates ISO 8601 timestamp format. */
+/**
+ * @brief Validates ISO 8601 timestamp format.
+ * @param _timestamp Timestamp string to validate.
+ * @return True if the string matches ISO 8601 format.
+ */
 auto timestamp(std::string const& _timestamp) -> bool;
 } // namespace test
 

@@ -8,9 +8,12 @@ namespace runtime {
  * the polling loop.
  * @param _argc Argument count from main.
  * @param _argv Argument vector from main.
+ * @return void
  */
 auto initialize(int _argc, char** _argv) -> void;
-/** @brief Shuts down the stream polling loop. */
+/** @brief Shuts down the stream polling loop.
+ * @return void
+ */
 auto shutdown() -> void;
 } // namespace runtime
 } // namespace zpt

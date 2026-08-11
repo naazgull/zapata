@@ -39,9 +39,11 @@ class SMTPPtr;
 
 class SMTPPtr : public std::shared_ptr<zpt::SMTP> {
   public:
-    /** @brief Constructs an SMTPPtr wrapping a new SMTP instance. */
+    /** @brief Constructs an SMTPPtr wrapping a new SMTP instance.
+     * @return void (constructors implicitly initialize the object). */
     SMTPPtr();
-    /** @brief Destroys the SMTPPtr. */
+    /** @brief Destroys the SMTPPtr.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~SMTPPtr();
 };
 
@@ -51,20 +53,24 @@ typedef zpt::SMTPPtr broker;
 
 class SMTP {
   public:
-    /** @brief Constructs an SMTP client with default port 0. */
+    /** @brief Constructs an SMTP client with default port 0.
+     * @return void (constructors implicitly initialize the object). */
     SMTP();
-    /** @brief Destroys the SMTP client, freeing any resources. */
+    /** @brief Destroys the SMTP client, freeing any resources.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~SMTP();
 
     /** @brief Sets the credentials for SMTP authentication.
-     @param _user The username for authentication.
-     @param _passwd The password for authentication.
-     */
+     * @param _user The username for authentication.
+     * @param _passwd The password for authentication.
+     * @return void. */
     virtual auto credentials(std::string const& _user, std::string const& _passwd) -> void;
 
-    /** @brief Returns the configured username. */
+    /** @brief Returns the configured username.
+     * @return The username for SMTP authentication. */
     virtual auto user() -> std::string;
-    /** @brief Returns the configured password. */
+    /** @brief Returns the configured password.
+     * @return The password for SMTP authentication. */
     virtual auto passwd() -> std::string;
 
     /** @brief Connects to an SMTP server using the given connection URI.
@@ -72,13 +78,13 @@ class SMTP {
      Parses the URI to extract host, port, and credentials.
      The URI scheme can be "smtp", "smtp+ssl", "smtp+tls", "esmtp", "esmtp+ssl", or "esmtp+tls".
      @param _connection The SMTP connection URI.
-     */
+     * @return void. */
     virtual auto connect(std::string const& _connection) -> void;
     /** @brief Sends an email message through the connected SMTP server.
 
      Composes the MIME email and delivers it via SMTP.
      @param _e_mail A JSON object with "From", "To", "Subject", and "Body" fields.
-     */
+     * @return void. */
     virtual auto send(zpt::json _e_mail) -> void;
 
   private:
@@ -107,14 +113,14 @@ class SMTP {
      */
     auto open() -> mailsmtp*;
     /** @brief Closes and frees a mailsmtp session.
-     @param _smtp The mailsmtp session to close.
-     */
+     * @param _smtp The mailsmtp session to close.
+     * @return void */
     auto close(mailsmtp* _smtp) -> void;
     /** @brief Composes a MIME email string from a JSON message object.
 
      Generates headers (Date, From, To, Subject, etc.) and multipart body.
-     @param _e_mail The JSON email object.
-     @return The complete MIME-formatted email string ready for transmission.
+     * @param _e_mail The JSON email object.
+     * @return The complete MIME-formatted email string ready for transmission.
      */
     auto compose(zpt::json _e_mail) -> std::string;
 };

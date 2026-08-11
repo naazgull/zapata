@@ -70,13 +70,14 @@
 /**
  * @brief Generates a `has_<m>()` trait function that checks for a zero-argument method `m`.
  * @param m Method name to check.
+ * @return bool Trait function returning whether type `T` has the method `m`.
  */
 #define has_method(m)                                                                              \
     template<class T>                                                                              \
     constexpr auto has_##m() -> bool {                                                             \
         constexpr bool has = requires(T& t) { t.m(); };                                            \
         if constexpr (has)                                                                         \
-            x return true;                                                                         \
+            return true;                                                                           \
         else                                                                                       \
             return false;                                                                          \
     }
@@ -85,6 +86,7 @@
  * @brief Generates a `has_<m>()` trait function that checks for a one-argument method `m(C1)`.
  * @param m  Method name to check.
  * @param C1 Type of the first argument.
+ * @return bool Trait function returning whether type `T` has the method `m(C1)`.
  */
 #define has_method_1(m, C1)                                                                        \
     template<class T>                                                                              \
@@ -101,6 +103,7 @@
  * @param m  Method name to check.
  * @param C1 Type of the first argument.
  * @param C2 Type of the second argument.
+ * @return bool Trait function returning whether type `T` has the method `m(C1, C2)`.
  */
 #define has_method_2(m, C1, C2)                                                                    \
     template<class T>                                                                              \
@@ -119,6 +122,7 @@
  * @param C1 Type of the first argument.
  * @param C2 Type of the second argument.
  * @param C3 Type of the third argument.
+ * @return bool Trait function returning whether type `T` has the method `m(C1, C2, C3)`.
  */
 #define has_method_3(m, C1, C2, C3)                                                                \
     template<class T>                                                                              \

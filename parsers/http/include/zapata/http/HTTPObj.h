@@ -656,30 +656,42 @@ inline const char* status_names[] = {
  */
 class basic_message : public zpt::basic_message {
   public:
-    /** @brief Default constructor. */
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object). */
     basic_message() = default;
-    /** @brief Destructor. */
+    /** @brief Destroys the HTTP message.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~basic_message() = default;
 
-    /** @brief Returns the HTTP method (GET, POST, etc.). */
+    /** @brief Returns the HTTP method (GET, POST, etc.).
+     * @return HTTP method name. */
     virtual auto performative() const -> zpt::performative override;
-    /** @brief Returns the HTTP status code. */
+    /** @brief Returns the HTTP status code.
+     * @return HTTP status code. */
     virtual auto status() const -> zpt::status override;
-    /** @brief Returns reference to the request URI. */
+    /** @brief Returns reference to the request URI.
+     * @return Reference to the URI JSON object. */
     virtual auto uri() -> zpt::json& override;
-    /** @brief Returns the request URI (const). */
+    /** @brief Returns the request URI (const).
+     * @return Const reference to the URI JSON object. */
     virtual auto uri() const -> zpt::json const override;
-    /** @brief Returns the HTTP version (e.g., "1.1"). */
+    /** @brief Returns the HTTP version (e.g., "1.1").
+     * @return HTTP protocol version string. */
     virtual auto version() const -> std::string override;
-    /** @brief Returns the URI scheme (http, https). */
+    /** @brief Returns the URI scheme (http, https).
+     * @return URI scheme. */
     virtual auto scheme() const -> std::string override;
-    /** @brief Returns the resource path. */
+    /** @brief Returns the resource path.
+     * @return Resource path JSON value. */
     virtual auto resource() const -> zpt::json const override;
-    /** @brief Returns query parameters. */
+    /** @brief Returns query parameters.
+     * @return Query parameters as JSON object. */
     virtual auto parameters() const -> zpt::json const override;
-    /** @brief Returns reference to headers object. */
+    /** @brief Returns reference to headers object.
+     * @return Reference to the headers JSON object. */
     virtual auto headers() -> zpt::json& override;
-    /** @brief Returns headers (const). */
+    /** @brief Returns headers (const).
+     * @return Const reference to the headers JSON object. */
     virtual auto headers() const -> zpt::json const override;
     /**
      * @brief Adds or updates a header.
@@ -689,26 +701,40 @@ class basic_message : public zpt::basic_message {
      */
     virtual auto header(std::string const& _name, std::string const& _value)
       -> zpt::basic_message& override;
-    /** @brief Returns reference to body. */
+    /** @brief Returns reference to body.
+     * @return Reference to the body JSON value. */
     virtual auto body() -> zpt::json& override;
-    /** @brief Returns body (const). */
+    /** @brief Returns body (const).
+     * @return Const reference to the body JSON value. */
     virtual auto body() const -> zpt::json const override;
-    /** @brief Checks if connection should be kept alive. */
+    /** @brief Checks if connection should be kept alive.
+     * @return True if connection should be kept alive. */
     virtual auto keep_alive() const -> bool override;
-    /** @brief Returns the Content-Type header value. */
+    /** @brief Returns the Content-Type header value.
+     * @return Content-Type header value. */
     virtual auto content_type() const -> std::string override;
-    /** @brief Sets the HTTP method. */
+    /** @brief Sets the HTTP method.
+     * @param _performative HTTP method to set.
+     * @return Reference to this message. */
     virtual auto performative(zpt::performative _performative) -> zpt::basic_message& override;
-    /** @brief Sets the HTTP status code. */
+    /** @brief Sets the HTTP status code.
+     * @param _status HTTP status code to set.
+     * @return Reference to this message. */
     virtual auto status(zpt::status _status) -> zpt::basic_message& override;
-    /** @brief Sets the request URI from string. */
+    /** @brief Sets the request URI from string.
+     * @param _uri URI string to set.
+     * @return Reference to this message. */
     virtual auto uri(std::string const& _uri) -> zpt::basic_message& override;
-    /** @brief Sets the HTTP version. */
+    /** @brief Sets the HTTP version.
+     * @param _uri HTTP version to set.
+     * @return Reference to this message. */
     virtual auto version(std::string const& _uri) -> zpt::basic_message& override;
-    /** @brief Checks if the message is empty/uninitialized. */
+    /** @brief Checks if the message is empty/uninitialized.
+     * @return True if the message is empty. */
     virtual auto empty() const -> bool override;
 
-    /** @brief Returns the URI fragment/anchor. */
+    /** @brief Returns the URI fragment/anchor.
+     * @return URI fragment/anchor string. */
     virtual auto anchor() const -> std::string;
     /**
      * @brief Sets the message body from a string.
@@ -738,22 +764,30 @@ class basic_message : public zpt::basic_message {
  */
 class basic_request : public zpt::http::basic_message {
   public:
-    /** @brief Default constructor. */
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object). */
     basic_request();
     /**
      * @brief Constructs from a generic message.
      * @param _request Source message.
-     * @param Unused compatibility parameter.
+     * @param _unused Unused compatibility parameter.
+     * @return void (constructors implicitly initialize the object).
      */
     basic_request(zpt::message _request, bool);
-    /** @brief Destructor. */
+    /** @brief Destroys the HTTP request.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~basic_request();
 
-    /** @brief Retrieves a clone of this message. */
+    /** @brief Retrieves a clone of this message.
+     * @return Cloned HTTP request message. */
     virtual auto clone() const -> zpt::message override;
-    /** @brief Serializes the request to an output stream. */
+    /** @brief Serializes the request to an output stream.
+     * @param _out Output stream to serialize to.
+     * @return Const reference to this message. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
-    /** @brief Parses a request from an input stream. */
+    /** @brief Parses a request from an input stream.
+     * @param _in Input stream to parse from.
+     * @return Reference to this message. */
     virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 
@@ -776,22 +810,30 @@ using request = std::shared_ptr<basic_request>;
  */
 class basic_reply : public zpt::http::basic_message {
   public:
-    /** @brief Default constructor. */
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object). */
     basic_reply();
     /**
      * @brief Constructs a reply from a request (for response generation).
      * @param _request Original request message.
-     * @param Unused compatibility parameter.
+     * @param _unused Unused compatibility parameter.
+     * @return void (constructors implicitly initialize the object).
      */
     basic_reply(zpt::message _request, bool);
-    /** @brief Destructor. */
+    /** @brief Destroys the HTTP response.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~basic_reply();
 
-    /** @brief Retrieves a clone of this message. */
+    /** @brief Retrieves a clone of this message.
+     * @return Cloned HTTP response message. */
     virtual auto clone() const -> zpt::message override;
-    /** @brief Serializes the response to an output stream. */
+    /** @brief Serializes the response to an output stream.
+     * @param _out Output stream to serialize to.
+     * @return Const reference to this message. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
-    /** @brief Parses a response from an input stream. */
+    /** @brief Parses a response from an input stream.
+     * @param _in Input stream to parse from.
+     * @return Reference to this message. */
     virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
 };
 
@@ -800,9 +842,13 @@ using reply = std::shared_ptr<basic_reply>;
 
 } // namespace http
 
-/** @brief Initializes an HTTP request with default values. */
+/** @brief Initializes an HTTP request with default values.
+ * @param _out Request to initialize.
+ * @return void. */
 void init(zpt::http::basic_request& _out);
-/** @brief Initializes an HTTP response with default values. */
+/** @brief Initializes an HTTP response with default values.
+ * @param _out Response to initialize.
+ * @return void. */
 void init(zpt::http::basic_reply& _out);
 } // namespace zpt
 

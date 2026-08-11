@@ -22,7 +22,12 @@
 
 #include <zapata/runtime.h>
 
-/** @brief Program entry point. Initializes the runtime and returns 0. */
+/**
+ * @brief Program entry point. Initializes the runtime and returns 0.
+ * @param _argc Argument count.
+ * @param _argv Argument vector.
+ * @return Exit code (always 0).
+ */
 auto main(int _argc, char* _argv[]) -> int {
     zpt::runtime::initialize(_argc, _argv);
     return 0;

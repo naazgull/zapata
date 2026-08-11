@@ -124,7 +124,13 @@ auto zpt::plugin::is_loaded() -> bool { return this->__state->load() == PLUGIN_S
 
 auto zpt::plugin::is_unloaded() -> bool { return this->__state->load() == PLUGIN_STATE_UNLOADED; }
 
-/** @brief Registers a worker thread with the plugin. */
+/**
+ * @brief Registers a worker thread with the plugin.
+ * @param _callback The worker function to run in a thread.
+ * @return Reference to this plugin for chaining.
+ *
+ * Stores the callback in the plugin's thread list for later execution.
+ */
 auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin& {
     this->__threads.emplace_back(_callback);
     return (*this);

@@ -53,22 +53,39 @@ namespace transport {
  */
 class amqp : public zpt::basic_transport {
   public:
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object) */
     amqp() = default;
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object) */
     virtual ~amqp() = default;
 
-    /** @brief Returns whether the transport has the requested capability. */
+    /** @brief Returns whether the transport has the requested capability.
+     * @param _capability Capability flag to check.
+     * @return True if the transport has the requested capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
-    /** @brief Creates a new request message with JSON payload. */
+    /** @brief Creates a new request message with JSON payload.
+     * @return Shared pointer to the new request message. */
     auto make_request() const -> zpt::message override;
-    /** @brief Creates a new reply message, optionally using the allocator. */
+    /** @brief Creates a new reply message, optionally using the allocator.
+     * @param _with_allocator If true, uses the memory pool allocator.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(bool _with_allocator = true) const -> zpt::message override;
-    /** @brief Creates a reply message derived from the given request. */
+    /** @brief Creates a reply message derived from the given request.
+     * @param _request The request message to reply to.
+     * @return Shared pointer to the new reply message. */
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    /** @brief Processes an incoming request message from the given stream. */
+    /** @brief Processes an incoming request message from the given stream.
+     * @param _stream Input stream containing the serialized request.
+     * @return Parsed request message. */
     auto process_incoming_request(zpt::stream _stream) const -> zpt::message override;
-    /** @brief Processes an incoming reply message from the given stream. */
+    /** @brief Processes an incoming reply message from the given stream.
+     * @param _stream Input stream containing the serialized reply.
+     * @return Parsed reply message. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
-    /** @brief Publishes a message to the AMQP broker for distribution. */
+    /** @brief Publishes a message to the AMQP broker for distribution.
+     * @param _to_publish Message to publish with routing keys extracted from URI.
+     * @return void */
     auto publish(zpt::message _to_publish) const -> void override;
 };
 } // namespace transport

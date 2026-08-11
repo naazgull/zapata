@@ -68,31 +68,25 @@ class HTTPParser : public HTTPTokenizer {
      */
     HTTPParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     /**
-     * \brief Destroys the current HTTPParser instance, freeing all allocated
-     * memory.
+     * @brief Destroys the current HTTPParser instance, freeing all allocated memory.
+     * @return void (destructors implicitly clean up the object).
      */
     virtual ~HTTPParser();
 
     /**
-     * \brief Access method for passing in the zpt::zpt::http::request object to be populated
-     * during parsing
-     *
-     * @param _root the zpt::http::request object to be populated during parsing
+     * @brief Access method for passing in the zpt::http::request object to be populated during parsing.
+     * @param _root The zpt::http::request object to be populated during parsing.
      */
     void switchRoots(zpt::http::basic_request& _root);
     /**
-     * \brief Access method for passing in the zpt::http::reply object to be populated
-     * during parsing
-     *
-     * @param _root the zpt::http::reply object to be populated during parsing
+     * @brief Access method for passing in the zpt::http::reply object to be populated during parsing.
+     * @param _root The zpt::http::reply object to be populated during parsing.
      */
     void switchRoots(zpt::http::basic_reply& _root);
     /**
-     * \brief Write-access method for switching both input and output streams
-     *
-     * @param _in  the input stream to be used for parsing, from now on
-     * @param _out the output stream to be used for transformation output, from
-     * now on
+     * @brief Write-access method for switching both input and output streams.
+     * @param _in The input stream to be used for parsing, from now on.
+     * @param _out The output stream to be used for transformation output, from now on.
      */
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };

@@ -279,9 +279,118 @@ WebSocket (RFC 6455) bidirectional messaging.
 ```cpp
 namespace zpt::net::ws {
     auto handshake(zpt::stream& _stream) -> void;
-    auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-    auto write(zpt::stream& _stream, std::string const& _in) -> void;
+    auto read(std::istream& _stream) -> std::tuple<std::string, int>;
+    auto write(std::ostream& _stream, std::string const& _in, bool _mask = false) -> void;
 }
+```
+
+**Note:** The `handshake()` function has been moved to the HTTP layer for WebSocket upgrade handling. Use `websocket::process_incoming_request()` or `websocket::process_incoming_reply()` instead.
+
+---
+
+#### `ws_message` Class
+
+```cpp
+class ws_message : public json_message;
+```
+
+JSON message class specialized for WebSocket protocol. Wraps JSON content in WebSocket frame format for transmission.
+
+**Inherits from:** `json_message`
+
+**Methods:**
+
+```cpp
+virtual ~ws_message() = default;
+
+auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
+auto from_stream(std::istream& _in) -> zpt::basic_message& override;
+```
+
+**`to_stream`**
+
+Serializes the message to an output stream as a WebSocket text frame.
+
+**Parameters:**
+- `_out` - Output stream to write the framed message to
+
+**Returns:** Reference to the output stream for chaining
+
+**Frame format:** FIN=1, opcode=1 (text frame), no masking (client-to-server)
+
+**`from_stream`**
+
+Deserializes a WebSocket frame from an input stream.
+
+**Parameters:**
+- `_in` - Input stream containing a WebSocket frame
+
+**Returns:** Reference to the deserialized message
+
+**Raises:** `std::runtime_error` if frame is incomplete or malformed
+
+**Example:**
+```cpp
+auto msg = std::make_shared<zpt::net::ws::ws_message>();
+msg->body() = { "type", "chat", "text", "Hello, World!" };
+
+std::ostringstream out;
+msg->to_stream(out);
+// Output: [FIN=1, opcode=1, len=17, payload="{"type":"chat","text":"Hello, World!"}"]
+```
+
+---
+
+#### `read`
+
+```cpp
+namespace zpt::net::ws {
+    auto read(std::istream& _stream) -> std::tuple<std::string, int>;
+}
+```
+
+Reads a WebSocket frame from the input stream.
+
+**Parameters:**
+- `_stream` - Input stream to read the frame from (typically socket or file)
+
+**Returns:** Tuple of `(payload_string, opcode_int)`
+
+**Opcode values:**
+- `1` - Text frame
+- `2` - Binary frame
+
+**Raises:** `std::runtime_error` if frame is incomplete or malformed
+
+**Example:**
+```cpp
+std::istringstream in("[FIN=1, opcode=1, len=17, payload=\"Hello\"]");
+auto [payload, opcode] = zpt::net::ws::read(in);
+// payload = "Hello", opcode = 1
+```
+
+---
+
+#### `write`
+
+```cpp
+namespace zpt::net::ws {
+    auto write(std::ostream& _stream, std::string const& _in, bool _mask = false) -> void;
+}
+```
+
+Writes data as a WebSocket text frame to the output stream.
+
+**Parameters:**
+- `_stream` - Output stream to write the frame to
+- `_in` - String data to send (UTF-8 encoded text)
+- `_mask` - If `true`, enables masking for outbound frames (rarely needed; RFC 6455 requires masking for client-to-server frames)
+
+**Example:**
+```cpp
+std::ostringstream out;
+zpt::net::ws::write(out, "Hello, World!");
+// Output: [FIN=1, opcode=1, len=17, payload="Hello, World!"]
 ```
 
 ### Unix Socket Transport
@@ -329,6 +438,199 @@ In-process message passing without serialization.
 **URI schemes:** `upnp`
 
 UPnP/SSDP device discovery via multicast UDP.
+
+---
+
+## Email Transport (SMTP)
+
+Zapata provides a high-level SMTP client for sending email messages via the Simple Mail Transfer Protocol.
+
+**Header:** `<zapata/smtp/SMTP.h>`
+
+**Namespace:** `zpt::smtp`
+
+### Class: `SMTPPtr`
+
+Smart pointer wrapper for SMTP client instances with automatic reference counting.
+
+```cpp
+class SMTPPtr : public std::shared_ptr<zpt::SMTP> {
+  public:
+    SMTPPtr();                        // Wraps a new SMTP instance
+    virtual ~SMTPPtr();               // Automatically cleans up
+};
+```
+
+---
+
+### Class: `SMTP`
+
+SMTP client for sending email messages with authentication and SSL/TLS support.
+
+**Constructor**
+
+```cpp
+SMTP();
+```
+
+Creates an SMTP client with default port 0 (configured at runtime).
+
+**Destructor**
+
+```cpp
+virtual ~SMTP();
+```
+
+Closes the SMTP connection and frees all resources.
+
+---
+
+#### `credentials`
+
+Sets authentication credentials for SMTP login.
+
+**Parameters:**
+- `_user` - Username for authentication
+- `_passwd` - Password for authentication
+
+**Example:**
+```cpp
+smtp->credentials("user@example.com", "password123");
+```
+
+---
+
+#### `user`
+
+Returns the configured authentication username.
+
+**Returns:** Username string
+
+---
+
+#### `passwd`
+
+Returns the configured authentication password.
+
+**Returns:** Password string
+
+---
+
+#### `connect`
+
+Connects to an SMTP server using the given connection URI.
+
+The URI scheme determines the protocol and security settings:
+- `smtp://host:port` - Plain SMTP
+- `smtp+ssl://host:port` - SMTP over SSL/TLS
+- `smtp+tls://host:port` - SMTP over STARTTLS
+- `esmtp://host:port` - Extended SMTP (optional)
+- `esmtp+ssl://host:port` - ESMTP with SSL
+- `esmtp+tls://host:port` - ESMTP with STARTTLS
+
+**Parameters:**
+- `_connection` - SMTP connection URI
+
+**Example:**
+```cpp
+// Plain SMTP
+smtp->connect("smtp://smtp.example.com:587");
+
+// SMTP with SSL
+smtp->connect("smtp+ssl://smtp.example.com:465");
+
+// SMTP with STARTTLS
+smtp->connect("smtp+tls://smtp.example.com:587");
+```
+
+---
+
+#### `send`
+
+Sends an email message through the connected SMTP server.
+
+**Parameters:**
+- `_e_mail` - JSON object containing email fields
+
+**Required fields:**
+- `"From"` - Sender email address
+- `"To"` - Comma-separated recipient list
+- `"Subject"` - Email subject line
+- `"Body"` - Email body content
+
+**Optional fields:**
+- `"Cc"` - Carbon copy recipients
+- `"Bcc"` - Blind carbon copy recipients
+- `"Reply-To"` - Reply address
+
+**Example:**
+```cpp
+zpt::json email = {
+    "From", "sender@example.com",
+    "To", "recipient@example.com",
+    "Subject", "Hello, World!",
+    "Body", "This is a test email."
+};
+
+smtp->send(email);
+```
+
+**Note:** The `send()` method is synchronous and blocks until the email is delivered or the operation fails.
+
+---
+
+#### Private Methods
+
+The following methods are implementation details and not intended for direct use:
+
+```cpp
+auto open() -> mailsmtp*;                    // Opens SMTP connection with SSL/TLS
+auto close(mailsmtp* _smtp) -> void;          // Closes SMTP session
+auto compose(zpt::json _e_mail) -> std::string;  // Composes MIME email string
+```
+
+---
+
+### Usage Example
+
+```cpp
+#include <zapata/smtp/SMTP.h>
+
+int main() {
+    // Create SMTP client
+    auto smtp = std::make_shared<zpt::SMTP>();
+
+    // Set credentials
+    smtp->credentials("user@example.com", "password");
+
+    // Connect to server
+    smtp->connect("smtp+tls://smtp.example.com:587");
+
+    // Create email
+    zpt::json email = {
+        "From", "sender@example.com",
+        "To", "recipient@example.com",
+        "Subject", "Test Email",
+        "Body", "This is a test message sent via Zapata's SMTP client."
+    };
+
+    // Send email
+    smtp->send(email);
+
+    // Cleanup (automatically happens on destruction)
+    return 0;
+}
+```
+
+---
+
+### Notes
+
+- The SMTP client uses libetpan for underlying protocol implementation
+- SSL/TLS negotiation is handled automatically based on the URI scheme
+- The client supports SMTP extensions (ESMTP) including authentication
+- Email composition uses MIME with multipart support for attachments
+- Connection pooling is not implemented; each `send()` creates a new connection
 
 ---
 

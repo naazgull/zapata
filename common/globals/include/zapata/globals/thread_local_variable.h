@@ -70,9 +70,17 @@ class thread_local_variable {
     using const_pointer = type const*;
     using const_reference = type const&;
 
-    /** @brief Constructs with an initial value forwarded to T. */
+    /**
+     * @brief Constructs with an initial value forwarded to T.
+     * @param _args Arguments forwarded to T's constructor.
+     * @return void (constructors implicitly initialize the object).
+     */
     template<typename... Args>
     thread_local_variable(Args... _args);
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~thread_local_variable();
 
     thread_local_variable(thread_local_variable const&) = delete;
@@ -80,21 +88,42 @@ class thread_local_variable {
     auto operator=(thread_local_variable const&) -> thread_local_variable& = delete;
     auto operator=(thread_local_variable&&) -> thread_local_variable& = delete;
 
-    /** @brief Implicit conversion to reference. */
+    /**
+     * @brief Implicit conversion to reference.
+     * @return Reference to the thread-local value.
+     */
     operator reference();
-    /** @brief Implicit conversion to const reference. */
+    /**
+     * @brief Implicit conversion to const reference.
+     * @return Const reference to the thread-local value.
+     */
     operator const_reference() const;
-    /** @brief Dereference to the thread-local value. */
+    /**
+     * @brief Dereference to the thread-local value.
+     * @return Reference to the thread-local value.
+     */
     auto operator*() -> reference;
-    /** @brief Dereference to the thread-local value (const). */
+    /**
+     * @brief Dereference to the thread-local value (const).
+     * @return Const reference to the thread-local value.
+     */
     auto operator*() const -> const_reference;
-    /** @brief Member access (enabled only for class types). */
+    /**
+     * @brief Member access (enabled only for class types).
+     * @return Pointer to the thread-local value.
+     */
     template<typename D = T, std::enable_if_t<std::is_class<D>::value, bool> = true>
     auto operator->() -> pointer;
-    /** @brief Member access (const, enabled only for class types). */
+    /**
+     * @brief Member access (const, enabled only for class types).
+     * @return Const pointer to the thread-local value.
+     */
     template<typename D = T, std::enable_if_t<std::is_class<D>::value, bool> = true>
     auto operator->() const -> const_pointer;
-    /** @brief Removes the current thread's copy from the table. */
+    /**
+     * @brief Removes the current thread's copy from the table.
+     * @return void (thread-local entry removed from the table).
+     */
     auto dispose_local_image() -> void;
 
   private:

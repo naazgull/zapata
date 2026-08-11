@@ -47,31 +47,65 @@ enum system_event_type : long long {
 class system_event {
   public:
     system_event() = default;
-    /** @brief Constructs from an incoming message. */
+    /**
+     * @brief Constructs from an incoming message.
+     * @param _received The incoming message that triggered this event.
+     * @return void (constructors implicitly initialize the object).
+     */
     system_event(zpt::message _received);
-    /** @brief Constructs from an incoming message and context. */
+    /**
+     * @brief Constructs from an incoming message and call context.
+     * @param _received The incoming message that triggered this event.
+     * @param _context Call context associated with this event.
+     * @return void (constructors implicitly initialize the object).
+     */
     system_event(zpt::message _received, zpt::call_context::ptr _context);
-    /** @brief Constructs with a specific event type and optional data. */
+    /**
+     * @brief Constructs with a specific event type and optional data.
+     * @param _type Lifecycle event type (e.g., BOOTING, SHUTTING_DOWN).
+     * @param _data Optional associated data.
+     * @return void (constructors implicitly initialize the object).
+     */
     system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~system_event() = default;
 
-    /** @brief Stores the dispatcher reference from initialization data. */
+    /**
+     * @brief Stores the dispatcher reference from initialization data.
+     * @param _init Event initialization data.
+     * @return void
+     */
     virtual auto initialize(zpt::event_initialization& _init) -> void final;
-    /** @brief Returns false (system events are never blocked). */
+    /** @brief Returns false (system events are never blocked).
+     * @return Always false. */
     virtual auto blocked() const -> bool;
-    /** @brief Returns true (system events are always authorized). */
+    /** @brief Returns true (system events are always authorized).
+     * @return Always true. */
     virtual auto authorized() const -> bool;
-    /** @brief Handles generic exceptions. Returns false (no retry). */
+    /** @brief Handles generic exceptions. Returns false (no retry).
+     * @param _e The caught exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Always false (no retry on error). */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
-    /** @brief Handles allocation failures. Returns false (no retry). */
+    /** @brief Handles allocation failures. Returns false (no retry).
+     * @param _e The caught std::bad_alloc exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Always false (no retry on error). */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool;
-    /** @brief Handles expectation failures. Returns false (no retry). */
+    /** @brief Handles expectation failures. Returns false (no retry).
+     * @param _e The caught failed_expectation exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Always false (no retry on error). */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool;
-    /** @brief Resolves and dispatches the system event to registered handlers. */
+    /** @brief Resolves and dispatches the system event to registered handlers.
+     * @param _dispatcher Event dispatcher to use for dispatching.
+     * @return Final processing state (typically finish). */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 
   protected:
@@ -113,37 +147,70 @@ class resolver_t : public zpt::events::resolver_t {
      */
     template<zpt::events::Operation T>
     auto add(zpt::system_event_type _type) -> resolver_t&;
-    /** @brief Registers a service from its JSON description. */
+    /** @brief Registers a service from its JSON description.
+     * @param _service_description Service description JSON object.
+     * @return Reference to this resolver. */
     auto add(zpt::json const& _service_description) -> resolver_t& override;
-    /** @brief Registers a callback for a sent message's reply. */
+    /** @brief Registers a callback for a sent message's reply.
+     * @param _sent The sent request message.
+     * @param _context Call context.
+     * @param callback Resolver callback for the response.
+     * @return Reference to this resolver. */
     auto add(zpt::message _sent,
              zpt::call_context::ptr _context,
              zpt::events::resolver_callback callback) -> resolver_t& override;
-    /** @brief Registers a callback for a performative/ID combination. */
+    /** @brief Registers a callback for a performative/ID combination.
+     * @param _performative HTTP performative.
+     * @param _id Handler identifier.
+     * @param _metadata Handler metadata.
+     * @param _callback Resolver callback.
+     * @return Reference to this resolver. */
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
-    /** @brief Removes handler for a system event type. */
+    /** @brief Removes handler for a system event type.
+     * @tparam T Operation type to remove.
+     * @param _type System event type.
+     * @return Reference to this resolver. */
     template<zpt::events::Operation T>
     auto remove(zpt::system_event_type _type) -> resolver_t&;
-    /** @brief Removes the callback registered for a sent message. */
+    /** @brief Removes the callback registered for a sent message.
+     * @param _sent The sent request message.
+     * @return Reference to this resolver. */
     auto remove(zpt::message _sent) -> resolver_t& override;
-    /** @brief Removes callback for a performative/ID combination. */
+    /** @brief Removes callback for a performative/ID combination.
+     * @param _performative HTTP performative.
+     * @param _id Handler identifier.
+     * @return Reference to this resolver. */
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
-    /** @brief Resolves a message to matching system event handlers. */
+    /** @brief Resolves a message to matching system event handlers.
+     * @param _received Incoming message to resolve.
+     * @param _initializer Event initialization callback.
+     * @return List of matching system events. */
     auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
       -> std::list<zpt::event> override;
-    /** @brief Searches for registered handlers matching the given ID. */
+    /** @brief Searches for registered handlers matching the given ID.
+     * @param _id Pattern to match handler IDs.
+     * @param _provider_id Optional provider filter.
+     * @return JSON array of matching handlers. */
     auto search(zpt::json const& _id, std::string const& _provider_id = "") const
       -> zpt::json override;
-    /** @brief Lists all registered handlers. */
+    /** @brief Lists all registered handlers.
+     * @param _provider_id Optional provider filter.
+     * @return JSON array of all handlers. */
     auto list(std::string const& _provider_id = "") const -> zpt::json override;
-    /** @brief Registers a service provider. */
+    /** @brief Registers a service provider.
+     * @param _provider Provider description JSON.
+     * @return Reference to this resolver. */
     auto register_provider(zpt::json const& _provider) -> resolver_t& override;
-    /** @brief Unregisters a service provider by ID. */
+    /** @brief Unregisters a service provider by ID.
+     * @param _id Provider ID to remove.
+     * @return Reference to this resolver. */
     auto unregister_provider(std::string const& _id) -> resolver_t& override;
-    /** @brief Returns provider metadata by ID. */
+    /** @brief Returns provider metadata by ID.
+     * @param _id Provider ID to look up.
+     * @return JSON object with provider details. */
     auto get_provider(std::string const& _id) const -> zpt::json override;
 
   private:

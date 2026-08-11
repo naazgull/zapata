@@ -19,12 +19,16 @@ namespace zpt {
  */
 class aes_crypto {
   public:
-    /** @brief Default constructor with random key and IV. */
+    /**
+     * @brief Default constructor with random key and IV.
+     * @return none
+     */
     aes_crypto();
     /**
      * @brief Constructs with user-specified key and IV.
      * @param _key_str Key string (must be 32 bytes or fewer).
      * @param _iv_str IV string (must be 16 bytes).
+     * @return none
      */
     aes_crypto(std::string const& _key_str, std::string const& _iv_str);
 

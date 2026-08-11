@@ -62,16 +62,19 @@ class SHA1 {
   public:
     /**
      * @brief Constructs and initializes a SHA1 hasher.
+     * @return none
      */
     SHA1();
     /**
      * @brief Updates the hash with a string.
      * @param s String data to hash.
+     * @return void
      */
     void update(const std::string& s);
     /**
      * @brief Updates the hash with data from a stream.
      * @param is Input stream to read from.
+     * @return void
      */
     void update(std::istream& is);
     /**
@@ -80,7 +83,7 @@ class SHA1 {
      */
     std::string finalize();
     /**
-     * @brief Finalizes and returns the hash.
+     * @brief Finalizes and returns the raw hash bytes.
      * @return The raw bytes for the hash.
      */
     std::vector<unsigned char> finalize_bytes();

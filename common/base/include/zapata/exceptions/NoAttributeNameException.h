@@ -44,10 +44,12 @@ class NoAttributeNameException : public zpt::exception {
     /**
      * @brief Constructs a NoAttributeNameException.
      * @param _what Description of the missing attribute.
+     * @return void (constructors implicitly initialize the object).
+     * @throws NoAttributeNameException Always (the constructor itself throws).
      */
     NoAttributeNameException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~NoAttributeNameException() throw();
 };
 

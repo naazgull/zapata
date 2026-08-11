@@ -44,30 +44,42 @@ class mqtt_stream : public basic_stream {
     auto operator=(mqtt_stream const& _rhs) -> mqtt_stream& = delete;
     auto operator=(mqtt_stream&& _rhs) -> mqtt_stream& = delete;
 
-    /** @brief Sets the file descriptor. */
+    /** @brief Sets the file descriptor.
+     * @param _rhs Integer value representing the file descriptor.
+     * @return Reference to this stream. */
     auto operator=(int _rhs) -> mqtt_stream&;
-    /** @brief Applies a stream manipulator (e.g., std::flush). */
+    /** @brief Applies a stream manipulator (e.g., std::flush).
+     * @param _in The stream manipulator to apply.
+     * @return Reference to this stream. */
     auto operator<<(ostream_manipulator _in) -> mqtt_stream&;
-    /** @brief Closes the stream and resets its internal state. */
+    /** @brief Closes the stream and resets its internal state.
+     * @return Reference to this stream. */
     auto close() -> mqtt_stream& override;
-    /** @brief Shuts down the connection and releases mosquitto resources. */
+    /** @brief Shuts down the connection and releases mosquitto resources.
+     * @return Reference to this stream. */
     auto shutdown() -> mqtt_stream& override;
-    /** @brief Reads content from the internal buffer without I/O. */
+    /** @brief Reads content from the internal buffer without I/O.
+     * @param _out Reference to receive the deserialized content.
+     * @return Reference to this stream. */
     auto read_without_io(std::any& _out) -> mqtt_stream& override;
-    /** @brief Writes content to the internal buffer without I/O. */
+    /** @brief Writes content to the internal buffer without I/O.
+     * @param _in The content to write to the internal buffer.
+     * @return Reference to this stream. */
     auto write_without_io(std::any const& _in) -> mqtt_stream& override;
-    /** @brief Returns true if there are buffered messages waiting to be read. */
+    /** @brief Returns true if there are buffered messages waiting to be read.
+     * @return True if there are buffered messages available. */
     auto has_next() const -> bool override;
-    /** @brief Returns whether the stream maintains a persistent connection. */
+    /** @brief Returns whether the stream maintains a persistent connection.
+     * @return True if the stream is persistent. */
     auto persistent() -> bool override;
     /** @brief Establishes a connection to the MQTT broker using configuration.
 
      Initializes mosquitto library, configures TLS if enabled, registers
      callbacks, and connects with optional credentials.
-     @return Reference to this stream.
-     */
+     @return Reference to this stream. */
     auto connect() -> mqtt_stream&;
-    /** @brief Returns whether the stream is currently connected to the broker. */
+    /** @brief Returns whether the stream is currently connected to the broker.
+     * @return True if connected, false otherwise. */
     auto is_connected() const -> bool;
     /** @brief Subscribes to an MQTT topic.
 
@@ -107,23 +119,39 @@ class mqtt_stream : public basic_stream {
     /** @brief Buffer of incoming messages waiting to be read. */
     std::vector<zpt::message> __buffer;
 
-    /** @brief Sets MQTT client access credentials. */
+    /** @brief Sets MQTT client access credentials.
+     * @param _user Username for MQTT authentication.
+     * @param _passwd Password for MQTT authentication.
+     * @return void */
     auto credentials(std::string const& _user, std::string const& _passwd) -> void;
-    /** @brief Sends a subscription request to the broker for a topic. */
+    /** @brief Sends a subscription request to the broker for a topic.
+     * @param _topic The topic to subscribe to.
+     * @return Reference to this stream. */
     auto send_subscribe(std::string const& _topic) -> mqtt_stream&;
     /** @brief Static callback invoked when the MQTT connection is established.
 
      Records the connection state, socket FD, and resends pending subscriptions.
-     */
+     @param _mosq Pointer to the mosquitto client handle.
+     @param _ptr Pointer to the mqtt_stream instance.
+     @param _rc Connection result code (0 = success).
+     @return void */
     static auto on_connect(struct mosquitto* _mosq, void* _ptr, int _rc) -> void;
     /** @brief Static callback invoked when a message is received from the broker.
 
      Parses the JSON payload and adds it to the message buffer.
-     */
+     @param _mosq Pointer to the mosquitto client handle.
+     @param _ptr Pointer to the mqtt_stream instance.
+     @param _message Pointer to the received mosquitto message.
+     @return void */
     static auto on_message(struct mosquitto* _mosq,
                            void* _ptr,
                            const struct mosquitto_message* _message) -> void;
-    /** @brief Static callback routing mosquitto log messages through zapata's logger. */
+    /** @brief Static callback routing mosquitto log messages through zapata's logger.
+     * @param _mosq Pointer to the mosquitto client handle.
+     * @param _ptr Pointer to the mqtt_stream instance.
+     * @param _level Log severity level.
+     * @param _message Log message string.
+     * @return void */
     static auto on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message)
       -> void;
 };

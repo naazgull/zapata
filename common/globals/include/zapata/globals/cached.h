@@ -63,12 +63,22 @@ namespace zpt {
 template<typename T>
 class cached {
   public:
-    /** @brief Default constructor. */
+    /**
+     * @brief Default constructor (initialized with default-constructed value).
+     * @return void (constructors implicitly initialize the object).
+     */
     cached() = default;
-    /** @brief Constructs with an initial value. */
+    /**
+     * @brief Constructs with an initial value.
+     * @param _args Arguments forwarded to T's constructor.
+     * @return void (constructors implicitly initialize the object).
+     */
     template<typename... Args>
     cached(Args... _args);
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~cached();
 
     /**
@@ -84,12 +94,21 @@ class cached {
      */
     auto commit(T const& _new_value) -> cached<T>&;
 
-    /** @brief Returns the current version number. */
+    /**
+     * @brief Returns the current version number.
+     * @return Current version number (unsigned long long).
+     */
     auto version() -> unsigned long long;
 
-    /** @brief Access the thread-local copy. */
+    /**
+     * @brief Access the thread-local copy.
+     * @return Pointer to the thread-local copy.
+     */
     auto operator->() -> T*;
-    /** @brief Dereference to the thread-local copy. */
+    /**
+     * @brief Dereference to the thread-local copy.
+     * @return Reference to the thread-local copy.
+     */
     auto operator*() -> T&;
 
   private:

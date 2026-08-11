@@ -50,13 +50,19 @@ class UPnPPtr;
 /** @brief Shared pointer wrapper for UPnP instances. */
 class UPnPPtr : public std::shared_ptr<zpt::UPnP> {
   public:
-    /** @brief Constructs an UPnPPtr with default options. */
+    /**
+     * @brief Constructs an UPnPPtr with default options.
+     * @return void (constructors implicitly initialize the object).
+     */
     UPnPPtr();
     /** @brief Constructs an UPnPPtr with the given options.
      @param _options Configuration JSON for the UPnP channel.
      */
     UPnPPtr(zpt::json _options);
-    /** @brief Destroys the UPnPPtr. */
+    /**
+     * @brief Destroys the UPnPPtr.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~UPnPPtr();
 };
 
@@ -76,7 +82,10 @@ class UPnP : public zpt::Channel {
      @param _options Configuration JSON for the UPnP channel.
      */
     UPnP(zpt::json _options);
-    /** @brief Destroys the UPnP channel and cleans up resources. */
+    /**
+     * @brief Destroys the UPnP channel and cleans up resources.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~UPnP();
 
     /** @brief Sends an SSDP NOTIFY message for service announcement.
@@ -112,31 +121,70 @@ class UPnP : public zpt::Channel {
      */
     virtual auto send(zpt::json _envelope) -> zpt::json;
 
-    /** @brief Returns the unique identifier for this UPnP channel. */
+    /**
+     * @brief Returns the unique identifier for this UPnP channel.
+     * @return Unique channel identifier string.
+     */
     virtual auto id() -> std::string;
-    /** @brief Returns the underlying socket stream for the send connection. */
+    /**
+     * @brief Returns the underlying socket stream for the send connection.
+     * @return Socket stream pointer.
+     */
     virtual auto underlying() -> zpt::socketstream_ptr;
-    /** @brief Returns the multicast ZMQ socket used for UPnP communication. */
+    /**
+     * @brief Returns the multicast ZMQ socket used for UPnP communication.
+     * @return ZMQ socket pointer.
+     */
     virtual auto socket() -> zmq::socket_ptr;
-    /** @brief Returns the input ZMQ socket. */
+    /**
+     * @brief Returns the input ZMQ socket.
+     * @return Input ZMQ socket pointer.
+     */
     virtual auto in() -> zmq::socket_ptr;
-    /** @brief Returns the output ZMQ socket. */
+    /**
+     * @brief Returns the output ZMQ socket.
+     * @return Output ZMQ socket pointer.
+     */
     virtual auto out() -> zmq::socket_ptr;
-    /** @brief Returns the file descriptor of the underlying socket. */
+    /**
+     * @brief Returns the file descriptor of the underlying socket.
+     * @return File descriptor integer.
+     */
     virtual auto fd() -> int;
-    /** @brief Returns a reference to the input mutex for thread synchronization. */
+    /**
+     * @brief Returns a reference to the input mutex for thread synchronization.
+     * @return Reference to the input mutex.
+     */
     virtual auto in_mtx() -> std::mutex&;
-    /** @brief Returns a reference to the output mutex for thread synchronization. */
+    /**
+     * @brief Returns a reference to the output mutex for thread synchronization.
+     * @return Reference to the output mutex.
+     */
     virtual auto out_mtx() -> std::mutex&;
-    /** @brief Returns the short integer type identifier for this channel. */
+    /**
+     * @brief Returns the short integer type identifier for this channel.
+     * @return Channel type identifier.
+     */
     virtual auto type() -> short int;
-    /** @brief Returns the protocol string for this channel. */
+    /**
+     * @brief Returns the protocol string for this channel.
+     * @return Protocol string (e.g., "upnp").
+     */
     virtual auto protocol() -> std::string;
-    /** @brief Closes the UPnP channel and releases associated resources. */
+    /**
+     * @brief Closes the UPnP channel and releases associated resources.
+     * @return void.
+     */
     virtual auto close() -> void;
-    /** @brief Returns whether there is data available to read. */
+    /**
+     * @brief Returns whether there is data available to read.
+     * @return True if data is available.
+     */
     virtual auto available() -> bool;
-    /** @brief Returns whether this channel instance can be reused. */
+    /**
+     * @brief Returns whether this channel instance can be reused.
+     * @return True if the channel can be reused for subsequent requests.
+     */
     virtual auto is_reusable() -> bool;
 
   private:

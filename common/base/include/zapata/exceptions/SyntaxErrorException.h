@@ -43,10 +43,12 @@ class SyntaxErrorException : public zpt::exception {
     /**
      * @brief Constructs a SyntaxErrorException.
      * @param _what Description of the syntax error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws SyntaxErrorException Always (the constructor itself throws).
      */
     SyntaxErrorException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~SyntaxErrorException() throw();
 };
 

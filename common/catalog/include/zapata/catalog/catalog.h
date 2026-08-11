@@ -81,13 +81,33 @@ class catalog {
     catalog(std::string const& _catalog_name, std::string const& _self_id);
     virtual ~catalog() = default;
 
-    /** @brief Removes all entries and providers. */
+    /**
+     * @brief Removes all entries and providers.
+     * @return Reference to this catalog.
+     */
     auto clear() -> catalog&;
-    /** @brief Adds an entry using self as provider. */
+    /**
+     * @brief Adds an entry using self as provider.
+     * @param _key Entry key.
+     * @param hash Entry hash code.
+     * @param _metadata Entry metadata.
+     * @return Reference to this catalog.
+     */
     auto add(K _key, std::uint64_t hash, M _metadata) -> catalog&;
-    /** @brief Adds an entry with an explicit provider ID. */
+    /**
+     * @brief Adds an entry with an explicit provider ID.
+     * @param _key Entry key.
+     * @param _provider_id Provider identifier.
+     * @param hash Entry hash code.
+     * @param _metadata Entry metadata.
+     * @return Reference to this catalog.
+     */
     auto add(K _key, std::string const& _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
-    /** @brief Removes an entry by key. */
+    /**
+     * @brief Removes an entry by key.
+     * @param _key Entry key to remove.
+     * @return Reference to this catalog.
+     */
     auto remove(K _key) -> catalog&;
     /**
      * @brief Resolves a pattern to matching entries (self provider only).
@@ -95,16 +115,38 @@ class catalog {
      * @return JSON array of matching entries.
      */
     auto resolve(K const& _pattern) const -> zpt::json const;
-    /** @brief Searches for entries matching a pattern, optionally filtering by provider. */
+    /**
+     * @brief Searches for entries matching a pattern, optionally filtering by provider.
+     * @param _pattern Pattern to match against entry keys.
+     * @param _provider Optional provider ID to filter results.
+     * @return JSON array of matching entries.
+     */
     auto search(K const& _pattern, std::string const& _provider = "") const -> zpt::json const;
-    /** @brief Lists all entries for a provider (default: self). */
+    /**
+     * @brief Lists all entries for a provider (default: self).
+     * @param _provider_id Provider ID to list entries for.
+     * @return JSON array of all entries for the provider.
+     */
     auto list(std::string const& _provider_id = "") const -> zpt::json const;
 
-    /** @brief Registers a service provider. */
+    /**
+     * @brief Registers a service provider.
+     * @param _id Provider identifier.
+     * @param _info Provider information metadata.
+     * @return Reference to this catalog.
+     */
     auto add_provider(std::string const& _id, zpt::json const& _info) -> catalog&;
-    /** @brief Unregisters a service provider and its entries. */
+    /**
+     * @brief Unregisters a service provider and its entries.
+     * @param _id Provider ID to remove.
+     * @return Reference to this catalog.
+     */
     auto remove_provider(std::string const& _id) -> catalog&;
-    /** @brief Retrieves provider information by ID. */
+    /**
+     * @brief Retrieves provider information by ID.
+     * @param _id Provider ID to look up.
+     * @return JSON object with provider details, or null if not found.
+     */
     auto get_provider(std::string const& _id) const -> zpt::json;
 
   private:

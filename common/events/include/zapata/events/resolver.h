@@ -53,6 +53,7 @@ class resolver_t {
      * @tparam T Operation type (must satisfy Operation concept).
      * @param _id Handler identifier (typically a URI pattern).
      * @param _metadata Optional metadata for the handler.
+     * @return Reference to this resolver.
      */
     template<zpt::events::Operation T>
     auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
@@ -63,33 +64,59 @@ class resolver_t {
      * @param _performative HTTP method to match (Get, Post, etc.).
      * @param _id Handler identifier.
      * @param _metadata Optional metadata.
+     * @return Reference to this resolver.
      */
     template<zpt::events::Operation T>
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
-    /** @brief Registers a handler from a service description. */
+    /** @brief Registers a handler from a service description.
+     * @param _service_description Service description JSON object.
+     * @return Reference to this resolver. */
     virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
-    /** @brief Registers a callback for a sent message (request/reply pairing). */
+    /** @brief Registers a callback for a sent message (request/reply pairing).
+     * @param _sent The sent request message.
+     * @param _context Call context for the request.
+     * @param callback Resolver callback for the response.
+     * @return Reference to this resolver. */
     virtual auto add(zpt::message _sent,
                      zpt::call_context::ptr _context,
                      zpt::events::resolver_callback callback) -> resolver_t& = 0;
-    /** @brief Registers a raw callback for a performative and ID. */
+    /** @brief Registers a raw callback for a performative and ID.
+     * @param _performtive HTTP performative (Get, Post, etc.).
+     * @param _id Handler identifier.
+     * @param _metadata Optional handler metadata.
+     * @param _callback Resolver callback.
+     * @return Reference to this resolver. */
     virtual auto add(zpt::performative _performtive,
                      zpt::json const& _id,
                      zpt::json const& _metadata,
                      zpt::events::resolver_callback _callback) -> resolver_t& = 0;
 
-    /** @brief Removes an Operation handler (any performative). */
+    /** @brief Removes an Operation handler (any performative).
+     * @tparam T Operation type to remove.
+     * @param _id Handler identifier.
+     * @return Reference to this resolver. */
     template<zpt::events::Operation T>
     auto remove(zpt::json const& _id) -> resolver_t&;
-    /** @brief Removes an Operation handler for a specific performative. */
+    /** @brief Removes an Operation handler for a specific performative.
+     * @tparam T Operation type to remove.
+     * @param _performative HTTP performative to match.
+     * @param _id Handler identifier.
+     * @return Reference to this resolver. */
     template<zpt::events::Operation T>
     auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t&;
-    /** @brief Removes a message-based handler. */
+    /** @brief Removes a message-based handler.
+     * @param _sent The sent request message to match.
+     * @return Reference to this resolver. */
     virtual auto remove(zpt::message _sent) -> resolver_t& = 0;
-    /** @brief Removes a handler by performative and ID. */
+    /** @brief Removes a handler by performative and ID.
+     * @param _performtive HTTP performative.
+     * @param _id Handler identifier.
+     * @return Reference to this resolver. */
     virtual auto remove(zpt::performative _performtive, zpt::json const& _id) -> resolver_t& = 0;
+    /** @brief Returns the total number of registered handlers.
+     * @return Handler count. */
     virtual auto count() const -> size_t final;
     /**
      * @brief Resolves a message to matching event handlers.
@@ -100,16 +127,27 @@ class resolver_t {
     virtual auto resolve(zpt::message _received, initializer_t _initializer) const
       -> std::list<zpt::event> = 0;
 
-    /** @brief Searches for handlers matching an ID pattern. */
+    /** @brief Searches for handlers matching an ID pattern.
+     * @param _id Pattern to match against handler IDs.
+     * @param _provider_id Optional provider filter.
+     * @return JSON array of matching handlers. */
     virtual auto search(zpt::json const& _id, std::string const& _provider_id = "") const
       -> zpt::json = 0;
-    /** @brief Lists all registered handlers. */
+    /** @brief Lists all registered handlers.
+     * @param _provider_id Optional provider filter.
+     * @return JSON array of all handlers. */
     virtual auto list(std::string const& _provider_id = "") const -> zpt::json = 0;
-    /** @brief Registers a service provider. */
+    /** @brief Registers a service provider.
+     * @param _service_description Service description JSON object.
+     * @return Reference to this resolver. */
     virtual auto register_provider(zpt::json const& _service_description) -> resolver_t& = 0;
-    /** @brief Unregisters a service provider. */
+    /** @brief Unregisters a service provider.
+     * @param _id Provider ID to remove.
+     * @return Reference to this resolver. */
     virtual auto unregister_provider(std::string const& _id) -> resolver_t& = 0;
-    /** @brief Retrieves a service provider by ID. */
+    /** @brief Retrieves a service provider by ID.
+     * @param _id Provider ID to look up.
+     * @return JSON object with provider details, or null if not found. */
     virtual auto get_provider(std::string const& _id) const -> zpt::json = 0;
 
   protected:

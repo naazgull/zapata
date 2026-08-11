@@ -20,19 +20,34 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file plugin.cpp
+ * @brief WebSocket transport plugin registration.
+ *
+ * Registers the "ws" transport with the transport layer on load,
+ * and removes it on unload.
+ *
+ * @see zpt::TRANSPORT_LAYER
+ */
+
 #include <iostream>
 #include <zapata/net/socket.h>
 #include <zapata/net/websocket.h>
 #include <zapata/startup.h>
 
+/** @brief Flag tracking whether the plugin has been unloaded. */
 static zpt::padded_atomic<bool> _has_exited{ false };
 
+/** @brief Plugin entry point: registers the WebSocket transport ("ws" scheme).
+ * @param _plugin Plugin handle (unused). */
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
       .add("ws", zpt::make_transport<zpt::net::transport::websocket>());
     zlog("Loaded WebSocket connection upgrade support", zpt::info);
 }
 
+/** @brief Plugin exit point: unregisters the WebSocket transport.
+ * @param _plugin Plugin handle (unused). */
 extern "C" auto _zpt_unload_(zpt::plugin&) {
     zlog("Unloading WebSocket connection upgrade support", zpt::info);
     zpt::TRANSPORT_LAYER().remove("ws");

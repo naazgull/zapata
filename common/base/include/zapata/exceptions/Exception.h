@@ -56,12 +56,12 @@ class exception : public std::exception {
     /**
      * @brief Constructs an exception with the given error message.
      * @param _what The error message describing what went wrong.
+     * @return void (constructors implicitly initialize the object).
+     * @throws exception Always (the constructor itself throws).
      */
     exception(std::string const& _what);
 
-    /**
-     * @brief Destructor.
-     */
+    /** @brief Destructor. @return none */
     virtual ~exception() throw();
 
     /**

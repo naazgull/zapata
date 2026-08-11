@@ -29,19 +29,37 @@ namespace zpt {
 
 class URITokenizerLexer : public Re2cURILexer {
   public:
-    /** @brief Constructs with given input and output streams. */
+    /**
+     * @brief Constructs with given input and output streams.
+     * @param _in Input stream to read from.
+     * @param _out Output stream for errors.
+     */
     URITokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~URITokenizerLexer();
 
-    /** @brief Sets the JSON root node to populate during parsing. */
+    /**
+     * @brief Sets the JSON root node to populate during parsing.
+     * @param _root JSON object to populate with URI components.
+     * @return void (internal __root set).
+     */
     auto switchRoots(zpt::json& _root) -> void;
-    /** @brief Calls leave(0) to signal lexing completion. */
+    /**
+     * @brief Calls leave(0) to signal lexing completion.
+     * @return void (internal __left flag set).
+     */
     auto justLeave() -> void;
 
-    /** @brief Returns the root JSON object (used as grammar context `*ctx`). */
+    /**
+     * @brief Returns the root JSON object (used as grammar context `*ctx`).
+     * @return Reference to the root JSON object.
+     */
     auto operator->() -> zpt::json&;
-    /** @brief Returns the root JSON object (used as grammar context `*ctx`). */
+    /**
+     * @brief Returns the root JSON object (used as grammar context `*ctx`).
+     * @return Reference to the root JSON object.
+     */
     auto operator*() -> zpt::json&;
 
   private:

@@ -56,7 +56,10 @@ class spin_mutex {
     static constexpr bool shared{ true };     ///< Constant for shared lock mode.
     static constexpr bool exclusive{ false }; ///< Constant for exclusive lock mode.
 
-    /** @brief Default constructor. */
+    /**
+     * @brief Default constructor.
+     * @return none
+     */
     spin_mutex() = default;
     spin_mutex(zpt::locks::spin_mutex const&) = delete;
     /** @brief Destructor. */
@@ -111,10 +114,16 @@ class spin_mutex {
     zpt::padded_atomic<bool> __exclusive_access{ false }; ///< Exclusive lock flag.
     std::thread::id __exclusive_owner;                    ///< Thread ID of exclusive lock holder.
 
-    /** @brief Spins until shared lock can be acquired. */
+    /**
+     * @brief Spins until shared lock can be acquired.
+     * @return void (blocks until shared lock is held).
+     */
     auto spin_shared_lock() -> void;
 
-    /** @brief Spins until exclusive lock can be acquired. */
+    /**
+     * @brief Spins until exclusive lock can be acquired.
+     * @return void (blocks until exclusive lock is held).
+     */
     auto spin_exclusive_lock() -> void;
 };
 

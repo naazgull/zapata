@@ -54,6 +54,9 @@ class ExpectationException : public zpt::exception {
      * @param _desc The stringified condition that failed.
      * @param _line Source line number where the failure occurred.
      * @param _file Source file where the failure occurred.
+     * @param _code Error code for the failure.
+     * @return void (constructors implicitly initialize the object).
+     * @throws ExpectationException Always (the constructor itself throws).
      */
     ExpectationException(std::string const& _what,
                          std::string _desc,

@@ -51,6 +51,7 @@ class uuid {
   public:
     /**
      * @brief Generates a new random UUID.
+     * @return void (constructors implicitly initialize the object).
      */
     uuid();
     /**
@@ -75,7 +76,8 @@ class uuid {
     uuid(uuid&& _rhs);
     ~uuid() = default;
     /**
-     * @brief Retrieves the unsigned 128-bit integer representing this UUID.
+     * @brief Implicit conversion to the underlying 128-bit integer value.
+     * @return The 128-bit integer representation of this UUID.
      */
     operator __uint128_t() const;
     /**
@@ -114,7 +116,10 @@ class uuid {
      * @return True if this UUIDs is less than the given one.
      */
     auto operator<(uuid const& _rhs) const -> bool;
-    /** @brief Converts to string. */
+    /**
+     * @brief Implicit conversion to string (calls to_string()).
+     * @return UUID in 8-4-4-4-12 hexadecimal format.
+     */
     operator std::string();
     /**
      * @brief Converts the UUID to a string.

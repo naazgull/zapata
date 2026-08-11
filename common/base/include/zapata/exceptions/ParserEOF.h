@@ -44,10 +44,12 @@ class ParserEOF : public zpt::exception {
     /**
      * @brief Constructs a ParserEOF exception.
      * @param _what Description of what was expected.
+     * @return void (constructors implicitly initialize the object).
+     * @throws ParserEOF Always (the constructor itself throws).
      */
     ParserEOF(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~ParserEOF() throw();
 };
 

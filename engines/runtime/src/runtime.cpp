@@ -7,8 +7,14 @@
 #include <zapata/transport.h>
 
 namespace {
-/** @brief Signal handler that triggers stream polling shutdown. */
-auto deallocate(int) -> void;
+/**
+ * @brief Signal handler that triggers stream polling shutdown.
+ * @param _signal The signal number received.
+ *
+ * Called when SIGUSR1, SIGINT, or SIGTERM is received. Triggers the stream
+ * polling shutdown sequence, which causes the runtime to cleanly unwind.
+ */
+auto deallocate(int _signal) -> void;
 } // namespace
 
 auto zpt::runtime::initialize(int _argc, char** _argv) -> void {

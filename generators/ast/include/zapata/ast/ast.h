@@ -97,11 +97,14 @@ class basic_element : public std::enable_shared_from_this<basic_element> {
     basic_element() = default;
     virtual ~basic_element() = default;
 
-    /** @brief Serializes this element to a string. */
+    /** @brief Serializes this element to a string.
+     * @return Serialized string representation. */
     virtual auto to_string() const -> std::string = 0;
-    /** @brief Returns the indentation string for this nesting level. */
+    /** @brief Returns the indentation string for this nesting level.
+     * @return Indentation string. */
     virtual auto get_indentation() const -> std::string final;
-    /** @brief Returns whether to emit a newline before this element. */
+    /** @brief Returns whether to emit a newline before this element.
+     * @return True if newline should be emitted. */
     virtual auto new_line() const -> bool final;
     /** @brief Sets whether to emit a newline before this element.
      *  @param _value True to emit a newline, false to suppress it.
@@ -145,18 +148,27 @@ class basic_module {
     basic_module(std::string const& _module_name);
     ~basic_module() = default;
 
-    /** @brief Returns the module name. */
+    /** @brief Returns the module name.
+     * @return Module name. */
     auto name() const -> std::string const&;
-    /** @brief Adds a file to this module. */
+    /** @brief Adds a file to this module.
+     * @param _to_add File to add.
+     * @return Reference to this module. */
     auto add(std::shared_ptr<basic_file> _to_add) -> basic_module&;
-    /** @brief Constructs and adds a file from arguments. */
+    /** @brief Constructs and adds a file from arguments.
+     * @param _args Arguments forwarded to basic_file constructor.
+     * @return Reference to this module. */
     template<typename... Args>
     auto add(Args... _args) -> basic_module&;
-    /** @brief Serializes all files to their respective paths. */
+    /** @brief Serializes all files to their respective paths.
+     * @return Reference to this module. */
     auto dump() -> basic_module&;
-    /** @brief Serializes all files to the given stream. */
+    /** @brief Serializes all files to the given stream.
+     * @param _out Output stream.
+     * @return Reference to this module. */
     auto dump(std::ostream& _out) -> basic_module&;
-    /** @brief Invokes a callback for each contained file. */
+    /** @brief Invokes a callback for each contained file.
+     * @param _callback Callback function receiving each file. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_module&;
 
@@ -190,19 +202,28 @@ class basic_file {
     basic_file(std::filesystem::path const& _path);
     ~basic_file() = default;
 
-    /** @brief Returns the output file path. */
+    /** @brief Returns the output file path.
+     * @return Output file path. */
     auto path() const -> std::filesystem::path const&;
-    /** @brief Adds an AST element to this file. */
+    /** @brief Adds an AST element to this file.
+     * @param _to_add AST element to add.
+     * @return Reference to this file. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_file&;
-    /** @brief Constructs and adds an AST element from arguments. */
+    /** @brief Constructs and adds an AST element from arguments.
+     * @param _args Arguments forwarded to AST element constructor.
+     * @return Reference to this file. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_file&;
-    /** @brief Serializes all elements to the file path. */
+    /** @brief Serializes all elements to the file path.
+     * @return Reference to this file. */
     auto dump() -> basic_file&;
-    /** @brief Serializes all elements to the given stream. */
+    /** @brief Serializes all elements to the given stream.
+     * @param _out Output stream.
+     * @return Reference to this file. */
     auto dump(std::ostream& _out) -> basic_file&;
-    /** @brief Invokes a callback for each contained element. */
+    /** @brief Invokes a callback for each contained element.
+     * @param _callback Callback function receiving each element. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_file&;
 
@@ -236,13 +257,20 @@ class basic_class : public basic_element {
     basic_class(std::string const& _name, std::string const& _extends = "");
     virtual ~basic_class() override = default;
 
-    /** @brief Adds a member element with the given visibility (PUBLIC/PROTECTED/PRIVATE). */
+    /** @brief Adds a member element with the given visibility (PUBLIC/PROTECTED/PRIVATE).
+     * @param _to_add Member element to add.
+     * @param _visibility Visibility level (PUBLIC, PROTECTED, or PRIVATE).
+     * @return Reference to this class. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add, int _visibility) -> basic_class&;
-    /** @brief Constructs and adds a member element with the given visibility. */
+    /** @brief Constructs and adds a member element with the given visibility.
+     * @param _visibility Visibility level (PUBLIC, PROTECTED, or PRIVATE).
+     * @param _args Arguments forwarded to member element constructor.
+     * @return Reference to this class. */
     template<BasicASTElement T, typename... Args>
     auto add(int _visibility, Args... _args) -> basic_class&;
-    /** @brief Invokes a callback for each member across all visibility sections. */
+    /** @brief Invokes a callback for each member across all visibility sections.
+     * @param _callback Callback function receiving each member element. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_class&;
 
@@ -281,13 +309,18 @@ class basic_code_block : public basic_element {
     basic_code_block(std::string const& _prefix = "");
     virtual ~basic_code_block() override = default;
 
-    /** @brief Adds a statement element to this block. */
+    /** @brief Adds a statement element to this block.
+     * @param _to_add Statement element to add.
+     * @return Reference to this code block. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_code_block&;
-    /** @brief Constructs and adds a statement element from arguments. */
+    /** @brief Constructs and adds a statement element from arguments.
+     * @param _args Arguments forwarded to statement element constructor.
+     * @return Reference to this code block. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_code_block&;
-    /** @brief Invokes a callback for each statement in the block. */
+    /** @brief Invokes a callback for each statement in the block.
+     * @param _callback Callback function receiving each statement element. */
     template<typename Callback>
     auto traverse_elements(Callback _callback) -> basic_code_block&;
 
@@ -319,15 +352,22 @@ class basic_function : public basic_element {
                    int _modifiers = 0);
     virtual ~basic_function() override = default;
 
-    /** @brief Adds a parameter (basic_variable) or body (basic_code_block). */
+    /** @brief Adds a parameter (basic_variable) or body (basic_code_block).
+     * @param _to_add Parameter or body element to add.
+     * @return Reference to this function. */
     template<BasicASTElement T>
     auto add(std::shared_ptr<T> _to_add) -> basic_function&;
-    /** @brief Constructs and adds a parameter or body from arguments. */
+    /** @brief Constructs and adds a parameter or body from arguments.
+     * @param _args Arguments forwarded to element constructor.
+     * @return Reference to this function. */
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_function&;
-    /** @brief Sets modifier flags (VIRTUAL, CONST, OVERRIDE, etc.). */
+    /** @brief Sets modifier flags (VIRTUAL, CONST, OVERRIDE, etc.).
+     * @param _modifiers Bitwise OR of modifier constants.
+     * @return Reference to this function. */
     auto set_modifiers(int _modifiers) -> basic_function&;
-    /** @brief Returns the function body code block (may be null). */
+    /** @brief Returns the function body code block (may be null).
+     * @return Shared pointer to body code block. */
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
@@ -361,14 +401,21 @@ class basic_variable : public basic_element {
     basic_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     virtual ~basic_variable() override = default;
 
-    /** @brief Sets the initialization code block. */
+    /** @brief Sets the initialization code block.
+     * @param _initialization Code block for variable initialization.
+     * @return Reference to this variable. */
     auto add(std::shared_ptr<basic_code_block> _initialization) -> basic_variable&;
-    /** @brief Constructs and sets the initialization code block from arguments. */
+    /** @brief Constructs and sets the initialization code block from arguments.
+     * @param _args Arguments forwarded to code block constructor.
+     * @return Reference to this variable. */
     template<typename... Args>
     auto add(Args... _args) -> basic_variable&;
-    /** @brief Sets modifier flags (CONST, EXTERN, PARAMETER, etc.). */
+    /** @brief Sets modifier flags (CONST, EXTERN, PARAMETER, etc.).
+     * @param _modifiers Bitwise OR of modifier constants.
+     * @return Reference to this variable. */
     auto set_modifiers(int _modifiers) -> basic_variable&;
-    /** @brief Returns the initialization code block (may be null). */
+    /** @brief Returns the initialization code block (may be null).
+     * @return Shared pointer to initialization code block. */
     auto initialization() -> std::shared_ptr<basic_code_block>;
 
   protected:
@@ -398,12 +445,17 @@ class basic_instruction : public basic_element {
     basic_instruction(std::string const& _code);
     virtual ~basic_instruction() override = default;
 
-    /** @brief Sets the body code block for this instruction. */
+    /** @brief Sets the body code block for this instruction.
+     * @param _body Code block for the instruction body.
+     * @return Reference to this instruction. */
     auto add(std::shared_ptr<basic_code_block> _body) -> basic_instruction&;
-    /** @brief Constructs and sets the body code block from arguments. */
+    /** @brief Constructs and sets the body code block from arguments.
+     * @param _args Arguments forwarded to code block constructor.
+     * @return Reference to this instruction. */
     template<typename... Args>
     auto add(Args... _args) -> basic_instruction&;
-    /** @brief Returns the body code block (may be null). */
+    /** @brief Returns the body code block (may be null).
+     * @return Shared pointer to body code block. */
     auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:

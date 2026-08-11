@@ -41,20 +41,47 @@ namespace zpt {
  * @brief URI parser.
  *
  * Wrapper around the re2c/bison generated parser for URIs.
- * Parses URI strings into structured JSON.
+ * Parses URI strings into structured JSON with components: scheme, host, path, query, fragment.
+ *
+ * Example JSON output format:
+ * @code
+ * {
+ *   "scheme": "http",
+ *   "host": "example.com",
+ *   "path": ["api", "users", "123"],
+ *   "query": { "page": "1", "limit": "10" },
+ *   "fragment": "results"
+ * }
+ * @endcode
  */
 class URIParser : public URITokenizer {
   public:
-    /** @brief Constructs a parser with the given I/O streams. */
+    /** @brief Constructs a parser with the given I/O streams.
+     * @param _in Input stream to read URI strings from (default: stdin)
+     * @param _out Output stream for parser logging (default: stdout)
+     */
     URIParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~URIParser();
 
-    /** @brief Sets the JSON root node to populate during parsing. */
+    /** @brief Sets the JSON root node to populate during parsing.
+     * The parser will write URI components into this JSON object.
+     * @param _root JSON object to populate with URI components
+     * @return void (internal __root set).
+     */
     auto switchRoots(zpt::json& _root) -> void;
-    /** @brief Switches the input/output streams. */
+    /** @brief Switches the input/output streams for parsing.
+     * Allows reusing the parser instance with different streams.
+     * @param _in Input stream to read URI strings from
+     * @param _out Output stream for parser logging
+     * @return void (internal streams replaced).
+     */
     auto switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout) -> void;
-    /** @brief Clears the internal structures. */
+    /** @brief Clears the internal structures after parsing.
+     * Resets parser state for reuse with a new URI string.
+     * @return Reference to this parser for chaining.
+     */
     auto clear() -> void;
 };
 } // namespace zpt

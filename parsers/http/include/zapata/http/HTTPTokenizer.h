@@ -39,7 +39,8 @@ class HTTPTokenizer {
   public:
     HTTPTokenizer() = default;
 
-    /** @brief Parses one HTTP/UPnP message from d_scanner's current stream. */
+    /** @brief Parses one HTTP/UPnP message from d_scanner's current stream.
+     * @return 0 on success, non-zero on error. */
     auto parse() -> int;
 
     HTTPTokenizerLexer d_scanner;

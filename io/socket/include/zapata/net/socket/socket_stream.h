@@ -70,11 +70,24 @@ constexpr char const* ADDR_ANONYMOUS = "";
 constexpr bool NO_SSL = false;
 constexpr bool USE_SSL = true;
 
-/** @brief Returns a human-readable SSL error description. */
+/**
+ * @brief Returns a human-readable SSL error description.
+ * @param _ssl The SSL pointer.
+ * @param _ret The SSL result code.
+ * @return A human-readable error description string.
+ */
 auto ssl_error_print(SSL* _ssl, int _ret) -> std::string;
-/** @brief Returns a human-readable SSL error description for a given error code. */
+/**
+ * @brief Returns a human-readable SSL error description for a given error code.
+ * @param _error The OpenSSL error code (defaults to the last error if 0).
+ * @return A human-readable error description string.
+ */
 auto ssl_error_print(unsigned long _error = 0) -> std::string;
-/** @brief Tests if an IP address is a multicast address. */
+/**
+ * @brief Tests if an IP address is a multicast address.
+ * @param _ip The IP address string to test.
+ * @return True if the IP is in the multicast range (224.0.0.0/4).
+ */
 auto is_multicast_address(std::string const& _ip) -> bool;
 auto bind_to_address(zpt::sockaddrin_t& _to_bind, std::string const& _address) -> bool;
 
@@ -98,39 +111,92 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     using __int_type = typename __buf_type::int_type;
     using __traits_type = typename std::basic_streambuf<Char>::traits_type;
 
+    /**
+     * @brief Constructs an empty socket buffer.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketbuf();
+    /**
+     * @brief Destructor. Closes the socket and frees SSL resources.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~basic_socketbuf();
 
-    /** @brief Returns the underlying socket file descriptor. */
+    /**
+     * @brief Returns the underlying socket file descriptor.
+     * @return The socket file descriptor.
+     */
     auto get_socket() -> int;
-    /** @brief Sets the socket file descriptor and configures socket options. */
+    /**
+     * @brief Sets the socket file descriptor and configures socket options.
+     * @param _sock Socket file descriptor.
+     * @return void
+     */
     auto set_socket(int _sock) -> void;
-    /** @brief Configures SSL/TLS context and initiates handshake. */
+    /**
+     * @brief Configures SSL/TLS context and initiates handshake.
+     * @param _ctx SSL context to use.
+     * @return void
+     */
     auto set_context(SSL_CTX* _ctx) -> void;
-    /** @brief Sets the protocol (IPPROTO_TCP, IPPROTO_UDP, or UNIXPROTO_RAW). */
+    /**
+     * @brief Sets the protocol (IPPROTO_TCP, IPPROTO_UDP, or UNIXPROTO_RAW).
+     * @param _protocol Protocol type.
+     * @return void
+     */
     auto set_protocol(short _protocol) -> void;
 
-    /** @brief Returns the local socket address. */
+    /**
+     * @brief Returns the local socket address.
+     * @return Reference to local sockaddr structure.
+     */
     auto address() -> zpt::sockaddr_t&;
-    /** @brief Returns the peer socket address (UDP only). */
+    /**
+     * @brief Returns the peer socket address (UDP only).
+     * @return Reference to peer sockaddr structure.
+     */
     auto peer() -> zpt::sockaddr_t&;
-    /** @brief Returns whether SSL is enabled. */
+    /**
+     * @brief Returns whether SSL is enabled.
+     * @return Reference to SSL enabled flag.
+     */
     auto ssl() -> bool&;
-    /** @brief Returns the remote hostname or Unix socket path. */
+    /**
+     * @brief Returns the remote hostname or Unix socket path.
+     * @return Reference to host string.
+     */
     auto host() -> std::string&;
-    /** @brief Returns the remote port number. */
+    /**
+     * @brief Returns the remote port number.
+     * @return Reference to port number.
+     */
     auto port() -> int&;
-    /** @brief Returns the socket protocol. */
+    /**
+     * @brief Returns the socket protocol.
+     * @return Protocol type (IPPROTO_TCP, IPPROTO_UDP, UNIXPROTO_RAW).
+     */
     auto protocol() -> short;
-    /** @brief Returns the socket timeout in milliseconds. */
+    /**
+     * @brief Returns the socket timeout in milliseconds.
+     * @return Reference to timeout value.
+     */
     auto timeout() -> unsigned long long&;
 
-    /** @brief Returns the last error code. */
+    /**
+     * @brief Returns the last error code.
+     * @return Reference to error code.
+     */
     auto error_code() -> unsigned int&;
-    /** @brief Returns the last error description. */
+    /**
+     * @brief Returns the last error description.
+     * @return Reference to error description string.
+     */
     auto error_string() -> std::string&;
 
-    /** @brief Returns true if the socket is in a valid state. */
+    /**
+     * @brief Returns true if the socket is in a valid state.
+     * @return True if socket is valid and ready.
+     */
     virtual auto __good() -> bool;
 
   protected:
@@ -199,63 +265,154 @@ class basic_socketstream : public std::basic_iostream<Char> {
     using __stream_type = std::basic_iostream<__char_type>;
     using __buf_type = basic_socketbuf<__char_type>;
 
-    /** @brief Default constructor (unconnected). */
+    /**
+     * @brief Default constructor (unconnected).
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream();
-    /** @brief Wraps an existing TCP socket with address info. */
+    /**
+     * @brief Wraps an existing TCP socket with address info.
+     * @param s Socket file descriptor.
+     * @param _address Address information.
+     * @param _ssl Whether SSL is enabled.
+     * @param _protocol Socket protocol.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream(int s, zpt::sockaddrin_t const& _address, bool _ssl, short _protocol);
-    /** @brief Connects to a remote host. */
+    /**
+     * @brief Connects to a remote host.
+     * @param _host Hostname or IP address.
+     * @param _port Port number.
+     * @param _ssl Whether to use SSL/TLS.
+     * @param _protocol Socket protocol (IPPROTO_TCP or IPPROTO_UDP).
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream(std::string const& _host, std::uint16_t _port, bool _ssl, short _protocol);
-    /** @brief Creates a UDP client socket. */
+    /**
+     * @brief Creates a UDP client socket.
+     * @param _ssl Whether to use SSL/TLS.
+     * @param _protocol Socket protocol (must be IPPROTO_UDP).
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream(bool _ssl, short _protocol);
-    /** @brief Wraps an existing Unix domain socket. */
+    /**
+     * @brief Wraps an existing Unix domain socket.
+     * @param s Socket file descriptor.
+     * @param _address Unix socket address.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream(int s, zpt::sockaddrun_t const& _address);
-    /** @brief Connects to a Unix domain socket by path. */
+    /**
+     * @brief Connects to a Unix domain socket by path.
+     * @param _path Filesystem path to the socket.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_socketstream(std::string const& _path);
     basic_socketstream(const basic_socketstream&) = delete;
     basic_socketstream(basic_socketstream&&) = delete;
+    /**
+     * @brief Destructor. Closes the socket connection.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~basic_socketstream();
 
     auto operator=(const basic_socketstream&) -> basic_socketstream& = delete;
     auto operator=(basic_socketstream&&) -> basic_socketstream& = delete;
 
-    /** @brief Returns the socket file descriptor. */
+    /**
+     * @brief Implicit conversion to the socket file descriptor.
+     * @return Socket file descriptor value.
+     */
     operator int();
-    /** @brief Returns a URI representation (e.g., "tcp://host:port"). */
+    /**
+     * @brief Returns a URI representation (e.g., "tcp://host:port").
+     * @return URI string representation.
+     */
     operator std::string();
 
-    /** @brief Sets the peer address for UDP communication. */
+    /**
+     * @brief Sets the peer address for UDP communication.
+     * @param address Peer address.
+     * @param port Peer port.
+     * @return void
+     */
     auto set_peer(std::string const& address, int port) -> void;
 
-    /** @brief Returns whether SSL is enabled. */
+    /**
+     * @brief Returns whether SSL is enabled.
+     * @return Reference to SSL enabled flag.
+     */
     auto ssl() -> bool&;
-    /** @brief Returns the remote hostname. */
+    /**
+     * @brief Returns the remote hostname.
+     * @return Reference to hostname string.
+     */
     auto host() -> std::string&;
-    /** @brief Returns the remote port. */
+    /**
+     * @brief Returns the remote port.
+     * @return Reference to port number.
+     */
     auto port() -> int&;
-    /** @brief Returns the socket protocol. */
+    /**
+     * @brief Returns the socket protocol.
+     * @return Protocol type.
+     */
     auto protocol() -> short;
 
-    /** @brief Assigns a raw socket file descriptor (no SSL). */
+    /**
+     * @brief Assigns a raw socket file descriptor (no SSL).
+     * @param _sockfd Socket file descriptor.
+     * @return void
+     */
     auto assign(int _sockfd) -> void;
-    /** @brief Assigns a raw socket file descriptor with SSL context. */
+    /**
+     * @brief Assigns a raw socket file descriptor with SSL context.
+     * @param _sockfd Socket file descriptor.
+     * @param _ctx SSL context for encryption.
+     * @return void
+     */
     auto assign(int _sockfd, SSL_CTX* _ctx) -> void;
-    /** @brief Detaches from the current socket. */
+    /**
+     * @brief Detaches from the current socket.
+     * @return void
+     */
     auto unassign() -> void;
 
-    /** @brief Closes the socket connection. */
+    /**
+     * @brief Closes the socket connection.
+     * @return void
+     */
     auto close() -> void;
-    /** @brief Returns true if the socket is open and valid. */
+    /**
+     * @brief Returns true if the socket is open and valid.
+     * @return True if socket is open.
+     */
     auto is_open() -> bool;
-    /** @brief Returns true if data is available for reading. */
+    /**
+     * @brief Returns true if data is available for reading.
+     * @return True if data is ready.
+     */
     auto ready() -> bool;
 
-    /** @brief Returns the underlying stream buffer. */
+    /**
+     * @brief Returns the underlying stream buffer.
+     * @return Reference to the socket stream buffer.
+     */
     auto buffer() -> __buf_type&;
-    /** @brief Returns true if an error has occurred. */
+    /**
+     * @brief Returns true if an error has occurred.
+     * @return True if error occurred.
+     */
     auto is_error() -> bool;
-    /** @brief Returns the last error code. */
+    /**
+     * @brief Returns the last error code.
+     * @return Reference to error code.
+     */
     auto error_code() -> unsigned int&;
-    /** @brief Returns the last error description. */
+    /**
+     * @brief Returns the last error description.
+     * @return Reference to error description string.
+     */
     auto error_string() -> std::string&;
 
     /**
@@ -316,26 +473,57 @@ using wsocketstream = zpt::basic_socketstream<wchar_t>;
 template<typename Char>
 class basic_serversocketstream {
   public:
-    /** @brief Default constructor (unbound). */
+    /**
+     * @brief Default constructor (unbound).
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_serversocketstream();
-    /** @brief Binds to a TCP port. */
+    /**
+     * @brief Binds to a TCP port.
+     * @param _transport Transport scheme.
+     * @param _address Bind address.
+     * @param _port Port number.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_serversocketstream(std::string const& _transport,
                              std::string const& _address,
                              std::uint16_t _port);
-    /** @brief Binds to a Unix domain socket path. */
+    /**
+     * @brief Binds to a Unix domain socket path.
+     * @param _transport Transport scheme.
+     * @param _path Filesystem path for the socket.
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_serversocketstream(std::string const& _transport, std::string const& _path);
+    /**
+     * @brief Destructor. Closes the server socket.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~basic_serversocketstream();
 
-    /** @brief Returns a URI representation (e.g., "tcp://host:port"). */
+    /**
+     * @brief Returns a URI representation (e.g., "tcp://host:port").
+     * @return URI string representation.
+     */
     operator std::string();
-    /** @brief Closes the server socket. */
+    /**
+     * @brief Closes the server socket.
+     * @return void
+     */
     auto close() -> void;
-    /** @brief Returns true if the server socket is open. */
+    /**
+     * @brief Returns true if the server socket is open.
+     * @return True if server socket is open.
+     */
     auto is_open() -> bool;
-    /** @brief Returns true if a connection is pending. */
+    /**
+     * @brief Returns true if a connection is pending.
+     * @return True if connection is pending.
+     */
     auto ready() -> bool;
     /**
      * @brief Binds to a TCP port and starts listening.
+     * @param _address Address to bind to.
      * @param _port Port number to bind to.
      * @return True on success.
      */
@@ -370,12 +558,27 @@ class basic_serversocketstream {
  */
 class serversocketstream {
   public:
+    /**
+     * @brief Default constructor (unbound).
+     * @return void (constructors implicitly initialize the object).
+     */
     serversocketstream();
-    /** @brief Binds to a TCP port. */
+    /**
+     * @brief Binds to a TCP port.
+     * @param _transport Transport scheme.
+     * @param _address Bind address.
+     * @param _port Port number.
+     * @return void (constructors implicitly initialize the object).
+     */
     serversocketstream(std::string const& _transport,
                        std::string const& _address,
                        std::uint16_t _port);
-    /** @brief Binds to a Unix domain socket path. */
+    /**
+     * @brief Binds to a Unix domain socket path.
+     * @param _transport Transport scheme.
+     * @param _path Filesystem path for the socket.
+     * @return void (constructors implicitly initialize the object).
+     */
     serversocketstream(std::string const& _transport, std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
     serversocketstream(serversocketstream&& _rhs);
@@ -384,9 +587,15 @@ class serversocketstream {
     auto operator=(const zpt::serversocketstream& _rhs) -> zpt::serversocketstream&;
     auto operator=(zpt::serversocketstream&& _rhs) -> zpt::serversocketstream&;
 
-    /** @brief Access the underlying server socket. */
+    /**
+     * @brief Access the underlying server socket.
+     * @return Pointer to the underlying server socket.
+     */
     auto operator->() -> zpt::basic_serversocketstream<char>*;
-    /** @brief Dereference the underlying server socket. */
+    /**
+     * @brief Dereference the underlying server socket.
+     * @return Reference to the underlying server socket.
+     */
     auto operator*() -> zpt::basic_serversocketstream<char>&;
 
   private:
@@ -400,12 +609,27 @@ class serversocketstream {
  */
 class wserversocketstream {
   public:
+    /**
+     * @brief Default constructor (unbound).
+     * @return void (constructors implicitly initialize the object).
+     */
     wserversocketstream();
-    /** @brief Binds to a TCP port. */
+    /**
+     * @brief Binds to a TCP port.
+     * @param _transport Transport scheme.
+     * @param _address Bind address.
+     * @param _port Port number.
+     * @return void (constructors implicitly initialize the object).
+     */
     wserversocketstream(std::string const& _transport,
                         std::string const& _address,
                         std::uint16_t _port);
-    /** @brief Binds to a Unix domain socket path. */
+    /**
+     * @brief Binds to a Unix domain socket path.
+     * @param _transport Transport scheme.
+     * @param _path Filesystem path for the socket.
+     * @return void (constructors implicitly initialize the object).
+     */
     wserversocketstream(std::string const& _transport, std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
     wserversocketstream(zpt::wserversocketstream&& _rhs);
@@ -414,9 +638,15 @@ class wserversocketstream {
     auto operator=(const zpt::wserversocketstream& _rhs) -> zpt::wserversocketstream&;
     auto operator=(zpt::wserversocketstream&& _rhs) -> zpt::wserversocketstream&;
 
-    /** @brief Access the underlying server socket. */
+    /**
+     * @brief Access the underlying server socket.
+     * @return Pointer to the underlying wide-char server socket.
+     */
     auto operator->() -> zpt::basic_serversocketstream<wchar_t>*;
-    /** @brief Dereference the underlying server socket. */
+    /**
+     * @brief Dereference the underlying server socket.
+     * @return Reference to the underlying wide-char server socket.
+     */
     auto operator*() -> zpt::basic_serversocketstream<wchar_t>&;
 
   private:

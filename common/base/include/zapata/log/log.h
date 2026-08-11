@@ -174,6 +174,7 @@ class timer {
     /**
      * @brief Resets the timer to its initial state.
      * @return Reference to this timer.
+     * @throws none
      */
     auto reset() -> zpt::this_thread::timer<T>&;
 

@@ -44,18 +44,21 @@ namespace zpt {
 /**
  * @brief Trims leading whitespace from a string (in-place).
  * @param _in_out String to modify.
+ * @return void
  */
 void ltrim(std::string& _in_out);
 
 /**
  * @brief Trims trailing whitespace from a string (in-place).
  * @param _in_out String to modify.
+ * @return void
  */
 void rtrim(std::string& _in_out);
 
 /**
  * @brief Trims leading and trailing whitespace from a string (in-place).
  * @param _in_out String to modify.
+ * @return void
  */
 void trim(std::string& _in_out);
 
@@ -64,6 +67,7 @@ void trim(std::string& _in_out);
  * @param str String to modify.
  * @param find Substring to search for.
  * @param replace Replacement string.
+ * @return void
  */
 auto replace(std::string& str, std::string const& find, std::string const& replace) -> void;
 
@@ -72,6 +76,7 @@ auto replace(std::string& str, std::string const& find, std::string const& repla
  * @param str String to modify.
  * @param find List of substrings to search for.
  * @param replace List of replacements string.
+ * @return void
  */
 auto replace_multiple(std::string& _str,
                       std::vector<std::string> const& _find,
@@ -83,6 +88,7 @@ auto replace_multiple(std::string& _str,
  * @param _with_trailing Whether to include trailing slash.
  *
  * Removes duplicate slashes and optionally ensures trailing slash.
+ * @return void
  */
 void normalize_path(std::string& _in_out, bool _with_trailing);
 
@@ -91,6 +97,7 @@ void normalize_path(std::string& _in_out, bool _with_trailing);
  * @param name Header name to format.
  *
  * Converts "content-type" to "Content-Type".
+ * @return void
  */
 void prettify_header_name(std::string& name);
 

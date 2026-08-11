@@ -57,27 +57,38 @@ namespace zpt {
  */
 class basic_message {
   public:
-    /** @brief Retrieves a clone of this message. */
+    /** @brief Retrieves a clone of this message.
+     * @return Shared pointer to cloned message. */
     virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
-    /** @brief Returns the request method (GET, POST, etc.). */
+    /** @brief Returns the request method (GET, POST, etc.).
+     * @return Performative enum value. */
     virtual auto performative() const -> zpt::performative = 0;
-    /** @brief Returns the response status code. */
+    /** @brief Returns the response status code.
+     * @return Status code (200, 404, etc.). */
     virtual auto status() const -> zpt::status = 0;
-    /** @brief Returns mutable reference to URI. */
+    /** @brief Returns mutable reference to URI.
+     * @return Non-const reference to URI JSON object. */
     virtual auto uri() -> zpt::json& = 0;
-    /** @brief Returns the URI (const). */
+    /** @brief Returns the URI (const).
+     * @return Const reference to URI JSON object. */
     virtual auto uri() const -> zpt::json const = 0;
-    /** @brief Returns protocol version (e.g., "1.1"). */
+    /** @brief Returns protocol version (e.g., "1.1").
+     * @return Protocol version string. */
     virtual auto version() const -> std::string = 0;
-    /** @brief Returns URI scheme (http, https, ws, etc.). */
+    /** @brief Returns URI scheme (http, https, ws, etc.).
+     * @return Scheme string. */
     virtual auto scheme() const -> std::string = 0;
-    /** @brief Returns the resource path. */
+    /** @brief Returns the resource path.
+     * @return JSON object representing the resource path. */
     virtual auto resource() const -> zpt::json const = 0;
-    /** @brief Returns query parameters. */
+    /** @brief Returns query parameters.
+     * @return JSON object of query parameters. */
     virtual auto parameters() const -> zpt::json const = 0;
-    /** @brief Returns mutable reference to headers. */
+    /** @brief Returns mutable reference to headers.
+     * @return Non-const reference to headers JSON object. */
     virtual auto headers() -> zpt::json& = 0;
-    /** @brief Returns headers (const). */
+    /** @brief Returns headers (const).
+     * @return Const reference to headers JSON object. */
     virtual auto headers() const -> zpt::json const = 0;
     /**
      * @brief Adds or updates a header.
@@ -87,27 +98,44 @@ class basic_message {
      */
     virtual auto header(std::string const& _name, std::string const& _value)
       -> zpt::basic_message& = 0;
-    /** @brief Returns mutable reference to body. */
+    /** @brief Returns mutable reference to body.
+     * @return Non-const reference to body JSON object. */
     virtual auto body() -> zpt::json& = 0;
-    /** @brief Returns body (const). */
+    /** @brief Returns body (const).
+     * @return Const reference to body JSON object. */
     virtual auto body() const -> zpt::json const = 0;
-    /** @brief Returns true if connection should persist. */
+    /** @brief Returns true if connection should persist.
+     * @return True if keep-alive is enabled. */
     virtual auto keep_alive() const -> bool = 0;
-    /** @brief Returns Content-Type header value. */
+    /** @brief Returns Content-Type header value.
+     * @return Content-Type string (e.g., "application/json"). */
     virtual auto content_type() const -> std::string = 0;
-    /** @brief Sets the request method. */
+    /** @brief Sets the request method.
+     * @param _performative New performative value.
+     * @return Reference to this message. */
     virtual auto performative(zpt::performative _performative) -> basic_message& = 0;
-    /** @brief Sets the response status code. */
+    /** @brief Sets the response status code.
+     * @param _status New status code.
+     * @return Reference to this message. */
     virtual auto status(zpt::status _status) -> basic_message& = 0;
-    /** @brief Sets the URI from a string. */
+    /** @brief Sets the URI from a string.
+     * @param _uri URI string to parse.
+     * @return Reference to this message. */
     virtual auto uri(std::string const& _uri) -> basic_message& = 0;
-    /** @brief Sets the protocol version. */
+    /** @brief Sets the protocol version.
+     * @param _version Version string (e.g., "1.1").
+     * @return Reference to this message. */
     virtual auto version(std::string const& _version) -> basic_message& = 0;
-    /** @brief Serializes message to output stream. */
+    /** @brief Serializes message to output stream.
+     * @param _out Output stream to serialize to.
+     * @return Const reference to this message. */
     virtual auto to_stream(std::ostream& _out) const -> basic_message const& = 0;
-    /** @brief Deserializes message from input stream. */
+    /** @brief Deserializes message from input stream.
+     * @param _in Input stream to deserialize from.
+     * @return Reference to this message. */
     virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
-    /** @brief Returns true if message is empty/uninitialized. */
+    /** @brief Returns true if message is empty/uninitialized.
+     * @return True if message has no content. */
     virtual auto empty() const -> bool = 0;
 
     /**
@@ -156,15 +184,21 @@ class call_context {
     /** @brief Destructor. */
     ~call_context() = default;
 
-    /** @brief Returns the current call state (UNPROCESSED, SENT, SUCCESS_REPLY, FAILURE_REPLY). */
+    /** @brief Returns the current call state (UNPROCESSED, SENT, SUCCESS_REPLY, FAILURE_REPLY).
+     * @return State integer value. */
     auto state() const -> int;
-    /** @brief Returns the reply message (may be null if not yet replied). */
+    /** @brief Returns the reply message (may be null if not yet replied).
+     * @return Reply message, or null if no reply received. */
     auto reply() const -> zpt::message;
-    /** @brief Sets the reply message and updates the call state. */
+    /** @brief Sets the reply message and updates the call state.
+     * @param _to_update Reply message to set.
+     * @return Reference to this context. */
     auto reply(zpt::message _to_update) -> call_context&;
-    /** @brief Returns true if a reply has been received. */
+    /** @brief Returns true if a reply has been received.
+     * @return True if reply is available. */
     auto is_replied() const -> bool;
-    /** @brief Returns true if the reply indicates a failure. */
+    /** @brief Returns true if the reply indicates a failure.
+     * @return True if reply status indicates error. */
     auto has_error() const -> bool;
 
   private:
@@ -182,63 +216,132 @@ class call_context {
  */
 class json_message : public basic_message {
   public:
-    /** @brief Constructs an empty JSON message. */
+    /**
+     * @brief Constructs an empty JSON message.
+     * @return void (constructors implicitly initialize the object).
+     */
     json_message();
-    /** @brief Populates this message with the given JSON. */
+    /**
+     * @brief Populates this message with the given JSON.
+     * @param _other JSON object to copy into this message.
+     */
     json_message(zpt::json const& _other);
-    /** @brief Constructs a JSON reply from an existing request. */
+    /**
+     * @brief Constructs a JSON reply from an existing request.
+     * @param _req Request message to reply to.
+     * @param _is_reply Flag indicating this is a reply.
+     */
     json_message(zpt::message _req, bool);
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~json_message() = default;
 
-    /** @brief Retrieves a clone of this message. */
+    /**
+     * @brief Retrieves a clone of this message.
+     * @return Cloned message.
+     */
     virtual auto clone() const -> zpt::message override;
-    /** @brief Returns the request method. */
+    /**
+     * @brief Returns the request method.
+     * @return Performative enum value.
+     */
     virtual auto performative() const -> zpt::performative override;
-    /** @brief Returns the response status code. */
+    /**
+     * @brief Returns the response status code.
+     * @return Status code value.
+     */
     virtual auto status() const -> zpt::status override;
-    /** @brief Returns mutable reference to URI. */
+    /**
+     * @brief Returns mutable reference to URI.
+     * @return Non-const reference to URI JSON object.
+     */
     virtual auto uri() -> zpt::json& override;
-    /** @brief Returns the URI (const). */
+    /**
+     * @brief Returns the URI (const).
+     * @return Const reference to URI JSON object.
+     */
     virtual auto uri() const -> zpt::json const override;
-    /** @brief Returns protocol version. */
+    /**
+     * @brief Returns protocol version.
+     * @return Protocol version string.
+     */
     virtual auto version() const -> std::string override;
-    /** @brief Returns URI scheme. */
+    /**
+     * @brief Returns URI scheme.
+     * @return Scheme string (e.g., "http", "https").
+     */
     virtual auto scheme() const -> std::string override;
-    /** @brief Returns the resource path. */
+    /**
+     * @brief Returns the resource path.
+     * @return Resource path JSON object.
+     */
     virtual auto resource() const -> zpt::json const override;
-    /** @brief Returns query parameters. */
+    /**
+     * @brief Returns query parameters.
+     * @return Query parameters JSON object.
+     */
     virtual auto parameters() const -> zpt::json const override;
-    /** @brief Returns mutable reference to headers. */
+    /**
+     * @brief Returns mutable reference to headers.
+     * @return Non-const reference to headers JSON object.
+     */
     virtual auto headers() -> zpt::json& override;
-    /** @brief Returns headers (const). */
+    /**
+     * @brief Returns headers (const).
+     * @return Const reference to headers JSON object.
+     */
     virtual auto headers() const -> zpt::json const override;
-    /** @brief Adds or updates a header. */
+    /** @brief Adds or updates a header.
+     * @param _name Header name.
+     * @param _value Header value.
+     * @return Reference to the base message interface. */
     virtual auto header(std::string const& _name, std::string const& _value)
       -> zpt::basic_message& override;
-    /** @brief Returns mutable reference to body. */
+    /** @brief Returns mutable reference to body.
+     * @return Non-const reference to body JSON object. */
     virtual auto body() -> zpt::json& override;
-    /** @brief Returns body (const). */
+    /** @brief Returns body (const).
+     * @return Const reference to body JSON object. */
     virtual auto body() const -> zpt::json const override;
-    /** @brief Returns true if connection should persist. */
+    /** @brief Returns true if connection should persist.
+     * @return True if keep-alive is enabled. */
     virtual auto keep_alive() const -> bool override;
-    /** @brief Returns Content-Type header value. */
+    /** @brief Returns Content-Type header value.
+     * @return Content-Type string. */
     virtual auto content_type() const -> std::string override;
-    /** @brief Serializes message to output stream as JSON. */
+    /** @brief Serializes message to output stream as JSON.
+     * @param _out Output stream.
+     * @return Const reference to this message. */
     virtual auto to_stream(std::ostream& _out) const -> zpt::basic_message const& override;
-    /** @brief Deserializes message from input stream. */
+    /** @brief Deserializes message from input stream.
+     * @param _in Input stream to read from.
+     * @return Reference to this message. */
     virtual auto from_stream(std::istream& _in) -> zpt::basic_message& override;
-    /** @brief Sets the request method. */
+    /** @brief Sets the request method.
+     * @param _performative New performative value.
+     * @return Reference to the base message interface. */
     virtual auto performative(zpt::performative _performative) -> zpt::basic_message& override;
-    /** @brief Sets the response status code. */
+    /** @brief Sets the response status code.
+     * @param _status New status code.
+     * @return Reference to the base message interface. */
     virtual auto status(zpt::status _status) -> zpt::basic_message& override;
-    /** @brief Sets the URI from a string. */
+    /** @brief Sets the URI from a string.
+     * @param _uri URI string.
+     * @return Reference to the base message interface. */
     virtual auto uri(std::string const& _uri) -> zpt::basic_message& override;
-    /** @brief Sets the protocol version. */
+    /** @brief Sets the protocol version.
+     * @param _version Version string.
+     * @return Reference to the base message interface. */
     virtual auto version(std::string const& _version) -> zpt::basic_message& override;
-    /** @brief Returns true if message is empty/uninitialized. */
+    /** @brief Returns true if message is empty/uninitialized.
+     * @return True if message has no content. */
     virtual auto empty() const -> bool override;
-    /** @brief Appends a value to the underlying JSON. */
+    /** @brief Appends a value to the underlying JSON.
+     * @tparam T Value type to append.
+     * @param _to_add Value to append.
+     * @return Reference to this message. */
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 

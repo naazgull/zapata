@@ -158,6 +158,198 @@ Returns the global thread-local Lua bridge instance.
 auto LUA_BRIDGE() -> zpt::lua::bridge&;
 ```
 
+---
+
+#### Lua Bindings Functions
+
+The Lua bridge provides utility functions for binding Zapata APIs to Lua scripts.
+
+**Header:** `<zapata/lua/lua.h>`
+
+**Namespace:** `zpt::lua::bindings`
+
+##### `make_request`
+
+Creates a new HTTP request from the Lua stack.
+
+```cpp
+auto make_request(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** Pushes a new HTTP request object onto the Lua stack (returns 1)
+
+**Raises:** `std::runtime_error` if the Lua stack doesn't contain a protocol atom
+
+**Example:**
+```lua
+-- Call from Lua
+zpt.make_request()  -- Creates HTTP request on stack
+```
+
+---
+
+##### `send_request`
+
+Sends an HTTP request and receives a response.
+
+```cpp
+auto send_request(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** Pushes the response object onto the Lua stack (returns 1)
+
+**Raises:** `std::runtime_error` if request parameters are missing or invalid
+
+**Example:**
+```lua
+zpt.send_request()  -- Sends request, returns response on stack
+```
+
+---
+
+##### `get_config`
+
+Pushes the global Zapata configuration as a JSON table onto the Lua stack.
+
+```cpp
+auto get_config(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** Pushes the global configuration JSON object onto the Lua stack (returns 1)
+
+**Example:**
+```lua
+local config = zpt.get_config()  -- Get global config
+local log_level = config.log.level
+```
+
+---
+
+##### `log`
+
+Logs the arguments from the Lua stack using the Zapata logging system.
+
+```cpp
+auto log(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** 0 (no return values)
+
+**Raises:** `std::runtime_error` if log level cannot be determined
+
+**Example:**
+```lua
+-- Log at info level
+zpt.log(zpt.levels.info, "Application started")
+
+-- Log with format
+zpt.log(zpt.levels.info, "User {}: logged in", "alice")
+```
+
+---
+
+##### `to_json_str`
+
+Parses a JSON string from the Lua stack and pushes it back as a JSON value.
+
+```cpp
+auto to_json_str(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** Pushes the parsed JSON value onto the Lua stack (returns 1)
+
+**Example:**
+```lua
+local json_str = '{"name": "Alice", "age": 30}'
+local json_obj = zpt.to_json_str(json_str)
+local name = json_obj.name
+```
+
+---
+
+##### `sleep`
+
+Sleeps for the given number of seconds.
+
+```cpp
+auto sleep(lua_State* _state) -> int;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Returns:** 0 (no return values)
+
+**Raises:** `std::runtime_error` if sleep duration is invalid
+
+**Example:**
+```lua
+zpt.sleep(1.5)  -- Sleep for 1.5 seconds
+```
+
+---
+
+##### `register_bindings`
+
+Registers the `zpt` Lua module with bindings for HTTP requests, config access, logging, and JSON conversion.
+
+```cpp
+auto register_bindings(lua_State* _state) -> void;
+```
+
+**Parameters:**
+- `_state` - Lua state pointer
+
+**Effect:** Registers all `zpt` functions and constants to the global namespace
+
+**Example:**
+```lua
+-- In C++ initialization
+auto lua_state = luaL_newstate();
+luaL_openlibs(lua_state);
+zpt::lua::bindings::register_bindings(lua_state);
+
+-- Now accessible from Lua
+zpt.make_request()
+zpt.log(zpt.levels.info, "Message")
+zpt.sleep(1.0)
+```
+
+**Registered Functions:**
+- `make_request` - Create HTTP request
+- `send_request` - Send HTTP request
+- `get_config` - Get global configuration
+- `log` - Log message
+- `to_json_str` - Parse JSON string
+- `sleep` - Sleep for seconds
+
+**Registered Constants:**
+- `zpt.levels.debug`, `info`, `warn`, `error`, `critical`, `fatal`
+- `zpt.levels.off` (0)
+- `zpt.levels.debug` (1)
+- `zpt.levels.info` (6)
+- `zpt.levels.warn` (7)
+- `zpt.levels.error` (8)
+- `zpt.levels.critical` (9)
+- `zpt.levels.fatal` (10)
+
+---
+
 ### Lua Bridge Usage
 
 ```cpp

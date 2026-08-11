@@ -41,10 +41,12 @@ class NoSuchElementException : public zpt::exception {
     /**
      * @brief Constructs a NoSuchElementException.
      * @param _what Description of the error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws NoSuchElementException Always (the constructor itself throws).
      */
     NoSuchElementException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~NoSuchElementException() throw();
 };
 

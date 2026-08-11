@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file plugin.cpp
+ * @brief AMQP transport plugin registration.
+ *
+ * Registers the "amqp" transport and optionally starts a background
+ * connection loop if AMQP broker address and port are configured.
+ */
+
 #include <iostream>
 #include <mosquitto.h>
 #include <zapata/net/socket.h>
@@ -28,11 +36,19 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
+/** @brief System event that subscribes to AMQP topics at boot time.
+ *
+ * Reads the "amqp.subscribe" array from the global config and subscribes
+ * the AMQP stream to each topic.
+ */
 class plugin_amqp_execute_after_boot : public zpt::system_event {
   public:
     using zpt::system_event::system_event;
     ~plugin_amqp_execute_after_boot() = default;
 
+    /** @brief Executes subscription logic at boot.
+     * @param _dispatcher Event dispatcher (unused).
+     * @return events::finish */
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         auto _config = zpt::GLOBAL_CONFIG();
         auto _stream = zpt::AMQP_STREAM();
@@ -51,6 +67,13 @@ class plugin_amqp_execute_after_boot : public zpt::system_event {
     }
 };
 
+/** @brief Plugin entry point: registers the AMQP transport and optionally starts a broker connection loop.
+ *
+ * If the plugin config contains both "port" and "address", a background thread is spawned
+ * to maintain a persistent connection to the AMQP broker and process miscellaneous messages.
+ * The plugin_amqp_execute_after_boot event is registered to subscribe to configured topics at boot.
+ *
+ * @param _plugin Plugin handle providing configuration via config(). */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
@@ -96,6 +119,8 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     else { zlog("Loaded AMQP transport", zpt::info); }
 }
 
+/** @brief Plugin exit point: unregisters the AMQP transport.
+ * @param _plugin Plugin handle (unused). */
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
     zpt::TRANSPORT_LAYER().remove("amqp");

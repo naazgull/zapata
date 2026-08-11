@@ -20,6 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file amqp_stream.cpp
+ * @brief AMQP stream implementation with Proton connection driver.
+ *
+ * Implements the zpt::amqp_stream class for persistent AMQP connections.
+ * Provides message publishing to topics, topic subscription management,
+ * I/O pumping, and event processing using the Proton C library.
+ *
+ * @see zpt::amqp_stream
+ */
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -30,6 +41,10 @@
 #include <zapata/startup/startup.h>
 
 namespace {
+/** @brief Wraps a system call error check, throwing on non-zero errno.
+ * @param _operation Description of the operation that failed.
+ * @param _errno errno value to check.
+ * @return void */
 auto check_error(std::string const& _operation, int _errno) -> void;
 }
 

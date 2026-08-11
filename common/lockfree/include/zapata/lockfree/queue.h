@@ -98,16 +98,36 @@ class queue {
      * @param _max_queue_size Maximum number of elements the queue can hold simultaneously.
      */
     queue(size_t _max_queue_size);
-    /** @brief Not copyable — the ring buffer cannot be shared. */
+    /**
+     * @brief Copy constructor (deleted).
+     * @return void (queue cannot be copied).
+     *
+     * The ring buffer cannot be shared between instances.
+     */
     queue(zpt::lf::queue<T> const& _rhs) = delete;
-    /** @brief Not movable — the atomic state cannot be transferred safely. */
+    /**
+     * @brief Move constructor (deleted).
+     * @return void (queue cannot be moved).
+     *
+     * The atomic state cannot be transferred safely.
+     */
     queue(zpt::lf::queue<T>&& _rhs) = delete;
     /** @brief Destructor. */
     ~queue() = default;
 
-    /** @brief Not copyable — the ring buffer cannot be shared. */
+    /**
+     * @brief Copy assignment (deleted).
+     * @return void (queue cannot be copied).
+     *
+     * The ring buffer cannot be shared between instances.
+     */
     auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
-    /** @brief Not movable — the atomic state cannot be transferred safely. */
+    /**
+     * @brief Move assignment (deleted).
+     * @return void (queue cannot be moved).
+     *
+     * The atomic state cannot be transferred safely.
+     */
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
     /**
@@ -129,14 +149,26 @@ class queue {
      */
     auto pop() -> ptr;
 
-    /** @brief Returns the queue maximum number of elements. */
+    /**
+     * @brief Returns the queue maximum number of elements.
+     * @return Maximum capacity of the queue.
+     */
     auto capacity() const -> size_t;
-    /** @brief Returns approximate element count. */
+    /**
+     * @brief Returns approximate element count.
+     * @return Current number of elements in the queue.
+     */
     auto size() const -> size_t;
 
-    /** @brief Returns a debug string representation of the queue. */
+    /**
+     * @brief Returns a debug string representation of the queue.
+     * @return String with queue state.
+     */
     __attribute__((noinline)) auto to_string() const -> std::string;
-    /** @brief Converts to string (calls to_string()). */
+    /**
+     * @brief Converts to string (calls to_string()).
+     * @return String representation of the queue.
+     */
     operator std::string() const;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {

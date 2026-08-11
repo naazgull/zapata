@@ -20,11 +20,31 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file connector.cpp
+ * @brief SQLite storage connector implementation.
+ *
+ * Implements the full SQLite connector hierarchy: connection, session, database,
+ * collection, action (add/modify/remove/replace/find), and result types.
+ * Also provides SQLite-specific utilities for error handling, parameter binding,
+ * and row-to-JSON conversion.
+ *
+ * @see zpt::storage::sqlite::connection
+ * @see zpt::storage::sqlite::session
+ * @see zpt::storage::sqlite::database
+ * @see zpt::storage::sqlite::collection
+ * @see zpt::storage::sqlite::action
+ * @see zpt::storage::sqlite::result
+ */
+
 #include <algorithm>
 #include <zapata/base/sentry.h>
 #include <zapata/sqlite/connector.h>
 #include <zapata/uuid.h>
 
+/** @brief SQLite error checking macro with descriptive messages.
+ * @param _error SQLite return code to check.
+ * @param _message Human-readable error message to append. */
 #define sqlite_expect(_error, _message)                                                            \
     {                                                                                              \
         auto __error__ = _error;                                                                   \
@@ -32,6 +52,8 @@
                std::get<0>(__messages[__error__])                                                  \
                  << "(" << std::get<1>(__messages[__error__]) << "): " << _message);               \
     }
+/** @brief SQLite error printing macro.
+ * @param _error SQLite return code to look up and print. */
 #define sqlite_print(_error)                                                                       \
     {                                                                                              \
         auto __error__ = _error;                                                                   \
@@ -39,6 +61,7 @@
              zpt::info);                                                                           \
     }
 
+/** @brief SQLite return code to human-readable message mapping. */
 std::map<int, std::tuple<std::string, std::string>> __messages = {
     { SQLITE_OK, { "SQLITE_OK", "Successful result" } },
     { SQLITE_ERROR, { "SQLITE_ERROR", "Generic error" } },

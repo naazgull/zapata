@@ -62,11 +62,13 @@ class sentry {
     /**
      * @brief Constructs a sentry with the given callback.
      * @param _callback The callable to invoke on destruction.
+     * @return none
      */
     sentry(T _callback);
 
     /**
      * @brief Destructor that invokes the stored callback.
+     * @return none
      */
     virtual ~sentry();
 

@@ -46,17 +46,38 @@ namespace rest {
  */
 class pending_messages {
   public:
+    /**
+     * @brief Default constructor (empty pending messages store).
+     * @return void (constructors implicitly initialize the object).
+     */
     pending_messages() = default;
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~pending_messages() = default;
 
-    /** @brief Stores a callback for a sent message. */
+    /**
+     * @brief Stores a callback for a sent message.
+     * @param _sent The outbound message to track.
+     * @param _context The call context for the request.
+     * @param _callback Callback to invoke when the reply arrives.
+     * @return Reference to this pending_messages instance.
+     */
     auto push(zpt::message _sent,
               zpt::call_context::ptr _context,
               zpt::events::resolver_callback _callback) -> pending_messages&;
-    /** @brief Retrieves and removes the callback for a received reply. */
+    /**
+     * @brief Retrieves and removes the callback for a received reply.
+     * @param _received The incoming reply message.
+     * @return Tuple of call context pointer and resolver callback.
+     */
     auto pop(zpt::message _received)
       -> std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>;
-    /** @brief Removes all pending callbacks. */
+    /**
+     * @brief Removes all pending callbacks.
+     * @return Reference to this pending_messages instance.
+     */
     auto clear() -> pending_messages&;
 
   private:

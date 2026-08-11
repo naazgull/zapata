@@ -62,6 +62,7 @@ class pool {
 
     /**
      * @brief Creates a pool with unbounded memory limit.
+     * @return void (constructors implicitly initialize the object).
      */
     pool();
 
@@ -79,6 +80,7 @@ class pool {
      * @brief Returns memory to the pool.
      * @param _ptr Pointer previously returned by allocate().
      * @param _n Size that was originally allocated.
+     * @return void
      */
     auto deallocate(pointer_type _ptr, size_t _n) -> void;
 
@@ -100,10 +102,18 @@ class pool {
      */
     auto allocated_size() const -> size_t;
 
-    /** @brief Returns a human-readable string with pool statistics. */
+    /**
+     * @brief Returns a human-readable string with pool statistics.
+     * @return std::string Human-readable pool statistics.
+     */
     auto to_string() const -> std::string;
 
-    /** @brief Stream insertion operator for pool statistics. */
+    /**
+     * @brief Stream insertion operator for pool statistics.
+     * @param _out Output stream.
+     * @param _in Pool to print.
+     * @return Reference to the output stream.
+     */
     friend auto operator<<(std::ostream& _out, zpt::mem::pool& _in) -> std::ostream& {
         _out << _in.to_string();
         return _out;
@@ -120,19 +130,27 @@ inline std::map<std::uint64_t, std::string> __allocated;
 /** @brief Mutex protecting @ref __allocated. */
 inline zpt::locks::spin_mutex __allocated_mutex;
 
-/** @brief Begins recording all pool allocations. */
+/**
+ * @brief Begins recording all pool allocations.
+ * @return void (global tracking state activated).
+ */
 auto start_tracking() -> void;
-/** @brief Logs all allocations that have not yet been deallocated. */
+/**
+ * @brief Logs all allocations that have not yet been deallocated.
+ * @return void (allocation leak report printed to stdout).
+ */
 auto print_still_allocated() -> void;
 /**
  * @brief Records a new allocation in the debug map.
  * @param _ptr Allocated pointer.
  * @param _name Demangled type name for the allocation.
+ * @return void
  */
 auto store(void* _ptr, std::string const& _name) -> void;
 /**
  * @brief Removes a pointer from the debug map on deallocation.
  * @param _ptr Pointer being deallocated.
+ * @return void
  */
 auto remove(void* _ptr) -> void;
 #endif
@@ -183,6 +201,7 @@ class allocator {
     /**
      * @brief Constructs an allocator using the given pool.
      * @param _pool The memory pool to allocate from.
+     * @return none
      */
     allocator(zpt::mem::pool& _pool);
 
@@ -190,6 +209,7 @@ class allocator {
      * @brief Rebinding copy constructor.
      * @tparam U Source allocator's value type.
      * @param _rhs Source allocator.
+     * @return none
      */
     template<typename U>
     allocator(zpt::allocator<U> const& _rhs);
@@ -197,6 +217,7 @@ class allocator {
     /**
      * @brief Copy constructor.
      * @param _rhs Source allocator.
+     * @return none
      */
     allocator(zpt::allocator<T> const& _rhs);
 

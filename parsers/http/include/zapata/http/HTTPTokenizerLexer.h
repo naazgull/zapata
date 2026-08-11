@@ -29,30 +29,61 @@ namespace zpt {
 
 class HTTPTokenizerLexer : public Re2cHTTPLexer {
   public:
-    /** @brief Constructs with given input and output streams. */
+    /** @brief Constructs with given input and output streams.
+     * @param _in Input stream to read from (default std::cin).
+     * @param _out Output stream for errors (default std::cout).
+     * @return void */
     HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~HTTPTokenizerLexer();
 
-    /** @brief Sets the request object to populate during parsing. */
+    /** @brief Sets the request object to populate during parsing.
+     * @param _root Request object to populate with parsed data.
+     * @return void */
     auto switchRoots(zpt::http::basic_request& _root) -> void;
-    /** @brief Sets the reply object to populate during parsing. */
+    /** @brief Sets the reply object to populate during parsing.
+     * @param _root Reply object to populate with parsed data.
+     * @return void */
     auto switchRoots(zpt::http::basic_reply& _root) -> void;
-    /** @brief Calls leave(0) to signal lexing completion. */
+    /** @brief Calls leave(0) to signal lexing completion.
+     * @return void */
     auto justLeave() -> void;
 
-    /** @brief Initializes the request/reply type based on the message. */
+    /**
+     * @brief Initializes the request/reply type based on the message.
+     * @param _in_type Type identifier (request or reply).
+     */
     auto init(int _in_type) -> void;
-    /** @brief Processes the HTTP version token. */
+    /**
+     * @brief Processes the HTTP version token.
+     * @return void (internal __root_req or __root_rep updated).
+     */
     auto version() -> void;
-    /** @brief Processes body content from the lexer. */
+    /**
+     * @brief Processes body content from the lexer.
+     * @return void (internal body accumulated).
+     */
     auto body() -> void;
-    /** @brief Processes the URL/request-target token. */
+    /**
+     * @brief Processes the URL/request-target token.
+     * @return void (internal __root_req URL set).
+     */
     auto url() -> void;
-    /** @brief Processes the status code token. */
+    /**
+     * @brief Processes the status code token.
+     * @return void (internal __root_rep status field set).
+     */
     auto status() -> void;
 
-    /** @brief Adds the current token to the appropriate data structure. */
+    /**
+     * @brief Adds the current token to the appropriate data structure.
+     *
+     * Examines the current matched text and the parsing context to determine
+     * whether it represents a header, method, status code, URL, or other
+     * HTTP construct, then stores it in the appropriate field.
+     * @return void (internal HTTP data structure updated).
+     */
     auto add() -> void;
 
     /**
@@ -61,6 +92,7 @@ class HTTPTokenizerLexer : public Re2cHTTPLexer {
      * Called once by the grammar after `headers` reduces. Factors out the
      * duplicated end-of-message block that appeared identically in both
      * alternatives of HTTP.b's `exp` rule.
+     * @return void (internal lexer state finalized).
      */
     auto finishMessage() -> void;
 

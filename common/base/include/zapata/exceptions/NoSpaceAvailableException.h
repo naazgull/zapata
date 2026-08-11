@@ -46,10 +46,12 @@ class NoSpaceAvailableException : public zpt::exception {
     /**
      * @brief Constructs a NoSpaceAvailableException.
      * @param _what Description of the error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws NoSpaceAvailableException Always (the constructor itself throws).
      */
     NoSpaceAvailableException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~NoSpaceAvailableException() throw();
 };
 

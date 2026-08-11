@@ -53,6 +53,7 @@ namespace html {
  * @param out Output stream for encoded result.
  * @param quote Whether to encode quote characters.
  * @param tags Whether to encode tag characters (< and >).
+ * @return void
  */
 auto entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false)
   -> void;
@@ -65,6 +66,7 @@ auto entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool 
  *
  * Converts characters like &, <, >, " to their HTML entity equivalents
  * (&amp;, &lt;, &gt;, &quot;).
+ * @return void
  */
 auto entities_encode(std::string& out, bool quote = true, bool tags = false) -> void;
 
@@ -74,6 +76,7 @@ auto entities_encode(std::string& out, bool quote = true, bool tags = false) -> 
  *
  * Converts HTML entities like &amp;, &lt;, &gt; back to their
  * character equivalents.
+ * @return void
  */
 auto entities_decode(std::string& out) -> void;
 
@@ -81,6 +84,7 @@ auto entities_decode(std::string& out) -> void;
  * @brief Extracts the multipart boundary from a Content-Type header.
  * @param _in Content-Type header value.
  * @param _out Extracted boundary string.
+ * @return void
  */
 auto content_boundary(std::string& _in, std::string& _out) -> void;
 

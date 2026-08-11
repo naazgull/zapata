@@ -20,11 +20,21 @@ namespace rest {
 class minion_boot : public zpt::events::process {
   public:
     using zpt::events::process::process;
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~minion_boot() = default;
-    /** @brief Returns false (boot processing is never blocked). */
+    /**
+     * @brief Returns false (boot processing is never blocked).
+     * @return False.
+     */
     auto blocked() const -> bool;
-    /** @brief Registers the booting worker and its services. */
+    /**
+     * @brief Registers the booting worker and its services.
+     * @param _dispatcher The event dispatcher for triggering events.
+     * @return Event state indicating completion.
+     */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
@@ -36,11 +46,19 @@ class minion_boot : public zpt::events::process {
 class minion_shutdown : public zpt::events::process {
   public:
     using zpt::events::process::process;
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~minion_shutdown() = default;
-    /** @brief Returns false (shutdown processing is never blocked). */
+    /**
+     * @brief Returns false (shutdown processing is never blocked).
+     * @return False.
+     */
     auto blocked() const -> bool;
-    /** @brief Unregisters the shutting-down worker and its services. */
+    /** @brief Unregisters the shutting-down worker and its services.
+     * @param _dispatcher The event dispatcher for triggering events.
+     * @return Event state indicating completion. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
@@ -52,11 +70,19 @@ class minion_shutdown : public zpt::events::process {
 class minion_hello : public zpt::events::process {
   public:
     using zpt::events::process::process;
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~minion_hello() = default;
-    /** @brief Returns false (hello processing is never blocked). */
+    /**
+     * @brief Returns false (hello processing is never blocked).
+     * @return False.
+     */
     auto blocked() const -> bool;
-    /** @brief Processes the hello handshake and exchanges capabilities. */
+    /** @brief Processes the hello handshake and exchanges capabilities.
+     * @param _dispatcher The event dispatcher for triggering events.
+     * @return Event state indicating completion. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
@@ -69,11 +95,19 @@ class minion_hello : public zpt::events::process {
 class minion_state : public zpt::events::process {
   public:
     using zpt::events::process::process;
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~minion_state() = default;
-    /** @brief Returns false (state queries are never blocked). */
+    /**
+     * @brief Returns false (state queries are never blocked).
+     * @return False.
+     */
     auto blocked() const -> bool;
-    /** @brief Responds with current worker diagnostics. */
+    /** @brief Responds with current worker diagnostics.
+     * @param _dispatcher The event dispatcher for triggering events.
+     * @return Event state indicating completion. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
@@ -85,16 +119,29 @@ class minion_state : public zpt::events::process {
 class services_list : public zpt::events::process {
   public:
     using zpt::events::process::process;
-    /** @brief Destructor. */
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     ~services_list() = default;
-    /** @brief Returns false (listing is never blocked). */
+    /**
+     * @brief Returns false (listing is never blocked).
+     * @return False.
+     */
     auto blocked() const -> bool;
-    /** @brief Responds with the list of registered services. */
+    /** @brief Responds with the list of registered services.
+     * @param _dispatcher The event dispatcher for triggering events.
+     * @return Event state indicating completion. */
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state;
 };
 
 namespace services {
-/** @brief Broadcasts service registration to connected nodes. */
+/**
+ * @brief Broadcasts service registration to connected nodes.
+ * @param _path Service path identifier.
+ * @param _config Service configuration JSON.
+ * @return void
+ */
 auto broadcast(std::string const& _path, zpt::json const& _config) -> void;
 } // namespace services
 } // namespace rest

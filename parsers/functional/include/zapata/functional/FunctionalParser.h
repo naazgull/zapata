@@ -40,13 +40,20 @@ namespace zpt {
  */
 class FunctionalParser : public FunctionalTokenizer {
   public:
-    /** @brief Constructs a parser with the given I/O streams. */
+    /** @brief Constructs a parser with the given I/O streams.
+     * @param _in Input stream to read from (default std::cin).
+     * @param _out Output stream for errors (default std::cout). */
     FunctionalParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~FunctionalParser();
 
-    /** @brief Sets the JSON root node to populate during parsing. */
+    /** @brief Sets the JSON root node to populate during parsing.
+     * @param _root JSON object to populate with parsed data.
+     * @return void */
     void switchRoots(zpt::json& _root);
-    /** @brief Switches the input/output streams. */
+    /** @brief Switches the input/output streams.
+     * @param _in New input stream (default std::cin).
+     * @param _out New output stream for errors (default std::cout).
+     * @return void */
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
 } // namespace zpt

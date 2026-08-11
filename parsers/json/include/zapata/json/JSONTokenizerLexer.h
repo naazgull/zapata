@@ -35,41 +35,68 @@ class JSONTokenizerLexer : public Re2cJSONLexer {
     /** @brief Parent element for nested structures. */
     zpt::JSONElementT* __parent{ nullptr };
 
-    /** @brief Constructs with given input and output streams. */
+    /** @brief Constructs with given input and output streams.
+     * @param _in Input stream to tokenize (default std::cin).
+     * @param _out Output stream for errors (default std::cout). */
     JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-    /** @brief Destructor. */
+    /** @brief Destructor.
+     * @return void (destructors implicitly clean up the object). */
     virtual ~JSONTokenizerLexer();
 
-    /** @brief Sets the root JSON object to populate during parsing. */
+    /** @brief Sets the root JSON object to populate during parsing.
+     * @param _root JSON object to use as root. */
     auto switchRoots(zpt::json& _root) -> void;
-    /** @brief Calls leave(0) to signal lexing completion. */
+    /**
+     * @brief Calls leave(0) to signal lexing completion.
+     * @return void (internal __left flag set).
+     */
     auto justLeave() -> void;
 
-    /** @brief Creates and pushes a new element of the given type onto the stack. */
+    /** @brief Creates and pushes a new element of the given type onto the stack.
+     * @param _in JSONType of the new element. */
     auto result(zpt::JSONType _in) -> void;
-    /** @brief Finishes the current element and attaches it to parent. */
+    /** @brief Finishes the current element and attaches it to parent.
+     * @param _in JSONType of the finished element. */
     auto finish(zpt::JSONType _in) -> void;
 
-    /** @brief Initializes an element from a type and string value. */
+    /** @brief Initializes an element from a type and string value.
+     * @param _in_type JSONType of the element.
+     * @param _in_str String value. */
     auto init(zpt::JSONType _in_type, const std::string _in_str) -> void;
-    /** @brief Initializes an element of the given type (null value). */
+    /** @brief Initializes an element of the given type (null value).
+     * @param _in_type JSONType of the element. */
     auto init(zpt::JSONType _in_type) -> void;
-    /** @brief Initializes a boolean element. */
+    /** @brief Initializes a boolean element.
+     * @param _in Boolean value. */
     auto init(bool _in) -> void;
-    /** @brief Initializes an integer element. */
+    /** @brief Initializes an integer element.
+     * @param _in Integer value. */
     auto init(long long _in) -> void;
-    /** @brief Initializes a floating-point element. */
+    /** @brief Initializes a floating-point element.
+     * @param _in Double value. */
     auto init(double _in) -> void;
-    /** @brief Initializes a string element. */
+    /** @brief Initializes a string element.
+     * @param _in String value. */
     auto init(std::string const& _in) -> void;
-    /** @brief Initializes a lambda element. */
+    /** @brief Initializes a lambda element.
+     * @param _in Lambda value. */
     auto init(zpt::lambda _in) -> void;
-    /** @brief Initializes a regex element. */
+    /** @brief Initializes a regex element.
+     * @param _in Regex value. */
     auto init(zpt::regex _in) -> void;
-    /** @brief Initializes a null element. */
+    /**
+     * @brief Initializes a null element.
+     * @return void (internal __element initialized).
+     */
     auto init() -> void;
 
-    /** @brief Adds the current element to its parent container. */
+    /**
+     * @brief Adds the current element to its parent container.
+     *
+     * Appends the freshly initialized element to its parent JSON container
+     * (array or object), or sets it as the root if no parent exists.
+     * @return void (parent element updated).
+     */
     auto add() -> void;
 };
 } // namespace zpt

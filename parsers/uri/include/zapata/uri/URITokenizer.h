@@ -45,7 +45,10 @@ class URITokenizer {
     /** @brief Default constructor. */
     URITokenizer() = default;
 
-    /** @brief Parses one URI from d_scanner's current stream. */
+    /**
+     * @brief Parses one URI from d_scanner's current stream.
+     * @return 0 on success, non-zero on error.
+     */
     auto parse() -> int;
 
     /** @brief The re2c lexer/tokenizer used for URI tokenization. */

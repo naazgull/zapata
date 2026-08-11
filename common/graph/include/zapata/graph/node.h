@@ -61,19 +61,46 @@ class node {
   public:
     /** @brief Default constructor (empty node). */
     node() = default;
-    /** @brief Copy constructor. */
+    /**
+     * @brief Copy constructor.
+     * @param _rhs Node to copy from.
+     *
+     * Deep-copies all children, callbacks, value, and path from the source node.
+     */
     node(node const& _rhs);
-    /** @brief Move constructor. */
+    /**
+     * @brief Move constructor.
+     * @param _rhs Node to move from.
+     *
+     * Transfers ownership of children, callbacks, value, and path from the source node,
+     * then clears the source node.
+     */
     node(node&& _rhs);
     /** @brief Destructor. */
     virtual ~node() = default;
 
-    /** @brief Copy assignment. */
+    /**
+     * @brief Copy assignment.
+     * @param _rhs Node to copy from.
+     * @return Reference to this node.
+     *
+     * Deep-copies all children, callbacks, value, and path from the source node.
+     */
     auto operator=(node const& _rhs) -> node&;
-    /** @brief Move assignment. */
+    /**
+     * @brief Move assignment.
+     * @param _rhs Node to move from.
+     * @return Reference to this node.
+     *
+     * Transfers ownership of children, callbacks, value, and path from the source node,
+     * then clears the source node.
+     */
     auto operator=(node&& _rhs) -> node&;
 
-    /** @brief Removes all children and callbacks. */
+    /**
+     * @brief Removes all children and callbacks.
+     * @return Reference to this node for chaining.
+     */
     auto clear() -> node&;
 
     /**
@@ -102,7 +129,11 @@ class node {
     template<typename I>
     auto merge(I _sequence, I _end, P _path, C _callback) -> bool;
 
-    /** @brief Returns a string representation of the tree structure. */
+    /**
+     * @brief Returns a string representation of the tree structure.
+     * @param _n_tabs Number of tab characters for indentation.
+     * @return String representation of the tree.
+     */
     auto to_string(uint _n_tabs = 0) const -> std::string;
 
     friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in)

@@ -47,21 +47,45 @@ namespace zpt {
  */
 class event_stream : public basic_stream {
   public:
+    /**
+     * @brief Constructs an event_stream backed by a Linux eventfd.
+     * @return void (constructors implicitly initialize the object).
+     */
     event_stream();
     event_stream(event_stream const& _rhs) = delete;
     event_stream(event_stream&& _rhs) = delete;
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~event_stream();
 
     auto operator=(event_stream const& _rhs) -> event_stream& = delete;
     auto operator=(event_stream&& _rhs) -> event_stream& = delete;
 
-    /** @brief Sets the file descriptor. */
+    /**
+     * @brief Sets the file descriptor.
+     * @param _rhs File descriptor value.
+     * @return Reference to this event_stream.
+     */
     auto operator=(int _rhs) -> event_stream&;
-    /** @brief Applies a stream manipulator (e.g., std::flush). */
+    /**
+     * @brief Applies a stream manipulator (e.g., std::flush).
+     * @param _in Manipulator function.
+     * @return Reference to this event_stream.
+     */
     auto operator<<(ostream_manipulator _in) -> event_stream&;
-    /** @brief Reads content from the internal buffer without I/O. */
+    /**
+     * @brief Reads content from the internal buffer without I/O.
+     * @param _out Output reference for the read value.
+     * @return Reference to this event_stream.
+     */
     auto read_without_io(std::any& _out) -> event_stream& override;
-    /** @brief Writes content to the internal buffer without I/O. */
+    /**
+     * @brief Writes content to the internal buffer without I/O.
+     * @param _in Value to write.
+     * @return Reference to this event_stream.
+     */
     auto write_without_io(std::any const& _in) -> event_stream& override;
     /**
      * @brief Returns false once both the request write and the reply read have completed.
@@ -69,6 +93,7 @@ class event_stream : public basic_stream {
      * The stream counts `read_without_io()` calls via `__reads`. When `__reads` reaches
      * `FINAL_REPLY_RECEIVED` (2), `persistent()` returns false so `unmute()` erases the
      * stream from the polling set.
+     * @return False when stream is fully processed, true while still active.
      */
     auto persistent() -> bool override;
 

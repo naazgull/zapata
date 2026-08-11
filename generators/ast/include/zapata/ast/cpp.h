@@ -63,7 +63,8 @@ class cpp_class : public zpt::ast::basic_class {
     cpp_class(std::string const& _name, std::string const& _extends = "");
     ~cpp_class() = default;
 
-    /** @brief Generates C++ class declaration string. */
+    /** @brief Generates C++ class declaration string.
+     * @return C++ class declaration code. */
     auto to_string() const -> std::string override;
 };
 
@@ -80,7 +81,8 @@ class cpp_code_block : public zpt::ast::basic_code_block {
     cpp_code_block(std::string const& _prefix = "");
     ~cpp_code_block() = default;
 
-    /** @brief Generates C++ code block string. */
+    /** @brief Generates C++ code block string.
+     * @return C++ code block with braces. */
     auto to_string() const -> std::string override;
 };
 
@@ -108,7 +110,8 @@ class cpp_function : public zpt::ast::basic_function {
                  int _modifiers = 0);
     ~cpp_function() = default;
 
-    /** @brief Generates C++ function declaration/definition string. */
+    /** @brief Generates C++ function declaration/definition string.
+     * @return C++ function declaration or definition. */
     auto to_string() const -> std::string override;
 };
 
@@ -126,7 +129,8 @@ class cpp_variable : public zpt::ast::basic_variable {
     cpp_variable(std::string const& _name, std::string const& _type, int _modifiers = 0);
     ~cpp_variable() = default;
 
-    /** @brief Generates C++ variable declaration string. */
+    /** @brief Generates C++ variable declaration string.
+     * @return C++ variable declaration. */
     auto to_string() const -> std::string override;
 };
 
@@ -143,11 +147,11 @@ class cpp_instruction : public zpt::ast::basic_instruction {
     cpp_instruction(std::string const& _code, bool _no_end_of_line = false);
     ~cpp_instruction() = default;
 
-    /** @brief Generates C++ instruction string. */
+    /** @brief Generates C++ instruction string.
+     * @return C++ instruction code. */
     auto to_string() const -> std::string override;
 
   private:
-    /** @brief If true, omits trailing newline after the instruction. */
     bool __no_endl_of_line;
 };
 
@@ -163,7 +167,8 @@ class cmake_instruction : public zpt::ast::basic_instruction {
     cmake_instruction(std::string const& _code);
     ~cmake_instruction() = default;
 
-    /** @brief Generates CMake command string. */
+    /** @brief Generates CMake command string.
+     * @return CMake command string. */
     auto to_string() const -> std::string override;
 };
 } // namespace ast

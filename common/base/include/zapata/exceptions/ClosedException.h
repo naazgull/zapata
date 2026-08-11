@@ -44,10 +44,12 @@ class ClosedException : public zpt::exception {
     /**
      * @brief Constructs a ClosedException.
      * @param _what Description of the error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws ClosedException Always (the constructor itself throws).
      */
     ClosedException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~ClosedException() throw();
 };
 

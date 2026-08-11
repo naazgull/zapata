@@ -1,9 +1,24 @@
+/**
+ * @file engine.cpp
+ * @brief Transport engine implementation for network I/O and event dispatch.
+ *
+ * Implements the zpt::transports::engine class and the receive, send, process,
+ * and call event operations defined in the engine header.
+ */
+
 #include <zapata/globals.h>
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
 namespace {
-/** @brief Builds an error JSON body from an exception. */
+/** @brief Builds an error JSON body from an exception.
+ *
+ * Extracts the error code, exception type name, and diagnostic message
+ * from the caught exception to build a structured error response.
+ *
+ * @tparam T Exception type (std::exception, std::bad_alloc, or zpt::failed_expectation).
+ * @param _e Exception to extract error information from.
+ * @return JSON object with "error", "exception", and "what" fields. */
 template<typename T>
 auto get_error_body(T const& _e) -> zpt::json {
     int _error{ 500 };
@@ -17,7 +32,17 @@ auto get_error_body(T const& _e) -> zpt::json {
     return _to_return;
 }
 
-/** @brief Reports an error by building and returning an error response message. */
+/** @brief Reports an error by building and returning an error response message.
+ *
+ * For synchronous transports, constructs an error reply with status code and
+ * exception details. For asynchronous transports, logs the error and unmutes
+ * the stream without sending a reply. Respects the PROPAGATE_EXCEPTION flag.
+ *
+ * @tparam T Exception type.
+ * @param _e Exception to report.
+ * @param _stream Source stream for the error.
+ * @param _polling Polling instance for stream management.
+ * @return Error reply message for synchronous transports, nullptr otherwise. */
 template<typename T>
 auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) -> zpt::message {
 #ifdef PROPAGATE_EXCEPTION

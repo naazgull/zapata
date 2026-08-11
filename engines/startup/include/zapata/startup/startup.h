@@ -79,8 +79,17 @@ class plugin {
     /** @brief Plugin entry point function signature. */
     using plugin_fn_type = std::function<bool(zpt::plugin& _plugin)>;
 
-    /** @brief Constructs a plugin with options and configuration. */
+    /**
+     * @brief Constructs a plugin with options and configuration.
+     * @param _options Plugin options JSON.
+     * @param _config Global configuration JSON.
+     * @return void (constructors implicitly initialize the object).
+     */
     plugin(zpt::json _options, zpt::json _config);
+    /**
+     * @brief Destructor. Stops plugin threads if running.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~plugin();
 
     plugin(plugin const& _rhs) = delete;
@@ -88,20 +97,42 @@ class plugin {
     auto operator=(plugin const& _rhs) -> plugin& = delete;
     auto operator=(plugin&& _rhs) -> plugin& = delete;
 
-    /** @brief Returns the plugin name. */
+    /**
+     * @brief Returns the plugin name.
+     * @return Reference to plugin name string.
+     */
     auto name() -> std::string&;
-    /** @brief Returns the shared library path. */
+    /**
+     * @brief Returns the shared library path.
+     * @return Reference to source path string.
+     */
     auto source() -> std::string&;
-    /** @brief Returns the plugin configuration. */
+    /**
+     * @brief Returns the plugin configuration.
+     * @return Reference to plugin configuration JSON.
+     */
     auto config() -> zpt::json&;
-    /** @brief Returns true if shutdown is in progress. */
+    /**
+     * @brief Returns true if shutdown is in progress.
+     * @return True if shutdown is ongoing.
+     */
     auto is_shutdown_ongoing() -> bool;
-    /** @brief Returns true if plugin is loaded. */
+    /**
+     * @brief Returns true if plugin is loaded.
+     * @return True if plugin is loaded.
+     */
     auto is_loaded() -> bool;
-    /** @brief Returns true if plugin is unloaded. */
+    /**
+     * @brief Returns true if plugin is unloaded.
+     * @return True if plugin is unloaded.
+     */
     auto is_unloaded() -> bool;
 
-    /** @brief Registers a worker thread. */
+    /**
+     * @brief Registers a worker thread.
+     * @param _callback Worker loop callback function.
+     * @return Reference to this plugin.
+     */
     auto add_thread(std::function<void()> _callback) -> plugin&;
 
   private:
@@ -143,8 +174,16 @@ class boot {
   public:
     using plugin_map_element_type = std::unique_ptr<zpt::plugin>;
 
-    /** @brief Constructs boot manager with configuration. */
+    /**
+     * @brief Constructs boot manager with configuration.
+     * @param _config Application configuration JSON.
+     * @return void (constructors implicitly initialize the object).
+     */
     boot(zpt::json _config);
+    /**
+     * @brief Destructor.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~boot();
 
     boot(boot const& _rhs) = delete;
@@ -152,11 +191,20 @@ class boot {
     auto operator=(boot const& _rhs) -> boot& = delete;
     auto operator=(boot&& _rhs) -> boot& = delete;
 
-    /** @brief Loads all plugins in dependency order. */
+    /**
+     * @brief Loads all plugins in dependency order.
+     * @return Reference to this boot manager.
+     */
     auto load() -> zpt::startup::boot&;
-    /** @brief Unloads all plugins in reverse order. */
+    /**
+     * @brief Unloads all plugins in reverse order.
+     * @return Reference to this boot manager.
+     */
     auto unload() -> zpt::startup::boot&;
-    /** @brief Returns string representation of loaded plugins. */
+    /**
+     * @brief Returns string representation of loaded plugins.
+     * @return String with plugin names and states.
+     */
     auto to_string() -> std::string;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::boot& _in) {
@@ -172,26 +220,48 @@ class boot {
     /** @brief Order in which plugins were loaded. */
     std::vector<std::string> __load_order;
 
-    /** @brief Resolves and adds builtin plugin dependencies from __builtins metadata. */
+    /**
+     * @brief Resolves and adds builtin plugin dependencies from __builtins metadata.
+     * @return void
+     */
     auto resolve_builtin_dependencies() -> void;
-    /** @brief Internal helper that loads a single plugin from options and config. */
+    /**
+     * @brief Internal helper that loads a single plugin from options and config.
+     * @param _plugin_options Plugin-specific options JSON.
+     * @param _plugin_config Plugin configuration JSON.
+     * @return Reference to the newly created plugin.
+     */
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
-    /** @brief Computes a string hash for a plugin event (plugin/step). */
+    /**
+     * @brief Computes a string hash for a plugin event (plugin/step).
+     * @param _event Event JSON to hash.
+     * @return Hash string.
+     */
     auto hash(zpt::json& _event) -> std::string;
 };
 
 } // namespace startup
 
-/** @brief Returns the default URI for this service instance. */
+/**
+ * @brief Returns the default URI for this service instance.
+ * @return URI string for the service.
+ */
 auto get_default_uri() -> std::string;
 
 /**
  * @brief Returns the global boot manager instance.
  * @param _config Configuration (used only on first call).
+ * @return Reference to the global boot manager.
  */
 auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
-/** @brief Returns the global configuration. */
+/**
+ * @brief Returns the global configuration.
+ * @return Global configuration JSON object.
+ */
 auto GLOBAL_CONFIG() -> zpt::json;
-/** @brief Returns the service identity. */
+/**
+ * @brief Returns the service identity.
+ * @return Service identity JSON object.
+ */
 auto IDENTITY() -> zpt::json const&;
 } // namespace zpt

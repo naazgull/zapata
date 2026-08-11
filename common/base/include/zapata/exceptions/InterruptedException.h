@@ -44,10 +44,12 @@ class InterruptedException : public zpt::exception {
     /**
      * @brief Constructs an InterruptedException.
      * @param _what Description of the interrupted operation.
+     * @return void (constructors implicitly initialize the object).
+     * @throws InterruptedException Always (the constructor itself throws).
      */
     InterruptedException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~InterruptedException() throw();
 };
 

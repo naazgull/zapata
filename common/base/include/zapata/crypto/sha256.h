@@ -93,6 +93,7 @@ class SHA256 {
      * @brief Initializes the hash state.
      *
      * Must be called before update() to reset the hasher.
+     * @return void
      */
     void init();
 
@@ -102,12 +103,14 @@ class SHA256 {
      * @param len Length of the data in bytes.
      *
      * Can be called multiple times to hash data incrementally.
+     * @return void
      */
     void update(const unsigned char* message, unsigned int len);
 
     /**
      * @brief Finalizes the hash and outputs the digest.
      * @param digest Buffer to receive the 32-byte hash digest.
+     * @return none
      *
      * After calling finalize(), call init() before hashing new data.
      */
@@ -118,6 +121,7 @@ class SHA256 {
      * @brief Processes a block of data.
      * @param message Pointer to the message block.
      * @param block_nb Number of blocks to process.
+     * @return void
      */
     void transform(const unsigned char* message, unsigned int block_nb);
 

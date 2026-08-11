@@ -1,9 +1,32 @@
+/**
+ * @file bindings.cpp
+ * @brief SWI-Prolog foreign interface for Zapata.
+ *
+ * Implements five Prolog predicates: zpt_make_request/2, zpt_call/2,
+ * zpt_config/1, zpt_log/1, and zpt_value_for/3. Each converts between
+ * Prolog terms and JSON for seamless integration with the Zapata framework.
+ *
+ * @see install_libzapata_bridge_prolog_bindings
+ */
+
 #include <zapata/prolog/bindings.h>
 #include <zapata/rest.h>
 #include <zapata/transport/engine.h>
 
 namespace {
 extern "C" {
+/**
+ * @brief Creates a new HTTP request from a Prolog term.
+ *
+ * Converts a Prolog term containing the protocol name into a full HTTP request object,
+ * then pushes the request onto the Prolog stack for further manipulation.
+ *
+ * @param _protocol_pl The Prolog term containing the request protocol (e.g., "http", "https")
+ * @param _request_pl The Prolog term to store the created request
+ * @return foreign_t 0 on success, throws exception on error
+ *
+ * @throws expect Failed if _request_pl is not a variable or _protocol_pl is not a string
+ */
 static auto make_request(term_t _protocol_pl /*+*/, term_t _request_pl /*-*/) -> foreign_t {
     expect(PL_term_type(_request_pl) == PL_VARIABLE,
            "`zpt_make_request`'s second parameter must be a variable");
@@ -19,6 +42,27 @@ static auto make_request(term_t _protocol_pl /*+*/, term_t _request_pl /*-*/) ->
     return PL_unify_term(_request_pl, PL_TERM, *_request);
 }
 
+/**
+ * @brief Sends an HTTP request and receives a response.
+ *
+ * Constructs an HTTP request from the provided Prolog term, sends it to the
+ * configured transport layer, and waits for the response (with 20-second timeout).
+ * The response is then pushed onto the Prolog stack.
+ *
+ * @param _request_pl The Prolog term containing the HTTP request parameters:
+ *                     - protocol (string)
+ *                     - performative (string, e.g., "GET", "POST")
+ *                     - uri (JSON object)
+ *                     - headers (JSON object)
+ *                     - body (optional JSON object)
+ * @param _reply_pl The Prolog term to store the HTTP response:
+ *                  - status (integer)
+ *                  - headers (JSON object)
+ *                  - body (optional JSON object)
+ * @return foreign_t 0 on success, throws exception on error
+ *
+ * @throws expect Failed if _reply_pl is not a variable or request is malformed
+ */
 static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> foreign_t {
     expect(PL_term_type(_reply_pl) == PL_VARIABLE,
            "`zpt_call`'s second parameter must be a variable");
@@ -63,6 +107,18 @@ static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> fo
     return PL_unify_term(_reply_pl, PL_TERM, *_reply);
 }
 
+/**
+ * @brief Pushes the global Zapata configuration onto the Prolog stack.
+ *
+ * Retrieves the global configuration from Zapata and converts it to a Prolog term,
+ * then pushes it onto the Prolog stack. If no global configuration is available,
+ * returns a default configuration with Prolog library information.
+ *
+ * @param _config_pl The Prolog term to store the configuration
+ * @return foreign_t 0 on success, throws exception on error
+ *
+ * @throws expect Failed if _config_pl is not a variable
+ */
 static auto get_config(term_t _config_pl /*-*/) -> foreign_t {
     expect(PL_term_type(_config_pl) == PL_VARIABLE,
            "`zpt_config`'s second parameter must be a variable");
@@ -74,6 +130,24 @@ static auto get_config(term_t _config_pl /*-*/) -> foreign_t {
     return PL_unify_term(_config_pl, PL_TERM, *_config);
 }
 
+/**
+ * @brief Logs a message to the Zapata logging system.
+ *
+ * Converts the Prolog term to a JSON representation and logs it using
+ * Zapata's logging system. Accepts either a single string/atom or a list
+ * of terms, converting them to a single log message.
+ *
+ * @param _to_log The Prolog term to log - either a string/atom or a list of terms
+ * @return foreign_t 1 on success
+ *
+ * @throws expect Failed if _to_log is a variable
+ *
+ * Example Prolog usage:
+ * @code
+ * ?- zpt_log("Application started").
+ * ?- zpt_log([Debug, "Connection established", Info, "Processing request"]).
+ * @endcode
+ */
 static auto send_to_log(term_t _to_log /*+*/) -> foreign_t {
     expect(PL_term_type(_to_log) != PL_VARIABLE,
            "`zpt_config`'s second parameter must NOT be a variable");
@@ -90,6 +164,20 @@ static auto send_to_log(term_t _to_log /*+*/) -> foreign_t {
     return 1;
 }
 
+/**
+ * @brief Retrieves a value from a Prolog term by key.
+ *
+ * Searches through a Prolog term (list or compound) and extracts the value
+ * associated with a given key. Supports searching in both lists (by integer index)
+ * and compound terms (by string key).
+ *
+ * @param _to_search_pl The Prolog term to search in - a list or compound term
+ * @param _key_pl The key to search for - integer index for lists, string key for compounds
+ * @param _result_pl The Prolog term to store the result (may be unbound)
+ * @return foreign_t 0 if key not found, 1 on success with result
+ *
+ * @throws expect Failed if key or search term are variables
+ */
 static auto get_value_for_key(term_t _to_search_pl /*+*/,
                               term_t _key_pl /*+*/,
                               term_t _result_pl /*?*/) -> foreign_t {
@@ -121,7 +209,22 @@ static auto get_value_for_key(term_t _to_search_pl /*+*/,
 }
 } // namespace
 
-/** @brief SWI-Prolog library initializer that registers all `zpt_*` foreign predicates. */
+/**
+ * @brief SWI-Prolog library initializer that registers all `zpt_*` foreign predicates.
+ *
+ * Registers all Zapata Prolog bridge foreign functions with the SWI-Prolog engine.
+ * This function should be called by the Prolog library initialization code to make
+ * the `zpt_*` predicates available to Prolog programs.
+ *
+ * @return install_t SWI-Prolog install_t handle
+ *
+ * Registered predicates:
+ * - zpt_make_request/2 - Create HTTP request from protocol
+ * - zpt_call/2 - Send HTTP request and receive response
+ * - zpt_config/1 - Get global Zapata configuration
+ * - zpt_log/1 - Log message via Zapata logging system
+ * - zpt_value_for/3 - Get value by key from list or compound term
+ */
 extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_make_request", 2, (void*)::make_request, 0);
     PL_register_foreign("zpt_call", 2, (void*)::send_request, 0);

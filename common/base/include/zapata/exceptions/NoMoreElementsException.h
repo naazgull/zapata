@@ -46,10 +46,12 @@ class NoMoreElementsException : public zpt::exception {
     /**
      * @brief Constructs a NoMoreElementsException.
      * @param _what Description of the error.
+     * @return void (constructors implicitly initialize the object).
+     * @throws NoMoreElementsException Always (the constructor itself throws).
      */
     NoMoreElementsException(std::string const& _what);
 
-    /** @brief Destructor. */
+    /** @brief Destructor. @return none */
     virtual ~NoMoreElementsException() throw();
 };
 

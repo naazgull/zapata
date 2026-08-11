@@ -29,7 +29,8 @@ std::atomic<bool> _shutdown{ false };
 
 /** @brief Plugin load entry point. Initializes the OAuth2 server with the configured token
     provider and registers the four REST listeners for authorization, token, refresh, and
-    validation endpoints. */
+    validation endpoints.
+ * @param _plugin The plugin instance being loaded, providing configuration and REST resolver. */
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _rest = zpt::REST_RESOLVER();
     auto _config = _plugin->config();
@@ -54,7 +55,10 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Registering listeners for oauth2.0", zpt::info);
 }
 
-/** @brief Plugin unload entry point. Releases the global OAuth2 server instance. */
+/**
+ * @brief Plugin unload entry point. Releases the global OAuth2 server instance.
+ * @param _plugin The plugin instance being unloaded.
+ */
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Unregistering listeners for oauth2.0", zpt::info);
     zpt::release_global<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());

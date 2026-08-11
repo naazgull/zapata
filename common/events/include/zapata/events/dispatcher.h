@@ -105,34 +105,51 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      * @param _max_consumers Maximum consumer threads.
      * @param _max_queue_size Maximum number of elements allowed in the queue (resource management
      *                        cap).
+     * @return Shared pointer to the dispatcher.
      */
     dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
-    /** @brief Destructor. Stops consumers if running. */
+    /**
+     * @brief Destructor. Stops consumers if running.
+     *
+     * Sets the shutdown flag, joins all consumer threads, and cleans up
+     * internal state.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~dispatcher();
 
-    /** @brief Sets initialization data passed to new events. */
+    /** @brief Sets initialization data passed to new events.
+     * @param _event_init Event initialization data pointer.
+     * @return Reference to this dispatcher. */
     auto set_event_initialization(zpt::event_initialization::ptr _event_init) -> dispatcher&;
     /**
      * @brief Starts consumer threads.
      * @param n_consumers Number to start (0 = use max_consumers).
+     * @return Reference to this dispatcher.
      */
     auto start_consumers(long n_consumers = 0) -> dispatcher&;
-    /** @brief Signals consumers to stop and waits for completion. */
+    /** @brief Signals consumers to stop and waits for completion.
+     * @return Reference to this dispatcher. */
     auto stop_consumers() -> dispatcher&;
-    /** @brief Enqueues an existing event for processing. */
+    /** @brief Enqueues an existing event for processing.
+     * @param _event Event to enqueue.
+     * @return Reference to this dispatcher. */
     auto trigger(zpt::event _event) -> dispatcher&;
     /**
      * @brief Creates and enqueues an event.
      * @tparam T Event operation type (must satisfy Operation concept).
      * @param _args Arguments forwarded to T's constructor.
+     * @return Reference to this dispatcher.
      */
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
-    /** @brief Blocks until dispatcher is shut down. */
+    /** @brief Blocks until dispatcher is shut down.
+     * @return Reference to this dispatcher. */
     auto trap() -> dispatcher&;
-    /** @brief Checks if shutdown has been initiated. */
+    /** @brief Checks if shutdown has been initiated.
+     * @return True if shutdown is in progress. */
     auto is_in_shutdown() -> bool;
-    /** @brief Retrieves the dispatcher's internal state. */
+    /** @brief Retrieves the dispatcher's internal state.
+     * @return JSON object with dispatcher status (running, queue size, etc.). */
     auto get_state() const -> zpt::json;
 
   public:
@@ -154,6 +171,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     /**
      * @brief Main consumer loop: dequeues and processes events until shutdown.
      * @param _consumer_nr Consumer thread index (for logging).
+     * @return None (runs until shutdown).
      */
     auto loop(long _consumer_nr) -> void;
 };
@@ -213,22 +231,36 @@ class abstract_event {
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
-    /** @brief Called when event is created with initialization data. */
+    /** @brief Called when event is created with initialization data.
+     * @param init_data Event initialization data. */
     virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
-    /** @brief Returns true if event is blocked waiting for something. */
+    /** @brief Returns true if event is blocked waiting for something.
+     * @return True if event is blocked. */
     virtual auto blocked() const -> bool = 0;
-    /** @brief Returns true if event is authorized to be invoked. */
+    /** @brief Returns true if event is authorized to be invoked.
+     * @return True if authorized. */
     virtual auto authorized() const -> bool = 0;
-    /** @brief Handles a generic exception. Return true to re-trigger event. */
+    /** @brief Handles a generic exception. Return true to re-trigger event.
+     * @param _e The caught exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return True to re-trigger the event. */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool = 0;
-    /** @brief Handles memory allocation failure. Return true to retry. */
+    /** @brief Handles memory allocation failure. Return true to retry.
+     * @param _e The caught std::bad_alloc exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return True to retry the event. */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool = 0;
-    /** @brief Handles expectation failure. Return true to re-trigger. */
+    /** @brief Handles expectation failure. Return true to re-trigger.
+     * @param _e The caught failed_expectation exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return True to re-trigger the event. */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool = 0;
-    /** @brief Executes the event operation. */
+    /** @brief Executes the event operation.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Processing state (finish, abort, retrigger). */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 };
 /**@}*/
@@ -245,32 +277,52 @@ using event = zpt::allocator<zpt::abstract_event>::unique_pointer;
 template<zpt::events::Operation T>
 class event_t : public zpt::abstract_event {
   public:
-    /** @brief Constructs event, forwarding args to underlying Operation. */
+    /**
+     * @brief Constructs event, forwarding args to underlying Operation.
+     * @tparam Args Constructor argument types for the underlying Operation.
+     * @param _args Arguments forwarded to the underlying Operation's constructor.
+     */
     template<typename... Args>
     event_t(Args&&... _args);
     /** @brief Destructor. */
     virtual ~event_t() override = default;
 
-    /** @brief Access underlying operation. */
+    /** @brief Access underlying operation.
+     * @return Reference to the underlying Operation. */
     auto operator*() -> T&;
-    /** @brief Access underlying operation (const). */
+    /** @brief Access underlying operation (const).
+     * @return Const reference to the underlying Operation. */
     auto operator*() const -> T const&;
-    /** @brief Delegates to underlying Operation's initialize(). */
+    /** @brief Delegates to underlying Operation's initialize().
+     * @param init_data Event initialization data. */
     virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
-    /** @brief Delegates to underlying Operation's blocked(). */
+    /** @brief Delegates to underlying Operation's blocked().
+     * @return Result of underlying Operation's blocked(). */
     virtual auto blocked() const -> bool override final;
-    /** @brief Delegates to underlying Operation's authorized(). */
+    /** @brief Delegates to underlying Operation's authorized().
+     * @return Result of underlying Operation's authorized(). */
     virtual auto authorized() const -> bool override final;
-    /** @brief Delegates to underlying Operation's catch_error() for generic exceptions. */
+    /** @brief Delegates to underlying Operation's catch_error() for generic exceptions.
+     * @param _e The caught exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Result of underlying Operation's catch_error(). */
     virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool override final;
-    /** @brief Delegates to underlying Operation's catch_error() for allocation failures. */
+    /** @brief Delegates to underlying Operation's catch_error() for allocation failures.
+     * @param _e The caught std::bad_alloc exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Result of underlying Operation's catch_error(). */
     virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher)
       -> bool override final;
-    /** @brief Delegates to underlying Operation's catch_error() for expectation failures. */
+    /** @brief Delegates to underlying Operation's catch_error() for expectation failures.
+     * @param _e The caught failed_expectation exception.
+     * @param _dispatcher Event dispatcher reference.
+     * @return Result of underlying Operation's catch_error(). */
     virtual auto catch_error(zpt::failed_expectation const& _e,
                              zpt::events::dispatcher::ptr _dispatcher) -> bool override final;
-    /** @brief Delegates to underlying Operation's operator(). */
+    /** @brief Delegates to underlying Operation's operator().
+     * @param _dispatcher Event dispatcher reference.
+     * @return Result of underlying Operation's operator(). */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher)
       -> zpt::events::state override final;
 

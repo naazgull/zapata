@@ -39,35 +39,81 @@ class Re2cFunctionalLexer {
     Re2cFunctionalLexer(Re2cFunctionalLexer const&) = delete;
     auto operator=(Re2cFunctionalLexer const&) -> Re2cFunctionalLexer& = delete;
 
-    /** @brief Returns the next token, or a value <= 0 at end-of-message/EOF. */
+    /**
+     * @brief Returns the next token, or a value <= 0 at end-of-message/EOF.
+     * @return Token value (positive integer), or 0 or negative at end-of-message/EOF.
+     *
+     * Advances the lexer through the input stream using the current start condition,
+     * performing state transitions based on the Re2c-generated DFA.
+     */
     auto lex() -> int;
 
-    /** @brief Text of the most recently completed token (mirrors flexc++'s matched()). */
+    /**
+     * @brief Text of the most recently completed token (mirrors flexc++'s matched()).
+     * @return Const reference to the matched string.
+     */
     auto matched() const -> std::string const&;
-    /** @brief Overwrites the current matched text (mirrors flexc++'s setMatched()). */
+    /**
+     * @brief Overwrites the current matched text (mirrors flexc++'s setMatched()).
+     * @param _text The new matched text to set.
+     */
     auto setMatched(std::string const& _text) -> void;
-    /** @brief Marks that the next match should append to, not replace, matched(). */
+    /**
+     * @brief Marks that the next match should append to, not replace, matched().
+     * @return void (internal state flag set).
+     */
     auto more() -> void;
 
-    /** @brief Current lexer start condition. */
+    /**
+     * @brief Current lexer start condition.
+     * @return The current start condition enum value.
+     */
     auto startCondition() const -> re2c_functional_cond;
-    /** @brief Switches the lexer start condition. */
+    /**
+     * @brief Switches the lexer start condition.
+     * @param _condition The new start condition to use for subsequent lexing.
+     */
     auto begin(re2c_functional_cond _condition) -> void;
 
-    /** @brief Marks lexing as finished for this message; lex() will return <= 0 from now on. */
+    /**
+     * @brief Marks lexing as finished for this message; lex() will return <= 0 from now on.
+     * @param _retValue The value that lex() will return when called after this.
+     */
     auto leave(int _retValue) -> void;
 
-    /** @brief 1-based input line number, for diagnostics. */
+    /**
+     * @brief 1-based input line number, for diagnostics.
+     * @return Current line number in the input stream.
+     */
     auto lineNr() const -> std::size_t;
 
-    /** @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state. */
+    /**
+     * @brief Re-targets the lexer at a fresh input/output stream pair, resetting all state.
+     * @param _in Input stream to read from.
+     * @param _out Output stream for errors.
+     */
     auto switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout) -> void;
 
-    /** @brief Pushes back onto the input stream any buffered-but-unconsumed bytes. */
+    /**
+     * @brief Pushes back onto the input stream any buffered-but-unconsumed bytes.
+     * @return void (internal buffer state adjusted).
+     */
     auto syncBackToStream() -> void;
 
+    /**
+     * @brief Lexing function for the INITIAL start condition.
+     * @return Token value, or a negative value on EOF/error.
+     */
     auto lexInitial() -> int;
+    /**
+     * @brief Lexing function for the quoted string start condition.
+     * @return Token value, or a negative value on EOF/error.
+     */
     auto lexQuoted() -> int;
+    /**
+     * @brief Lexing function for the number start condition.
+     * @return Token value, or a negative value on EOF/error.
+     */
     auto lexNumber() -> int;
 
   protected:

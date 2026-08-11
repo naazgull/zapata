@@ -20,6 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * @file websocket.cpp
+ * @brief WebSocket transport implementation.
+ *
+ * Provides WebSocket message framing, frame read/write utilities,
+ * and the zpt::net::transport::websocket transport class.
+ */
+
 #include <zapata/base.h>
 #include <zapata/globals/globals.h>
 #include <zapata/http.h>
@@ -30,9 +38,13 @@ using request_type = zpt::ws_message;
 using reply_type = zpt::ws_message;
 
 namespace {
+/** @brief Exception thrown when a WebSocket message is not valid JSON.
+ *
+ * Wraps the original message content for debugging purposes.
+ */
 class non_json_message : public std::exception {
   public:
-    zpt::json __original;
+    zpt::json __original; ///< Original non-JSON message content.
     non_json_message(zpt::json _original)
       : __original{ _original } {}
 };

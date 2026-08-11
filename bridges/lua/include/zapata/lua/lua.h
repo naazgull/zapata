@@ -65,53 +65,90 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
     using callback_type = std::function<void(underlying_type)>; ///< C++ callback for Lua
     using lambda_type = std::function<int(underlying_type)>;    ///< Lambda as Lua C function
 
-    /** @brief Creates a new Lua state with standard libraries open. */
+    /** @brief Creates a new Lua state with standard libraries open.
+     * @return void (constructors implicitly initialize the object). */
     bridge();
     bridge(bridge&& _rhs) = delete;
-    /** @brief Closes the Lua state if it is not null. */
+    /** @brief Closes the Lua state if it is not null.
+     * @return void (destructors implicitly clean up the object). */
     ~bridge();
 
     auto operator=(bridge const& _rhs) -> zpt::lua::bridge& = delete;
     auto operator=(bridge&& _rhs) -> zpt::lua::bridge& = delete;
 
-    /** @brief Returns "lua". */
+    /** @brief Returns "lua".
+     * @return The name of this bridge. */
     auto name() const -> std::string;
-    /** @brief Returns the raw lua_State pointer. */
+    /** @brief Returns the raw lua_State pointer.
+     * @return Raw Lua state pointer. */
     auto state() -> lua_State*;
-    /** @brief Returns thread-local bridge instance. */
+    /** @brief Returns thread-local bridge instance.
+     * @return Reference to thread-local bridge instance. */
     auto thread_instance() -> bridge&;
 
-    /** @brief Loads a Lua module from file. */
+    /** @brief Loads a Lua module from file.
+     * @param _conf Configuration JSON.
+     * @param _external_path External file path to load.
+     * @param _persist Whether to persist the module.
+     * @return Reference to this bridge. */
     auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
       -> zpt::lua::bridge&;
-    /** @brief Registers a C++ callback as a Lua module. */
+    /** @brief Registers a C++ callback as a Lua module.
+     * @param _conf Configuration JSON.
+     * @param _callback C++ callback to register.
+     * @param _persist Whether to persist the module.
+     * @return Reference to this bridge. */
     auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
       -> zpt::lua::bridge&;
-    /** @brief Locates a Lua value by path. */
+    /** @brief Locates a Lua value by path.
+     * @param _to_locate JSON value with path.
+     * @return Lua value at the given path. */
     auto find(zpt::json _to_locate) -> object_type;
 
-    /** @brief Clears the Lua stack. */
+    /** @brief Clears the Lua stack.
+     * @return Reference to this bridge. */
     auto clear_stack() -> zpt::lua::bridge&;
 
-    /** @brief Converts Lua stack to JSON. */
+    /** @brief Converts Lua stack to JSON.
+     * @param _to_convert Object to convert.
+     * @return JSON representation of the stack. */
     auto to_json(object_type _to_convert) -> zpt::json;
-    /** @brief Converts Lua value at index to JSON. */
+    /** @brief Converts Lua value at index to JSON.
+     * @param _to_convert Object to convert.
+     * @param _index Stack index to convert.
+     * @return JSON representation of the value. */
     auto to_json(object_type _to_convert, int _index) -> zpt::json;
-    /** @brief Creates a JSON reference to a Lua value. */
+    /** @brief Creates a JSON reference to a Lua value.
+     * @param _to_convert Object to reference.
+     * @param _index Stack index of the value.
+     * @return JSON reference to the Lua value. */
     auto to_ref(object_type _to_convert, int _index = 1) -> zpt::json;
-    /** @brief Pushes JSON value onto Lua stack. */
+    /** @brief Pushes JSON value onto Lua stack.
+     * @param _to_convert JSON value to push.
+     * @return Lua value pushed. */
     auto to_object(zpt::json _to_convert) -> object_type;
-    /** @brief Pushes JSON value using existing state. */
+    /** @brief Pushes JSON value using existing state.
+     * @param _to_convert JSON value to push.
+     * @param _return Existing state to push into.
+     * @return Lua value pushed. */
     auto to_object(zpt::json _to_convert, object_type _return) -> object_type;
-    /** @brief Dereferences a JSON Lua reference. */
+    /** @brief Dereferences a JSON Lua reference.
+     * @param _to_convert JSON reference to dereference.
+     * @param _return Target state to push into.
+     * @return Lua value from the reference. */
     auto from_ref(zpt::json _to_convert, object_type _return) -> object_type;
 
-    /** @brief Executes a Lua function with arguments. */
+    /** @brief Executes a Lua function with arguments.
+     * @param _func Function to execute.
+     * @param _args Function arguments.
+     * @return Result of the function execution. */
     auto execute(zpt::json _func, zpt::json _args) -> zpt::lua::bridge::object_type;
 
-    /** @brief Initializes the bridge (loads all modules). */
+    /** @brief Initializes the bridge (loads all modules).
+     * @return Reference to this bridge. */
     auto initialize() -> zpt::lua::bridge&;
-    /** @brief Clears all loaded modules and resets the bridge state. */
+    /** @brief Clears all loaded modules and resets the bridge state.
+     * @return Reference to this bridge. */
     auto cleanup() -> zpt::lua::bridge&;
 
   private:
@@ -120,11 +157,15 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
       __builtin_to_load;                                 ///< Built-in modules to register
     std::map<std::string, zpt::json> __external_to_load; ///< External file modules to load
 
-    /** @brief Copy constructor for creating a new thread-local bridge instance. */
+    /** @brief Copy constructor for creating a new thread-local bridge instance.
+     * @param _rhs Bridge instance to copy from. */
     bridge(bridge const& _rhs);
-    /** @brief Executes the Lua function currently on top of the stack. */
+    /** @brief Executes the Lua function currently on top of the stack.
+     * @return Result of the function execution. */
     auto execute() -> zpt::lua::bridge::object_type;
-    /** @brief Pushes all JSON array elements onto the Lua stack as function arguments. */
+    /** @brief Pushes all JSON array elements onto the Lua stack as function arguments.
+     * @param _to_convert JSON array to push elements from.
+     * @return Reference to this bridge. */
     auto to_args(zpt::json _to_convert) -> zpt::lua::bridge&;
 };
 } // namespace lua

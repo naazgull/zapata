@@ -42,9 +42,12 @@ namespace zpt {
 
 class JSONTokenizer {
   public:
+    /** @brief Default constructor.
+     * @return void (constructors implicitly initialize the object). */
     JSONTokenizer() = default;
 
-    /** @brief Parses one JSON value from d_scanner's current stream. */
+    /** @brief Parses one JSON value from d_scanner's current stream.
+     * @return Parse result token. */
     auto parse() -> int;
 
     JSONTokenizerLexer d_scanner;

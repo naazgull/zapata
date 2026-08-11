@@ -87,59 +87,170 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
 
+    /**
+     * @brief Constructs a stream with the given transport scheme.
+     * @param _transport Transport scheme (e.g., "tcp", "udp", "unix").
+     * @return void (constructors implicitly initialize the object).
+     */
     basic_stream(std::string const& _transport);
-    /** @brief Constructs from a unique pointer to a stream. */
+    /**
+     * @brief Constructs from a unique pointer to a stream.
+     * @tparam T Underlying stream type.
+     * @param _args Arguments forwarded to T's constructor.
+     * @return void (constructors implicitly initialize the object).
+     */
     template<typename T, typename... Args>
     basic_stream(std::in_place_type_t<T>, std::string const& _transport, Args... _args);
     basic_stream(basic_stream const& _rhs) = delete;
     basic_stream(basic_stream&& _rhs) = delete;
-    /** @brief Destructor. Closes the stream. */
+    /**
+     * @brief Destructor. Closes the stream.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~basic_stream();
 
     auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
     auto operator=(basic_stream&& _rhs) -> basic_stream& = delete;
 
-    /** @brief Sets the file descriptor. */
+    /**
+     * @brief Sets the file descriptor.
+     * @param _rhs File descriptor value.
+     * @return Reference to this stream.
+     */
     virtual auto operator=(int _rhs) -> basic_stream&;
-    /** @brief Reads a value from the stream using the transport protocol. */
+    /**
+     * @brief Reads a value from the stream using the transport protocol.
+     * @tparam T Value type to read.
+     * @param _out Output reference for the read value.
+     * @return Reference to this stream.
+     */
     template<typename T>
     auto read(T& _out) -> basic_stream&;
-    /** @brief Writes a value to the stream using the transport protocol. */
+    /**
+     * @brief Writes a value to the stream using the transport protocol.
+     * @tparam T Value type to write.
+     * @param _in Value to write.
+     * @return Reference to this stream.
+     */
     template<typename T>
     auto write(T _in) -> basic_stream&;
-    /** @brief Reads without performing I/O (e.g., from internal buffer). */
+    /**
+     * @brief Reads without performing I/O (e.g., from internal buffer).
+     * @param _out Output reference for the read value.
+     * @return Reference to this stream.
+     */
     virtual auto read_without_io(std::any& _out) -> basic_stream&;
-    /** @brief Writes without performing I/O (e.g., to internal buffer). */
+    /**
+     * @brief Writes without performing I/O (e.g., to internal buffer).
+     * @param _in Value to write.
+     * @return Reference to this stream.
+     */
     virtual auto write_without_io(std::any const& _in) -> basic_stream&;
-    /** @brief Whether or not the stream consumed several messages and more are available. */
+    /**
+     * @brief Whether or not the stream consumed several messages and more are available.
+     * @return True if more data is available.
+     */
     virtual auto has_next() const -> bool;
-    /** @brief Stream extraction operator. */
+    /**
+     * @brief Stream extraction operator.
+     * @tparam T Value type to extract.
+     * @param _out Output reference for the extracted value.
+     * @return Reference to this stream.
+     */
     template<typename T>
     auto operator>>(T& _out) -> basic_stream&;
-    /** @brief Stream insertion operator. */
+    /**
+     * @brief Stream insertion operator.
+     * @tparam T Value type to insert.
+     * @param _in Value to insert.
+     * @return Reference to this stream.
+     */
     template<typename T>
     auto operator<<(T _in) -> basic_stream&;
-    /** @brief Stream manipulator support (e.g., std::endl). */
+    /**
+     * @brief Stream manipulator support (e.g., std::endl).
+     * @param _in Manipulator function.
+     * @return Reference to this stream.
+     */
     auto operator<<(ostream_manipulator _in) -> basic_stream&;
-    /** @brief Dereferences to the underlying iostream. */
+    /**
+     * @brief Dereferences to the underlying iostream.
+     * @return Reference to the underlying iostream.
+     */
     auto operator*() -> std::iostream&;
 
-    /** @brief Returns the file descriptor. */
+    /**
+     * @brief Returns the file descriptor.
+     * @return File descriptor value.
+     */
     virtual operator int();
 
-    /** @brief Sets the peer address and port on the underlying socket. */
+    /**
+     * @brief Sets the peer address and port on the underlying socket.
+     * @tparam IOStream Underlying stream type.
+     * @param _address Peer address.
+     * @param _port Peer port.
+     * @return Reference to this stream.
+     */
     template<typename IOStream>
     auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
+    /**
+     * @brief Returns the stream's unique identifier.
+     * @return UUID of this stream.
+     */
     virtual auto uuid() const -> zpt::uuid const& final;
+    /**
+     * @brief Closes the stream.
+     * @return Reference to this stream.
+     */
     virtual auto close() -> basic_stream&;
+    /**
+     * @brief Shuts down the stream's connection.
+     * @return Reference to this stream.
+     */
     virtual auto shutdown() -> basic_stream&;
+    /**
+     * @brief Upgrades the stream to a different transport.
+     * @param _to_transport Target transport scheme.
+     * @return Reference to this stream.
+     */
     virtual auto upgrade(std::string const& _to_transport) -> basic_stream&;
+    /**
+     * @brief Returns the transport scheme.
+     * @return Reference to transport scheme string.
+     */
     virtual auto transport() -> std::string&;
+    /**
+     * @brief Returns the URI string.
+     * @return Reference to URI string.
+     */
     virtual auto uri() -> std::string&;
+    /**
+     * @brief Sets the stream processing state.
+     * @param _state New processing state.
+     * @return Reference to this stream.
+     */
     virtual auto state(stream_state _state) -> basic_stream&;
+    /**
+     * @brief Returns the current stream processing state.
+     * @return Current stream state.
+     */
     virtual auto state() -> stream_state;
+    /**
+     * @brief Returns whether the stream should remain in the polling set.
+     * @return True if stream should persist.
+     */
     virtual auto persistent() -> bool;
+    /**
+     * @brief Sets arbitrary metadata on this stream.
+     * @param _metadata Metadata to attach.
+     * @return Reference to this stream.
+     */
     virtual auto metadata(std::any _metadata) -> basic_stream&;
+    /**
+     * @brief Returns the attached metadata.
+     * @return Reference to metadata value.
+     */
     virtual auto metadata() const -> std::any const&;
 
   protected:
@@ -160,7 +271,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     /** @brief Whether this stream is currently muted (not monitored by polling). */
     std::atomic<bool> __muted{ true };
 
-    /** @brief Extracts the URI from the underlying iostream. */
+    /** @brief Extracts the URI from the underlying iostream.
+     * @return void. */
     auto extract_uri() -> void;
 };
 
@@ -205,33 +317,86 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Maximum events processed per poll() call. */
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
+    /**
+     * @brief Constructs a polling instance with epoll.
+     * @return void (constructors implicitly initialize the object).
+     */
     polling();
+    /**
+     * @brief Destructor. Closes the polling instance.
+     * @return void (destructors implicitly clean up the object).
+     */
     virtual ~polling();
 
-    /** @brief Closes the polling instance and all registered streams. */
+    /**
+     * @brief Closes the polling instance and all registered streams.
+     * @return Reference to this polling instance.
+     */
     auto close() -> zpt::polling&;
-    /** @brief Registers a delegate function called when streams are ready. */
+    /**
+     * @brief Registers a delegate function called when streams are ready.
+     * @param _callback Delegate function to register.
+     * @return Reference to this polling instance.
+     */
     auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
-    /** @brief Registers a delegate function called when streams are ready. */
+    /**
+     * @brief Unregisters a previously registered delegate function.
+     * @param _callback Delegate function to unregister.
+     * @return Reference to this polling instance.
+     */
     auto unregister_delegate(delegate_fn_type _callback) -> zpt::polling&;
-    /** @brief Adds a stream to be monitored for I/O. */
+    /**
+     * @brief Adds a stream to be monitored for I/O.
+     * @param _stream Stream to monitor.
+     * @return Reference to this polling instance.
+     */
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Temporarily stops monitoring a stream. */
+    /**
+     * @brief Temporarily stops monitoring a stream.
+     * @param _stream Stream to mute.
+     * @return Reference to this polling instance.
+     */
     auto mute(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Temporarily stops monitoring a stream. */
+    /**
+     * @brief Temporarily stops monitoring a stream by UUID.
+     * @param _id UUID of the stream to mute.
+     * @return Muted stream.
+     */
     auto mute(zpt::uuid const& _id) -> zpt::stream;
-    /** @brief Temporarily stops monitoring a stream. */
+    /**
+     * @brief Temporarily stops monitoring a stream by URI.
+     * @param _uri URI of the stream to mute.
+     * @return Muted stream.
+     */
     auto mute(std::string const& _uri) -> zpt::stream;
-    /** @brief Resumes monitoring a muted stream. */
+    /**
+     * @brief Resumes monitoring a muted stream.
+     * @param _stream Stream to unmute.
+     * @return Reference to this polling instance.
+     */
     auto unmute(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Changes the underlying transport of a stream. */
+    /**
+     * @brief Changes the underlying transport of a stream.
+     * @param _stream Stream to upgrade.
+     * @param _transport New transport scheme.
+     * @return Reference to this polling instance.
+     */
     auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
 
-    /** @brief Waits for I/O events and dispatches to delegates. */
+    /**
+     * @brief Waits for I/O events and dispatches to delegates.
+     * @return Reference to this polling instance.
+     */
     auto poll() -> zpt::polling&;
-    /** @brief Initiates shutdown of the polling loop. */
+    /**
+     * @brief Initiates shutdown of the polling loop.
+     * @return Reference to this polling instance.
+     */
     auto shutdown() -> zpt::polling&;
-    /** @brief Returns true if shutdown has been initiated. */
+    /**
+     * @brief Returns true if shutdown has been initiated.
+     * @return True if shutdown is in progress.
+     */
     auto is_in_shutdown() const -> bool;
 
   private:
@@ -250,17 +415,29 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
-    /** @brief Registers a stream with epoll (called by listen_on). */
+    /** @brief Registers a stream with epoll (called by listen_on).
+     * @param _stream Stream to register.
+     * @return Reference to this polling instance. */
     auto insert(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Removes a stream from epoll and the polled map. */
+    /** @brief Removes a stream from epoll and the polled map.
+     * @param _stream Stream to remove.
+     * @return Reference to this polling instance. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Retrieves the stream associated with the given file descriptor. */
+    /** @brief Retrieves the stream associated with the given file descriptor.
+     * @param _stream_fd File descriptor to look up.
+     * @return Stream associated with the file descriptor, or nullptr. */
     auto get(int _stream_fd) const -> zpt::stream;
-    /** @brief Retrieves the stream associated with the given identifier. */
+    /** @brief Retrieves the stream associated with the given identifier.
+     * @param _stream_id UUID to look up.
+     * @return Stream associated with the UUID, or nullptr. */
     auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
-    /** @brief Retrieves the stream associated with the given identifier. */
+    /** @brief Retrieves the stream associated with the given identifier.
+     * @param _uri URI string to look up.
+     * @return Stream associated with the URI, or nullptr. */
     auto get(std::string const& _uri) const -> zpt::stream;
-    /** @brief Dispatches a ready stream to all registered delegates. */
+    /** @brief Dispatches a ready stream to all registered delegates.
+     * @param _stream Stream that is ready for I/O.
+     * @return Reference to this polling instance. */
     auto delegate(zpt::stream _stream) -> zpt::polling&;
 };
 
