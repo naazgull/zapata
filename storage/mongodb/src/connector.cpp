@@ -271,6 +271,7 @@ auto zpt::storage::mongodb::action_add::execute() -> zpt::storage::result {
     try {
         auto _coll = (*this->__mongodb)[this->__db][this->__collection];
         for (auto&& [_, __, _record] : this->__underlying) {
+            if (!_record->is_object() || _record->size() == 0) { continue; }
             if (!_record("_id")->ok()) {
                 auto _id = zpt::uuid{}.to_base64_string();
                 _record << "_id" << _id;

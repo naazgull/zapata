@@ -379,6 +379,8 @@ zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection co
 
 auto zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
     expect(_document->is_object(), "expected add parameter to be a JSON object");
+    if (_document->size() == 0) { return this; }
+
     if (!_document("_id")->ok()) {
         std::string _id{ zpt::uuid{}.to_base64_string() };
         _document << "_id" << _id;

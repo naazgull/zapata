@@ -309,6 +309,7 @@ auto zpt::storage::mysqlx::action_add::bind(zpt::json) -> zpt::storage::action::
 auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     std::ostringstream _oss;
     for (auto&& [_, __, _record] : this->__underlying) {
+        if (!_record->is_object() || _record->size() == 0) { continue; }
         if (!_record("_id")->ok()) {
             auto _id = zpt::uuid{}.to_base64_string();
             _record << "_id" << _id;
