@@ -26,7 +26,7 @@
 #include <zapata/http/HTTPParser.h>
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
-#include <zapata/upnp/UPNPObj.h>
+#include <zapata/net/transport/upnp_message.h>
 #include <zapata/uri.h>
 #include <zapata/uuid.h>
 
