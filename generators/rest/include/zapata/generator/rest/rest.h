@@ -91,6 +91,7 @@ class unit {
     std::string __namespace;
     zpt::json __schema;
     std::vector<std::string> __header_files;
+    std::vector<std::string> __source_files;
     std::map<std::string, zpt::json> __schema_components;
 
     static inline std::map<std::string, std::string> __sql_types{

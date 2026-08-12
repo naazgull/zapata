@@ -55,6 +55,7 @@ auto zpt::gen::rest::unit::generate_operations() -> unit& {
 auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / "plugin.cpp";
+    this->__source_files.push_back(_file_path.filename());
     if (std::filesystem::exists(_file_path)) { return (*this); }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
@@ -158,20 +159,13 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
         _oss << std::format("target_sources({}\n"
                             "  PRIVATE\n",
                             _lib);
-        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
-            if (_file->path().string().find(".cpp") != std::string::npos) {
-                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
-                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
-            }
-        });
+        for (auto const& _source : this->__source_files) {
+            _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}/src/" << _source << "\n";
+        }
         _oss << "  INTERFACE\n";
-        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
-            if (_file->path().string().find(".h") != std::string::npos &&
-                _file->path().string().find(".html") == std::string::npos) {
-                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
-                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
-            }
-        });
+        for (auto const& _header : this->__header_files) {
+            _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}/include/" << _header << "\n";
+        }
         _oss << ")";
         _file->add<zpt::ast::cmake_instruction>(_oss.str());
         _file->add<zpt::ast::cmake_instruction>(
@@ -256,6 +250,7 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
   -> zpt::ast::basic_file::ptr {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / std::format("{}.cpp", _def(_method)("operationId")->string());
+    this->__source_files.push_back(_file_path.filename());
     if (!std::filesystem::exists(_file_path)) {
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
@@ -920,8 +915,8 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
               ->add<zpt::ast::cpp_instruction>(
                 "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
               .add<zpt::ast::cpp_instruction>("_session->commit()")
-              .add<zpt::ast::cpp_instruction>(
-                "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+              .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(201).body() = "
+                                              "_received + zpt::json{ \"_id\", _id }");
         }
         else {
             _method_try_body //
@@ -1158,8 +1153,8 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
 
         auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
         _if_block //
-          ->add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _params)");
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = "
+                                           "this->retrieve_element(_session, _params)");
         _method_try_body->add(_if_block);
         auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
         _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
@@ -1353,8 +1348,10 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
       .add<zpt::ast::cpp_instruction>(
-        "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
-        "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() = "
+        "_request "
+        "//\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
+        "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() "
+        "= "
         "_received")
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
