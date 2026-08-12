@@ -158,12 +158,12 @@ auto zpt::uri::address::to_string(zpt::json const& _uri) -> std::string {
     return _oss.str();
 }
 
-auto zpt::uri::params::to_string(zpt::json const& _uri) -> std::string {
+auto zpt::uri::params::to_string(zpt::json const& _uri, bool _not_first) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri("params")->ok()) {
-            bool _first{ true };
-            _oss << "?";
+            bool _first{ !_not_first };
+            if (_first) { _oss << "?"; }
             for (auto&& [_, _key, _value] : _uri("params")) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
