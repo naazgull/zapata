@@ -101,7 +101,7 @@ auto to_json(MYSQL_STMT* _statement, zpt::storage::mysqlx::result_set_metadata& 
  * @return Generated SELECT SQL query string. */
 auto to_query(zpt::json _fields, zpt::json _filter) -> std::string;
 /** @brief Generates an INSERT SQL statement from a JSON document.
- * @param _to_insert JSON object containing column values to insert.
+ * @param _to_insert JSON array containing rows to insert.
  * @return Generated INSERT SQL statement string. */
 auto to_insert(zpt::json _to_insert) -> std::string;
 /** @brief Generates an UPDATE SQL statement from JSON update/pattern descriptions.

@@ -252,7 +252,9 @@ auto zpt::fromstr(std::string s, char* i) -> void {
     _in >> (*i);
 }
 
-auto zpt::fromstr(std::string s, bool* i) -> void { *i = s == std::string("true"); }
+auto zpt::fromstr(std::string_view s, bool* i) -> void {
+    *i = s == std::string_view("true");
+}
 
 auto zpt::fromstr(std::string s, time_t* i, const char* f) -> void {
     struct tm tm[1] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };

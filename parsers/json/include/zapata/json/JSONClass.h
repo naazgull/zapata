@@ -109,7 +109,7 @@ enum JSONType {
  * @param _type The JSON type to convert.
  * @return String name of the type (e.g., "object", "array", "string").
  */
-auto to_string(zpt::JSONType _type) -> std::string;
+auto to_string(zpt::JSONType _type) -> const char*;
 
 // Forward declarations
 class JSONElementT;  ///< Internal JSON element implementation

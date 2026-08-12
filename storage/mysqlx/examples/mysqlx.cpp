@@ -15,6 +15,8 @@ auto main(int, char**) -> int {
       ->execute();
     auto _ids = _collection //
                   ->add({ "name", "John Smith", "address", "Upside Down 'just for fun' with {}" })
+                  ->add({ "name", "John Smith 2", "address", "Upside Down 'just for fun' with {}" })
+                  ->add({ "name", "John Smith 3", "address", "Upside Down 'just for fun' with {}" })
                   ->execute()
                   ->generated_id();
 

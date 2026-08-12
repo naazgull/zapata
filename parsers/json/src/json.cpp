@@ -4,7 +4,7 @@
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-auto zpt::to_string(zpt::JSONType _type) -> std::string {
+auto zpt::to_string(zpt::JSONType _type) -> const char* {
     switch (_type) {
         case JSObject: {
             return "object";

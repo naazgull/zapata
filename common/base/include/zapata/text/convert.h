@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <string_view>
 #include <wchar.h>
 #include <wctype.h>
 #include <zapata/text/manip.h>
@@ -270,7 +271,7 @@ auto fromstr(std::string s, char* i) -> void;
  * @param s String containing the boolean to parse.
  * @param i Pointer to store the parsed boolean.
  */
-auto fromstr(std::string s, bool* i) -> void;
+auto fromstr(std::string_view s, bool* i) -> void;
 /**
  * @brief Parses a time_t from a string.
  * @param s String containing the time value to parse.
@@ -289,11 +290,11 @@ auto fromstr(T _in) -> std::string;
 /** @} */
 
 /** @brief Standard Base64 encoding lookup table (64 characters plus null terminator). */
-const char encodeCharacterTable[65] =
+constinit const char encodeCharacterTable[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /** @brief Standard Base64 decoding lookup table (maps each byte to its 6-bit value, or -1 if
  * invalid). */
-const signed char decodeCharacterTable[256] = {
+constinit const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,
@@ -307,10 +308,10 @@ const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 /** @brief URL-safe Base64 encoding lookup table (uses - and _ instead of + and /). */
-const char encodeCharacterTableUrl[65] =
+constinit const char encodeCharacterTableUrl[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 /** @brief URL-safe Base64 decoding lookup table. */
-const signed char decodeCharacterTableUrl[256] = {
+constinit const signed char decodeCharacterTableUrl[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,
