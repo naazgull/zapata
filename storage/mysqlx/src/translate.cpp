@@ -351,8 +351,32 @@ auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std
 auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "insert into `{}` set ";
-    zpt::storage::mysqlx::to_assignment_list(_to_insert, _oss, ", ");
+    _oss << "insert into `{}` (";
+    bool _first{ true };
+    for (auto&& [_, __, _record] : _to_insert) {
+        if (!_record->is_object() || _record->size() == 0) { continue; }
+        for (auto&& [_, _key, _value] : _record) {
+            if (!_first) { _oss << ", "; }
+            _first = false;
+            _oss << "`" << static_cast<std::string>(_key) << "`";
+        }
+        break;
+    }
+    _oss << ") values ";
+    _first = true;
+    for (auto&& [_, __, _record] : _to_insert) {
+        if (!_record->is_object() || _record->size() == 0) { continue; }
+        if (!_first) { _oss << ", "; }
+        _first = false;
+        _oss << "(";
+        bool _first_value{ true };
+        for (auto&& [_, _key, _value] : _record) {
+            if (!_first_value) { _oss << ", "; }
+            _first_value = false;
+            _oss << quote(_value);
+        }
+        _oss << ")";
+    }
     _oss << ";" << std::flush;
 
     return _oss.str();

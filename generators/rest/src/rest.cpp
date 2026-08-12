@@ -11,10 +11,6 @@
  * JSON schema using the AST node hierarchy.
  */
 
-/** @brief Constructs a REST generator unit from schema, module name, and output path.
- * @param _module_name Module name used for namespace and directory.
- * @param _base_path_backend Output base path for backend files.
- * @param _schema OpenAPI-style JSON schema definition for code generation. */
 zpt::gen::rest::unit::unit(std::string const& _module_name,
                            std::filesystem::path const& _base_path_backend,
                            zpt::json _schema)
@@ -38,8 +34,6 @@ zpt::gen::rest::unit::unit(std::string const& _module_name,
     }
 }
 
-/** @brief Generates C++ operation handler classes for all paths defined in the schema.
- * @return Reference to this unit for chaining. */
 auto zpt::gen::rest::unit::generate_operations() -> unit& {
     for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
         if (_path_def("resource")->string() == "collection") {
@@ -58,11 +52,10 @@ auto zpt::gen::rest::unit::generate_operations() -> unit& {
     return (*this);
 }
 
-/** @brief Generates the plugin registration file (plugin.cpp) with load/unload callbacks.
- * @return Reference to this unit for chaining. */
 auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / "plugin.cpp";
+    this->__source_files.push_back(_file_path.filename());
     if (std::filesystem::exists(_file_path)) { return (*this); }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
@@ -139,8 +132,6 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     return (*this);
 }
 
-/** @brief Generates SQL DDL schemata for all schemas with dbCollection defined.
- * @return Reference to this unit for chaining. */
 auto zpt::gen::rest::unit::generate_sql() -> unit& {
     for (auto const& [_, __, _schema] : this->__schema("components")("schemas")) {
         if (_schema("dbCollection")->ok()) { this->generate_sql_schemata_mysql(_schema); }
@@ -148,8 +139,6 @@ auto zpt::gen::rest::unit::generate_sql() -> unit& {
     return (*this);
 }
 
-/** @brief Generates CMakeLists.txt build configuration for the module.
- * @return Reference to this unit for chaining. */
 auto zpt::gen::rest::unit::generate_cmake() -> unit& {
     auto _base_path = std::filesystem::absolute(this->__base_path) / this->__module.name();
     auto _file_path = _base_path / "CMakeLists.txt";
@@ -170,20 +159,13 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
         _oss << std::format("target_sources({}\n"
                             "  PRIVATE\n",
                             _lib);
-        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
-            if (_file->path().string().find(".cpp") != std::string::npos) {
-                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
-                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
-            }
-        });
+        for (auto const& _source : this->__source_files) {
+            _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}/src/" << _source << "\n";
+        }
         _oss << "  INTERFACE\n";
-        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
-            if (_file->path().string().find(".h") != std::string::npos &&
-                _file->path().string().find(".html") == std::string::npos) {
-                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
-                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
-            }
-        });
+        for (auto const& _header : this->__header_files) {
+            _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}/include/" << _header << "\n";
+        }
         _oss << ")";
         _file->add<zpt::ast::cmake_instruction>(_oss.str());
         _file->add<zpt::ast::cmake_instruction>(
@@ -230,17 +212,11 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
     return (*this);
 }
 
-/** @brief Dumps all generated files to disk via the underlying module.
- * @return Reference to this unit for chaining. */
 auto zpt::gen::rest::unit::dump() -> unit& {
     this->__module.dump();
     return (*this);
 }
 
-/** @brief Creates or returns an existing header file for an operation handler.
- * @param _def JSON definition of the operation (path/method).
- * @param _method HTTP method identifier ("*", "get", "post", "patch", "delete").
- * @return Shared pointer to the generated header file, or nullptr if it already exists. */
 auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string const& _method)
   -> zpt::ast::basic_file::ptr {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() /
@@ -270,14 +246,11 @@ auto zpt::gen::rest::unit::generate_operation_h_file(zpt::json _def, std::string
     return nullptr;
 }
 
-/** @brief Creates or returns an existing source file for an operation handler.
- * @param _def JSON definition of the operation (path/method).
- * @param _method HTTP method identifier ("*", "get", "post", "patch", "delete").
- * @return Shared pointer to the generated source file, or nullptr if it already exists. */
 auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::string const& _method)
   -> zpt::ast::basic_file::ptr {
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "src";
     auto _file_path = _directory / std::format("{}.cpp", _def(_method)("operationId")->string());
+    this->__source_files.push_back(_file_path.filename());
     if (!std::filesystem::exists(_file_path)) {
         std::filesystem::create_directories(_directory);
         auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
@@ -306,10 +279,6 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
     return nullptr;
 }
 
-/** @brief Generates CRUD collection operation handlers (list, add, remove).
- * @param _def JSON definition of the collection resource.
- * @param _path Parsed URI path object.
- * @return Shared pointer to the generated header file, or nullptr. */
 auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
   -> zpt::ast::basic_file::ptr {
     auto _h_file = this->generate_operation_h_file(_def, "*");
@@ -464,7 +433,7 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
             std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
-                        "allowed to use with a collection\" }}",
+                        "allowed to use with this collection\" }}",
                         _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
@@ -473,10 +442,6 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-/** @brief Generates document operation handlers (get, update, remove).
- * @param _def JSON definition of the document resource.
- * @param _path Parsed URI path object.
- * @return Shared pointer to the generated header file, or nullptr. */
 auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
   -> zpt::ast::basic_file::ptr {
     auto _h_file = this->generate_operation_h_file(_def, "*");
@@ -644,7 +609,7 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
             std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
-                        "allowed to use with a document\" }}",
+                        "allowed to use with this document\" }}",
                         _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
@@ -653,10 +618,6 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-/** @brief Generates a controller operation handler (POST-only).
- * @param _def JSON definition of the controller resource.
- * @param _path Parsed URI path object.
- * @return Shared pointer to the generated header file, or nullptr. */
 auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
   -> zpt::ast::basic_file::ptr {
     auto _h_file = this->generate_operation_h_file(_def, "post");
@@ -751,7 +712,7 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
             "this //\n->to_send()->status(405).body() = { \"message\", \"Only POST, "
-            "allowed to use with a controller\" }")
+            "allowed to use with this controller\" }")
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
         _cpp_file->add(_cpp_operator);
@@ -759,10 +720,6 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-/** @brief Generates store operation handlers (similar to collection with PUT support).
- * @param _def JSON definition of the store resource.
- * @param _path Parsed URI path object.
- * @return Shared pointer to the generated header file, or nullptr. */
 auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
   -> zpt::ast::basic_file::ptr {
     auto _h_file = this->generate_operation_h_file(_def, "*");
@@ -916,7 +873,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
           ->add(_cpp_operator_switch)
           .add<zpt::ast::cpp_instruction>(
             std::format("this //\n->to_send()->status(405).body() = {{ \"message\", \"Only {} "
-                        "allowed to use with a store\" }}",
+                        "allowed to use with this store\" }}",
                         _allowed))
           .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
         _cpp_operator->add(_cpp_operator_body);
@@ -925,10 +882,6 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
     return _h_file;
 }
 
-/** @brief Generates the add_element handler (POST to create a resource).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_file,
                                                 zpt::json _def,
                                                 zpt::json _path) -> void {
@@ -962,8 +915,8 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
               ->add<zpt::ast::cpp_instruction>(
                 "auto _id = _collection //\n->add(_received)->execute()->generated_id()(0)")
               .add<zpt::ast::cpp_instruction>("_session->commit()")
-              .add<zpt::ast::cpp_instruction>(
-                "this //\n->to_send()->status(201).body() = _received + zpt::json{ \"_id\", _id }");
+              .add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(201).body() = "
+                                              "_received + zpt::json{ \"_id\", _id }");
         }
         else {
             _method_try_body //
@@ -992,10 +945,6 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the list_elements handler (GET to list resources).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp_file,
                                                   zpt::json _def,
                                                   zpt::json _path) -> void {
@@ -1073,10 +1022,6 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the remove_elements handler (DELETE to remove resources).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _cpp_file,
                                                     zpt::json _def,
                                                     zpt::json _path) -> void {
@@ -1123,10 +1068,6 @@ auto zpt::gen::rest::unit::generate_remove_elements(zpt::ast::basic_file::ptr _c
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the retrieve_element helper (internal DB query for a single document).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _unused Path object (unused for retrieval). */
 auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _cpp_file,
                                                      zpt::json _def,
                                                      zpt::json) -> void {
@@ -1184,10 +1125,6 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the update_element handler (PATCH to modify a resource).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cpp_file,
                                                    zpt::json _def,
                                                    zpt::json _path) -> void {
@@ -1216,8 +1153,8 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
 
         auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
         _if_block //
-          ->add<zpt::ast::cpp_instruction>(
-            "this //\n->to_send()->status(202).body() = this->retrieve_element(_session, _params)");
+          ->add<zpt::ast::cpp_instruction>("this //\n->to_send()->status(202).body() = "
+                                           "this->retrieve_element(_session, _params)");
         _method_try_body->add(_if_block);
         auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
         _else_block->add<zpt::ast::cpp_instruction>("this->to_send()->status(404)");
@@ -1242,10 +1179,6 @@ auto zpt::gen::rest::unit::generate_update_element(zpt::ast::basic_file::ptr _cp
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the get_element handler (GET to retrieve a single resource).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_get_element(zpt::ast::basic_file::ptr _cpp_file,
                                                 zpt::json _def,
                                                 zpt::json _path) -> void {
@@ -1295,10 +1228,6 @@ auto zpt::gen::rest::unit::generate_get_element(zpt::ast::basic_file::ptr _cpp_f
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the remove_element handler (DELETE to remove a single resource).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cpp_file,
                                                    zpt::json _def,
                                                    zpt::json _path) -> void {
@@ -1351,10 +1280,6 @@ auto zpt::gen::rest::unit::generate_remove_element(zpt::ast::basic_file::ptr _cp
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the process_request handler (controller POST action).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the controller resource operation.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_process_request(zpt::ast::basic_file::ptr _cpp_file,
                                                     zpt::json _def,
                                                     zpt::json _path) -> void {
@@ -1389,10 +1314,6 @@ auto zpt::gen::rest::unit::generate_process_request(zpt::ast::basic_file::ptr _c
     _cpp_file->add(_method);
 }
 
-/** @brief Generates the redirect handler (forwards requests to another endpoint).
- * @param _cpp_file Shared pointer to the operation's source file.
- * @param _def JSON definition of the redirect resource.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file,
                                              zpt::json _def,
                                              zpt::json _path) -> void {
@@ -1427,8 +1348,10 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
       .add<zpt::ast::cpp_instruction>(
-        "_request //\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
-        "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() = "
+        "_request "
+        "//\n->performative(this->received()->performative()).uri(std::format(\"{}{}{}\", "
+        "_prefix, _redirect_to, zpt::uri::params::to_string(this->received()->uri()))).body() "
+        "= "
         "_received")
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
@@ -1458,10 +1381,6 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     _cpp_file->add(_method);
 }
 
-/** @brief Adds database connection and collection setup code to a code block.
- * @param _block Code block to add the setup code to.
- * @param _def JSON definition of the resource operation.
- * @param _with_collection Whether to also create the collection variable. */
 auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr _block,
                                                 zpt::json _def,
                                                 bool _with_collection) -> void {
@@ -1495,10 +1414,6 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
     }
 }
 
-/** @brief Adds path parameter extraction and required parameter validation code.
- * @param _block Code block to add the validation code to.
- * @param _def JSON definition of the resource operation with parameters.
- * @param _path Parsed URI path object. */
 auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_block::ptr _block,
                                                          zpt::json _def,
                                                          zpt::json _path) -> void {
@@ -1540,9 +1455,6 @@ auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_bl
     }
 }
 
-/** @brief Adds request body schema validation checks for required fields.
- * @param _block Code block to add the validation code to.
- * @param _def JSON definition of the resource operation with requestBody. */
 auto zpt::gen::rest::unit::add_schema_validation(zpt::ast::basic_code_block::ptr _block,
                                                  zpt::json _def) -> void {
     for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
@@ -1558,10 +1470,6 @@ auto zpt::gen::rest::unit::add_schema_validation(zpt::ast::basic_code_block::ptr
     }
 }
 
-/** @brief Adds auto-generated field injection (generation expressions and defaults).
- * @param _block Code block to add the generation code to.
- * @param _def JSON definition of the resource operation with requestBody.
- * @param _generate Generation phase name ("create", "update", etc.). */
 auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                                          zpt::json _def,
                                          std::string const& _generate) -> void {
@@ -1618,9 +1526,6 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
     }
 }
 
-/** @brief Generates a JSON expression string binding path/query parameters.
- * @param _def JSON definition of the resource operation with parameters.
- * @return JSON string like `{ "param1", _params("param1"), ... }`. */
 auto zpt::gen::rest::unit::get_bind_expression(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     _oss << "{ ";
@@ -1636,9 +1541,6 @@ auto zpt::gen::rest::unit::get_bind_expression(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-/** @brief Generates the visible fields filter expression for list queries.
- * @param _def JSON definition of the resource operation.
- * @return JSON expression string for selecting visible fields, respecting "hidden" list. */
 auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     _oss << R"((_params("fields")->ok() ? zpt::split(_params("fields")->string(), ",") : )";
@@ -1655,9 +1557,6 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-/** @brief Generates the hidden fields removal expression for field selection.
- * @param _def JSON definition of the resource operation.
- * @return SQL/JSON expression to subtract hidden fields from the visible set. */
 auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     if (_def("*")("requestBody")("allOf")->ok()) {
@@ -1670,9 +1569,6 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     return _oss.str();
 }
 
-/** @brief Checks if the resource schema defines an _id property.
- * @param _def JSON definition of the resource operation.
- * @return True if _id is defined in the schema properties. */
 auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
     if (_def("*")("requestBody")("allOf")->ok()) {
         for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
@@ -1687,9 +1583,6 @@ auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
     return false;
 }
 
-/** @brief Generates MySQL DDL SQL file for a collection schema.
- * @param _def JSON definition of the resource with dbCollection.
- * @return Shared pointer to the generated SQL file, or nullptr if it already exists. */
 auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
   -> zpt::ast::basic_file::ptr {
     auto _collection = _def("dbCollection")->string();

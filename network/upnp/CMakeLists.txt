@@ -24,7 +24,7 @@ target_sources(zapata-net-upnp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp_message.cpp
   INTERFACE
-    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/upnp/UPNPObj.h
+    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/transport/upnp_message.h
     ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/upnp.h
     ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/transport/upnp.h
 )

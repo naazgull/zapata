@@ -48,7 +48,7 @@
 #include <vector>
 
 /** @brief Number of spaces per indentation level. */
-inline std::uint16_t AST_INDENTATION_SPACES{ 4 };
+constinit inline std::uint16_t AST_INDENTATION_SPACES{ 4 };
 
 namespace zpt {
 namespace ast {

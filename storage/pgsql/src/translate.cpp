@@ -197,19 +197,31 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
     // Collect column names and values
     _oss << "INSERT INTO \"{}\".\"{}\" (";
     bool _first{ true };
-    for (auto const& [_, _key, _value] : _to_insert) {
-        if (!_first) { _oss << ", "; }
-        _first = false;
-        _oss << "\"" << static_cast<std::string>(_key) << "\"";
+    for (auto&& [_, __, _record] : _to_insert) {
+        if (!_record->is_object() || _record->size() == 0) { continue; }
+        for (auto&& [_, _key, _value] : _record) {
+            if (!_first) { _oss << ", "; }
+            _first = false;
+            _oss << "\"" << static_cast<std::string>(_key) << "\"";
+        }
+        break;
     }
-    _oss << ") VALUES (";
+    _oss << ") VALUES ";
     _first = true;
-    for (auto const& [_, _key, _value] : _to_insert) {
+    for (auto&& [_, __, _record] : _to_insert) {
+        if (!_record->is_object() || _record->size() == 0) { continue; }
         if (!_first) { _oss << ", "; }
         _first = false;
-        _oss << quote(_value);
+        _oss << "(";
+        bool _first_value{ true };
+        for (auto&& [_, _key, _value] : _record) {
+            if (!_first_value) { _oss << ", "; }
+            _first_value = false;
+            _oss << quote(_value);
+        }
+        _oss << ")";
     }
-    _oss << ");";
+    _oss << ";";
 
     return _oss.str();
 }

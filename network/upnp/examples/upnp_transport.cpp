@@ -23,7 +23,7 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/upnp.h>
 #include <zapata/transport.h>
-#include <zapata/upnp/UPNPObj.h>
+#include <zapata/net/transport/upnp_message.h>
 
 auto main(int _argc, char* _argv[]) -> int {
     if (_argc > 3) {

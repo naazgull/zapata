@@ -98,9 +98,10 @@ namespace params {
 /**
  * @brief Converts query parameters to string.
  * @param _uri URI JSON object.
- * @return Query string (e.g., "foo=bar&baz=qux").
+ * @param _not_first Whether or not the URI has already parameters (include '?' or not).
+ * @return Query string (e.g., "?foo=bar&baz=qux").
  */
-auto to_string(zpt::json const& _uri) -> std::string;
+auto to_string(zpt::json const& _uri, bool _not_first = false) -> std::string;
 } // namespace params
 
 } // namespace uri

@@ -24,15 +24,15 @@
 #include <zapata/ontology/performative.h>
 
 namespace {
-inline constexpr char const* STATUS_NAMES[] = { "GET",       "PUT",     "POST",  "DELETE",
+inline constexpr const char* STATUS_NAMES[] = { "GET",       "PUT",     "POST",  "DELETE",
                                                 "HEAD",      "OPTIONS", "PATCH", "REPLY",
                                                 "M-SEARCH",  "NOTIFY",  "TRACE", "CONNECT",
                                                 "SUBSCRIBE", "INFORM" };
 }
 
-auto zpt::ontology::to_str(zpt::performative _performative) -> std::string {
+auto zpt::ontology::to_str(zpt::performative _performative) -> const char* {
     if (_performative < zpt::Performative_end) {
-        return std::string{ ::STATUS_NAMES[_performative] };
+        return ::STATUS_NAMES[_performative];
     }
     return "HEAD";
 }

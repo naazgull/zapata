@@ -28,7 +28,7 @@
 #include <zapata/base.h>
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/upnp.h>
-#include <zapata/upnp/UPNPObj.h>
+#include <zapata/net/transport/upnp_message.h>
 #include <zapata/uri/uri.h>
 
 auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const -> bool {
