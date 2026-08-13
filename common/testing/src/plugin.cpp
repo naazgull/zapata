@@ -51,7 +51,7 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
                 zlog(_target->string() << ": ok", zpt::notice);
             }
             catch (std::exception const& _e) {
-                zlog(_target->string() << ": fail - " << _e.what(), zpt::notice);
+                zlog(_target->string() << ": fail - " << _e.what(), zpt::warning);
                 _failed << _target;
             }
         }
