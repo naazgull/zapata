@@ -67,7 +67,8 @@ class plugin_amqp_execute_after_boot : public zpt::system_event {
     }
 };
 
-/** @brief Plugin entry point: registers the AMQP transport and optionally starts a broker connection loop.
+/** @brief Plugin entry point: registers the AMQP transport and optionally starts a broker
+ * connection loop.
  *
  * If the plugin config contains both "port" and "address", a background thread is spawned
  * to maintain a persistent connection to the AMQP broker and process miscellaneous messages.

@@ -74,12 +74,14 @@ class HTTPParser : public HTTPTokenizer {
     virtual ~HTTPParser();
 
     /**
-     * @brief Access method for passing in the zpt::http::request object to be populated during parsing.
+     * @brief Access method for passing in the zpt::http::request object to be populated during
+     * parsing.
      * @param _root The zpt::http::request object to be populated during parsing.
      */
     void switchRoots(zpt::http::basic_request& _root);
     /**
-     * @brief Access method for passing in the zpt::http::reply object to be populated during parsing.
+     * @brief Access method for passing in the zpt::http::reply object to be populated during
+     * parsing.
      * @param _root The zpt::http::reply object to be populated during parsing.
      */
     void switchRoots(zpt::http::basic_reply& _root);

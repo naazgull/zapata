@@ -27,6 +27,19 @@ auto send_request(lua_State* _state) -> int;
  */
 auto get_config(lua_State* _state) -> int;
 /**
+ * @brief Pushes the bridge's global identified by the given parameter as a JSON table onto the Lua
+ * stack.
+ * @param _state The Lua state.
+ * @return The number of results pushed onto the stack.
+ */
+auto get_global(lua_State* _state) -> int;
+/**
+ * @brief Takes the given global identifier and value and add it to the bridge's globals.
+ * @param _state The Lua state.
+ * @return The number of results pushed onto the stack.
+ */
+auto set_global(lua_State* _state) -> int;
+/**
  * @brief Logs the arguments from the Lua stack using the Zapata logging system.
  * @param _state The Lua state.
  * @return The number of results pushed onto the stack.

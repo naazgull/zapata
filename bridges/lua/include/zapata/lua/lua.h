@@ -35,6 +35,7 @@
 #pragma once
 
 #include <lua.hpp>
+#include <zapata/base/safe_access.h>
 #include <zapata/bridge.h>
 
 namespace zpt {
@@ -171,8 +172,13 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
 } // namespace lua
 
 /**
- * @brief Returns the global Lua bridge instance.
+ * @brief Retrieves the global Lua bridge instance.
  * @return Reference to the thread-local Lua bridge.
  */
 auto LUA_BRIDGE() -> zpt::lua::bridge&;
+/**
+ * @brief Retrieves the Lua bridge global variables.
+ * @return Reference to the thread-local Lua bridge.
+ */
+auto LUA_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>&;
 } // namespace zpt

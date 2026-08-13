@@ -8,8 +8,10 @@ consume(Status) :-
             uri:Prefix,
             body:(name:"client", date:"2026-01-01T00:00:00.000")),
     zpt_call(Req2, Reply),
+    zpt_global("received", Reply),
     zpt_value_for(Reply, "status", Status),
-    zpt_log(["Received message: ", Reply]).
+    zpt_global("received", Stored),
+    zpt_log(["Received message: ", Stored]).
 
 consume :-
     consume(200) ;

@@ -30,6 +30,7 @@
 #pragma once
 
 #include <SWI-cpp2.h>
+#include <zapata/base/safe_access.h>
 #include <zapata/bridge.h>
 #include <zapata/prolog/helpers.h>
 
@@ -144,8 +145,13 @@ auto get_name_arity(term_t _term) -> std::tuple<std::string, size_t>;
 } // namespace prolog
 
 /**
- * @brief Returns the global Prolog bridge instance.
+ * @brief Retrieves the global Prolog bridge instance.
  * @return Reference to the thread-local Prolog bridge.
  */
 auto PROLOG_BRIDGE(std::string const& _cmd = "") -> zpt::prolog::bridge&;
+/**
+ * @brief Retrieves the Prolog bridge globals.
+ * @return Reference to the Prolog bridge globals.
+ */
+auto PROLOG_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>&;
 } // namespace zpt

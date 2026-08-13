@@ -73,7 +73,8 @@ zpt::ast::cpp_function::cpp_function(std::string const& _name,
   : zpt::ast::basic_function{ _name, _return_type, _modifiers } {}
 
 /** @brief Generates the C++ function declaration/definition string.
- * @return C++ function declaration or definition with modifiers, parameters, return type, and body. */
+ * @return C++ function declaration or definition with modifiers, parameters, return type, and body.
+ */
 auto zpt::ast::cpp_function::to_string() const -> std::string {
     std::ostringstream _oss;
     _oss << this->get_indentation();

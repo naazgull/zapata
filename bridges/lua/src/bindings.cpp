@@ -6,6 +6,8 @@ namespace {
 struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "call", zpt::lua::bindings::send_request },
                            { "config", zpt::lua::bindings::get_config },
+                           { "get_global", zpt::lua::bindings::get_global },
+                           { "set_global", zpt::lua::bindings::set_global },
                            { "log", zpt::lua::bindings::log },
                            { "to_json", zpt::lua::bindings::to_json_str },
                            { "sleep", zpt::lua::bindings::sleep },
@@ -15,6 +17,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
 auto zpt::lua::bindings::make_request(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
+    expect(_args->is_string(), "1st parameter of `zpt.make_request` isn't a string");
     auto _request = zpt::TRANSPORT_LAYER() //
                       .get(_args->string())
                       ->make_request();
@@ -26,6 +29,7 @@ auto zpt::lua::bindings::make_request(lua_State* _state) -> int {
 auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
+    expect(_args->is_object(), "1st parameter of `zpt.call` isn't an object");
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_args("protocol")->string());
 
@@ -62,16 +66,39 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
                             "body",
                             _reply->body() },
                           _state);
+        return 1;
     }
-    else { zpt::make_call(zpt::REST_RESOLVER(), _request); }
-
-    return 1;
+    else {
+        zpt::make_call(zpt::REST_RESOLVER(), _request);
+        return 0;
+    }
 }
 
 auto zpt::lua::bindings::get_config(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     _bridge.to_object(zpt::GLOBAL_CONFIG(), _state);
     return 1;
+}
+
+auto zpt::lua::bindings::get_global(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+    expect(_args->is_string(), "1st parameter of `zpt.get_global` isn't a string");
+    auto& _global = zpt::LUA_GLOBALS();
+    std::shared_lock _guard{ _global.mutex() };
+    _bridge.to_object((*_global)(_args->string()), _state);
+    return 1;
+}
+
+auto zpt::lua::bindings::set_global(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _args = _bridge.object_to_json(_state);
+    expect(_args->is_array() && _args->size() == 2, "`zpt.set_global` expects 2 parameters");
+    expect(_args(0)->is_string(), "1st parameter of `zpt.set_global` isn't a string");
+    auto& _global = zpt::LUA_GLOBALS();
+    std::unique_lock _guard{ _global.mutex() };
+    (*_global)[_args(0)->string()] = _args(1);
+    return 0;
 }
 
 auto zpt::lua::bindings::log(lua_State* _state) -> int {
@@ -86,7 +113,7 @@ auto zpt::lua::bindings::log(lua_State* _state) -> int {
     }
     else { zlog(static_cast<std::string>(_args), static_cast<zpt::LogLevel>(zpt::log_lvl)); }
 
-    return 1;
+    return 0;
 }
 
 auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
@@ -99,8 +126,10 @@ auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
 auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
-    std::this_thread::sleep_for(std::chrono::seconds{ static_cast<unsigned long>(_args) });
-    return 1;
+    expect(_args->is_number(), "1st parameter of `zpt.sleep` isn't a number");
+    std::this_thread::sleep_for(
+      std::chrono::duration<double, std::milli>{ static_cast<double>(_args) * 1000 });
+    return 0;
 }
 
 auto zpt::lua::register_bindings(lua_State* _state) -> void {

@@ -120,14 +120,42 @@ static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> fo
  * @throws expect Failed if _config_pl is not a variable
  */
 static auto get_config(term_t _config_pl /*-*/) -> foreign_t {
-    expect(PL_term_type(_config_pl) == PL_VARIABLE,
-           "`zpt_config`'s second parameter must be a variable");
+    expect(PL_term_type(_config_pl) == PL_VARIABLE, "`zpt_config`'s parameter must be a variable");
 
     auto _config = zpt::prolog::to_object(zpt::GLOBAL_CONFIG()->size() != 0
                                             ? zpt::GLOBAL_CONFIG()
                                             : zpt::json{ "prolog", { "lib", "SWI Prolog" } });
 
     return PL_unify_term(_config_pl, PL_TERM, *_config);
+}
+
+/**
+ * @brief Sets or unifies the global Prolog variable identified by the first parameter with the
+ * second parameter.
+ *
+ * @param _global_key_pl The identifier of the global
+ * @param _global_value_pl The Prolog term to unify with the value of the given global
+ * @return foreign_t 1 on success, throws exception on error
+ *
+ * @throws expect Failed if _global_key_pl is not a atom or string
+ */
+static auto global(term_t _global_key_pl /*+*/, term_t _global_value_pl /*?*/) -> foreign_t {
+    expect(PL_term_type(_global_key_pl) == PL_ATOM || PL_term_type(_global_key_pl) == PL_STRING,
+           "`zpt_global`'s first parameter must be a string or atom");
+
+    auto& _global = zpt::PROLOG_GLOBALS();
+    auto _global_key = zpt::prolog::to_json(_global_key_pl);
+    if (PL_term_type(_global_value_pl) == PL_VARIABLE) {
+        std::shared_lock _guard{ _global.mutex() };
+        auto _global_value = zpt::prolog::to_object((*_global)(_global_key->string()));
+        return PL_unify_term(_global_value_pl, PL_TERM, *_global_value);
+    }
+    else {
+        std::unique_lock _guard{ _global.mutex() };
+        auto _global_value = zpt::prolog::to_json(_global_value_pl);
+        (*_global)[_global_key->string()] = _global_value;
+    }
+    return 1;
 }
 
 /**
@@ -229,6 +257,7 @@ extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_make_request", 2, (void*)::make_request, 0);
     PL_register_foreign("zpt_call", 2, (void*)::send_request, 0);
     PL_register_foreign("zpt_config", 1, (void*)::get_config, 0);
+    PL_register_foreign("zpt_global", 2, (void*)::global, 0);
     PL_register_foreign("zpt_log", 1, (void*)::send_to_log, 0);
     PL_register_foreign("zpt_value_for", 3, (void*)::get_value_for_key, 0);
 }

@@ -53,6 +53,7 @@
 #include <utility>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/expect.h>
+#include <zapata/base/safe_access.h>
 #include <zapata/base/sentry.h>
 #include <zapata/crypto/sha1.h>
 #include <zapata/crypto/sha256.h>
