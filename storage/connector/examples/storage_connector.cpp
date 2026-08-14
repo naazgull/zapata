@@ -6,6 +6,11 @@ auto main(int, char**) -> int {
                         "c", "{.boolean(true).}",
                         "d", 0.1,
                         "e", true,
-                        "f", "{.date(\"2022-02-20T16:28:01.000\").}" };
+                        "f", "hello",
+                        "g", "{.date(\"2022-02-20T16:28:01.000\").}",
+                        "h", "{.is(not(null)).}",
+                        "i", "{.not(in(1, 2, 3)).}",
+                        "j", "{.in(a, b, c).}",
+                        "k", "{.not(is(null)).}" };
     zlog(zpt::storage::extract_find(_find), zpt::info);
 }
