@@ -11,6 +11,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "log", zpt::lua::bindings::log },
                            { "to_json", zpt::lua::bindings::to_json_str },
                            { "sleep", zpt::lua::bindings::sleep },
+                           { "is_in_shutdown", zpt::lua::bindings::is_in_shutdown },
                            { nullptr, nullptr } };
 }
 
@@ -119,7 +120,7 @@ auto zpt::lua::bindings::log(lua_State* _state) -> int {
 auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
-    _bridge.json_to_object(static_cast<std::string>(_args));
+    _bridge.to_object(static_cast<std::string>(_args), _state);
     return 1;
 }
 
@@ -130,6 +131,12 @@ auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
     std::this_thread::sleep_for(
       std::chrono::duration<double, std::milli>{ static_cast<double>(_args) * 1000 });
     return 0;
+}
+
+auto zpt::lua::bindings::is_in_shutdown(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    _bridge.to_object(zpt::STREAM_POLLING()->is_in_shutdown(), _state);
+    return 1;
 }
 
 auto zpt::lua::register_bindings(lua_State* _state) -> void {

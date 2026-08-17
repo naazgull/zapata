@@ -58,6 +58,12 @@ auto to_json_str(lua_State* _state) -> int;
  * @return The number of results pushed onto the stack.
  */
 auto sleep(lua_State* _state) -> int;
+/**
+ * @brief Whether or not the system is in shutdown.
+ * @param _state The Lua state.
+ * @return The number of results pushed onto the stack.
+ */
+auto is_in_shutdown(lua_State* _state) -> int;
 } // namespace bindings
 
 /**
