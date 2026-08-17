@@ -107,12 +107,14 @@ class resolver_t : public zpt::events::resolver_t {
      * @param _performative HTTP performative (e.g., zpt::Get, zpt::Post).
      * @param _id URI pattern or handler identifier.
      * @param _metadata Optional handler metadata.
+     * @param _callback_hash The callback's unique identifier.
      * @param _callback Resolver callback to invoke on match.
      * @return Reference to this resolver.
      */
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,
+             size_t _callback_hash,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
     /**
      * @brief Removes the callback registered for a sent message.
@@ -124,9 +126,11 @@ class resolver_t : public zpt::events::resolver_t {
      * @brief Removes callback for a performative/URI combination.
      * @param _performative The HTTP performative (GET, POST, etc.).
      * @param _id The URI pattern or identifier.
+     * @param _callback_hash The callback's unique identifier.
      * @return Reference to this resolver instance.
      */
-    auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
+    auto remove(zpt::performative _performative, zpt::json const& _id, size_t _callback_hash)
+      -> resolver_t& override;
     /**
      * @brief Resolves an incoming request to matching REST handlers.
      * @param _received Incoming message.
@@ -172,7 +176,9 @@ class resolver_t : public zpt::events::resolver_t {
     /** @brief Catalog mapping URI patterns to callback indices. */
     zpt::catalog<std::string, zpt::json>::ptr __catalog{ nullptr };
     /** @brief Vector of registered REST callback handlers. */
-    std::vector<zpt::events::resolver_callback> __callbacks;
+    std::map<size_t, zpt::events::resolver_callback> __callbacks;
+    /** @brief Callback list mutex guard. */
+    mutable zpt::locks::spin_mutex __callbacks_mutex;
     /** @brief Store for pending request/response callbacks. */
     mutable zpt::rest::pending_messages __pending_requests;
     /** @brief Configuration passed to the resolver at construction. */

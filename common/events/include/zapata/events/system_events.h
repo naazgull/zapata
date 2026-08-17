@@ -163,11 +163,13 @@ class resolver_t : public zpt::events::resolver_t {
      * @param _performative HTTP performative.
      * @param _id Handler identifier.
      * @param _metadata Handler metadata.
+     * @param _callback_hash The callback's unique identifier.
      * @param _callback Resolver callback.
      * @return Reference to this resolver. */
     auto add(zpt::performative _performative,
              zpt::json const& _id,
              zpt::json const& _metadata,
+             size_t _callback_hash,
              zpt::events::resolver_callback _callback) -> resolver_t& override;
     /** @brief Removes handler for a system event type.
      * @tparam T Operation type to remove.
@@ -182,8 +184,10 @@ class resolver_t : public zpt::events::resolver_t {
     /** @brief Removes callback for a performative/ID combination.
      * @param _performative HTTP performative.
      * @param _id Handler identifier.
+     * @param _callback_hash The callback's unique identifier.
      * @return Reference to this resolver. */
-    auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t& override;
+    auto remove(zpt::performative _performative, zpt::json const& _id, size_t _callback_hash)
+      -> resolver_t& override;
     /** @brief Resolves a message to matching system event handlers.
      * @param _received Incoming message to resolve.
      * @param _initializer Event initialization callback.
@@ -218,6 +222,8 @@ class resolver_t : public zpt::events::resolver_t {
      */
     std::map<zpt::system_event_type, std::map<zpt::json, zpt::events::resolver_callback>>
       __callbacks;
+    /** @brief Callback list mutex guard. */
+    mutable zpt::locks::spin_mutex __callbacks_mutex;
 };
 /** @brief Shared pointer type for system events resolver. */
 using resolver = std::shared_ptr<resolver_t>;
@@ -246,6 +252,7 @@ auto zpt::system_events::resolver_t::add(zpt::system_event_type _type) -> resolv
 
 template<zpt::events::Operation T>
 auto zpt::system_events::resolver_t::remove(zpt::system_event_type _type) -> resolver_t& {
+    std::unique_lock _guard{ this->__callbacks_mutex };
     this->__registered_callbacks->fetch_sub(
       this->__callbacks[_type].erase(zpt::system_events::get_id<T>()));
     return (*this);

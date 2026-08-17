@@ -61,7 +61,9 @@ auto zpt::system_events::resolver_t::add(zpt::message,
 auto zpt::system_events::resolver_t::add(zpt::performative,
                                          zpt::json const& _id,
                                          zpt::json const& _type,
+                                         size_t,
                                          zpt::events::resolver_callback _callback) -> resolver_t& {
+    std::unique_lock _guard{ this->__callbacks_mutex };
     this->__callbacks[static_cast<zpt::system_event_type>(_type->integer())].insert(
       std::make_pair(_id, _callback));
     this->__registered_callbacks->fetch_add(1);
@@ -73,8 +75,9 @@ auto zpt::system_events::resolver_t::remove(zpt::message) -> resolver_t& {
     return (*this);
 }
 
-auto zpt::system_events::resolver_t::remove(zpt::performative, zpt::json const& _id)
+auto zpt::system_events::resolver_t::remove(zpt::performative, zpt::json const& _id, size_t)
   -> resolver_t& {
+    std::unique_lock _guard{ this->__callbacks_mutex };
     for (auto& [_, _per_id] : this->__callbacks) {
         this->__registered_callbacks->fetch_sub(_per_id.erase(_id));
     }
@@ -86,6 +89,7 @@ auto zpt::system_events::resolver_t::resolve(zpt::message _received,
   -> std::list<zpt::event> {
     std::list<zpt::event> _return;
 
+    std::shared_lock _guard{ this->__callbacks_mutex };
     auto _type = _received->resource()->integer();
     auto _per_id = this->__callbacks.find(static_cast<zpt::system_event_type>(_type));
     if (_per_id != this->__callbacks.end()) {

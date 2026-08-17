@@ -86,11 +86,13 @@ class resolver_t {
      * @param _performtive HTTP performative (Get, Post, etc.).
      * @param _id Handler identifier.
      * @param _metadata Optional handler metadata.
+     * @param _callback_hash The callback's unique identifier.
      * @param _callback Resolver callback.
      * @return Reference to this resolver. */
     virtual auto add(zpt::performative _performtive,
                      zpt::json const& _id,
                      zpt::json const& _metadata,
+                     size_t _callback_hash,
                      zpt::events::resolver_callback _callback) -> resolver_t& = 0;
 
     /** @brief Removes an Operation handler (any performative).
@@ -113,8 +115,10 @@ class resolver_t {
     /** @brief Removes a handler by performative and ID.
      * @param _performtive HTTP performative.
      * @param _id Handler identifier.
+     * @param _callback_hash The callback's unique identifier.
      * @return Reference to this resolver. */
-    virtual auto remove(zpt::performative _performtive, zpt::json const& _id) -> resolver_t& = 0;
+    virtual auto remove(zpt::performative _performtive, zpt::json const& _id, size_t _callback_hash)
+      -> resolver_t& = 0;
     /** @brief Returns the total number of registered handlers.
      * @return Handler count. */
     virtual auto count() const -> size_t final;
@@ -185,7 +189,8 @@ template<zpt::events::Operation T>
 auto zpt::events::resolver_t::add(zpt::performative _performative,
                                   zpt::json const& _id,
                                   zpt::json const& _metadata) -> resolver_t& {
-    return this->add(_performative, _id, _metadata, zpt::events::make_callback<T>);
+    return this->add(
+      _performative, _id, _metadata, typeid(T).hash_code(), zpt::events::make_callback<T>);
 }
 
 template<zpt::events::Operation T>
@@ -196,5 +201,5 @@ auto zpt::events::resolver_t::remove(zpt::json const& _id) -> resolver_t& {
 template<zpt::events::Operation T>
 auto zpt::events::resolver_t::remove(zpt::performative _performative, zpt::json const& _id)
   -> resolver_t& {
-    return this->remove(_performative, _id);
+    return this->remove(_performative, _id, typeid(T).hash_code());
 }
