@@ -24,15 +24,18 @@
  * @file queue.h
  * @brief Bounded lock-free FIFO queue implementation.
  *
- * Provides a thread-safe, bounded queue backed by a fixed-size ring buffer.
- * Head and tail indices are packed into a single 128-bit atomic, with the
- * two most-significant bits used as a mutation guard to serialise concurrent
- * index updates via compare-and-swap. No per-thread state or cleanup is
- * required.
+ * Provides a thread-safe, bounded MPMC queue based on Dmitry Vyukov's
+ * algorithm.  Every slot carries a `sequence` token that acts as an
+ * ownership gate — a CAS on the shared head_/tail_ counter is the
+ * **ownership transfer** (it prevents two threads from operating on the
+ * same slot), and the sequence check is a guard that tells us whether
+ * the slot is ready.
  *
  * @par Thread Safety
- * - `push()`: Multiple threads can push concurrently; spins when the queue is full.
- * - `pop()`: Multiple threads can pop concurrently; throws when the queue is empty.
+ * - `push()`: Multiple threads can push concurrently; throws
+ *   `NoSpaceAvailableException` when the queue is full.
+ * - `pop()`: Multiple threads can pop concurrently; throws
+ *   `NoMoreElementsException` when the queue is empty.
  * - `size()`: Approximate count (may be transiently stale).
  */
 
@@ -46,22 +49,17 @@
 namespace zpt {
 namespace lf {
 
-/** @brief Bitmask that isolates the lower 126 bits (the packed head/tail indices). */
-constexpr __uint128_t UNMASK = (static_cast<__uint128_t>(1) << 126) - 1;
-/** @brief Mutation-guard bits (bits 126–127) set during an index update CAS. */
-constexpr __uint128_t MASK =
-  (static_cast<__uint128_t>(1) << 127) + (static_cast<__uint128_t>(1) << 126);
-
 /**
- * @brief Bounded lock-free FIFO queue for concurrent producer/consumer patterns.
+ * @brief Bounded MPMC lock-free FIFO queue (Vyukov algorithm).
  *
  * Backed by a fixed-capacity ring buffer allocated at construction time.
- * Head and tail positions are packed into a single 128-bit atomic value;
- * the two most-significant bits serve as a mutation guard so that only one
- * CAS winner at a time may advance the index, eliminating the need for
- * per-thread hazard pointers or a linked-node allocator.
+ * Each slot carries a `sequence` token; producers and consumers share
+ * two counters (`head_` and `tail_`).  A thread claims a slot index via
+ * a CAS on one of those counters — only the CAS winner gets to read or
+ * write the slot.  The sequence token is then advanced to hand the slot
+ * to the other side.
  *
- * @tparam T Value type stored in the queue.
+ * @tparam T Value type stored in the queue (must be trivially copyable).
  *
  * @par Example
  * @code
@@ -83,9 +81,9 @@ constexpr __uint128_t MASK =
  * }
  * @endcode
  *
- * @note `push()` spins until a slot is available when the queue is full.
- * @note `size()` may be transiently stale because the size counter is updated
- *       separately from the index CAS.
+ * @note `push()` throws `NoSpaceAvailableException` when the queue is full.
+ * @note `size()` may be transiently stale because the size counter is
+ *       updated independently of the slot CAS.
  */
 template<typename T>
 class queue {
@@ -95,9 +93,10 @@ class queue {
 
     /**
      * @brief Constructs a bounded queue with the given fixed capacity.
-     * @param _max_queue_size Maximum number of elements the queue can hold simultaneously.
+     * @param _max_queue_size Maximum number of elements the queue can
+     *   hold simultaneously (must be a power of two).
      */
-    queue(size_t _max_queue_size);
+    explicit queue(size_t _max_queue_size);
     /**
      * @brief Copy constructor (deleted).
      * @return void (queue cannot be copied).
@@ -132,16 +131,18 @@ class queue {
 
     /**
      * @brief Adds an element to the back of the queue.
-     * @param value Value to add (will be copied).
+     * @param _value Value to add (will be copied).
      * @return Reference to this queue.
+     * @throws zpt::NoSpaceAvailableException If queue is full.
      */
-    auto push(T value) -> zpt::lf::queue<T>&;
+    auto push(T _value) -> zpt::lf::queue<T>&;
     /**
      * @brief Adds an element to the back of the queue, transferring ownership.
-     * @param value Unique pointer whose ownership is transferred to the queue.
+     * @param _value Unique pointer whose ownership is transferred to the queue.
      * @return Reference to this queue.
+     * @throws zpt::NoSpaceAvailableException If queue is full.
      */
-    auto push(ptr&& value) -> zpt::lf::queue<T>&;
+    auto push(ptr&& _value) -> zpt::lf::queue<T>&;
     /**
      * @brief Removes and returns the front element.
      * @return Unique pointer owning the dequeued element.
@@ -175,10 +176,11 @@ class queue {
         _out << "queue(" << std::hex << &_in << "):" << std::dec << "\n  #items ->\n     [ ";
         try {
             size_t _count{ 0 };
-            auto [_lower, _upper] = _in.deserialize(_in.__boundaries->load());
+            auto _lower = _in.__head->load();
+            auto _upper = _in.__tail->load();
             for (size_t _idx = _lower; _idx != _upper; ++_idx, ++_count) {
                 _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", "))
-                     << *_in.__elements[_idx % _in.__capacity];
+                     << *_in.__slots[_idx % _in.__capacity].value;
             }
         }
         catch (zpt::NoMoreElementsException const& e) {
@@ -189,86 +191,118 @@ class queue {
     }
 
   private:
-    /** @brief Fixed-size ring buffer allocated at construction. */
-    zpt::allocator<ptr>::array_pointer __elements{ nullptr };
-    /** @brief Packed 128-bit atomic: lower 64 bits = lower index, upper 64 bits = upper index. Bits
-     * 126-127 are a mutation guard. */
-    zpt::padded_atomic<__uint128_t> __boundaries{ 0 };
-    /** @brief Approximate element count, updated independently of the index CAS. */
-    zpt::padded_atomic<std::uint64_t> __size{ 0 };
-    /** @brief Maximum number of elements the queue can hold. */
-    size_t __capacity{ 0 };
+    /**
+     * @brief One cache-line-aligned slot in the ring buffer.
+     *
+     * The `sequence` field is the ownership token.  Valid values are:
+     *   - `slot_index`        → slot is free (producers may write)
+     *   - `slot_index + C`    → slot is full (consumers may read)
+     *   where C is the queue capacity.
+     */
+    struct alignas(64) slot_t {
+        zpt::padded_atomic<std::uint64_t> sequence{ 0 };
+        ptr value;
+    };
 
-    /**
-     * @brief Packs lower and upper indices into a 128-bit value.
-     * @param _lower Lower index (head / pop position).
-     * @param _upper Upper index (tail / push position).
-     * @return Packed 128-bit value with _lower in bits 0-63 and _upper in bits 64-127.
-     */
-    auto serialize(std::uint64_t _lower, std::uint64_t _upper) const -> __uint128_t;
-    /**
-     * @brief Unpacks lower and upper indices from a 128-bit value.
-     * @param _value Packed value from serialize().
-     * @return Tuple of (lower, upper) indices.
-     */
-    auto deserialize(__uint128_t _value) const -> std::tuple<std::uint64_t, std::uint64_t>;
+    /** @brief Fixed-size ring buffer of slots allocated at construction. */
+    zpt::allocator<slot_t>::array_pointer __slots{ nullptr };
+    /** @brief Head index: producers claim the next slot via CAS on head_. */
+    zpt::padded_atomic<std::uint64_t> __head{ 0 };
+    /** @brief Tail index: consumers claim the next slot via CAS on tail_. */
+    zpt::padded_atomic<std::uint64_t> __tail{ 0 };
+    /** @brief Approximate element count, updated independently of the slot CAS. */
+    zpt::padded_atomic<std::uint64_t> __size{ 0 };
+    /** @brief Maximum number of elements the queue can hold (power of two). */
+    size_t __capacity{ 0 };
+    /** @brief Bit mask for index wrapping: `__capacity - 1`. */
+    size_t __mask{ 0 };
 };
 } // namespace lf
 } // namespace zpt
 
 template<typename T>
 zpt::lf::queue<T>::queue(size_t _max_queue_size)
-  : __elements{ zpt::allocate_array<ptr>(_max_queue_size) }
-  , __boundaries{ 0 }
-  , __capacity{ _max_queue_size } {}
+  : __slots{ zpt::allocate_array<slot_t>(_max_queue_size) }
+  , __capacity{ _max_queue_size }
+  , __mask{ _max_queue_size - 1 } {
+    // Initialise every slot: slot[i].sequence == i at start so that
+    // the first producer (claiming index 0) sees sequence[0] == 0.
+    for (size_t _i = 0; _i < _max_queue_size; ++_i) {
+        this->__slots[_i].sequence->store(_i, std::memory_order_relaxed);
+    }
+}
 
 template<typename T>
 auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
-    return this->push(zpt::allocate_unique<T>(_value));
+    return push(zpt::allocate_unique<T>(_value));
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
-    while (true) {
-        auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
-        auto [_lower, _upper] = this->deserialize(_boundaries);
-        if ((_upper - _lower) < this->__capacity) {
-            auto _new_upper = _upper + 1;
-            auto _new_boundaries = this->serialize(_lower, _new_upper) | MASK;
-            if (this->__boundaries->compare_exchange_strong(
-                  _boundaries, _new_boundaries, std::memory_order_release)) {
-                this->__elements[_upper % this->__capacity] = std::move(_value);
-                this->__size->fetch_add(1);
-                this->__boundaries->store(_new_boundaries & UNMASK);
-                return (*this);
+    for (;;) {
+        auto _head = this->__head->load(std::memory_order_relaxed);
+
+        // Claim a slot by advancing head_ via CAS.  Only the winner
+        // gets ownership of this slot index.
+        auto _new_head = _head + 1;
+        if (this->__head->compare_exchange_strong(_head, _new_head, std::memory_order_relaxed)) {
+            size_t _slot_idx = _head & this->__mask;
+
+            // Spin-wait until the slot is free (sequence == slot_index).
+            while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
+                   _slot_idx) {
+                std::this_thread::yield();
             }
+
+            // Write the value and release the slot to consumers.
+            this->__slots[_slot_idx].value = std::move(_value);
+            this->__slots[_slot_idx].sequence->store(_slot_idx + this->__capacity,
+                                                     std::memory_order_release);
+
+            // Update the approximate size counter.
+            this->__size->fetch_add(1);
+            return (*this);
         }
-        std::this_thread::yield();
+
+        // CAS failed — another producer claimed this slot first.
+        // _head was updated by CAS; loop and retry.
     }
-    return (*this);
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
-    while (true) {
-        auto _boundaries = this->__boundaries->load(std::memory_order_acquire) & UNMASK;
-        auto [_lower, _upper] = this->deserialize(_boundaries);
-        if (_lower != _upper) {
-            auto _new_lower = _lower + 1;
-            auto _new_boundaries = this->serialize(_new_lower, _upper) | MASK;
-            if (this->__boundaries->compare_exchange_strong(
-                  _boundaries, _new_boundaries, std::memory_order_release)) {
-                ptr _to_return;
-                this->__elements[_lower % this->__capacity].swap(_to_return);
-                this->__size->fetch_sub(1);
-                this->__boundaries->store(_new_boundaries & UNMASK);
-                return _to_return;
-            }
+    for (;;) {
+        if (this->__tail->load() == this->__head->load()) {
+            throw zpt::NoMoreElementsException("No elements in the queue");
         }
-        else { break; }
-        std::this_thread::yield();
+
+        auto _tail = this->__tail->load(std::memory_order_relaxed);
+
+        // Claim a slot by advancing tail_ via CAS.  Only the winner
+        // gets ownership of this slot index.
+        auto _new_tail = _tail + 1;
+        if (this->__tail->compare_exchange_strong(_tail, _new_tail, std::memory_order_relaxed)) {
+            size_t _slot_idx = _tail & this->__mask;
+
+            // Spin-wait until the slot is full (sequence == slot_index + capacity).
+            while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
+                   (_slot_idx + this->__capacity)) {
+                std::this_thread::yield();
+            }
+
+            // Read the value and release the slot to producers.
+            ptr _to_return;
+            this->__slots[_slot_idx].value.swap(_to_return);
+            this->__slots[_slot_idx].sequence->store(_slot_idx, std::memory_order_release);
+
+            // Update the approximate size counter.
+            this->__size->fetch_sub(1);
+            return _to_return;
+        }
+
+        // CAS failed — another consumer claimed this slot first.
+        // _tail was updated by CAS; loop and retry.
     }
-    throw NoMoreElementsException("no element to pop");
 }
 
 template<typename T>
@@ -291,15 +325,4 @@ zpt::lf::queue<T>::operator std::string() const {
     std::ostringstream _oss;
     _oss << (*this) << std::flush;
     return _oss.str();
-}
-
-template<typename T>
-auto zpt::lf::queue<T>::serialize(std::uint64_t _lower, std::uint64_t _upper) const -> __uint128_t {
-    return (static_cast<__uint128_t>(_upper) << 64) + static_cast<__uint128_t>(_lower);
-}
-
-template<typename T>
-auto zpt::lf::queue<T>::deserialize(__uint128_t _value) const
-  -> std::tuple<std::uint64_t, std::uint64_t> {
-    return { static_cast<std::uint64_t>(_value), static_cast<std::uint64_t>(_value >> 64) };
 }

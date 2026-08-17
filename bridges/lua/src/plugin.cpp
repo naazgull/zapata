@@ -38,6 +38,9 @@ class execute_after_boot : public zpt::system_event {
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
 
+        zpt::SYSTEM_EVENTS_RESOLVER()->remove<execute_after_boot>(
+          zpt::system_event_type::FINISHED_BOOT);
+
         for (auto&& [_, __, _execute] : _bridge.options()("exec")) {
             zlog("Executing `" << _execute("module")->string() << "."
                                << _execute("function")->string() << "`",
@@ -46,9 +49,6 @@ class execute_after_boot : public zpt::system_event {
               zpt::json{ "module", _execute("module"), "function", _execute("function") },
               _execute("args"));
         }
-
-        zpt::SYSTEM_EVENTS_RESOLVER()->remove<execute_after_boot>(
-          zpt::system_event_type::FINISHED_BOOT);
 
         return zpt::events::finish;
     }

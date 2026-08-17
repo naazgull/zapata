@@ -11,6 +11,7 @@ struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "log", zpt::lua::bindings::log },
                            { "to_json", zpt::lua::bindings::to_json_str },
                            { "sleep", zpt::lua::bindings::sleep },
+                           { "is_in_shutdown", zpt::lua::bindings::is_in_shutdown },
                            { nullptr, nullptr } };
 }
 
@@ -86,7 +87,7 @@ auto zpt::lua::bindings::get_global(lua_State* _state) -> int {
     expect(_args->is_string(), "1st parameter of `zpt.get_global` isn't a string");
     auto& _global = zpt::LUA_GLOBALS();
     std::shared_lock _guard{ _global.mutex() };
-    _bridge.to_object((*_global)(_args->string()), _state);
+    _bridge.to_object((*_global)->get_path(_args->string()), _state);
     return 1;
 }
 
@@ -97,7 +98,7 @@ auto zpt::lua::bindings::set_global(lua_State* _state) -> int {
     expect(_args(0)->is_string(), "1st parameter of `zpt.set_global` isn't a string");
     auto& _global = zpt::LUA_GLOBALS();
     std::unique_lock _guard{ _global.mutex() };
-    (*_global)[_args(0)->string()] = _args(1);
+    (*_global)->set_path(_args(0)->string(), _args(1));
     return 0;
 }
 
@@ -119,7 +120,7 @@ auto zpt::lua::bindings::log(lua_State* _state) -> int {
 auto zpt::lua::bindings::to_json_str(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
-    _bridge.json_to_object(static_cast<std::string>(_args));
+    _bridge.to_object(static_cast<std::string>(_args), _state);
     return 1;
 }
 
@@ -130,6 +131,12 @@ auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
     std::this_thread::sleep_for(
       std::chrono::duration<double, std::milli>{ static_cast<double>(_args) * 1000 });
     return 0;
+}
+
+auto zpt::lua::bindings::is_in_shutdown(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    _bridge.to_object(zpt::STREAM_POLLING()->is_in_shutdown(), _state);
+    return 1;
 }
 
 auto zpt::lua::register_bindings(lua_State* _state) -> void {

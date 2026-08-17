@@ -147,13 +147,13 @@ static auto global(term_t _global_key_pl /*+*/, term_t _global_value_pl /*?*/) -
     auto _global_key = zpt::prolog::to_json(_global_key_pl);
     if (PL_term_type(_global_value_pl) == PL_VARIABLE) {
         std::shared_lock _guard{ _global.mutex() };
-        auto _global_value = zpt::prolog::to_object((*_global)(_global_key->string()));
+        auto _global_value = zpt::prolog::to_object((*_global)->get_path(_global_key->string()));
         return PL_unify_term(_global_value_pl, PL_TERM, *_global_value);
     }
     else {
         std::unique_lock _guard{ _global.mutex() };
         auto _global_value = zpt::prolog::to_json(_global_value_pl);
-        (*_global)[_global_key->string()] = _global_value;
+        (*_global)->set_path(_global_key->string(), _global_value);
     }
     return 1;
 }
@@ -218,21 +218,33 @@ static auto get_value_for_key(term_t _to_search_pl /*+*/,
     if (_to_search->type() == zpt::JSArray) {
         auto _key = zpt::prolog::to_json(_key_pl);
         expect(_key->is_integer(), "key must be an integer in order to search in a list");
-        if (_to_search(static_cast<size_t>(_key))->ok()) {
-            auto _result = zpt::prolog::to_object(_to_search(static_cast<size_t>(_key)));
+        auto _value = _to_search(static_cast<size_t>(_key));
+        if (_value->ok()) {
+            auto _result = zpt::prolog::to_object(_value);
             return PL_unify_term(_result_pl, PL_TERM, *_result);
         }
     }
     else if (_to_search->type() == zpt::JSObject) {
         auto _key = zpt::prolog::to_json(_key_pl);
         expect(_key->is_string(), "key must be a string in order to search in a compound");
-        if (_to_search->get_path(_key->string())->ok()) {
-            auto _result = zpt::prolog::to_object(_to_search->get_path(_key->string()));
+        auto _value = _to_search->get_path(_key->string());
+        if (_value->ok()) {
+            auto _result = zpt::prolog::to_object(_value);
             return PL_unify_term(_result_pl, PL_TERM, *_result);
         }
     }
 
     return 0;
+}
+
+/**
+ * @brief Retrieves whether or not the system is in shutdown.
+ *
+ * @return bool True if the system is in shutdown.
+ */
+static auto is_in_shutdown(term_t _result_pl /*?*/) -> foreign_t {
+    auto _result = zpt::prolog::to_object(zpt::STREAM_POLLING()->is_in_shutdown());
+    return PL_unify_term(_result_pl, PL_TERM, *_result);
 }
 }
 } // namespace
@@ -260,4 +272,5 @@ extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_global", 2, (void*)::global, 0);
     PL_register_foreign("zpt_log", 1, (void*)::send_to_log, 0);
     PL_register_foreign("zpt_value_for", 3, (void*)::get_value_for_key, 0);
+    PL_register_foreign("zpt_is_in_shutdown", 1, (void*)::is_in_shutdown, 0);
 }
