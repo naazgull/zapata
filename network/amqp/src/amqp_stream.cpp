@@ -46,7 +46,7 @@ namespace {
  * @param _errno errno value to check.
  * @return void */
 auto check_error(std::string const& _operation, int _errno) -> void;
-}
+} // namespace
 
 zpt::amqp_stream::amqp_stream(zpt::json _config)
   : zpt::basic_stream{ "amqp" }

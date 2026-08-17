@@ -73,7 +73,8 @@ auto is_error(long _error) -> bool;
 auto from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
 /** @brief Serializes a JSON value to a raw byte array for BLOB storage in SQLite.
  * @param _value JSON value to serialize
- * @return Tuple of (allocated_byte_array_pointer, byte_array_size) - caller must free with free_byte_array()
+ * @return Tuple of (allocated_byte_array_pointer, byte_array_size) - caller must free with
+ * free_byte_array()
  */
 auto to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
 /** @brief Frees a byte array allocated by to_byte_array().

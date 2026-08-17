@@ -31,9 +31,7 @@ inline constexpr const char* STATUS_NAMES[] = { "GET",       "PUT",     "POST", 
 }
 
 auto zpt::ontology::to_str(zpt::performative _performative) -> const char* {
-    if (_performative < zpt::Performative_end) {
-        return ::STATUS_NAMES[_performative];
-    }
+    if (_performative < zpt::Performative_end) { return ::STATUS_NAMES[_performative]; }
     return "HEAD";
 }
 

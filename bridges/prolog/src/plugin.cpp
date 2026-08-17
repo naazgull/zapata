@@ -51,7 +51,7 @@ class execute_after_boot : public zpt::system_event {
         auto& _bridge = zpt::PROLOG_BRIDGE().thread_instance();
 
         for (auto&& [_, __, _execute] : _bridge.options()("exec")) {
-            zlog("Executing `" << _execute->string() << "`", zpt::info);
+            zlog("Executing `" << _execute->string() << "`", zpt::trace);
             _bridge.call(zpt::prolog::term{ _execute->string() });
         }
 

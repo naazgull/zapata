@@ -305,3 +305,8 @@ auto zpt::LUA_BRIDGE() -> zpt::lua::bridge& {
     static zpt::lua::bridge _global;
     return _global;
 }
+
+auto zpt::LUA_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>& {
+    static zpt::safe_access<zpt::json, zpt::locks::spin_mutex> _global{ zpt::json::object() };
+    return _global;
+}

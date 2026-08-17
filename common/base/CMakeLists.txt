@@ -65,6 +65,7 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/CastException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoHeaderNameException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/sentry.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/safe_access.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/expect.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h

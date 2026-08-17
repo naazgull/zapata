@@ -568,7 +568,7 @@ namespace ascii {
  * @param quote Whether to include surrounding quotes (default: true).
  */
 void encode(std::string& out, bool quote = true);
-}
+} // namespace ascii
 
 /**
  * @brief Random key and identifier generation functions.
