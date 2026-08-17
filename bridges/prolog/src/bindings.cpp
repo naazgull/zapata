@@ -147,13 +147,13 @@ static auto global(term_t _global_key_pl /*+*/, term_t _global_value_pl /*?*/) -
     auto _global_key = zpt::prolog::to_json(_global_key_pl);
     if (PL_term_type(_global_value_pl) == PL_VARIABLE) {
         std::shared_lock _guard{ _global.mutex() };
-        auto _global_value = zpt::prolog::to_object((*_global)(_global_key->string()));
+        auto _global_value = zpt::prolog::to_object((*_global)->get_path(_global_key->string()));
         return PL_unify_term(_global_value_pl, PL_TERM, *_global_value);
     }
     else {
         std::unique_lock _guard{ _global.mutex() };
         auto _global_value = zpt::prolog::to_json(_global_value_pl);
-        (*_global)[_global_key->string()] = _global_value;
+        (*_global)->set_path(_global_key->string(), _global_value);
     }
     return 1;
 }

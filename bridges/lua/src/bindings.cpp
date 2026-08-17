@@ -86,7 +86,7 @@ auto zpt::lua::bindings::get_global(lua_State* _state) -> int {
     expect(_args->is_string(), "1st parameter of `zpt.get_global` isn't a string");
     auto& _global = zpt::LUA_GLOBALS();
     std::shared_lock _guard{ _global.mutex() };
-    _bridge.to_object((*_global)(_args->string()), _state);
+    _bridge.to_object((*_global)->get_path(_args->string()), _state);
     return 1;
 }
 
@@ -97,7 +97,7 @@ auto zpt::lua::bindings::set_global(lua_State* _state) -> int {
     expect(_args(0)->is_string(), "1st parameter of `zpt.set_global` isn't a string");
     auto& _global = zpt::LUA_GLOBALS();
     std::unique_lock _guard{ _global.mutex() };
-    (*_global)[_args(0)->string()] = _args(1);
+    (*_global)->set_path(_args(0)->string(), _args(1));
     return 0;
 }
 
