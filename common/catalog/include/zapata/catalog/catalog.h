@@ -98,17 +98,18 @@ class catalog {
      * @brief Adds an entry with an explicit provider ID.
      * @param _key Entry key.
      * @param _provider_id Provider identifier.
-     * @param hash Entry hash code.
+     * @param _hash Entry hash code.
      * @param _metadata Entry metadata.
      * @return Reference to this catalog.
      */
-    auto add(K _key, std::string const& _provider_id, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, std::string const& _provider_id, std::uint64_t _hash, M _metadata) -> catalog&;
     /**
      * @brief Removes an entry by key.
      * @param _key Entry key to remove.
+     * @param _hash Entry hash code.
      * @return Reference to this catalog.
      */
-    auto remove(K _key) -> catalog&;
+    auto remove(K _key, std::uint64_t _hash) -> catalog&;
     /**
      * @brief Resolves a pattern to matching entries (self provider only).
      * @param _pattern Pattern to match (supports {} placeholders).
@@ -183,10 +184,11 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
 
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS catalog ("
-                 "    _id TEXT PRIMARY KEY,"
+                 "    _id TEXT,"
                  "    provider_id TEXT NOT NULL,"
                  "    hash INTEGER NOT NULL,"
                  "    metadata TEXT,"
+                 "    PRIMARY KEY(_id, hash),"
                  "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
                  ")",
                  nullptr,
@@ -234,19 +236,21 @@ auto zpt::catalog<K, M>::add(K _key,
     std::string _t_key{ _oss.str() };
     _oss.str("");
     _oss << _metadata << std::flush;
-    zpt::json _body{ "provider_id", _provider_id, "hash", _hash, "metadata", _oss.str() };
+    zpt::json _body{ "_id",        _t_key,    "provider_id",
+                     _provider_id, "hash",    static_cast<long long int>(_hash),
+                     "metadata",   _oss.str() };
 
     zlog("Registered " << _t_key, zpt::trace);
     this
       ->__catalog //
-      ->replace(_t_key, _body)
+      ->add(_body)
       ->execute();
 
     return (*this);
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::remove(K _key) -> catalog& {
+auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -254,7 +258,7 @@ auto zpt::catalog<K, M>::remove(K _key) -> catalog& {
     zlog("Unregistered " << _t_key, zpt::trace);
     this
       ->__catalog //
-      ->remove({ "_id", _t_key })
+      ->remove({ "_id", _t_key, "hash", _hash })
       ->execute();
 
     return (*this);
