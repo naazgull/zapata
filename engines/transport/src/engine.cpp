@@ -144,7 +144,6 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
                                zpt::base64::r_encode(zpt::crypto::sha1_bytes(_key)));
             }
 
-            _transport->send(this->__stream, _reply);
             auto _metadata = _received->clone();
             _metadata //
               ->headers()
@@ -153,6 +152,8 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
               .pop("Upgrade");
             this->__stream->metadata(std::make_any<zpt::message>(_metadata));
             this->__polling->upgrade(this->__stream, _value);
+
+            _transport->send(this->__stream, _reply);
             return true;
         }
     }
@@ -165,7 +166,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                         .get(this->__stream->transport());
     try {
         auto _received = _transport->receive(this->__stream);
-        if (!_received->empty() && !this->__polling->is_in_shutdown() &&
+        if (_received != nullptr && !_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
 
             if (this->check_upgrade(_received)) {

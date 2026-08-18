@@ -78,3 +78,8 @@ auto zpt::net::transport::upnp::process_incoming_reply(zpt::stream _stream) cons
     (*_stream) >> std::noskipws >> _reply;
     return _reply;
 }
+
+auto zpt::net::transport::upnp::copy(zpt::message const& _to_copy) const -> zpt::message {
+    if (_to_copy->performative() == zpt::Reply) { return _to_copy->copy<zpt::upnp::basic_reply>(); }
+    else { return _to_copy->copy<zpt::upnp::basic_request>(); }
+}

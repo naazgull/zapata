@@ -125,14 +125,14 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
 
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::system_event_type::SHUTTING_DOWN);
-    zpt::STREAM_POLLING() //
-      ->shutdown();
-    zlog("Unloaded stream polling service", zpt::info);
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
     zpt::DISPATCHER() //
       ->stop_consumers();
     zlog("Stopped global event dispatcher", zpt::info);
+    zpt::STREAM_POLLING() //
+      ->close();
+    zlog("Unloaded stream polling service", zpt::info);
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);

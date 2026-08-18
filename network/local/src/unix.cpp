@@ -62,6 +62,10 @@ auto zpt::net::transport::unix_socket::process_incoming_reply(zpt::stream _strea
     return _message;
 }
 
+auto zpt::net::transport::unix_socket::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}
+
 auto zpt::UNIX_SERVER_SOCKET(std::string const& _path) -> zpt::serversocketstream& {
     static zpt::serversocketstream _global{ "unix", _path };
     return _global;

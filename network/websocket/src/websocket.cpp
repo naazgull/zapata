@@ -190,13 +190,22 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
         return _message;
     }
     catch (::non_json_message const& _e) {
-        auto _message = std::any_cast<zpt::message>(_stream->metadata())->clone();
-        _message->body() = _e.__original;
-        return _message;
+        auto& _any = _stream->metadata();
+        if (_any.has_value()) {
+            auto _message = std::any_cast<zpt::message>(_any)->clone();
+            _message->body() = _e.__original;
+            return _message;
+        }
+        zlog("Unparsable message: " << _e.__original, zpt::error);
+        return nullptr;
     }
 }
 
 auto zpt::net::transport::websocket::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
     return this->process_incoming_request(_stream);
+}
+
+auto zpt::net::transport::websocket::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::ws_message>();
 }

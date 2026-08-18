@@ -65,6 +65,10 @@ auto zpt::net::transport::mqtt::publish(zpt::message _to_publish) const -> void 
     _server->publish(_to_publish);
 }
 
+auto zpt::net::transport::mqtt::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}
+
 auto zpt::MQTT_STREAM(zpt::json _config) -> zpt::mqtt_stream::ptr {
     static auto _global = zpt::allocate_shared<zpt::mqtt_stream>(_config);
     return _global;

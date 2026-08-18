@@ -110,13 +110,17 @@ class basic_transport {
      * @return Shared pointer to the new reply message. */
     virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
     /** @brief Parses an incoming request from a stream.
-     * @param __stream Input stream containing the serialized request.
+     * @param _stream Input stream containing the serialized request.
      * @return Parsed request message. */
     virtual auto process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
     /** @brief Parses an incoming reply from a stream.
-     * @param __stream Input stream containing the serialized reply.
+     * @param _stream Input stream containing the serialized reply.
      * @return Parsed reply message. */
     virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message = 0;
+    /** @brief Creates a copy of the given message with the transport's protocol and format.
+     * @param _to_copy The message to copy.
+     * @return The copied message. */
+    virtual auto copy(zpt::message const& _to_copy) const -> zpt::message = 0;
     /**
      * @brief Retrieves from which transport this was upgraded.
      * @return Reference to the name of the original transport.

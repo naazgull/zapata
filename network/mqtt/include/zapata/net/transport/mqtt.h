@@ -87,6 +87,10 @@ class mqtt : public zpt::basic_transport {
      * @param _to_publish Message to publish.
      * @return void */
     auto publish(zpt::message _to_publish) const -> void override;
+    /** @brief Creates a copy of the given message with the transport's protocol and format.
+     * @param _to_copy The message to copy.
+     * @return The copied message. */
+    auto copy(zpt::message const& _to_copy) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

@@ -96,10 +96,11 @@ auto test_uuid() -> void {
     expect(_uuid == _parsed, "UUIDs are the same");
 
     auto _22_byte = _uuid.to_base64_string();
-    _parsed.from_base64_string(_22_byte);
+    zpt::uuid _parsed2;
+    _parsed2.from_base64_string(_22_byte);
     std::cout << _22_byte << std::endl;
-    std::cout << _uuid << " == " << _parsed << std::endl;
-    expect(_uuid == _parsed, "UUIDs are the same");
+    std::cout << _uuid << " == " << _parsed2 << std::endl;
+    expect(_uuid == _parsed2, "UUIDs are the same");
 }
 
 auto main(int, char*[]) -> int {
