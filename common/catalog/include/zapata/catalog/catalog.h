@@ -188,7 +188,7 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
                  "    provider_id TEXT NOT NULL,"
                  "    hash INTEGER NOT NULL,"
                  "    metadata TEXT,"
-                 "    PRIMARY KEY(_id, hash),"
+                 "    PRIMARY KEY(_id, provider_id, hash),"
                  "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
                  ")",
                  nullptr,
@@ -240,7 +240,7 @@ auto zpt::catalog<K, M>::add(K _key,
                      _provider_id, "hash",    static_cast<long long int>(_hash),
                      "metadata",   _oss.str() };
 
-    zlog("Registered " << _t_key, zpt::trace);
+    if (static_cast<long long int>(_hash) != -1) { zlog("Registered " << _t_key, zpt::trace); }
     this
       ->__catalog //
       ->add(_body)
@@ -255,7 +255,7 @@ auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> catalog& {
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
 
-    zlog("Unregistered " << _t_key, zpt::trace);
+    if (static_cast<long long int>(_hash) != -1) { zlog("Unregistered " << _t_key, zpt::trace); }
     this
       ->__catalog //
       ->remove({ "_id", _t_key, "hash", _hash })

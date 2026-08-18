@@ -106,6 +106,7 @@ add_dependencies(zapata-net-mqtt-plugin
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
+  zapata-runtime
 )
 target_sources(zapata-net-mqtt-plugin
   PRIVATE
@@ -126,6 +127,7 @@ target_include_directories(zapata-net-mqtt-plugin
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-runtime
     zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
     ${MOSQUITTO_INCLUDE_DIR}
@@ -147,6 +149,7 @@ target_link_libraries(zapata-net-mqtt-plugin
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-runtime
     zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
     ${MOSQUITTO_LIBRARY}

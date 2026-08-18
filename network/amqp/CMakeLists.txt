@@ -90,6 +90,7 @@ add_dependencies(zapata-net-amqp-plugin
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
+  zapata-runtime
 )
 target_sources(zapata-net-amqp-plugin
   PRIVATE
@@ -110,6 +111,7 @@ target_include_directories(zapata-net-amqp-plugin
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-runtime
     zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
     ${NETWORK_TCP_INCLUDE_DIR}
@@ -130,6 +132,7 @@ target_link_libraries(zapata-net-amqp-plugin
     zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
+    zapata-runtime
     zapata-storage-sqlite
     ${SQLite3_LIBRARIES}
     Proton::qpid-proton

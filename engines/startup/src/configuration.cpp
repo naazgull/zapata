@@ -77,8 +77,7 @@ auto zpt::startup::configuration::load_defaults() -> zpt::json {
                  { "name": "builtin:tcp" },
                  { "name": "builtin:upnp" },
                  { "name": "builtin:ws" },
-                 { "name": "builtin:rest" },
-                 { "name": "builtin:lua" }
+                 { "name": "builtin:rest" }
              ],
              "resources": {
                  "limits": {

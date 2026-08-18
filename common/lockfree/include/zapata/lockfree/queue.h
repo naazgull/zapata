@@ -160,6 +160,11 @@ class queue {
      * @return Current number of elements in the queue.
      */
     auto size() const -> size_t;
+    /**
+     * @brief Instructs all threads spinning in `push` or `pop` to exit.
+     * @return Reference to this queue.
+     */
+    auto shutdown() -> zpt::lf::queue<T>&;
 
     /**
      * @brief Returns a debug string representation of the queue.
@@ -212,6 +217,8 @@ class queue {
     zpt::padded_atomic<std::uint64_t> __tail{ 0 };
     /** @brief Approximate element count, updated independently of the slot CAS. */
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
+    /** @brief Stop all spinning and exit. */
+    zpt::padded_atomic<bool> __shutdown{ false };
     /** @brief Maximum number of elements the queue can hold (power of two). */
     size_t __capacity{ 0 };
     /** @brief Bit mask for index wrapping: `__capacity - 1`. */
@@ -239,6 +246,7 @@ auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
 
 template<typename T>
 auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
+    zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
         auto _head = this->__head->load(std::memory_order_relaxed);
 
@@ -251,8 +259,12 @@ auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
             // Spin-wait until the slot is free (sequence == slot_index).
             while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
                    _slot_idx) {
-                std::this_thread::yield();
+                _timer.sleep_for(0.1f);
+                if (this->__shutdown->load()) {
+                    throw zpt::NoMoreElementsException("Shutting down");
+                }
             }
+            _timer.reset();
 
             // Write the value and release the slot to consumers.
             this->__slots[_slot_idx].value = std::move(_value);
@@ -271,6 +283,7 @@ auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
 
 template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
+    zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
         if (this->__tail->load() == this->__head->load()) {
             throw zpt::NoMoreElementsException("No elements in the queue");
@@ -287,8 +300,12 @@ auto zpt::lf::queue<T>::pop() -> ptr {
             // Spin-wait until the slot is full (sequence == slot_index + capacity).
             while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
                    (_slot_idx + this->__capacity)) {
-                std::this_thread::yield();
+                _timer.sleep_for(0.1f);
+                if (this->__shutdown->load()) {
+                    throw zpt::NoMoreElementsException("Shutting down");
+                }
             }
+            _timer.reset();
 
             // Read the value and release the slot to producers.
             ptr _to_return;
@@ -313,6 +330,12 @@ auto zpt::lf::queue<T>::capacity() const -> size_t {
 template<typename T>
 auto zpt::lf::queue<T>::size() const -> size_t {
     return this->__size->load(std::memory_order_relaxed);
+}
+
+template<typename T>
+auto zpt::lf::queue<T>::shutdown() -> zpt::lf::queue<T>& {
+    this->__shutdown->store(true);
+    return (*this);
 }
 
 template<typename T>

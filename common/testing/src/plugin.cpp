@@ -38,7 +38,7 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
     using zpt::system_event::system_event;
     ~plugin_testing_execute_after_boot() = default;
 
-    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
+    auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state override {
         auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
         auto _config = zpt::GLOBAL_CONFIG();
         auto _dummy_args = zpt::json::array();
@@ -53,6 +53,9 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
             catch (std::exception const& _e) {
                 zlog(_target->string() << ": fail - " << _e.what(), zpt::warning);
                 _failed << _target;
+            }
+            if (_dispatcher->is_in_shutdown()) {
+                break;
             }
         }
 

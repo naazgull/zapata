@@ -15,5 +15,9 @@ auto initialize(int _argc, char** _argv) -> void;
  * @return void
  */
 auto shutdown() -> void;
+/** @brief Whether or not the system is in shutdown.
+ * @return True if the system is in shutdown;
+ */
+auto is_in_shutdown() -> bool;
 } // namespace runtime
 } // namespace zpt

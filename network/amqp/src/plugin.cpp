@@ -34,6 +34,7 @@
 #include <zapata/net/transport/amqp.h>
 #include <zapata/net/transport/self.h>
 #include <zapata/startup.h>
+#include <zapata/runtime.h>
 #include <zapata/transport.h>
 
 /** @brief System event that subscribes to AMQP topics at boot time.
@@ -97,7 +98,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                                                         << _config("port")->integer(),
                  zpt::info);
 
-            while (!zpt::STREAM_POLLING()->is_in_shutdown()) {
+            while (!zpt::runtime::is_in_shutdown()) {
                 try {
                     if (!_stream->is_connected()) { _stream->connect(); }
                     _stream->loop_misc();

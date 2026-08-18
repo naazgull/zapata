@@ -53,9 +53,13 @@ auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& 
 }
 
 auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
-    expect(!this->__shutdown->load(),
-           "`stop_consunmers()` already been called from another execution path");
-    this->__shutdown->store(true);
+    while (this->__queue.size() != 0) {
+        std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
+    }
+
+    if (this->__shutdown->exchange(true)) { return (*this); }
+    this->__queue.shutdown();
+
     while (this->__running_consumers->load(std::memory_order_relaxed) != 0) {
         std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
     }
@@ -65,6 +69,7 @@ auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
 }
 
 auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
+    if (this->__shutdown->load()) { return (*this); }
     this->__queue.push(std::move(_event));
     return (*this);
 }

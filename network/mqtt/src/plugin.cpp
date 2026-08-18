@@ -25,6 +25,7 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/mqtt.h>
 #include <zapata/net/transport/self.h>
+#include <zapata/runtime.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
@@ -75,7 +76,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                                                         << _config("port")->integer(),
                  zpt::info);
 
-            while (!zpt::STREAM_POLLING()->is_in_shutdown()) {
+            while (!zpt::runtime::is_in_shutdown()) {
                 try {
                     if (!_stream->is_connected()) { _stream->connect(); }
                     _stream->loop_misc();
