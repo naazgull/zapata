@@ -67,3 +67,7 @@ auto zpt::net::transport::pipe_stream::process_incoming_reply(zpt::stream _strea
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }
+
+auto zpt::net::transport::pipe_stream::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}

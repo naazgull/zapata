@@ -73,6 +73,10 @@ auto zpt::net::transport::amqp::publish(zpt::message _to_publish) const -> void 
     _server->publish(_to_publish);
 }
 
+auto zpt::net::transport::amqp::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}
+
 auto zpt::AMQP_STREAM(zpt::json _config) -> zpt::amqp_stream::ptr {
     static auto _global = zpt::allocate_shared<zpt::amqp_stream>(_config);
     return _global;

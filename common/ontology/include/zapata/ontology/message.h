@@ -57,6 +57,10 @@ namespace zpt {
  */
 class basic_message {
   public:
+    /** @brief Retrieves a copy of this message of the given template type.
+     * @return Shared pointer to cloned message. */
+    template<typename T>
+    auto copy() const -> std::shared_ptr<basic_message>;
     /** @brief Retrieves a clone of this message.
      * @return Shared pointer to cloned message. */
     virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
@@ -379,10 +383,27 @@ template<typename T>
 auto message_cast(zpt::message _rhs) -> T& {
     return static_cast<T&>(*_rhs);
 }
+auto uri_to_string(zpt::json const& _uri) -> std::string;
 } // namespace zpt
 
 auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
 auto operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
+
+template<typename T>
+auto zpt::basic_message::copy() const -> std::shared_ptr<basic_message> {
+    auto _copy = zpt::make_message<T>();
+
+    _copy->headers() = this->headers()->clone();
+    _copy->body() = this->body()->clone();
+    _copy //
+      ->performative(this->performative())
+      .uri(zpt::uri_to_string(this->uri()))
+      .version(this->version());
+
+    if (this->performative() == zpt::Reply) { _copy->status(this->status()); }
+
+    return _copy;
+}
 
 template<typename T, typename... Args>
 auto zpt::make_message(Args... _args) -> zpt::message {

@@ -72,6 +72,11 @@ auto zpt::net::transport::http::process_incoming_reply(zpt::stream _stream) cons
     return _reply;
 }
 
+auto zpt::net::transport::http::copy(zpt::message const& _to_copy) const -> zpt::message {
+    if (_to_copy->performative() == zpt::Reply) { return _to_copy->copy<zpt::http::basic_reply>(); }
+    else { return _to_copy->copy<zpt::http::basic_request>(); }
+}
+
 auto zpt::HTTP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
   -> zpt::serversocketstream& {
     static zpt::serversocketstream _global{ "http", _address, _port };

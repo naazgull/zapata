@@ -299,7 +299,6 @@ auto zpt::polling::poll() -> zpt::polling& {
         }
 
     } while (!this->__shutdown.load());
-    this->close();
     return (*this);
 }
 

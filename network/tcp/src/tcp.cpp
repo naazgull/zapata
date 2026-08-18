@@ -60,6 +60,10 @@ auto zpt::net::transport::tcp::process_incoming_reply(zpt::stream _stream) const
     return _message;
 }
 
+auto zpt::net::transport::tcp::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}
+
 auto zpt::TCP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
   -> zpt::serversocketstream& {
     static zpt::serversocketstream _global{ "tcp", _address, _port };

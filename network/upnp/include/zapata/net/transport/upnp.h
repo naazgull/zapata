@@ -81,6 +81,10 @@ class upnp : public zpt::basic_transport {
      * @param _stream Input stream containing the serialized reply.
      * @return Parsed reply message. */
     auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override;
+    /** @brief Creates a copy of the given message with the transport's protocol and format.
+     * @param _to_copy The message to copy.
+     * @return The copied message. */
+    auto copy(zpt::message const& _to_copy) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

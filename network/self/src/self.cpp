@@ -60,6 +60,10 @@ auto zpt::net::transport::self::process_incoming_reply(zpt::stream _stream) cons
     return _message;
 }
 
+auto zpt::net::transport::self::copy(zpt::message const& _to_copy) const -> zpt::message {
+    return _to_copy->copy<zpt::json_message>();
+}
+
 auto zpt::CATALOG(std::string const& _name, std::string const& _self_id)
   -> zpt::catalog<std::string, zpt::json>::ptr {
     static auto _global =
