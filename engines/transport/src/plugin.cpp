@@ -25,6 +25,21 @@
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
+namespace {
+class transport_engine_stop_threads : public zpt::system_event {
+  public:
+    using zpt::system_event::system_event;
+    ~transport_engine_stop_threads() = default;
+
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
+        zpt::SYSTEM_EVENTS_RESOLVER()->remove<::transport_engine_stop_threads>(
+          zpt::system_event_type::EXITING);
+        zpt::TRANSPORT_ENGINE()->shutdown();
+        return zpt::events::finish;
+    }
+};
+} // namespace
+
 /** @brief Plugin entry point: initializes the global transport engine.
  * @param _plugin Plugin instance.
  * @return void. */
@@ -36,6 +51,9 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                  : 1)
            << " threads)",
          zpt::info);
+
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<::transport_engine_stop_threads>(
+      zpt::system_event_type::EXITING);
 }
 
 /** @brief Plugin unload entry point: shuts down the transport engine.
@@ -43,5 +61,4 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
  * @return void. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Stopped multi-transport engine", zpt::info);
-    zpt::TRANSPORT_ENGINE()->shutdown();
 }

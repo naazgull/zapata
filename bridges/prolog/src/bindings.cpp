@@ -11,6 +11,7 @@
 
 #include <zapata/prolog/bindings.h>
 #include <zapata/rest.h>
+#include <zapata/runtime.h>
 #include <zapata/transport/engine.h>
 
 namespace {
@@ -243,7 +244,7 @@ static auto get_value_for_key(term_t _to_search_pl /*+*/,
  * @return bool True if the system is in shutdown.
  */
 static auto is_in_shutdown(term_t _result_pl /*?*/) -> foreign_t {
-    auto _result = zpt::prolog::to_object(zpt::STREAM_POLLING()->is_in_shutdown());
+    auto _result = zpt::prolog::to_object(zpt::runtime::is_in_shutdown());
     return PL_unify_term(_result_pl, PL_TERM, *_result);
 }
 }

@@ -55,12 +55,13 @@ set_target_properties(zapata-bridge-lua
 add_library(zapata-bridge-lua-plugin SHARED)
 add_dependencies(zapata-bridge-lua-plugin
   zapata-base
-  zapata-parser-json
-  zapata-events
-  zapata-engine-startup
   zapata-bridge-base
   zapata-bridge-lua
+  zapata-engine-startup
   zapata-engine-rest
+  zapata-events
+  zapata-parser-json
+  zapata-runtime
 )
 target_sources(zapata-bridge-lua-plugin
   PRIVATE
@@ -70,16 +71,17 @@ target_sources(zapata-bridge-lua-plugin
 target_include_directories(zapata-bridge-lua-plugin
   PRIVATE
     zapata-base
-    zapata-common-catalog
-    zapata-globals
-    zapata-events
-    zapata-lockfree
-    zapata-parser-json
-    zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-lua
+    zapata-common-catalog
     zapata-engine-rest
+    zapata-engine-startup
     zapata-engine-transport
+    zapata-events
+    zapata-globals
+    zapata-lockfree
+    zapata-parser-json
+    zapata-runtime
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}
@@ -87,18 +89,19 @@ target_include_directories(zapata-bridge-lua-plugin
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
     zapata-base
-    zapata-common-catalog
-    zapata-globals
-    zapata-events
-    zapata-lockfree
-    zapata-parser-json
-    zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-lua
+    zapata-common-catalog
     zapata-engine-rest
+    zapata-engine-startup
     zapata-engine-transport
-    ${SQLite3_LIBRARIES}
+    zapata-events
+    zapata-globals
+    zapata-lockfree
+    zapata-parser-json
+    zapata-runtime
     zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
     ${LUA_LIBRARIES}
 )
 set_target_properties(zapata-bridge-lua-plugin

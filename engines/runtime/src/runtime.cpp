@@ -128,17 +128,17 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     zpt::STREAM_POLLING() //
       ->shutdown();
     zlog("Unloaded stream polling service", zpt::info);
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
+    zpt::DISPATCHER() //
+      ->stop_consumers();
+    zlog("Stopped global event dispatcher", zpt::info);
     zpt::BOOT() //
       .unload();
     zlog("Unloaded all plugins", zpt::notice);
     zpt::TRANSPORT_LAYER() //
       .clear();
     zlog("Unloaded transport layer", zpt::info);
-    zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
-    zpt::DISPATCHER() //
-      ->stop_consumers();
-    zlog("Stopped global event dispatcher", zpt::info);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
     if (_config("log")("target")->ok()) { delete zpt::log_fd; }
 
@@ -149,6 +149,8 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
 }
 
 auto zpt::runtime::shutdown() -> void { zpt::STREAM_POLLING()->shutdown(); }
+
+auto zpt::runtime::is_in_shutdown() -> bool { return zpt::STREAM_POLLING()->is_in_shutdown(); }
 
 namespace {
 auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }

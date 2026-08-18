@@ -54,11 +54,12 @@ set_target_properties(zapata-bridge-prolog
 add_library(zapata-bridge-prolog-plugin SHARED)
 add_dependencies(zapata-bridge-prolog-plugin
   zapata-base
-  zapata-parser-json
-  zapata-events
-  zapata-engine-startup
   zapata-bridge-base
   zapata-bridge-prolog
+  zapata-engine-startup
+  zapata-events
+  zapata-parser-json
+  zapata-runtime
 )
 target_sources(zapata-bridge-prolog-plugin
   PRIVATE
@@ -67,13 +68,14 @@ target_sources(zapata-bridge-prolog-plugin
 target_include_directories(zapata-bridge-prolog-plugin
   PRIVATE
     zapata-base
-    zapata-globals
-    zapata-events
-    zapata-lockfree
-    zapata-parser-json
-    zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-prolog
+    zapata-engine-startup
+    zapata-events
+    zapata-globals
+    zapata-lockfree
+    zapata-parser-json
+    zapata-runtime
     ${BRIDGE_PROLOG_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}
@@ -81,12 +83,13 @@ target_include_directories(zapata-bridge-prolog-plugin
 target_link_libraries(zapata-bridge-prolog-plugin
   PUBLIC
     zapata-base
-    zapata-parser-json
-    zapata-events
-    zapata-lockfree
-    zapata-engine-startup
     zapata-bridge-base
     zapata-bridge-prolog
+    zapata-events
+    zapata-engine-startup
+    zapata-lockfree
+    zapata-parser-json
+    zapata-runtime
     swipl::libswipl
 )
 set_target_properties(zapata-bridge-prolog-plugin
@@ -105,6 +108,7 @@ add_dependencies(zapata_bridge_prolog_bindings
   zapata-engine-startup
   zapata-bridge-base
   zapata-bridge-prolog
+  zapata-runtime
 )
 target_sources(zapata_bridge_prolog_bindings
   PRIVATE
@@ -123,6 +127,7 @@ target_include_directories(zapata_bridge_prolog_bindings
     zapata-bridge-prolog
     zapata-engine-rest
     zapata-engine-transport
+    zapata-runtime
     ${BRIDGE_PROLOG_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}
@@ -140,6 +145,7 @@ target_link_libraries(zapata_bridge_prolog_bindings
     zapata-engine-rest
     zapata-engine-transport
     swipl::libswipl
+    zapata-runtime
     ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
 )

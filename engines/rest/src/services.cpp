@@ -39,7 +39,10 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
                                _peer_scheme,
                                _peer("domain")->string(),
                                _peer("port")->integer()))
-              .body() = { "provider", zpt::IDENTITY(), "services", zpt::REST_RESOLVER()->list() };
+              .body() = { "provider",
+                          zpt::IDENTITY(),
+                          "services",
+                          zpt::REST_RESOLVER()->list(zpt::IDENTITY()("_id")->string()) };
 
             zpt::make_call<zpt::rest::services_list>(zpt::REST_RESOLVER(), _hello);
 #ifndef PROPAGATE_EXCEPTION

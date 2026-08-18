@@ -1,5 +1,6 @@
 #include <zapata/lua/bindings.h>
 #include <zapata/rest.h>
+#include <zapata/runtime.h>
 #include <zapata/transport/engine.h>
 
 namespace {
@@ -135,7 +136,7 @@ auto zpt::lua::bindings::sleep(lua_State* _state) -> int {
 
 auto zpt::lua::bindings::is_in_shutdown(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
-    _bridge.to_object(zpt::STREAM_POLLING()->is_in_shutdown(), _state);
+    _bridge.to_object(zpt::runtime::is_in_shutdown(), _state);
     return 1;
 }
 
