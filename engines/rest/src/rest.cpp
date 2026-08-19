@@ -67,7 +67,7 @@ auto zpt::rest::resolver_t::add(zpt::json const& _service_description) -> zpt::r
            "Member `provider_id` must be a part of the service description");
     this->__catalog->add(_service_description("_id")->string(),
                          _service_description("provider_id")->string(),
-                         -1,
+                         0,
                          _service_description("metadata"));
     return (*this);
 }
@@ -90,7 +90,8 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative,
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
                   _path);
-    for (auto&& [_, __, _record] : this->__catalog->search(_to_search)) {
+    for (auto&& [_, __, _record] :
+         this->__catalog->search(_to_search, zpt::IDENTITY()("_id")->string())) {
         auto _hash_code = static_cast<unsigned long long int>(_record("hash")->integer());
         if (_hash_code != _callback_hash) { continue; }
 
@@ -112,7 +113,7 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
                                       zpt::ontology::to_str(_received->performative()),
                                       _received->resource()->string());
         for (auto&& [_, __, _record] : this->__catalog->resolve(_to_search)) {
-            auto _hash_code = _record("hash")->integer();
+            auto _hash_code = static_cast<unsigned long long>(_record("hash")->integer());
 
             std::shared_lock _guard{ this->__callbacks_mutex };
             auto _found = this->__callbacks.find(_hash_code);
@@ -154,6 +155,11 @@ auto zpt::rest::resolver_t::unregister_provider(std::string const& _id) -> zpt::
 
 auto zpt::rest::resolver_t::get_provider(std::string const& _provider_id) const -> zpt::json {
     return this->__catalog->get_provider(_provider_id);
+}
+
+auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
+    this->__pending_requests.clear();
+    return (*this);
 }
 
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::events::resolver {

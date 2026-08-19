@@ -171,6 +171,11 @@ class resolver_t : public zpt::events::resolver_t {
      * @return JSON object with provider details.
      */
     auto get_provider(std::string const& _id) const -> zpt::json override;
+    /**
+     * @brief Clears all internal lists.
+     * @return Reference to this resolver instance.
+     */
+    auto clear() -> resolver_t&;
 
   private:
     /** @brief Catalog mapping URI patterns to callback indices. */

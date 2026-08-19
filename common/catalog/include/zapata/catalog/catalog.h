@@ -38,18 +38,6 @@
 #include <zapata/json.h>
 #include <zapata/sqlite.h>
 
-namespace {
-static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
-static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
-static constexpr char const* SEARCH_WITH_PROVIDER_STMT =
-  "(_id like '{}{}{}%') and (provider_id = '{}')";
-static constexpr char const* EXACT_SEARCH_WITH_PROVIDER_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
-static constexpr char const* RESOLVE_STMT = "(_id like '{}{}{}%') and (provider_id = '{}')";
-static constexpr char const* EXACT_RESOLVE_STMT =
-  "((_id = '{}{}{}') or (_id = '{}{}{}')) and (provider_id = '{}')";
-} // namespace
-
 namespace zpt {
 /**
  * @brief SQLite-backed service catalog with pattern matching.
@@ -187,10 +175,16 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
                  "    _id TEXT,"
                  "    provider_id TEXT NOT NULL,"
                  "    hash INTEGER NOT NULL,"
+                 "    pattern TEXT NOT NULL,"
                  "    metadata TEXT,"
                  "    PRIMARY KEY(_id, provider_id, hash),"
                  "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
                  ")",
+                 nullptr,
+                 nullptr,
+                 nullptr);
+    sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
+                 "CREATE INDEX pattern_idx ON catalog (pattern)",
                  nullptr,
                  nullptr,
                  nullptr);
@@ -236,11 +230,13 @@ auto zpt::catalog<K, M>::add(K _key,
     std::string _t_key{ _oss.str() };
     _oss.str("");
     _oss << _metadata << std::flush;
-    zpt::json _body{ "_id",        _t_key,    "provider_id",
-                     _provider_id, "hash",    static_cast<long long int>(_hash),
-                     "metadata",   _oss.str() };
+    zpt::json _body{ "_id",         _t_key,
+                     "provider_id", _provider_id,
+                     "hash",        static_cast<long long int>(_hash),
+                     "pattern",     zpt::r_replace(_t_key, "{}", "%"),
+                     "metadata",    _oss.str() };
 
-    if (static_cast<long long int>(_hash) != -1) { zlog("Registered " << _t_key, zpt::trace); }
+    if (static_cast<long long int>(_hash) != 0) { zlog("Registered " << _t_key, zpt::trace); }
     this
       ->__catalog //
       ->add(_body)
@@ -255,7 +251,7 @@ auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> catalog& {
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
 
-    if (static_cast<long long int>(_hash) != -1) { zlog("Unregistered " << _t_key, zpt::trace); }
+    if (static_cast<long long int>(_hash) != 0) { zlog("Unregistered " << _t_key, zpt::trace); }
     this
       ->__catalog //
       ->remove({ "_id", _t_key, "hash", _hash })
@@ -266,67 +262,26 @@ auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> catalog& {
 
 template<typename K, typename M>
 auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
-    auto _separator = zpt::catalog_id::separator<K>();
-    auto _parts = zpt::catalog_id::split(_pattern);
-    zpt::json _result = zpt::json::array();
-    zpt::json _prefixes{ zpt::array, "" };
-
-    for (auto const& [_idx, __, _part] : _parts) {
-        if (_idx == _parts->size() - 1) {
-            for (auto&& [_, __, _prefix] : _prefixes) {
-                _result += this
-                             ->__catalog                            //
-                             ->find(std::format(EXACT_RESOLVE_STMT, //
-                                                _prefix->string(),
-                                                _separator,
-                                                _part->string(),
-                                                _prefix->string(),
-                                                _separator,
-                                                "{}",
-                                                this->__self_id))
-                             ->fields({ zpt::array, "hash" })
-                             ->execute()
-                             ->fetch();
-            }
-            expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");
-        }
-        else {
-            zpt::json _matching = zpt::json::array();
-
-            for (auto&& [_, __, _prefix] : _prefixes) {
-                auto _count = this
-                                ->__catalog                      //
-                                ->find(std::format(RESOLVE_STMT, //
-                                                   _prefix->string(),
-                                                   _separator,
-                                                   _part->string(),
-                                                   this->__self_id))
-                                ->fields({ zpt::array, zpt::storage::sql_functions::COUNT })
-                                ->execute()
-                                ->fetch();
-                if (_count->ok() && _count(0)("count(*)")->integer() != 0) {
-                    _matching << (_prefix->string() + _separator + static_cast<std::string>(_part));
-                }
-
-                _count = this
-                           ->__catalog                      //
-                           ->find(std::format(RESOLVE_STMT, //
-                                              _prefix->string(),
-                                              _separator,
-                                              "{}",
-                                              this->__self_id))
-                           ->fields({ zpt::array, zpt::storage::sql_functions::COUNT })
-                           ->execute()
-                           ->fetch();
-                if (_count->ok() && _count(0)("count(*)")->integer() != 0) {
-                    _matching << (_prefix->string() + _separator + std::string{ "{}" });
-                }
-            }
-
-            if (_matching->size() == 0) { continue; }
-            _prefixes = _matching;
-        }
+    std::string _t_pattern;
+    if constexpr (std::is_convertible<K, std::string>::value) { _t_pattern.assign(_pattern); }
+    else {
+        std::ostringstream _oss;
+        _oss << _pattern << std::flush;
+        _t_pattern.assign(_oss.str());
     }
+    auto _parts = std::count(_t_pattern.begin(), _t_pattern.end(), '/');
+
+    auto _query = std::format("('{}' like pattern) and "
+                              "((length(pattern) - length(replace(pattern, '/', ''))) = {}) and "
+                              "(hash <> 0)",
+                              _t_pattern,
+                              _parts);
+    auto _result = this
+                     ->__catalog //
+                     ->find(_query)
+                     ->fields({ zpt::array, "hash" })
+                     ->execute()
+                     ->fetch();
 
     return _result;
 }
@@ -334,77 +289,27 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
 template<typename K, typename M>
 auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider) const
   -> zpt::json const {
-    auto _separator = zpt::catalog_id::separator<K>();
-    auto _parts = zpt::catalog_id::split(_pattern);
-    zpt::json _result = zpt::json::array();
-    zpt::json _prefixes{ zpt::array, "" };
-    std::string _search;
-    std::string _exact_search;
-
-    if (_provider.length() != 0) {
-        _search = SEARCH_WITH_PROVIDER_STMT;
-        _exact_search = EXACT_SEARCH_WITH_PROVIDER_STMT;
-    }
+    std::string _t_pattern;
+    if constexpr (std::is_convertible<K, std::string>::value) { _t_pattern.assign(_pattern); }
     else {
-        _search = SEARCH_STMT;
-        _exact_search = EXACT_SEARCH_STMT;
+        std::ostringstream _oss;
+        _oss << _pattern << std::flush;
+        _t_pattern.assign(_oss.str());
     }
+    auto _parts = std::count(_t_pattern.begin(), _t_pattern.end(), '/');
 
-    for (auto const& [_idx, __, _part] : _parts) {
-        if (_idx == _parts->size() - 1) {
-            for (auto&& [_, __, _prefix] : _prefixes) {
-                _result += this
-                             ->__catalog                        //
-                             ->find(std::vformat(_exact_search, //
-                                                 std::make_format_args(_prefix->string(),
-                                                                       _separator,
-                                                                       _part->string(),
-                                                                       _prefix->string(),
-                                                                       _separator,
-                                                                       "{}",
-                                                                       _provider)))
-                             ->execute()
-                             ->fetch();
-            }
-            expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");
-        }
-        else {
-            zpt::json _matching = zpt::json::array();
+    auto _query = std::format(
+      "('{}' like pattern) and ((length(pattern) - length(replace(pattern, '/', ''))) = {})",
+      _t_pattern,
+      _parts);
+    if (_provider != "") { _query += std::format(" and (provider_id = '{}')", _provider); }
 
-            for (auto&& [_, __, _prefix] : _prefixes) {
-                auto _count = this
-                                ->__catalog                                                  //
-                                ->find(std::vformat(_search,                                 //
-                                                    std::make_format_args(_prefix->string(), //
-                                                                          _separator,
-                                                                          _part->string(),
-                                                                          _provider)))
-                                ->fields({ zpt::array, zpt::storage::sql_functions::COUNT })
-                                ->execute()
-                                ->fetch();
-                if (_count->ok() && _count(0)("count(*)")->integer() != 0) {
-                    _matching << (_prefix->string() + _separator + static_cast<std::string>(_part));
-                }
-
-                _count = this
-                           ->__catalog                                                  //
-                           ->find(std::vformat(_search,                                 //
-                                               std::make_format_args(_prefix->string(), //
-                                                                     _separator,
-                                                                     "{}",
-                                                                     _provider)))
-                           ->fields({ zpt::array, zpt::storage::sql_functions::COUNT })
-                           ->execute()
-                           ->fetch();
-                if (_count->ok() && _count(0)("count(*)")->integer() != 0) {
-                    _matching << (_prefix->string() + _separator + std::string{ "{}" });
-                }
-            }
-
-            expect(_matching->size() != 0, "Pattern '" << _pattern << "' not found.");
-            _prefixes = _matching;
-        }
-    }
+    auto _result = this
+                     ->__catalog //
+                     ->find(_query)
+                     ->fields({ zpt::array, "_id", "provider_id", "hash", "metadata" })
+                     ->execute()
+                     ->fetch();
 
     return _result;
 }
@@ -415,6 +320,7 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
       this
         ->__catalog //
         ->find({ "provider_id", _provider_id.empty() ? this->__self_id : _provider_id })
+        ->fields({ zpt::array, "_id", "provider_id", "metadata" })
         ->execute()
         ->fetch();
 
@@ -426,7 +332,6 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
             _iss >> _metadata;
             _service["metadata"] = _metadata;
         }
-        _service->object()->pop("hash");
     }
 
     return _result;

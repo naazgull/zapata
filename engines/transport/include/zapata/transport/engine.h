@@ -762,9 +762,15 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
         return zpt::events::retrigger;
     }
 
-    _transport->send(_stream, this->__to_send);
-    this->__polling->unmute(_stream);
+    try {
+        _transport->send(_stream, this->__to_send);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->__polling->unmute(_stream);
+        return zpt::events::retrigger;
+    }
 
+    this->__polling->unmute(_stream);
     return zpt::events::finish;
 }
 
