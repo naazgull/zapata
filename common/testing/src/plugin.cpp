@@ -54,9 +54,7 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
                 zlog(_target->string() << ": fail - " << _e.what(), zpt::warning);
                 _failed << _target;
             }
-            if (_dispatcher->is_in_shutdown()) {
-                break;
-            }
+            if (_dispatcher->is_in_shutdown()) { break; }
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //

@@ -45,9 +45,7 @@ class some_protocol : public zpt::basic_transport {
         return _message;
     }
 
-    auto copy(zpt::message const& _to_copy) const -> zpt::message {
-        return _to_copy->clone();
-    }
+    auto copy(zpt::message const& _to_copy) const -> zpt::message { return _to_copy->clone(); }
 };
 
 auto main(int argc, char* argv[]) -> int {

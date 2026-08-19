@@ -180,9 +180,7 @@ auto zpt::json_message::empty() const -> bool {
     return !this->__underlying->ok() || this->__underlying->stringify().length() == 0;
 }
 
-auto zpt::uri_to_string(zpt::json const& _uri) -> std::string {
-    return zpt::uri::to_string(_uri);
-}
+auto zpt::uri_to_string(zpt::json const& _uri) -> std::string { return zpt::uri::to_string(_uri); }
 
 auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream& {
     _in->to_stream(_out);

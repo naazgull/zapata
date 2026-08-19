@@ -32,8 +32,6 @@ auto zpt::basic_transport::upgraded_from() const -> std::string const& {
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
     if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        assert(_stream->state() == zpt::stream_state::IDLE ||
-               _stream->state() == zpt::stream_state::WAITING);
         expect(_stream->state() == zpt::stream_state::IDLE ||
                  _stream->state() == zpt::stream_state::WAITING,
                "Stream not in a valid state for receiving");
@@ -61,9 +59,6 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
 
 auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) const -> void {
     if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        assert(_stream->state() == zpt::stream_state::IDLE ||
-               _stream->state() == zpt::stream_state::PROCESSING ||
-               _stream->state() == zpt::stream_state::ERRORING_OUT);
         expect(_stream->state() == zpt::stream_state::IDLE ||
                  _stream->state() == zpt::stream_state::PROCESSING ||
                  _stream->state() == zpt::stream_state::ERRORING_OUT,

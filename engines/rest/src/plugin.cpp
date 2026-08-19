@@ -26,6 +26,27 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
+namespace {
+class rest_resolver_minion_shutdown : public zpt::system_event {
+  public:
+    using zpt::system_event::system_event;
+    ~rest_resolver_minion_shutdown() = default;
+
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
+        zpt::SYSTEM_EVENTS_RESOLVER()->remove<::rest_resolver_minion_shutdown>(
+          zpt::system_event_type::EXITING);
+
+        auto _config = zpt::GLOBAL_CONFIG();
+        if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
+            zpt::rest::services::broadcast("/minions/shutdown", _config);
+        }
+        reinterpret_cast<zpt::rest::resolver_t&>(*zpt::REST_RESOLVER().get()).clear();
+
+        return zpt::events::finish;
+    }
+};
+} // namespace
+
 /** @brief Plugin entry point: registers the REST resolver and builtin minion event handlers.
  * @param _plugin Plugin instance.
  * @return void. */
@@ -50,6 +71,9 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
         zpt::rest::services::broadcast("/minions/boot", _config);
     }
 
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<::rest_resolver_minion_shutdown>(
+      zpt::system_event_type::EXITING);
+
     zlog("Added REST event resolver", zpt::info);
 }
 
@@ -59,10 +83,6 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zlog("Disposing REST event resolver", zpt::info);
-
-    if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
-        zpt::rest::services::broadcast("/minions/shutdown", _config);
-    }
 
     zpt::REST_RESOLVER() //
       ->remove<zpt::rest::minion_boot>(zpt::Notify, "/minions/boot")

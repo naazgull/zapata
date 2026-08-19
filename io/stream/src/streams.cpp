@@ -254,10 +254,17 @@ auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
     zpt::mem::print_still_allocated();
     zpt::mem::start_tracking();
 #endif
-    this->mute(_stream);
+    try {
+        this->mute(_stream);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return (*this);
+    }
+
     for (auto& d : this->__delegates) {
         if (d(this->shared_from_this(), _stream)) { return (*this); }
     }
+
     this->unmute(_stream);
     malloc_trim(0);
     return (*this);

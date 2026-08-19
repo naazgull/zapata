@@ -33,8 +33,8 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/amqp.h>
 #include <zapata/net/transport/self.h>
-#include <zapata/startup.h>
 #include <zapata/runtime.h>
+#include <zapata/startup.h>
 #include <zapata/transport.h>
 
 /** @brief System event that subscribes to AMQP topics at boot time.
