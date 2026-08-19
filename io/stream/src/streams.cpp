@@ -214,9 +214,16 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     {
         std::unique_lock _sentry{ this->__poll_lock };
-        this->__polled_streams.erase(this->__polled_streams.find(_fd));
-        this->__polled_streams_by_uuid.erase(this->__polled_streams_by_uuid.find(_stream->uuid()));
-        this->__polled_streams_by_uri.erase(this->__polled_streams_by_uri.find(_stream->uri()));
+        auto _found_fd = this->__polled_streams.find(_fd);
+        if (_found_fd != this->__polled_streams.end()) { this->__polled_streams.erase(_found_fd); }
+        auto _found_uuid = this->__polled_streams_by_uuid.find(_stream->uuid());
+        if (_found_uuid != this->__polled_streams_by_uuid.end()) {
+            this->__polled_streams_by_uuid.erase(_found_uuid);
+        }
+        auto _found_uri = this->__polled_streams_by_uri.find(_stream->uri());
+        if (_found_uri != this->__polled_streams_by_uri.end()) {
+            this->__polled_streams_by_uri.erase(_found_uri);
+        }
     }
     _stream->shutdown();
     return (*this);
