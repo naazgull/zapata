@@ -337,6 +337,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
         std::string _arg(_argv[_i]);
 
         if (_arg == "--") {
+            if (_key.length() != 0) { _return << _key << true; }
             _key.assign("");
             _value.assign("");
         }

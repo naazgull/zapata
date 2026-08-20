@@ -83,7 +83,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
 
     if (_parameters("--print-config")->ok()) {
-        std::cout << zpt::pretty{ _config } << std::flush;
+        std::cout << _config << std::endl << std::flush;
         return;
     }
 
@@ -129,7 +129,8 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
       ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
     zpt::DISPATCHER() //
       ->stop_consumers();
-    zlog("Stopped global event dispatcher", zpt::info);
+    zpt::events::dispatcher::join_threads();
+    zlog("Stopped all dispatcher worker threads", zpt::info);
     zpt::STREAM_POLLING() //
       ->close();
     zlog("Unloaded stream polling service", zpt::info);

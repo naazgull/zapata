@@ -48,6 +48,7 @@ auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& 
           [this, _consumer_nr]() mutable -> void { this->loop(_consumer_nr); });
         _consumer.detach();
         ++(*this->__running_consumers);
+        zpt::events::dispatcher::__n_threads.fetch_add(1);
     }
     return (*this);
 }
@@ -136,7 +137,14 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
 #endif
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     --(*this->__running_consumers);
+    zpt::events::dispatcher::__n_threads.fetch_sub(1);
     zlog(_name << " stopping", zpt::trace);
+}
+
+auto zpt::events::dispatcher::join_threads() -> void {
+    while (zpt::events::dispatcher::__n_threads.load() != 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
+    }
 }
 
 auto zpt::DISPATCHER(long int _consumers, size_t _max_queue_size) -> zpt::events::dispatcher::ptr {

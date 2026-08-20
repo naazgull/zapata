@@ -151,6 +151,9 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     /** @brief Retrieves the dispatcher's internal state.
      * @return JSON object with dispatcher status (running, queue size, etc.). */
     auto get_state() const -> zpt::json;
+    /** @brief Joins all dispatcher threads and waits for them to stop.
+     * @return void. */
+    static auto join_threads() -> void;
 
   public:
     /** @brief Lock-free queue holding pending events. */
@@ -167,6 +170,8 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     std::string __name{ "" };
     /** @brief Initialization data forwarded to new events on creation. */
     zpt::event_initialization::ptr __event_init{ nullptr };
+    /** @brief Number of workers threads initialised by all dispatchers. */
+    static inline std::atomic<unsigned int> __n_threads{ 0 };
 
     /**
      * @brief Main consumer loop: dequeues and processes events until shutdown.
