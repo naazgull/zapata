@@ -437,8 +437,9 @@ class polling : public std::enable_shared_from_this<polling> {
     auto get(std::string const& _uri) const -> zpt::stream;
     /** @brief Dispatches a ready stream to all registered delegates.
      * @param _stream Stream that is ready for I/O.
+     * @param _already_muted Whether or not the stream is already muted.
      * @return Reference to this polling instance. */
-    auto delegate(zpt::stream _stream) -> zpt::polling&;
+    auto delegate(zpt::stream _stream, bool _already_muted = false) -> zpt::polling&;
 };
 
 /**
