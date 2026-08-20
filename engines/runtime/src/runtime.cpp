@@ -83,7 +83,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
 
     if (_parameters("--print-config")->ok()) {
-        std::cout << zpt::pretty{ _config } << std::flush;
+        std::cout << _config << std::endl << std::flush;
         return;
     }
 
