@@ -23,7 +23,6 @@ namespace zpt {
  * @return JSON string representation.
  */
 auto to_string(zpt::json _in) -> std::string;
-
 /**
  * @brief Splits a string by separator into a JSON array.
  * @param _to_split String to split.
@@ -33,7 +32,6 @@ auto to_string(zpt::json _in) -> std::string;
  */
 auto split(std::string const& _to_split, std::string const& _separator, bool _trim = false)
   -> zpt::json;
-
 /**
  * @brief Joins a JSON array into a string.
  * @param _to_join JSON array of strings.
@@ -41,6 +39,10 @@ auto split(std::string const& _to_split, std::string const& _separator, bool _tr
  * @return Joined string.
  */
 auto join(zpt::json _to_join, std::string const& _separator) -> std::string;
+/** @brief Loads JSON from a file.
+ * @param _file Path to JSON file.
+ * @return The JSON content. */
+auto parse_json_file(std::filesystem::path const& _file) -> zpt::json;
 
 /**
  * @brief Path manipulation utilities.
