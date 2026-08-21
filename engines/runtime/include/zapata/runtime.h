@@ -1,5 +1,7 @@
 #pragma once
 
+#include <zapata/json.h>
+
 namespace zpt {
 namespace runtime {
 /**
@@ -8,9 +10,10 @@ namespace runtime {
  * the polling loop.
  * @param _argc Argument count from main.
  * @param _argv Argument vector from main.
+ * @param _default_config The default configuration, if any (default: zpt::undefined)
  * @return void
  */
-auto initialize(int _argc, char** _argv) -> void;
+auto initialize(int _argc, char** _argv, zpt::json const& _default_config = zpt::undefined) -> void;
 /** @brief Shuts down the stream polling loop.
  * @return void
  */
