@@ -200,6 +200,14 @@ class database : public zpt::storage::database::type {
      * @return Collection accessor for the specified table
      */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
+    /** @brief Backs up the database to the given path.
+     * @param _path The path to the file that will hold the backup.
+     * @return The size of the backup, in bytes. */
+    virtual auto backup(std::filesystem::path const& _path) const -> size_t override;
+    /** @brief Loads the database content from the given path.
+     * @param _path The path to the file that holds the backup.
+     * @return The size of the backup, in bytes. */
+    virtual auto restore(std::filesystem::path const& _path) const -> size_t override;
     /** @brief Returns the underlying sqlite3 handle for this database.
      * @return Shared pointer to sqlite3 database connection
      */
@@ -211,6 +219,7 @@ class database : public zpt::storage::database::type {
 
   private:
     std::string __path;
+    std::string __name;
     sqlite3_ptr __underlying{ nullptr };
 };
 /** @brief SQLite collection implementation (represents a database table). */
