@@ -133,13 +133,13 @@ auto zpt::storage::mongodb::database::collection(std::string const& _collection)
     return zpt::make_collection<zpt::storage::mongodb::collection>(*this, _collection);
 }
 
-auto zpt::storage::mongodb::database::backup(std::filesystem::path const& _path) const -> size_t {
+auto zpt::storage::mongodb::database::backup(std::filesystem::path const&) const -> size_t {
     bool _supported{ false };
     expect(_supported, "backup not yet implemented for MongoDB connector");
     return 0;
 }
 
-auto zpt::storage::mongodb::database::restore(std::filesystem::path const& _path) const -> size_t {
+auto zpt::storage::mongodb::database::restore(std::filesystem::path const&) const -> size_t {
     bool _supported{ false };
     expect(_supported, "load not yet implemented for MongoDB connector");
     return 0;
