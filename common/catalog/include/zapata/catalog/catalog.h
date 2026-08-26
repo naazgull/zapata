@@ -95,9 +95,9 @@ class catalog {
      * @brief Removes an entry by key.
      * @param _key Entry key to remove.
      * @param _hash Entry hash code.
-     * @return Reference to this catalog.
+     * @return Number of removed entries.
      */
-    auto remove(K _key, std::uint64_t _hash) -> catalog&;
+    auto remove(K _key, std::uint64_t _hash) -> size_t;
     /**
      * @brief Resolves a pattern to matching entries (self provider only).
      * @param _pattern Pattern to match (supports {} placeholders).
@@ -246,18 +246,19 @@ auto zpt::catalog<K, M>::add(K _key,
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> catalog& {
+auto zpt::catalog<K, M>::remove(K _key, std::uint64_t _hash) -> size_t {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
 
     if (static_cast<long long int>(_hash) != 0) { zlog("Unregistered " << _t_key, zpt::trace); }
-    this
-      ->__catalog //
-      ->remove({ "_id", _t_key, "hash", _hash })
-      ->execute();
+    auto _removed = this
+                      ->__catalog //
+                      ->remove({ "_id", _t_key, "hash", _hash })
+                      ->execute()
+                      ->count();
 
-    return (*this);
+    return _removed;
 }
 
 template<typename K, typename M>

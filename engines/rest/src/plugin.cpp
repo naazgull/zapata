@@ -96,5 +96,6 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     expect(zpt::REST_RESOLVER()->count() == 0,
            zpt::REST_RESOLVER()->count()
              << " callbacks still registered in REST resolver, it usually leads to segmentation "
-                "faults due to dynamic library unloading");
+                "faults due to dynamic library unloading: "
+             << zpt::REST_RESOLVER()->list());
 }

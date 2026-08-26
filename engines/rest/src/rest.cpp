@@ -48,9 +48,9 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
     auto _path = _id->string();
     {
         std::unique_lock _guard{ this->__callbacks_mutex };
-        this->__callbacks.insert(std::make_pair(_callback_hash, _callback));
+        auto [_, _inserted] = this->__callbacks.insert(std::make_pair(_callback_hash, _callback));
+        this->__registered_callbacks->fetch_add(_inserted);
     }
-    this->__registered_callbacks->fetch_add(1);
     auto _to_add =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
@@ -85,21 +85,14 @@ auto zpt::rest::resolver_t::remove(zpt::performative _performative,
                                    zpt::json const& _id,
                                    size_t _callback_hash) -> zpt::rest::resolver_t& {
     auto _path = _id->string();
-    auto _to_search =
+    auto _to_remove =
       std::format("/{}{}",
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
                   _path);
-    for (auto&& [_, __, _record] :
-         this->__catalog->search(_to_search, zpt::IDENTITY()("_id")->string())) {
-        auto _hash_code = static_cast<unsigned long long int>(_record("hash")->integer());
-        if (_hash_code != _callback_hash) { continue; }
-
-        this->__catalog->remove(_to_search, _hash_code);
-
-        std::unique_lock _guard{ this->__callbacks_mutex };
-        this->__registered_callbacks->fetch_sub(this->__callbacks.erase(_callback_hash));
-    }
+    this->__catalog->remove(_to_remove, _callback_hash);
+    std::unique_lock _guard{ this->__callbacks_mutex };
+    this->__registered_callbacks->fetch_sub(this->__callbacks.erase(_callback_hash));
     return (*this);
 }
 
