@@ -57,10 +57,6 @@ namespace zpt {
  */
 class basic_message {
   public:
-    /** @brief Retrieves a copy of this message of the given template type.
-     * @return Shared pointer to cloned message. */
-    template<typename T>
-    auto copy() const -> std::shared_ptr<basic_message>;
     /** @brief Retrieves a clone of this message.
      * @return Shared pointer to cloned message. */
     virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
@@ -141,7 +137,19 @@ class basic_message {
     /** @brief Returns true if message is empty/uninitialized.
      * @return True if message has no content. */
     virtual auto empty() const -> bool = 0;
-
+    /** @brief Tries to acquire the ownership of the reply to this message.
+     * @return True if the ownership was acquired, false otherwise. */
+    virtual auto acquire_reply() -> bool final;
+    /** @brief Sets the number of processing events acting upon this message.
+     * @return Reference to this message. */
+    virtual auto set_processors(size_t _n_processors) -> basic_message& final;
+    /** @brief Decrements the number of events processing this message.
+     * @return The number of processors remaining. */
+    virtual auto finish_processor() -> size_t final;
+    /** @brief Retrieves a copy of this message of the given template type.
+     * @return Shared pointer to cloned message. */
+    template<typename T>
+    auto copy() const -> std::shared_ptr<basic_message>;
     /**
      * @brief Serializes the message to the given output stream.
      * @param _out Output stream.
@@ -152,7 +160,6 @@ class basic_message {
         _in.to_stream(_out);
         return _out;
     }
-
     /**
      * @brief Deserializes a message from the given input stream.
      * @param _in Input stream.
@@ -163,6 +170,10 @@ class basic_message {
         _out.from_stream(_in);
         return _in;
     }
+
+  private:
+    std::atomic<bool> __reply_acquired{ false };
+    std::atomic<unsigned int> __active_processors{ 0 };
 };
 /** @brief Shared pointer type for messages. */
 using message = std::shared_ptr<basic_message>;
