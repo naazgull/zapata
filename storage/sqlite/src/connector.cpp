@@ -260,7 +260,8 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _s
   : __path{ std::string{ "file:" } +
             (_session.__options("path")->ok()
                ? _session.__options("path")->string() + std::string{ "/" } + _db
-               : _db + std::string{ "?mode=memory&cache=shared" }) } {
+               : _db + std::string{ "?mode=memory&cache=shared" }) }
+  , __name{ _db } {
     sqlite3* _underlying{ nullptr };
     sqlite_expect(sqlite3_open_v2(this->__path.data(),
                                   &_underlying,
@@ -291,12 +292,54 @@ auto zpt::storage::sqlite::database::connection() const -> sqlite3_ptr {
     return this->__underlying;
 }
 
-auto zpt::storage::sqlite::database::path() const -> std::string const& { return this->__path; }
-
 auto zpt::storage::sqlite::database::collection(std::string const& _collection) const
   -> zpt::storage::collection {
     return zpt::make_collection<zpt::storage::sqlite::collection>(*this, _collection);
 }
+
+auto zpt::storage::sqlite::database::backup(std::filesystem::path const& _path) const -> size_t {
+    sqlite3* _on_disk{ nullptr };
+    auto _result = sqlite3_open(_path.string().data(), &_on_disk);
+    sqlite_expect(_result, "couldn't open target file '" << _path << "'");
+
+    if (_result == SQLITE_OK) {
+        auto _backup = sqlite3_backup_init(_on_disk, "main", this->__underlying.get(), "main");
+        if (_backup != nullptr) {
+            do {
+                _result = sqlite3_backup_step(_backup, 5);
+                if (_result == SQLITE_OK || _result == SQLITE_BUSY || _result == SQLITE_LOCKED) {
+                    sqlite3_sleep(250);
+                }
+            } while (_result == SQLITE_OK || _result == SQLITE_BUSY || _result == SQLITE_LOCKED);
+
+            (void)sqlite3_backup_finish(_backup);
+        }
+        else { sqlite_expect(sqlite3_errcode(_on_disk), "error initializing backup"); }
+    }
+
+    (void)sqlite3_close(_on_disk);
+    return 0;
+}
+
+auto zpt::storage::sqlite::database::restore(std::filesystem::path const& _path) const -> size_t {
+    sqlite3* _on_disk{ nullptr };
+    auto _result = sqlite3_open(_path.string().data(), &_on_disk);
+    sqlite_expect(_result, "couldn't open target file '" << _path << "'");
+
+    if (_result == SQLITE_OK) {
+        auto _backup = sqlite3_backup_init(this->__underlying.get(), "main", _on_disk, "main");
+        if (_backup != nullptr) {
+            (void)sqlite3_backup_step(_backup, -1);
+            (void)sqlite3_backup_finish(_backup);
+        }
+        else { sqlite_expect(sqlite3_errcode(_on_disk), "error initializing backup"); }
+    }
+
+    (void)sqlite3_close(_on_disk);
+    return 0;
+}
+
+auto zpt::storage::sqlite::database::path() const -> std::string const& { return this->__path; }
 
 zpt::storage::sqlite::collection::collection(zpt::storage::sqlite::database const& _database,
                                              std::string const& _collection)

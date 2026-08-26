@@ -170,7 +170,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
     if (_stream->has_next()) {
-        this->delegate(_stream);
+        this->delegate(_stream, true);
         return (*this);
     }
 
@@ -256,18 +256,19 @@ auto zpt::polling::get(std::string const& _uri) const -> zpt::stream {
     return _found->second;
 }
 
-auto zpt::polling::delegate(zpt::stream _stream) -> zpt::polling& {
+auto zpt::polling::delegate(zpt::stream _stream, bool _already_muted) -> zpt::polling& {
 #ifdef ALLOCATOR_DEBUG_MODE
     zpt::mem::print_still_allocated();
     zpt::mem::start_tracking();
 #endif
-    try {
-        this->mute(_stream);
+    if (!_already_muted) {
+        try {
+            this->mute(_stream);
+        }
+        catch (zpt::failed_expectation const& _e) {
+            return (*this);
+        }
     }
-    catch (zpt::failed_expectation const& _e) {
-        return (*this);
-    }
-
     for (auto& d : this->__delegates) {
         if (d(this->shared_from_this(), _stream)) { return (*this); }
     }

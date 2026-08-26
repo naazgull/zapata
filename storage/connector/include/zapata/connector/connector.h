@@ -232,6 +232,14 @@ class database {
          * @param _name Collection name.
          * @return Collection object. */
         virtual auto collection(std::string const& _name) const -> zpt::storage::collection = 0;
+        /** @brief Backs up the database to the given path.
+         * @param _path The path to the file that will hold the backup.
+         * @return The size of the backup, in bytes. */
+        virtual auto backup(std::filesystem::path const& _path) const -> size_t = 0;
+        /** @brief Loads the database content from the given path.
+         * @param _path The path to the file that holds the backup.
+         * @return The size of the backup, in bytes. */
+        virtual auto restore(std::filesystem::path const& _path) const -> size_t = 0;
     };
 
     /** @brief Default constructor (null database). */

@@ -198,6 +198,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 }
             }
             else {
+                _received->set_processors(_events.size());
                 for (auto& _event : _events) { _dispatcher->trigger(std::move(_event)); }
             }
             return zpt::events::finish;
@@ -272,17 +273,22 @@ zpt::events::process::~process() {
             if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
                  this->__received->performative() != zpt::Reply) ||
                 (this->__to_send != nullptr && this->__to_send->status() != 0)) {
-                if (this->__to_send == nullptr) {
-                    this->__to_send = _transport->make_reply(this->__received);
-                }
-                if (this->__to_send->status() == 0) { this->__to_send->status(204); }
 
-                this->__dispatcher->trigger<zpt::events::send>(
-                  this->__polling, this->__stream, this->__to_send);
-                return;
+                if (this->__received->acquire_reply()) {
+                    if (this->__to_send == nullptr) {
+                        this->__to_send = _transport->make_reply(this->__received);
+                    }
+                    if (this->__to_send->status() == 0) { this->__to_send->status(204); }
+
+                    this->__dispatcher->trigger<zpt::events::send>(
+                      this->__polling, this->__stream, this->__to_send);
+                    return;
+                }
             }
         }
-        this->__polling->unmute(this->__stream);
+        if (this->__received->finish_processor() == 0) {
+            this->__polling->unmute(this->__stream);
+        }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {

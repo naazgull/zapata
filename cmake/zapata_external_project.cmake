@@ -29,17 +29,16 @@ set(ZPT_MODULES
   zapata-engine-startup
   zapata-engine-transport
   zapata-events
-  zapata-example-rest-consumer
-  zapata-example-rest-provider
-  zapata-example-ws-provider
   zapata-generator-ast
   zapata-generator-rest
   zapata-globals
   zapata-io-pipe
   zapata-io-socket
   zapata-io-stream
+  zapata-net-amqp
   zapata-net-http
   zapata-net-local
+  zapata-net-mqtt
   zapata-net-pipe
   zapata-net-self
   zapata-net-tcp

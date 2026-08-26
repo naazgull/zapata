@@ -204,6 +204,18 @@ auto zpt::storage::pgsql::database::collection(std::string const& _collection) c
     return zpt::make_collection<zpt::storage::pgsql::collection>(*this, _collection);
 }
 
+auto zpt::storage::pgsql::database::backup(std::filesystem::path const&) const -> size_t {
+    bool _supported{ false };
+    expect(_supported, "backup not yet implemented for PostgreSQL connector");
+    return 0;
+}
+
+auto zpt::storage::pgsql::database::restore(std::filesystem::path const&) const -> size_t {
+    bool _supported{ false };
+    expect(_supported, "load not yet implemented for PostgreSQL connector");
+    return 0;
+}
+
 auto zpt::storage::pgsql::database::schema() const -> std::string const& { return this->__schema; }
 
 auto zpt::storage::pgsql::database::pgsql() const -> pgsql_ptr { return this->__pgsql; }

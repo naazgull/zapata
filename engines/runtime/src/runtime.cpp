@@ -17,7 +17,7 @@ namespace {
 auto deallocate(int _signal) -> void;
 } // namespace
 
-auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
+auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default_config) -> void {
     std::signal(SIGUSR1, ::deallocate);
     std::signal(SIGINT, ::deallocate);
     std::signal(SIGTERM, ::deallocate);
@@ -79,6 +79,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv) -> void {
     auto _config = zpt::GLOBAL_CONFIG();
     zpt::log_lvl = 8;
     zpt::log_format = 0;
+    _config += _default_config;
     zpt::startup::configuration::load(_parameters, _config);
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
 

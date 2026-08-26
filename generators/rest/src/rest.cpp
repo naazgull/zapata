@@ -1342,7 +1342,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _try_body //
-      ->add<zpt::ast::cpp_instruction>("auto _preformative = this->received()->performative()")
+      ->add<zpt::ast::cpp_instruction>("auto _performative = this->received()->performative()")
       .add<zpt::ast::cpp_instruction>(
         std::format("auto _redirect_to{{ \"{}\" }}",
                     _def(_performative)("requestBody")("zpt:redirect")->string()))
@@ -1354,11 +1354,11 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
         _def(_performative)("requestBody")("zpt:redirect")->string().find("?") != std::string::npos
           ? ", true"
           : ""));
-    _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
+    auto _performative_if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
       "if (_performative != zpt::Get && _performative != zpt::Delete)");
-    _if_block->add<zpt::ast::cpp_instruction>("_request->body() = _received");
+    _performative_if_block->add<zpt::ast::cpp_instruction>("_request->body() = _received");
     _try_body //
-      ->add(_if_block)
+      ->add(_performative_if_block)
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");

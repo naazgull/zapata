@@ -25,6 +25,19 @@
 #include <zapata/uri/uri.h>
 #include <zapata/uuid.h>
 
+auto zpt::basic_message::acquire_reply() -> bool {
+    return !this->__reply_acquired.exchange(true, std::memory_order_seq_cst);
+}
+
+auto zpt::basic_message::set_processors(size_t _n_processors) -> basic_message& {
+    this->__active_processors.store(_n_processors);
+    return (*this);
+}
+
+auto zpt::basic_message::finish_processor() -> size_t {
+    return this->__active_processors.fetch_sub(1) - 1;
+}
+
 auto zpt::call_context::state() const -> int { return this->__state->load(); }
 
 auto zpt::call_context::reply() const -> zpt::message { return this->__reply; }

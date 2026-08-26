@@ -169,6 +169,14 @@ class database : public zpt::storage::database::type {
      * @param _name Collection name.
      * @return Collection handle. */
     virtual auto collection(std::string const& _name) const -> zpt::storage::collection override;
+    /** @brief Backs up the database to the given path.
+     * @param _path The path to the file that will hold the backup.
+     * @return The size of the backup, in bytes. */
+    virtual auto backup(std::filesystem::path const& _path) const -> size_t override;
+    /** @brief Loads the database content from the given path.
+     * @param _path The path to the file that holds the backup.
+     * @return The size of the backup, in bytes. */
+    virtual auto restore(std::filesystem::path const& _path) const -> size_t override;
 
     /** @brief Returns the database name.
      * @return Database name. */

@@ -311,6 +311,16 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
                      ->execute()
                      ->fetch();
 
+    std::istringstream _iss;
+    for (auto&& [_, __, _service] : _result) {
+        if (_service("metadata")->ok()) {
+            M _metadata;
+            _iss.str(_service("metadata")->string());
+            _iss >> _metadata;
+            _service["metadata"] = _metadata;
+        }
+    }
+
     return _result;
 }
 

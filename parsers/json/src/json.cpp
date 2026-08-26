@@ -75,6 +75,12 @@ auto zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string
     return _return;
 }
 
+auto zpt::parse_json_file(std::filesystem::path const& _file) -> zpt::json {
+    auto _content = zpt::json::object();
+    zpt::conf::file(_file, _content, _content);
+    return _content;
+}
+
 auto zpt::path::split(std::string const& _to_split) -> zpt::json {
     return zpt::split(_to_split, "/", true);
 }
