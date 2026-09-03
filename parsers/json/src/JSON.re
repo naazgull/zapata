@@ -379,10 +379,10 @@ auto zpt::Re2cJSONLexer::lexUnicode() -> int {
             std::stringstream ss;
             ss << _out[_out.length() - 4] << _out[_out.length() - 3] << _out[_out.length() - 2]
                << _out[_out.length() - 1];
-            int c;
+            unsigned int c;
             ss >> std::hex >> c;
 
-            wchar_t w = (wchar_t) c;
+            std::uint32_t w = this->combine_surrogate_pair(static_cast<std::uint32_t>(c));
             std::string dest("");
 
             if (w <= 0x7f) {

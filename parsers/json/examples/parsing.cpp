@@ -127,6 +127,17 @@ auto test_unicode() -> void {
     check(_e.size() == 2 && static_cast<unsigned char>(_e[0]) == 0xC3 &&
             static_cast<unsigned char>(_e[1]) == 0xA9,
           "unicode escape decodes to correct UTF-8 bytes");
+    // U+1F600 (GRINNING FACE) is outside the BMP; JSON encodes it as the
+    // UTF-16 surrogate pair 😀 (UTF-8: 0xF0 0x9F 0x98 0x80)
+    std::string _emoji = static_cast<std::string>(parse(R"("\uD83D\uDE00")"));
+    check(_emoji.size() == 4 && static_cast<unsigned char>(_emoji[0]) == 0xF0 &&
+            static_cast<unsigned char>(_emoji[1]) == 0x9F &&
+            static_cast<unsigned char>(_emoji[2]) == 0x98 &&
+            static_cast<unsigned char>(_emoji[3]) == 0x80,
+          "surrogate pair escape decodes to correct 4-byte UTF-8 sequence");
+    // Surrogate pair adjacent to plain text on both sides
+    check(static_cast<std::string>(parse(R"("a\uD83D\uDE00b")")) == "a\xF0\x9F\x98\x80" "b",
+          "surrogate pair decodes correctly surrounded by plain characters");
 }
 
 auto test_lambda_and_regex() -> void {
