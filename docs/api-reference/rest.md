@@ -18,7 +18,7 @@ This document provides the API reference for Zapata's REST engine.
 
 REST API request resolver implementing `zpt::events::resolver_t`.
 
-Routes incoming HTTP requests to registered handlers based on URI patterns and HTTP methods.
+Routes incoming HTTP requests to registered handlers based on URI patterns and HTTP methods. Supports service discovery and distributed node coordination.
 
 ### Constructor
 
@@ -28,38 +28,62 @@ resolver_t(zpt::json _rest_config);
 
 ### Handler Registration
 
-**Template-based (Operation classes):**
+**Template-based (Operation classes) — recommended:**
 ```cpp
+template<zpt::events::Operation T>
 auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+
+template<zpt::events::Operation T>
 auto add(zpt::performative _performative,
          zpt::json const& _id,
          zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
 ```
-Registers a handler Operation class. `zpt::events::Operation` types are registered with `resolver->add<MyHandler>("/path")`.
+
+Registers a handler Operation class. `zpt::events::Operation` types are registered with `resolver->add<MyHandler>("/path")`. The resolver creates instances of the handler when matching requests arrive.
 
 **Callback-based:**
 ```cpp
 auto add(zpt::message _sent,
+         zpt::call_context::ptr _context,
          zpt::events::resolver_callback callback) -> resolver_t&;
+
 auto add(zpt::performative _performative,
          zpt::json const& _id,
          zpt::json const& _metadata,
+         size_t _callback_hash,
          zpt::events::resolver_callback callback) -> resolver_t&;
 ```
-Registers a callback function.
+
+Registers a raw callback function. The `_callback_hash` uniquely identifies the registered callback (typically `typeid(T).hash_code()`).
 
 **Service descriptor:**
 ```cpp
 auto add(zpt::json const& _service_description) -> resolver_t&;
 ```
+
 Registers from a service descriptor JSON object.
 
 ### Handler Removal
 
 ```cpp
-auto remove(zpt::message _sent) -> resolver_t&;
+template<zpt::events::Operation T>
+auto remove(zpt::json const& _id) -> resolver_t&;
+
+template<zpt::events::Operation T>
 auto remove(zpt::performative _performative, zpt::json const& _id) -> resolver_t&;
+
+auto remove(zpt::message _sent) -> resolver_t&;
+
+auto remove(zpt::performative _performative, zpt::json const& _id, size_t _callback_hash) -> resolver_t&;
 ```
+
+### Handler Count
+
+```cpp
+auto count() const -> size_t;
+```
+
+Returns the total number of registered handlers.
 
 ### Resolution
 
@@ -93,19 +117,23 @@ Returns the global REST resolver instance.
 
 ### Class: `zpt::rest::minion_boot`
 
-Handles boot notifications from distributed nodes.
+Handles boot notifications from distributed nodes. Registers the booting worker and its services.
 
 ### Class: `zpt::rest::minion_shutdown`
 
-Handles shutdown notifications from distributed nodes.
+Handles shutdown notifications from distributed nodes. Unregisters the shutting-down worker and its services.
 
 ### Class: `zpt::rest::minion_hello`
 
-Handles hello messages for node discovery.
+Handles hello messages for node discovery. Processes the handshake and exchanges capabilities.
+
+### Class: `zpt::rest::minion_state`
+
+Handles state query requests. Responds with current memory pool and queue diagnostics for the worker.
 
 ### Class: `zpt::rest::services_list`
 
-Handles service listing requests.
+Handles service listing requests. Responds with the list of registered services.
 
 ### `zpt::rest::services::broadcast`
 
@@ -262,9 +290,10 @@ class GetUserHandler : public zpt::events::process {
     }
 };
 
-extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+extern "C" bool _zpt_load_(zpt::plugin&) {
     auto _resolver = zpt::REST_RESOLVER();
     _resolver->add<GetUserHandler>("/api/users/{}");
+    return true;
 }
 ```
 
@@ -284,7 +313,7 @@ class MyHandler : public zpt::events::process {
     }
 };
 
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
+extern "C" bool _zpt_load_(zpt::plugin& _plugin) {
     auto& config = _plugin.config();
 
     // Register REST endpoints
@@ -293,13 +322,15 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
 
     // Start a worker thread
     _plugin.add_thread([&]() {
-        // Background work
+        while (!_plugin.is_shutdown_ongoing()) {
+            // Background work
+        }
     });
 
     return true;
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) -> bool {
+extern "C" bool _zpt_unload_(zpt::plugin&) {
     return true;
 }
 ```

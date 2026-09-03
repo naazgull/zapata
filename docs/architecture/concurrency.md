@@ -41,25 +41,29 @@ The I/O layer uses non-blocking sockets with `EPOLLIN`/`EPOLLOUT` events, dispat
 
 ### Lock-Free Queue
 
-`zpt::lf::queue<T>` provides a bounded, multi-producer, multi-consumer FIFO queue backed by a fixed-size ring buffer:
+`zpt::lf::queue<T>` provides a bounded, multi-producer, multi-consumer FIFO queue using Dmitry Vyukov's MPMC algorithm:
 
-- **Enqueue** (`push`): Atomically advances the tail index with CAS; spins on contention or when the buffer is full.
-- **Dequeue** (`pop`): Atomically advances the head index with CAS; throws `zpt::NoMoreElementsException` when empty.
-- **Memory**: A flat `unique_ptr` array is allocated once at construction — no per-element allocation at runtime.
-- **Index packing**: Head and tail are packed into a single 128-bit atomic. Bits 126–127 act as a mutation guard so only one CAS winner at a time may commit an index advance, avoiding ABA issues without separate hazard pointer bookkeeping.
+- **Enqueue** (`push`): Atomically claims a slot via the tail counter; throws `zpt::NoSpaceAvailableException` when the buffer is full.
+- **Dequeue** (`pop`): Atomically claims a slot via the head counter; throws `zpt::NoMoreElementsException` when empty.
+- **Memory**: A flat array of slots (each containing a value and a sequence token) is allocated once at construction — no per-element allocation at runtime.
+- **Sequence tokens**: Each slot has a monotonically increasing sequence number that ensures producers and consumers don't overwrite each other, avoiding ABA issues without hazard pointers.
+- **Capacity**: Must be a power of two (enforced via bitmask indexing).
 - **No thread limit**: Any number of threads may push or pop concurrently without registration or cleanup.
 
 ```cpp
-// Size the queue to the expected peak depth
+// Size the queue to the expected peak depth (must be power of two)
 zpt::lf::queue<zpt::message> channel(4096);
 
 // Producer
-channel.push(make_message());
+try {
+    channel.push(make_message());
+}
+catch (zpt::NoSpaceAvailableException&) { /* queue full */ }
 
 // Consumer
 try {
-    auto msg = channel.pop();   // returns std::unique_ptr<zpt::message>
-    handle(*msg);
+    auto msg = channel.pop();   // returns T by value
+    handle(msg);
 }
 catch (zpt::NoMoreElementsException&) { /* queue empty */ }
 ```

@@ -8,6 +8,7 @@ The bridges and generators modules provide language integration and code generat
 |--------|--------|-------------|
 | bridges/base | `<zapata/bridge.h>` | CRTP base template for language bridges |
 | bridges/lua | `<zapata/lua.h>` | Lua scripting integration |
+| bridges/prolog | `<zapata/prolog.h>` | Prolog (SWI-Prolog) integration |
 | generators/ast | `<zapata/ast.h>` | AST-based code generation |
 
 ---
@@ -83,38 +84,14 @@ The derived class `C` must implement:
 
 **Header:** `<zapata/lua.h>`
 
-Provides bidirectional integration between C++ and Lua.
-
-#### zpt::lua_object
-
-RAII wrapper for `lua_State*`.
-
-```cpp
-class lua_object {
-  public:
-    lua_object();
-    lua_object(lua_State* _rhs);
-    lua_object(lua_object const& _rhs);
-    lua_object(lua_object&& _rhs);
-    ~lua_object();
-
-    auto operator=(lua_object const& _rhs) -> lua_object&;
-    auto operator=(lua_object&& _rhs) -> lua_object&;
-    auto operator=(lua_State* _rhs) -> lua_object&;
-    auto operator->() -> lua_State*;
-    auto operator*() -> lua_State&;
-    operator lua_State*();
-
-    auto get() -> lua_State*;
-};
-```
+Provides bidirectional integration between C++ and Lua. The object type is `lua_State*` directly.
 
 #### zpt::lua::bridge
 
 Lua scripting language bridge implementation.
 
 ```cpp
-class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object> {
+class bridge : public zpt::programming::bridge<zpt::lua::bridge, lua_State*> {
   public:
     using underlying_type = lua_State*;
     using callback_type = std::function<void(underlying_type)>;
@@ -380,6 +357,49 @@ lua.add_module([](lua_State* L) {
 // Get thread-local instance
 auto& local_lua = lua.thread_instance();
 ```
+
+---
+
+### Prolog Bridge
+
+**Header:** `<zapata/prolog.h>`
+
+Provides integration between C++ and SWI-Prolog. The object type is `zpt::prolog::term`.
+
+#### zpt::prolog::bridge
+
+Prolog scripting language bridge implementation.
+
+```cpp
+class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_object> {
+  public:
+    using callback_type = std::function<void()>;
+    using lambda_type = std::function<int()>;
+    using mutex_type = zpt::locks::spin_mutex;
+
+    bridge(std::string const& _cmd);
+    ~bridge() throw();
+
+    auto name() const -> std::string;              // Returns "prolog"
+    auto thread_instance() -> bridge&;             // Thread-local instance
+
+    // Module loading
+    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
+      -> zpt::prolog::bridge&;
+    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
+      -> zpt::prolog::bridge&;
+
+    // JSON/Prolog conversion
+    auto to_json(prolog_object _to_convert) -> zpt::json;
+    auto to_object(zpt::json _to_convert) -> prolog_object;
+
+    // Execution
+    auto execute(zpt::json _func, zpt::json _args) -> prolog_object;
+    auto initialize() -> zpt::prolog::bridge&;
+};
+```
+
+**Note:** Requires SWI-Prolog C++ library (`SWI-cpp2.h`). The constructor takes a command-line argument string for the Prolog engine.
 
 ---
 

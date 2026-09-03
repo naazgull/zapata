@@ -17,83 +17,71 @@ Lock-free data structures and utilities.
 
 ---
 
-## Constants
-
-```cpp
-constexpr __uint128_t zpt::lf::UNMASK;
-constexpr __uint128_t zpt::lf::MASK;
-```
-
-Internal bitmasks used by `zpt::lf::queue` to pack and guard head/tail indices inside a single 128-bit atomic. `UNMASK` isolates the lower 126 bits (the actual index values); `MASK` has bits 126–127 set and is used as a mutation guard during CAS operations.
-
----
-
 ## Class Template: `zpt::lf::queue<T>`
 
-Bounded lock-free FIFO queue for concurrent producer/consumer patterns.
+Bounded MPMC (multi-producer, multi-consumer) lock-free FIFO queue based on [Dmitry Vyukov's algorithm](http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue).
 
-Backed by a fixed-capacity ring buffer allocated at construction time. Head and tail positions are packed into a single 128-bit atomic value; the two most-significant bits serve as a mutation guard so that only one CAS winner at a time may advance an index. No per-thread state or cleanup is required.
+Backed by a fixed-capacity ring buffer allocated at construction time. Each slot carries a `sequence` token that acts as an ownership gate — a CAS on the shared `head_`/`tail_` counters is the ownership transfer (it prevents two threads from operating on the same slot), and the sequence check is a guard that tells us whether the slot is ready or not.
 
 ### Template Parameters
 
 | Parameter | Description |
 |-----------|-------------|
-| `T` | Element type stored in the queue |
+| `T` | Element type stored in the queue (must be trivially copyable) |
 
 ### Type Aliases
 
 ```cpp
 using size_type = size_t;
-using ptr       = std::unique_ptr<T>;
-using const_ptr = std::shared_ptr<T const>;
+using ptr       = zpt::allocator<T>::unique_pointer;
 ```
 
 ### Constructor
 
 ```cpp
-queue(size_t _max_queue_size);
+explicit queue(size_t _max_queue_size);
 ```
 
 Creates a bounded queue.
 
 **Parameters:**
-- `_max_queue_size` — Maximum number of elements the queue can hold simultaneously.
+- `_max_queue_size` — Maximum number of elements the queue can hold simultaneously. **Must be a power of two.**
 
-**Note:** Copy and move constructors are deleted — the ring buffer and atomic state cannot be shared or transferred.
+**Note:** Copy and move constructors (and assignment operators) are deleted — the ring buffer and atomic state cannot be shared or transferred.
 
 ### Methods
 
 #### `push` (by value)
 
 ```cpp
-auto push(T value) -> zpt::lf::queue<T>&;
+auto push(T _value) -> zpt::lf::queue<T>&;
 ```
 
 Copies the value into a new heap-allocated node and enqueues it.
 
 **Parameters:**
-- `value` — Value to copy into the queue.
+- `_value` — Value to copy into the queue.
 
 **Returns:** Reference to the queue for chaining.
 
-**Note:** Spins with `std::this_thread::yield()` until a slot becomes available when the queue is at capacity.
+**Throws:** `zpt::NoSpaceAvailableException` if the queue is full.
 
 ---
 
 #### `push` (by unique_ptr)
 
 ```cpp
-auto push(ptr&& value) -> zpt::lf::queue<T>&;
+auto push(ptr&& _value) -> zpt::lf::queue<T>&;
 ```
 
 Transfers ownership of an already-allocated node into the queue.
 
 **Parameters:**
-- `value` — Owning pointer to the element. Ownership is transferred to the queue.
+- `_value` — Owning pointer to the element. Ownership is transferred to the queue.
 
 **Returns:** Reference to the queue for chaining.
 
-**Note:** Spins with `std::this_thread::yield()` until a slot becomes available when the queue is at capacity.
+**Throws:** `zpt::NoSpaceAvailableException` if the queue is full.
 
 ---
 
@@ -111,15 +99,39 @@ Removes and returns the front element.
 
 ---
 
+#### `capacity`
+
+```cpp
+auto capacity() const -> size_t;
+```
+
+Returns the maximum number of elements the queue can hold.
+
+**Returns:** Queue capacity (the value passed to the constructor).
+
+---
+
 #### `size`
 
 ```cpp
 auto size() const -> size_t;
 ```
 
-Returns the current element count.
+Returns the approximate current element count.
 
-**Note:** May be transiently stale because the size counter is updated separately from the index CAS.
+**Note:** The size counter is updated independently of the slot CAS and may be transiently stale. Use it for monitoring, not synchronisation.
+
+---
+
+#### `shutdown`
+
+```cpp
+auto shutdown() -> zpt::lf::queue<T>&;
+```
+
+Sets the internal shutdown flag, causing all threads spinning in `push()` or `pop()` to throw `NoMoreElementsException` and exit.
+
+**Returns:** Reference to the queue for chaining.
 
 ---
 
@@ -136,7 +148,7 @@ Returns a debug string listing the queue's current contents.
 #### `operator std::string`
 
 ```cpp
-operator std::string();
+operator std::string() const;
 ```
 
 Implicit conversion to string; delegates to `to_string()`.
@@ -161,24 +173,29 @@ Streams a human-readable representation of the queue to `_out`.
 #include <zapata/lockfree.h>
 #include <thread>
 
-// Capacity of 1000 elements; no thread-count limit
+// Capacity of 1000 elements
 zpt::lf::queue<int> work_queue(1000);
 std::atomic<bool> done{ false };
 
 void producer() {
     for (int i = 0; i < 500; ++i) {
-        work_queue.push(i);
+        try {
+            work_queue.push(i);
+        } catch (zpt::NoSpaceAvailableException const&) {
+            // Queue is full — either back-pressure, retry with sleep, or log
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            --i;  // Retry this iteration
+        }
     }
     done = true;
 }
 
 void consumer() {
-    while (!done || work_queue.size() > 0) {
+    while (!done.load() || work_queue.size() > 0) {
         try {
             auto item = work_queue.pop();
             process(*item);
-        }
-        catch (zpt::NoMoreElementsException&) {
+        } catch (zpt::NoMoreElementsException const&) {
             std::this_thread::yield();
         }
     }
@@ -206,11 +223,15 @@ process(*received);
 
 1. **No thread registration** — Any thread may call `push()` or `pop()` without prior registration.
 
-2. **Bounded capacity** — `push()` spins when the queue is full. Size the queue to the peak concurrent load to avoid starvation.
+2. **Bounded capacity** — `push()` throws `NoSpaceAvailableException` when the queue is full. Size the queue to the peak concurrent load to avoid exceptions.
 
 3. **Approximate size** — `size()` is updated outside the CAS critical section and may be transiently stale; use it for monitoring, not synchronisation.
 
 4. **No iteration** — The queue does not provide iterators; elements must be consumed via `pop()`.
+
+5. **Shutdown** — Call `shutdown()` to wake threads blocked in `push()`/`pop()`. They will throw `NoMoreElementsException`.
+
+6. **Power-of-two capacity** — The queue capacity must be a power of two. This is enforced at construction via the bitmask used for index wrapping (`index & mask`).
 
 ---
 

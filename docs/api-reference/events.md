@@ -43,13 +43,16 @@ C++20 concept defining the interface for event operation types.
 template<typename T>
 concept Operation = requires(T t,
                              zpt::event_initialization& _i,
-                             zpt::events::dispatcher::ptr _d) {
+                             zpt::events::dispatcher::ptr _d,
+                             std::exception const& _e,
+                             std::bad_alloc const& _bae,
+                             zpt::failed_expectation const& _fe) {
     { t.initialize(_i) } -> std::convertible_to<void>;
     { t.blocked() } -> std::convertible_to<bool>;
     { t.authorized() } -> std::convertible_to<bool>;
-    { t.catch_error(std::declval<std::exception const&>(), _d) } -> std::convertible_to<bool>;
-    { t.catch_error(std::declval<std::bad_alloc const&>(), _d) } -> std::convertible_to<bool>;
-    { t.catch_error(std::declval<zpt::failed_expectation const&>(), _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_e, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_bae, _d) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe, _d) } -> std::convertible_to<bool>;
     { t(_d) } -> std::convertible_to<zpt::events::state>;
 };
 ```
@@ -61,7 +64,9 @@ concept Operation = requires(T t,
 | `initialize(event_initialization&)` | Called when event is created |
 | `blocked() -> bool` | Return true if event should wait (re-queued) |
 | `authorized() -> bool` | Return true if event is authorized to execute |
-| `catch_error(exception, dispatcher) -> bool` | Handle errors; return true to retry |
+| `catch_error(std::exception, dispatcher) -> bool` | Handle generic errors; return true to retry |
+| `catch_error(std::bad_alloc, dispatcher) -> bool` | Handle allocation failures; return true to retry |
+| `catch_error(zpt::failed_expectation, dispatcher) -> bool` | Handle assertion failures; return true to retry |
 | `operator()(dispatcher) -> state` | Execute the event operation |
 
 ### Example Implementation
@@ -123,13 +128,13 @@ using ptr = std::shared_ptr<dispatcher>;
 ### Constructor
 
 ```cpp
-dispatcher(std::string const& _name, long _max_consumers, long _max_producers);
+dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
 ```
 
 **Parameters:**
-- `_name` - Dispatcher name for logging
-- `_max_consumers` - Maximum consumer threads
-- `_max_producers` - Maximum producer threads (for queue sizing)
+- `_name` — Dispatcher name for logging.
+- `_max_consumers` — Maximum consumer threads.
+- `_max_queue_size` — Maximum queue size (resource management cap). Default: 10000.
 
 ### Methods
 
@@ -150,7 +155,7 @@ auto start_consumers(long n_consumers = 0) -> dispatcher&;
 Starts consumer threads.
 
 **Parameters:**
-- `n_consumers` - Number to start (0 = max_consumers)
+- `n_consumers` — Number to start (0 = use max_consumers).
 
 #### `stop_consumers`
 
@@ -189,6 +194,14 @@ auto is_in_shutdown() -> bool;
 
 Returns true if shutdown has been initiated.
 
+#### `get_state`
+
+```cpp
+auto get_state() const -> zpt::json;
+```
+
+Returns a JSON object with dispatcher status (running, queue size, etc.).
+
 ---
 
 ## Class: `zpt::abstract_event`
@@ -225,6 +238,7 @@ Constructs the underlying Operation with forwarded arguments.
 | Method | Description |
 |--------|-------------|
 | `operator*() -> T&` | Access underlying operation |
+| `operator*() const -> T const&` | Access underlying operation (const) |
 
 ---
 
@@ -237,11 +251,11 @@ auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
     -> zpt::events::dispatcher::ptr;
 ```
 
-Creates a dispatcher with the specified capacity.
+Creates a dispatcher with the specified consumer count and queue capacity. The dispatcher is given an auto-generated name.
 
 **Parameters:**
-- `_consumers` - Number of consumer threads
-- `_max_queue_size` - Maximum queue size
+- `_consumers` — Number of consumer threads.
+- `_max_queue_size` — Maximum queue size.
 
 ### `zpt::make_event`
 
@@ -267,8 +281,8 @@ Casts an event to access its underlying Operation.
 ### `zpt::make_call`
 
 ```cpp
-template<typename T, typename... Args>
-auto make_call(zpt::events::resolver_t& _resolver, zpt::message _request, Args... _args);
+template<ProcessOperation T = zpt::events::process_call_reply, typename... Args>
+auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
 ```
 
 Creates an outbound call event. `T` is the response handler type.
@@ -301,7 +315,7 @@ Registers an Operation class as an event handler.
 virtual auto add(zpt::json const& _service_description) -> resolver_t& = 0;
 virtual auto add(zpt::message _sent,
                  zpt::events::resolver_callback callback) -> resolver_t& = 0;
-virtual auto add(zpt::performative _performtive,
+virtual auto add(zpt::performative _performative,
                  zpt::json const& _id,
                  zpt::json const& _metadata,
                  zpt::events::resolver_callback _callback) -> resolver_t& = 0;
@@ -372,16 +386,18 @@ Returns the global system events resolver.
 
 ## Process Base Class
 
-`zpt::events::process` (from `<zapata/transport/engine.h>`) provides a ready-made implementation of the Operation concept for REST handlers.
+`zpt::events::process` (from `<zapata/transport/engine.h>`) provides a ready-made implementation of the Operation concept for message handlers. It manages the received message and prepares the response.
 
 ### Methods
 
 | Method | Description |
 |--------|-------------|
-| `received() const` | Get the received message |
-| `to_send()` | Get the response message |
-| `context() const` | Get the call context |
-| `context(ptr)` | Set the call context |
+| `received() const -> zpt::message const` | Get the received message |
+| `to_send() -> zpt::message` | Get the response message |
+| `context() const -> zpt::call_context::ptr` | Get the call context |
+| `context(zpt::call_context::ptr) -> process&` | Set the call context |
+| `transport_type() const -> std::string const&` | Get the transport type used to receive |
+| `stream() const -> zpt::stream` | Get the underlying stream |
 
 ### Usage Pattern
 
@@ -399,6 +415,30 @@ class my_handler : public zpt::events::process {
     }
 };
 ```
+
+---
+
+## Transport Engine Events
+
+### `zpt::events::receive`
+
+Event operation for receiving messages from a stream. Reads a message from the stream using the appropriate transport, resolves it to handlers, and triggers processing events.
+
+### `zpt::events::send`
+
+Event operation for sending messages to a stream. Serializes and writes a message to a stream using the appropriate transport protocol.
+
+### `zpt::events::call<T>`
+
+Template class for making outbound calls. Sends a message to a remote endpoint and registers a callback (type `T`) for handling the response. Handles internal vs external routing, and pub/sub for transports that support it.
+
+### `zpt::events::process_call_reply`
+
+Default processor for call reply messages. Delivers the reply to the call context so the caller can retrieve the response.
+
+### `zpt::events::discard`
+
+Default message processor that discards messages. Completes without sending a response.
 
 ---
 

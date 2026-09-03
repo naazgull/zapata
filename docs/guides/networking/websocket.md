@@ -61,14 +61,12 @@ WebSocket messages are sent as frames:
 
 ```cpp
 namespace zpt::net::ws {
-    // Perform the WebSocket handshake
-    auto handshake(zpt::stream& _stream) -> void;
+    // Read a WebSocket frame from an input stream
+    // Returns tuple of (payload_string, opcode_int)
+    auto read(std::istream& _stream) -> std::tuple<std::string, int>;
 
-    // Read a WebSocket frame
-    auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-
-    // Write a WebSocket frame
-    auto write(zpt::stream& _stream, std::string const& _in) -> void;
+    // Write data as a WebSocket text frame to an output stream
+    auto write(std::ostream& _stream, std::string const& _in, bool _mask = false) -> void;
 }
 ```
 

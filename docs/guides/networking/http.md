@@ -102,8 +102,8 @@ SSL is configured at the socket level via OpenSSL:
 ```cpp
 #include <zapata/net/socket.h>
 
-// Create an SSL socket stream
-auto stream = zpt::make_stream<zpt::socketstream>("example.com", 443, zpt::USE_SSL, IPPROTO_TCP);
+// Create an SSL socket stream (first arg is the transport name)
+auto stream = zpt::make_stream<zpt::socketstream>("tcp", "example.com", 443, zpt::USE_SSL, IPPROTO_TCP);
 ```
 
 Certificate and key paths are configured in the transport settings.

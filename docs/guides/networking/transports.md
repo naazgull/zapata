@@ -19,11 +19,10 @@ Transport Abstraction (basic_transport)
 
 ## Transport Interface
 
-All transports implement `zpt::transport::basic_transport<T>` using CRTP:
+All transports implement `zpt::basic_transport` (a plain abstract base class):
 
 ```cpp
-template<typename T>
-class basic_transport : public zpt::transport::base {
+class basic_transport {
 public:
     // Declare capabilities
     virtual auto has_capability(std::uint64_t _capability) const -> bool = 0;
@@ -35,34 +34,43 @@ public:
     virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
     virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
 
-    // Receive/send from a stream
-    virtual auto receive(zpt::stream _stream) const -> zpt::message = 0;
-    virtual auto send(zpt::stream _stream, zpt::message _to_send) const -> void = 0;
+    // Parse incoming messages from a stream
+    virtual auto process_incoming_request(zpt::stream _stream) const -> zpt::message = 0;
+    virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message = 0;
+
+    // Copy a message
+    virtual auto copy(zpt::message const& _to_copy) const -> zpt::message = 0;
+
+    // Final methods (not override-able):
+    //   receive(stream) — dispatches to process_incoming_request or _reply based on context
+    //   send(stream, message) — serializes and writes to stream
 };
 ```
 
 ## Transport Capabilities
 
-Each transport declares its capabilities:
+Each transport declares its capabilities using bitmask flags:
 
 | Capability | Constant | Description |
 |-----------|----------|-------------|
-| Synchronous | `zpt::transport::SYNCHRONOUS` (1) | Supports request-response pattern |
-| Persistent | `zpt::transport::PERSISTENT` (2) | Maintains persistent connections |
-
-HTTP supports both. Self (in-process) supports only synchronous.
+| Synchronous | `zpt::SYNCHRONOUS` (1) | Supports request-response pattern |
+| Persistent | `zpt::PERSISTENT` (2) | Maintains persistent connections |
+| Pub/Sub | `zpt::PUB_SUB` (4) | Follows publish/subscribe flow |
+| Upgraded | `zpt::UPGRADED` (8) | Transport upgraded from another transport |
 
 ## Available Transports
 
 | Transport | Header | Capabilities | Description |
 |-----------|--------|-------------|-------------|
 | HTTP | `<zapata/http.h>` | SYNCHRONOUS | HTTP/1.1 with SSL/TLS |
-| WebSocket | `<zapata/websocket.h>` | SYNCHRONOUS, PERSISTENT | RFC 6455 WebSockets |
-| TCP | `<zapata/tcp.h>` | SYNCHRONOUS, PERSISTENT | Raw TCP sockets |
-| Local | `<zapata/local.h>` | SYNCHRONOUS, PERSISTENT | Unix domain sockets |
+| WebSocket | `<zapata/websocket.h>` | PERSISTENT, UPGRADED | RFC 6455 WebSockets |
+| TCP | `<zapata/tcp.h>` | SYNCHRONOUS | Raw TCP sockets |
+| Local (Unix) | `<zapata/local.h>` | SYNCHRONOUS | Unix domain sockets |
 | Pipe | `<zapata/pipe.h>` | SYNCHRONOUS | Named pipes (FIFO) |
 | Self | `<zapata/self.h>` | SYNCHRONOUS | In-process callbacks |
 | UPnP | `<zapata/upnp.h>` | SYNCHRONOUS | UPnP/SSDP discovery |
+| MQTT | `<zapata/mqtt.h>` | PUB_SUB | MQTT broker integration |
+| AMQP | `<zapata/amqp.h>` | PUB_SUB | AMQP message queue |
 
 ## The Network Layer Registry
 

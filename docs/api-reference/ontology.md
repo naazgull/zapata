@@ -57,7 +57,7 @@ using status = unsigned short;        // Status code type
 ```cpp
 namespace zpt::ontology {
     // Convert performative to string (e.g., "GET", "POST")
-    auto to_str(zpt::performative _performative) -> std::string;
+    auto to_str(zpt::performative _performative) -> const char*;
 
     // Convert string to performative (case-insensitive)
     auto from_str(std::string _performative) -> zpt::performative;
@@ -81,6 +81,9 @@ public:
     basic_message(basic_message const& _req, bool);
     virtual ~basic_message() = default;
 
+    // Clone
+    virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
+
     // Accessors
     virtual auto performative() const -> zpt::performative = 0;
     virtual auto status() const -> zpt::status = 0;
@@ -102,11 +105,21 @@ public:
     virtual auto status(zpt::status _status) -> basic_message& = 0;
     virtual auto uri(std::string const& _uri) -> basic_message& = 0;
     virtual auto version(std::string const& _version) -> basic_message& = 0;
+    virtual auto header(std::string const& _name, std::string const& _value) -> basic_message& = 0;
 
     // Serialization
     virtual auto to_stream(std::ostream& _out) const -> basic_message const& = 0;
     virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
     virtual auto empty() const -> bool = 0;
+
+    // Reply tracking (final)
+    virtual auto acquire_reply() -> bool final;
+    virtual auto set_processors(size_t _n_processors) -> basic_message& final;
+    virtual auto finish_processor() -> size_t final;
+
+    // Typed copy
+    template<typename T>
+    auto copy() const -> std::shared_ptr<basic_message>;
 
     // Stream operators
     friend auto operator<<(std::ostream& _out, basic_message const& _in) -> std::ostream&;
@@ -131,7 +144,8 @@ JSON-based message implementation that stores all data internally as JSON.
 class json_message : public basic_message {
 public:
     json_message();
-    json_message(basic_message const& _req, bool);
+    json_message(zpt::json const& _other);
+    json_message(zpt::message _req, bool);
     virtual ~json_message() = default;
 
     // All basic_message methods implemented
@@ -160,6 +174,38 @@ auto allocate_message(Args... _args) -> zpt::message;
 // Cast message to specific type
 template<typename T>
 auto message_cast(zpt::message _rhs) -> T&;
+
+// Convert URI JSON to string
+auto uri_to_string(zpt::json const& _uri) -> std::string;
+```
+
+### Call State Constants
+
+```cpp
+constexpr int CALL_STATE_UNPROCESSED = 0;
+constexpr int CALL_STATE_SENT = 1;
+constexpr int CALL_STATE_SUCCESS_REPLY = 2;
+constexpr int CALL_STATE_FAILURE_REPLY = 3;
+```
+
+### Class: `zpt::call_context`
+
+Context for tracking an outbound call and its reply. Used with `zpt::events::call` to correlate requests with responses.
+
+#### Type Alias
+
+```cpp
+using ptr = std::shared_ptr<call_context>;
+```
+
+#### Methods
+
+```cpp
+auto state() const -> int;                    // Current call state
+auto reply() const -> zpt::message;           // Reply message (null if not yet replied)
+auto reply(zpt::message _to_update) -> call_context&;  // Set reply and update state
+auto is_replied() const -> bool;              // True if reply available
+auto has_error() const -> bool;               // True if reply indicates failure
 ```
 
 ---
@@ -177,14 +223,14 @@ auto msg = zpt::make_message<zpt::json_message>();
 // Configure as a GET request
 msg->performative(zpt::Get);
 msg->uri("/api/users/123");
-msg->headers("Accept", "application/json");
-msg->headers("Authorization", "Bearer token123");
+msg->header("Accept", "application/json");
+msg->header("Authorization", "Bearer token123");
 
 // Create a response
 auto reply = zpt::make_message<zpt::json_message>();
 reply->performative(zpt::Reply);
 reply->status(200);
-reply->headers("Content-Type", "application/json");
+reply->header("Content-Type", "application/json");
 reply->body() = zpt::json{
     "id", 123,
     "name", "John Doe",

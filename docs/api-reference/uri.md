@@ -221,8 +221,8 @@ std::string uri;
 while (std::getline(input, uri)) {
     // Clear for next URI
     parser->clear();
-    // Parse
-    parser->parse(uri);
+    // Parse (reads from the input stream)
+    parser->parse();
     // Access parsed result
     if (!results->is_null()) {
         std::cout << "Scheme: " << results("scheme") << std::endl;
@@ -297,8 +297,12 @@ Query parameter serialization.
 Serializes query parameters to URL-encoded string.
 
 ```cpp
-auto to_string(zpt::json const& _uri) -> std::string;
+auto to_string(zpt::json const& _uri, bool _not_first = false) -> std::string;
 ```
+
+**Parameters:**
+- `_uri` - JSON object containing URI with params
+- `_not_first` - If `true`, omits the leading `?` (for appending to an existing query string)
 
 **Example:**
 ```cpp

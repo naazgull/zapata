@@ -45,7 +45,7 @@ public:
 
 ```cpp
 // Get the boot engine
-auto& boot = zpt::BOOT_ENGINE();
+auto& boot = zpt::BOOT();
 
 // Access global configuration
 auto config = zpt::GLOBAL_CONFIG();
@@ -100,7 +100,7 @@ Plugins export `_zpt_load_()` and `_zpt_unload_()` functions:
 #include <zapata/rest.h>
 
 // Called when the plugin is loaded
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& config = _plugin.config();
     zlog("My plugin loaded with config: " + config.stringify(), zpt::info);
 
@@ -113,14 +113,11 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
         // Background work loop
         while (!true) { /* check shutdown */ std::this_thread::sleep_for(std::chrono::seconds(1)); }
     });
-
-    return true;
 }
 
 // Called when the plugin is unloaded
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> bool {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("My plugin unloaded", zpt::info);
-    return true;
 }
 ```
 
@@ -171,7 +168,7 @@ Zapata includes several built-in plugins:
 Plugins can register worker threads that run alongside the main event loop:
 
 ```cpp
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     _plugin.add_thread([]() {
         // This runs in a separate thread
         while (!_plugin.is_shutdown_ongoing()) {
@@ -179,7 +176,6 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> bool {
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     });
-    return true;
 }
 ```
 

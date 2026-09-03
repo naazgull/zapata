@@ -1,10 +1,10 @@
 # Writing Custom Transports
 
-Implement a custom transport protocol by subclassing the transport abstraction layer.
+Implement a custom transport protocol by subclassing `zpt::basic_transport`.
 
 ## Overview
 
-Custom transports implement `zpt::transport::basic_transport<T>` using the CRTP pattern, enabling your protocol to integrate seamlessly with Zapata's REST engine and event system.
+Custom transports implement the `zpt::basic_transport` abstract base class, enabling your protocol to integrate seamlessly with Zapata's REST engine and event system.
 
 ## Step 1: Define the Transport Class
 
@@ -13,31 +13,49 @@ Custom transports implement `zpt::transport::basic_transport<T>` using the CRTP 
 
 namespace myproto {
 
-class transport : public zpt::transport::basic_transport<myproto::transport> {
+class transport : public zpt::basic_transport {
   public:
-    transport() = default;
-    ~transport() = default;
-
     // Declare supported capabilities
     auto has_capability(std::uint64_t _capability) const -> bool override {
-        return _capability == zpt::transport::SYNCHRONOUS;
+        return (_capability & zpt::SYNCHRONOUS) == _capability;
     }
 
-    // Receive an incoming message
-    auto receive(zpt::message _message) -> void override {
-        // Parse your protocol's wire format into a zpt::message
-        // Dispatch to the event system
+    // Create a new request message
+    auto make_request() const -> zpt::message override {
+        return zpt::make_message<zpt::json_message>();
     }
 
-    // Send an outgoing message
-    auto send(zpt::message _message) -> void override {
-        // Serialize zpt::message into your protocol's wire format
-        // Write to the network
+    // Create a new reply message
+    auto make_reply(bool _with_allocator = true) const -> zpt::message override {
+        return zpt::make_message<zpt::json_message>();
     }
 
-    // Process a message through the handler chain
-    auto process(zpt::message _message) -> void override {
-        // Route the message to the appropriate handler
+    // Create a reply in response to a specific request
+    auto make_reply(zpt::message _request) const -> zpt::message override {
+        auto msg = zpt::make_message<zpt::json_message>();
+        msg->conversation_id(_request->conversation_id());
+        return msg;
+    }
+
+    // Parse an incoming request from a stream
+    auto process_incoming_request(zpt::stream _stream) const -> zpt::message override {
+        auto msg = make_request();
+        // Read and parse your protocol's wire format from _stream
+        // Populate msg with parsed data (performative, uri, headers, body)
+        return msg;
+    }
+
+    // Parse an incoming reply from a stream
+    auto process_incoming_reply(zpt::stream _stream) const -> zpt::message override {
+        auto msg = make_reply(true);
+        // Read and parse your protocol's wire format from _stream
+        // Populate msg with parsed data
+        return msg;
+    }
+
+    // Create a copy of the given message
+    auto copy(zpt::message const& _to_copy) const -> zpt::message override {
+        return _to_copy->clone();
     }
 };
 
@@ -81,46 +99,37 @@ Set `transport.default` to your protocol name to make it the primary transport.
 
 | Capability | Constant | Description |
 |-----------|----------|-------------|
-| Synchronous | `zpt::transport::SYNCHRONOUS` (1) | Supports request-response pattern |
-| Persistent | `zpt::transport::PERSISTENT` (2) | Maintains persistent connections |
+| Synchronous | `zpt::SYNCHRONOUS` (1) | Supports request-response pattern |
+| Persistent | `zpt::PERSISTENT` (2) | Maintains persistent connections |
+| Pub/Sub | `zpt::PUB_SUB` (4) | Follows publish/subscribe flow |
+| Upgraded | `zpt::UPGRADED` (8) | Transport upgraded from another transport |
 
-Return true from `has_capability()` for each capability your transport supports.
-
-## Message Conversion
-
-Convert between your protocol format and `zpt::message`:
+Capabilities are bitmask flags. Return true from `has_capability()` if your transport supports the queried capability:
 
 ```cpp
-auto receive(zpt::message _message) -> void override {
-    // Your protocol data → zpt::message
-    _message->performative(zpt::Get);
-    _message->uri("/api/resource");
-    _message->headers("X-Custom", "value");
-    _message->body() = zpt::json{ "data", parsed_data };
-}
-
-auto send(zpt::message _message) -> void override {
-    // zpt::message → your protocol format
-    auto method = _message->performative();
-    auto uri = _message->uri();
-    auto body = _message->body();
-    // Serialize and send...
+auto has_capability(std::uint64_t _capability) const -> bool override {
+    return (_capability & (zpt::SYNCHRONOUS | zpt::PERSISTENT)) == _capability;
 }
 ```
 
-## Message Factory
+## Message Parsing and Serialization
 
-Override `make_request()` and `make_reply()` to create protocol-appropriate messages:
+The transport's job is to convert between its wire format and `zpt::message`. This happens in `process_incoming_request()` and `process_incoming_reply()`:
 
 ```cpp
-auto make_request() const -> zpt::message override {
-    return zpt::make_message<zpt::json_message>();
-}
-
-auto make_reply(bool _with_allocator = true) const -> zpt::message override {
-    return zpt::make_message<zpt::json_message>();
+auto process_incoming_request(zpt::stream _stream) const -> zpt::message override {
+    auto msg = make_request();
+    // Read your protocol's wire format from _stream
+    // Populate the message with parsed data:
+    msg->performative(zpt::Get);
+    msg->uri("/api/resource");
+    msg->headers("X-Custom", "value");
+    msg->body() = zpt::json{ "data", parsed_data };
+    return msg;
 }
 ```
+
+Sending is handled by the `send()` method (which is `final` in the base class) — it calls your transport's protocol-specific serialization through the stream interface.
 
 ## See Also
 
