@@ -33,29 +33,29 @@ Stream processing states used with `zpt::polling`.
 
 ## Class: `zpt::basic_stream`
 
-Abstract stream wrapper with file descriptor support for epoll integration.
+Abstract stream wrapper with file descriptor support for epoll integration. Inherits from `std::enable_shared_from_this<basic_stream>`.
 
 ### Type Aliases
 
 ```cpp
-using ostream_manipulator = std::ostream& (*)(std::ostream&);
+typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 ```
 
 ### Constructors
 
 ```cpp
-basic_stream();
-basic_stream(std::ios& _rhs);
-basic_stream(std::unique_ptr<std::iostream> _underlying);
+basic_stream(std::string const& _transport);
+template<typename T, typename... Args>
+basic_stream(std::in_place_type_t<T>, std::string const& _transport, Args... _args);
 ```
-**Note:** Copy and move constructors are deleted.
+**Note:** Copy and move constructors are deleted. The template constructor wraps an iostream of type `T` with the given transport scheme (e.g., `"tcp"`, `"unix"`).
 
 ### Operators
 
 ```cpp
 auto operator=(int _rhs) -> basic_stream&;         // Set file descriptor
 auto operator*() -> std::iostream&;                 // Access underlying stream
-operator int();                                     // Get file descriptor
+virtual operator int();                             // Get file descriptor
 ```
 
 ### Read/Write Methods
@@ -67,6 +67,11 @@ auto read(T& _out) -> basic_stream&;
 template<typename T>
 auto write(T _in) -> basic_stream&;
 
+virtual auto read_without_io(std::any& _out) -> basic_stream&;
+virtual auto write_without_io(std::any const& _in) -> basic_stream&;
+
+virtual auto has_next() const -> bool;
+
 template<typename T>
 auto operator>>(T& _out) -> basic_stream&;
 
@@ -76,23 +81,34 @@ auto operator<<(T _in) -> basic_stream&;
 auto operator<<(ostream_manipulator _in) -> basic_stream&;
 ```
 
-For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively.
+For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively. `read_without_io` / `write_without_io` transfer data via internal storage without actual I/O. `has_next()` returns true if more messages are available.
 
 ### Control Methods
 
 ```cpp
 virtual auto close() -> basic_stream&;
 virtual auto shutdown() -> basic_stream&;
+virtual auto upgrade(std::string const& _to_transport) -> basic_stream&;
 ```
 
 ### Metadata Methods
 
 ```cpp
-virtual auto transport(const std::string& _rhs) -> basic_stream&;
 virtual auto transport() -> std::string&;
-virtual auto uri(const std::string& _rhs) -> basic_stream&;
 virtual auto uri() -> std::string&;
-virtual auto state() -> stream_state&;
+virtual auto state(stream_state _state) -> basic_stream&;
+virtual auto state() -> stream_state;
+virtual auto persistent() -> bool;
+virtual auto metadata(std::any _metadata) -> basic_stream&;
+virtual auto metadata() const -> std::any const&;
+virtual auto uuid() const -> zpt::uuid const& final;
+```
+
+### Peer Configuration
+
+```cpp
+template<typename IOStream>
+auto set_peer(std::string const& _address, unsigned int _port) -> basic_stream&;
 ```
 
 ---
@@ -143,21 +159,28 @@ auto is_in_shutdown() const -> bool;
 ```cpp
 auto listen_on(zpt::stream _stream) -> zpt::polling&;
 auto mute(zpt::stream _stream) -> zpt::polling&;
+auto mute(zpt::uuid const& _id) -> zpt::stream;
+auto mute(std::string const& _uri) -> zpt::stream;
 auto unmute(zpt::stream _stream) -> zpt::polling&;
+auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
 ```
 
 | Method | Description |
 |--------|-------------|
 | `listen_on` | Adds a stream to be monitored for I/O |
-| `mute` | Temporarily stops monitoring a stream |
+| `mute(stream)` | Temporarily stops monitoring a stream |
+| `mute(uuid)` | Mutes a stream by UUID, returns the muted stream |
+| `mute(uri)` | Mutes a stream by URI, returns the muted stream |
 | `unmute` | Resumes monitoring a muted stream |
+| `upgrade` | Changes a stream's transport in-place |
 
 ### Delegate Registration
 
 ```cpp
 auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
+auto unregister_delegate(delegate_fn_type _callback) -> zpt::polling&;
 ```
-Registers a callback invoked when streams are ready. The delegate receives the polling instance and the ready stream.
+Registers/unregisters a callback invoked when streams are ready. The delegate receives the polling instance and the ready stream.
 
 **Delegate return value:**
 - `true` - Keep monitoring the stream
@@ -206,7 +229,7 @@ Returns the global stream polling instance.
 
 ```cpp
 template<typename T, typename... Args>
-static auto make_stream(Args... _args) -> zpt::stream;
+static auto make_stream(std::string const& _transport, Args... _args) -> zpt::stream;
 ```
 Creates a stream wrapping a specific iostream type.
 
@@ -214,11 +237,15 @@ Creates a stream wrapping a specific iostream type.
 - `T` - The underlying iostream type (e.g., `socketstream`, `pipestream`)
 - `Args` - Constructor argument types
 
+**Parameters:**
+- `_transport` - Transport scheme string (e.g., `"tcp"`, `"unix"`, `"pipe"`)
+- `_args` - Arguments forwarded to T's constructor
+
 **Example:**
 
 ```cpp
-auto sock = zpt::make_stream<zpt::socketstream>("localhost", 8080, zpt::NO_SSL, IPPROTO_TCP);
-auto pipe = zpt::make_stream<zpt::pipestream>("my-pipe");
+auto sock = zpt::make_stream<zpt::socketstream>("tcp", "localhost", 8080, zpt::NO_SSL, IPPROTO_TCP);
+auto pipe = zpt::make_stream<zpt::pipestream>("pipe", "my-pipe");
 ```
 
 ### `zpt::stream_cast`
@@ -472,7 +499,7 @@ auto is_open() -> bool;
 
 // Connect to server
 auto stream = zpt::make_stream<zpt::socketstream>(
-    "example.com", 80, zpt::NO_SSL, IPPROTO_TCP);
+    "tcp", "example.com", 80, zpt::NO_SSL, IPPROTO_TCP);
 
 // Send HTTP request
 *stream << "GET / HTTP/1.1\r\n"
@@ -488,7 +515,7 @@ std::getline(**stream, line);
 
 ```cpp
 auto stream = zpt::make_stream<zpt::socketstream>(
-    "example.com", 443, zpt::USE_SSL, IPPROTO_TCP);
+    "tcp", "example.com", 443, zpt::USE_SSL, IPPROTO_TCP);
 
 *stream << "GET / HTTP/1.1\r\n"
         << "Host: example.com\r\n\r\n"
@@ -531,7 +558,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 zpt::serversocketstream server("/tmp/my.sock");
 
 // Client
-auto client = zpt::make_stream<zpt::socketstream>("/tmp/my.sock");
+auto client = zpt::make_stream<zpt::socketstream>("unix", "/tmp/my.sock");
 ```
 
 ### Inter-Process Pipe
@@ -539,7 +566,7 @@ auto client = zpt::make_stream<zpt::socketstream>("/tmp/my.sock");
 ```cpp
 #include <zapata/io/pipe.h>
 
-auto pipe = zpt::make_stream<zpt::pipestream>("my-channel");
+auto pipe = zpt::make_stream<zpt::pipestream>("pipe", "my-channel");
 
 // Write to pipe (typically in parent process)
 *pipe << "Hello from parent" << std::flush;

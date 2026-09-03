@@ -41,7 +41,7 @@ auto config = zpt::json{
     }}
 };
 
-auto conn = zpt::storage::make_connection<zpt::storage::mysqlx::connection>(config);
+auto conn = zpt::make_connection<zpt::storage::mysqlx::connection>(config);
 auto session = conn->session();
 auto db = session->database("myapp");
 ```
@@ -110,17 +110,19 @@ Unrecognized column types are silently skipped with a warning.
 
 ## Configuration
 
-Storage configuration is passed directly to `make_connection`, not through the main JSON config file:
+Storage configuration is passed to `make_connection` with the nested `"storage"` → `"mysqlx"` structure:
 
 ```cpp
 auto config = zpt::json{
-    "host", "localhost",
-    "port", 3306,
-    "database", "myapp",
-    "user", "root",
-    "password", ""
+    "storage", { "mysqlx", {
+        "host", "localhost",
+        "port", 3306,
+        "database", "myapp",
+        "user", "root",
+        "password", ""
+    }}
 };
-auto conn = zpt::storage::make_connection<zpt::storage::mysqlx::connection>(config);
+auto conn = zpt::make_connection<zpt::storage::mysqlx::connection>(config);
 ```
 
 | Key | Type | Default | Description |

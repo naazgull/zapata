@@ -35,6 +35,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -204,6 +205,25 @@ class Re2cJSONLexer {
      * @return void (internal __left flag set if complete).
      */
     auto leaveIfComplete() -> void;
+
+    /**
+     * @brief Combines a decoded UTF-16 high surrogate with a following
+     *   low surrogate escape, if one is present in the buffer.
+     *
+     * `lexUnicode()` decodes one `\uXXXX` escape at a time, so a
+     * surrogate pair (`\uD800`-`\uDBFF` followed by `\uDC00`-`\uDFFF`,
+     * used to represent code points outside the BMP) would otherwise be
+     * UTF-8-encoded as two separate, invalid 3-byte sequences. If
+     * `_high` is a high surrogate and the bytes at the cursor spell out
+     * a `\uXXXX` low-surrogate escape, this consumes those 6 bytes
+     * (advancing YYCURSOR past them) and returns the combined code
+     * point. Otherwise the buffer is left untouched and `_high` is
+     * returned as-is (including when `_high` is not a high surrogate,
+     * or is an unpaired one).
+     * @param _high Code point just decoded from the current `\uXXXX` escape.
+     * @return The combined code point, or `_high` unchanged.
+     */
+    auto combine_surrogate_pair(std::uint32_t _high) -> std::uint32_t;
 
     // Per-start-condition DFA dispatch methods. Their bodies are produced by
     // re2c from JSON.re; this class and its method declarations are

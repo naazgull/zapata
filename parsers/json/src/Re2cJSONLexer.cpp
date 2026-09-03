@@ -195,6 +195,37 @@ auto zpt::Re2cJSONLexer::leaveIfComplete() -> void {
     if (this->d_paren_count == 0) { this->leave(0); }
 }
 
+auto zpt::Re2cJSONLexer::combine_surrogate_pair(std::uint32_t _high) -> std::uint32_t {
+    if (_high < 0xD800 || _high > 0xDBFF) { return _high; }
+
+    // Ensure 6 bytes ("\uXXXX") are actually buffered before reading past
+    // __cursor - fill() may shift/reallocate __buffer, so __cursor is only
+    // read (into _p) after it returns.
+    if (!this->fill(6)) { return _high; }
+
+    char* _p = this->__cursor;
+    if (_p[0] != '\\' || _p[1] != 'u') { return _high; }
+
+    auto _hex_val = [](char _c) -> std::uint32_t {
+        if (_c >= '0' && _c <= '9') return static_cast<std::uint32_t>(_c - '0');
+        if (_c >= 'a' && _c <= 'f') return static_cast<std::uint32_t>(_c - 'a' + 10);
+        if (_c >= 'A' && _c <= 'F') return static_cast<std::uint32_t>(_c - 'A' + 10);
+        return 0xFFFFFFFF;
+    };
+
+    std::uint32_t _d0 = _hex_val(_p[2]);
+    std::uint32_t _d1 = _hex_val(_p[3]);
+    std::uint32_t _d2 = _hex_val(_p[4]);
+    std::uint32_t _d3 = _hex_val(_p[5]);
+    if (_d0 > 0xF || _d1 > 0xF || _d2 > 0xF || _d3 > 0xF) { return _high; }
+
+    std::uint32_t _low = (_d0 << 12) | (_d1 << 8) | (_d2 << 4) | _d3;
+    if (_low < 0xDC00 || _low > 0xDFFF) { return _high; }
+
+    this->__cursor = _p + 6;
+    return 0x10000 + ((_high - 0xD800) << 10) + (_low - 0xDC00);
+}
+
 auto zpt::Re2cJSONLexer::lex() -> int {
     while (true) {
         if (this->__left) { return this->__leave_value; }

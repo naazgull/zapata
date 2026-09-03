@@ -54,6 +54,7 @@ HTTP status codes enumeration.
 | `HTTP303` | 303 | See Other |
 | `HTTP304` | 304 | Not Modified |
 | `HTTP305` | 305 | Use Proxy |
+| `HTTP306` | 306 | (Unused) |
 | `HTTP307` | 307 | Temporary Redirect |
 | `HTTP308` | 308 | Permanent Redirect |
 
@@ -82,9 +83,12 @@ HTTP status codes enumeration.
 | `HTTP422` | 422 | Unprocessable Entity |
 | `HTTP423` | 423 | Locked |
 | `HTTP424` | 424 | Failed Dependency |
+| `HTTP425` | 425 | (Unassigned) |
 | `HTTP426` | 426 | Upgrade Required |
+| `HTTP427` | 427 | (Unassigned) |
 | `HTTP428` | 428 | Precondition Required |
 | `HTTP429` | 429 | Too Many Requests |
+| `HTTP430` | 430 | (Unassigned) |
 | `HTTP431` | 431 | Request Header Fields Too Large |
 | `HTTP451` | 451 | Unavailable For Legal Reasons |
 
@@ -101,6 +105,7 @@ HTTP status codes enumeration.
 | `HTTP506` | 506 | Variant Also Negotiates |
 | `HTTP507` | 507 | Insufficient Storage |
 | `HTTP508` | 508 | Loop Detected |
+| `HTTP509` | 509 | (Unassigned) |
 | `HTTP510` | 510 | Not Extended |
 | `HTTP511` | 511 | Network Authentication Required |
 
@@ -173,6 +178,7 @@ basic_request(zpt::message _request, bool);
 
 | Method | Description |
 |--------|-------------|
+| `clone() const` | Returns a cloned copy of this request |
 | `to_stream(ostream&)` | Serialize to stream |
 | `from_stream(istream&)` | Parse from stream |
 
@@ -205,6 +211,7 @@ basic_reply(zpt::message _request, bool);
 
 | Method | Description |
 |--------|-------------|
+| `clone() const` | Returns a cloned copy of this reply |
 | `to_stream(ostream&)` | Serialize to stream |
 | `from_stream(istream&)` | Parse from stream |
 
@@ -241,6 +248,24 @@ void zpt::init(zpt::http::basic_reply& _out);
 ```
 
 Initialize HTTP messages with default values.
+
+### `zpt::http::retrieve`
+
+**Header:** `<zapata/http/retrieve.h>`
+
+```cpp
+auto retrieve(zpt::message _to_send) -> zpt::message;
+```
+Sends an HTTP request message and returns the reply. Opens a TCP socket, writes the request, and reads the response. Supports both HTTP and HTTPS based on the message URI scheme.
+
+### `zpt::http::resolve`
+
+**Header:** `<zapata/http/retrieve.h>`
+
+```cpp
+auto resolve(std::string const& _domain) -> zpt::json;
+```
+Performs a DNS lookup and returns IPv4 and IPv6 addresses found. Returns a JSON object with `"ipv4"` and `"ipv6"` arrays.
 
 ---
 

@@ -26,7 +26,7 @@ Create storage objects using factory functions:
 ```cpp
 #include <zapata/connector.h>
 
-auto conn = zpt::storage::make_connection<MyBackend>(config);
+auto conn = zpt::make_connection<MyBackend>(config);
 auto session = conn->session();
 auto db = session->database("mydb");
 auto coll = db->collection("users");

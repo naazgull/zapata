@@ -40,16 +40,18 @@ class bridge : public zpt::programming::bridge<mylang::bridge, native_object> {
     auto name() const -> std::string { return "mylang"; }
 
     // Required: load a module from a file path
-    auto setup_module(zpt::json _conf, std::string _path, bool _persist = true)
-      -> mylang::bridge&;
+    auto setup_module(zpt::json _conf, std::string _path) -> void;
 
     // Required: load a module from a C++ callback
     template<typename Callback>
-    auto setup_module(zpt::json _conf, Callback _callback, bool _persist = true)
-      -> mylang::bridge&;
+    auto setup_module(zpt::json _conf, Callback _callback) -> void;
+
+    // Required: register a lambda function
+    template<typename Lambda>
+    auto setup_lambda(zpt::json _conf, Lambda _lambda) -> void;
 
     // Required: initialize the language runtime
-    auto initialize() -> mylang::bridge&;
+    auto initialize() -> void;
 
     // Required: locate a named object
     auto find(zpt::json _to_locate) -> native_object;
@@ -60,8 +62,9 @@ class bridge : public zpt::programming::bridge<mylang::bridge, native_object> {
     // Required: convert native object to JSON
     auto to_json(native_object _to_convert) -> zpt::json;
 
-    // Required: execute a function
-    auto execute(zpt::json _func, zpt::json _args) -> native_object;
+    // Required: execute a function (variadic template)
+    template<typename Term, typename... Args>
+    auto execute(Term _to_call, Args... _args) -> native_object;
 };
 
 } // namespace mylang
@@ -96,11 +99,30 @@ auto bridge::to_json(native_object _to_convert) -> zpt::json {
 ## Step 3: Implement Function Execution
 
 ```cpp
-auto bridge::execute(zpt::json _func, zpt::json _args) -> native_object {
-    auto func_name = std::string(_func("function"));
-    auto native_args = to_object(_args);
-    return mylang_call(this->state(), func_name.c_str(), native_args);
+template<typename Term, typename... Args>
+auto bridge::execute(Term _to_call, Args... _args) -> native_object {
+    auto func_name = std::string(_to_call("function"));
+    // Convert each argument and call the function
+    return mylang_call(this->state(), func_name.c_str(), to_object(_args)...);
 }
+```
+
+## Public API
+
+The CRTP base class exposes a simplified public API that delegates to your implementation:
+
+```cpp
+auto& my = MYLANG_BRIDGE();
+my.set_options({ "path", "/scripts" });
+my.add_module("handlers.lua");        // → calls setup_module()
+my.add_lambda([](zpt::json args) {   // → calls setup_lambda()
+    return zpt::json{ 42 };
+});
+my.init();                            // → calls initialize()
+
+auto result = my.call({ "function", "my_func" }, 1, 2, 3);  // → calls execute() + to_json()
+auto native = my.json_to_object(zpt::json{ "key", "val" });  // → calls to_object()
+auto json = my.object_to_json(native);                       // → calls to_json()
 ```
 
 ## Step 4: Provide a Global Accessor

@@ -12,26 +12,26 @@ auto main(int, char**) -> int {
 
     zpt::lambda::add("factory", 2, factory);
 
-    _catalog.add(
-      "/users",
-      "<self>",
-      1,
-      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
-    _catalog.add(
-      "/users/{}",
-      "<self>",
-      2,
-      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
-    _catalog.add(
-      "/users/n@zgul.me",
-      "<self>",
-      3,
-      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
-    _catalog.add(
-      "/users/{}/info",
-      "<self>",
-      4,
-      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
+    _catalog.add("/users",
+                 "<self>",
+                 1,
+                 { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) },
+                 true);
+    _catalog.add("/users/{}",
+                 "<self>",
+                 2,
+                 { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) },
+                 true);
+    _catalog.add("/users/n@zgul.me",
+                 "<self>",
+                 3,
+                 { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) },
+                 true);
+    _catalog.add("/users/{}/info",
+                 "<self>",
+                 4,
+                 { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) },
+                 true);
 
     for (auto&& [_, _key, _record] : _catalog.search("/users/n@zgul.me/info")) {
         zpt::json::parse_json_str(_record("metadata")->string())("callback")

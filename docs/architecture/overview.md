@@ -79,7 +79,7 @@ Message semantics and conversation tracking:
 
 **zapata-lockfree**
 Lock-free concurrent data structures:
-- Bounded FIFO queue backed by a ring buffer with 128-bit atomic mutation guard (CAS-based, no hazard pointers)
+- Bounded MPMC queue using Dmitry Vyukov's algorithm with per-slot sequence tokens
 - Lock-free FIFO queue
 - Cache-line aligned atomics (`padded_atomic`)
 
@@ -196,7 +196,7 @@ Plugins are discovered and loaded at startup based on configuration.
 
 - **Automatic**: Shared pointers for most objects
 - **Pool Allocator**: Optional bounded memory pools
-- **Atomic CAS**: Lock-free queues use 128-bit compare-and-swap with mutation guard for safe concurrent access
+- **Lock-free queues**: Use Dmitry Vyukov's MPMC algorithm with per-slot sequence tokens for safe concurrent access
 
 ## Configuration
 

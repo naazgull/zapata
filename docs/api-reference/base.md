@@ -21,6 +21,9 @@ All exceptions derive from `zpt::exception`, which extends `std::exception`.
 | `zpt::InterruptedException` | `InterruptedException.h` | Interrupted operation |
 | `zpt::ParserEOF` | `ParserEOF.h` | Unexpected end-of-file |
 | `zpt::NoAttributeNameException` | `NoAttributeNameException.h` | Missing attribute name |
+| `zpt::NoHeaderNameException` | `NoHeaderNameException.h` | Missing header name |
+| `zpt::NoSuchElementException` | `NoSuchElementException.h` | No matching element found |
+| `zpt::NoSpaceAvailableException` | `NoSpaceAvailableException.h` | Queue/container is full |
 
 ### Example
 
@@ -113,6 +116,8 @@ std::string hash512 = zpt::crypto::sha512("data");
 
 ### Incremental Hashing
 
+SHA256 / SHA512 use a stateful hasher class:
+
 ```cpp
 zpt::crypto::SHA256 hasher;
 hasher.init();
@@ -120,6 +125,15 @@ hasher.update(reinterpret_cast<const unsigned char*>(data1), len1);
 hasher.update(reinterpret_cast<const unsigned char*>(data2), len2);
 unsigned char digest[zpt::crypto::SHA256::DIGEST_SIZE];
 hasher.finalize(digest);
+```
+
+SHA1 has a simpler incremental API (no explicit `init()`):
+
+```cpp
+zpt::crypto::SHA1 hasher;
+hasher.update("Hello, ");
+hasher.update("World!");
+std::string hash = hasher.finalize();
 ```
 
 ## Text Encoding
@@ -155,7 +169,7 @@ std::string decoded = zpt::url::r_decode(encoded);
 
 ```cpp
 std::string text = "...";
-zpt::utf8::encode(text);  // Ensure valid UTF-8
+zpt::utf8::encode(text);  // Encode as UTF-8
 zpt::utf8::decode(text);  // Decode UTF-8 sequences
 ```
 
@@ -180,9 +194,9 @@ std::string trimmed = zpt::r_trim("  hello  ");
 **Header:** `#include <zapata/text/convert.h>`
 
 ```cpp
-std::string key = zpt::generate::r_key(32);  // 32-char random key
-std::string hash = zpt::generate::r_hash();  // Random hash
-std::string uuid = zpt::uuid{};  // New UUID
+std::string key = zpt::generate::r_key(32);  // 32-byte random key
+std::string hash = zpt::generate::r_hash();  // Random hex hash
+std::string pin  = zpt::generate::r_pin();   // 6-digit random PIN
 ```
 
 ## Input Validation
@@ -191,11 +205,12 @@ std::string uuid = zpt::uuid{};  // New UUID
 
 ```cpp
 bool valid_email = zpt::test::email("user@example.com");
-bool valid_uuid = zpt::test::uuid("550e8400-e29b-41d4-a716-446655440000");
-bool valid_uri = zpt::test::uri("https://example.com/path");
+bool valid_uuid  = zpt::test::uuid("550e8400-e29b-41d4-a716-446655440000");
+bool valid_uri   = zpt::test::uri("https://example.com/path");
 bool valid_phone = zpt::test::phone("+1-555-123-4567");
-bool valid_ts = zpt::test::timestamp("2024-01-15T10:30:00Z");
-bool matches = zpt::test::regex("hello123", "^[a-z]+[0-9]+$");
+bool valid_ts    = zpt::test::timestamp("2024-01-15T10:30:00Z");
+bool matches     = zpt::test::regex("hello123", "^[a-z]+[0-9]+$");
+// Additional validators: zpt::test::utf8(), zpt::test::ascii(), zpt::test::token()
 ```
 
 ## Time Utilities
@@ -205,8 +220,8 @@ bool matches = zpt::test::regex("hello123", "^[a-z]+[0-9]+$");
 ```cpp
 // Current time in various formats
 auto timestamp = zpt::now<std::string>();    // ISO 8601
-auto millis = zpt::now<uint64_t>();          // Milliseconds since epoch
-auto seconds = zpt::now<double>();           // Seconds since epoch
+auto millis    = zpt::now<uint64_t>();       // Milliseconds since epoch
+auto seconds   = zpt::now<double>();         // Seconds since epoch
 
 // Convert millis to timestamp
 std::string ts = zpt::timestamp_to_str(1705315800000);

@@ -5,8 +5,10 @@ This document provides the API reference for Zapata's transport layer.
 ## Headers
 
 ```cpp
+#include <zapata/net/transport/amqp.h>      // AMQP transport
 #include <zapata/net/transport/http.h>      // HTTP transport
 #include <zapata/net/transport/local.h>     // Unix socket / file transports
+#include <zapata/net/transport/mqtt.h>      // MQTT transport
 #include <zapata/net/transport/pipe.h>      // Named pipe transport
 #include <zapata/net/transport/self.h>      // In-process transport
 #include <zapata/net/transport/tcp.h>       // TCP transport
@@ -32,12 +34,14 @@ Capability flags for transport features.
 |-------|-------------|
 | `SYNCHRONOUS` (1) | Supports request-response pattern |
 | `PERSISTENT` (2) | Maintains persistent connections |
+| `PUB_SUB` (4) | Transport follows pub/sub flow |
+| `UPGRADED` (8) | Transport is upgraded from another transport |
 
 ---
 
 ## Class: `zpt::basic_transport`
 
-Abstract base class for protocol transports. Uses CRTP — derived class `T` implements protocol-specific logic.
+Abstract base class for protocol transports. Derived classes implement protocol-specific logic by overriding the pure virtual methods.
 
 ### Methods
 
@@ -64,10 +68,25 @@ virtual auto process_incoming_reply(zpt::stream _stream) const -> zpt::message =
 Parses incoming requests/replies from a stream.
 
 ```cpp
-auto receive(zpt::stream _stream) const -> zpt::message;
-auto send(zpt::stream _stream, zpt::message _to_send) const -> void;
+virtual auto copy(zpt::message const& _to_copy) const -> zpt::message = 0;
 ```
-High-level methods for receiving/sending messages (final).
+Creates a copy of the given message with the transport's protocol and format.
+
+```cpp
+virtual auto upgraded_from() const -> std::string const&;
+```
+Returns the name of the transport this one was upgraded from (empty string if not upgraded).
+
+```cpp
+auto receive(zpt::stream _stream) const -> zpt::message final;
+auto send(zpt::stream _stream, zpt::message _to_send) const -> void final;
+```
+High-level methods for receiving/sending messages.
+
+```cpp
+virtual auto publish(zpt::message _to_publish) const -> void;
+```
+Publishes a message to a pub-sub topic (no-op by default).
 
 ---
 
@@ -131,6 +150,13 @@ auto begin() const -> std::map<std::string, zpt::transport>::const_iterator;
 auto end() const -> std::map<std::string, zpt::transport>::const_iterator;
 ```
 
+### Free Function: `zpt::network::resolve_content_type`
+
+```cpp
+auto resolve_content_type(zpt::message _message) -> std::string;
+```
+Determines the content type from a message's headers (e.g., `"application/json"`).
+
 ---
 
 ## Factory Functions
@@ -156,7 +182,13 @@ Creates a transport using the memory pool allocator.
 
 ### Class: `zpt::transports::engine`
 
-Coordinates network I/O with event dispatch.
+Coordinates network I/O with event dispatch. Inherits from `std::enable_shared_from_this<engine>`.
+
+#### Type Alias
+
+```cpp
+using ptr = std::shared_ptr<engine>;
+```
 
 ### Constructor
 
@@ -168,6 +200,7 @@ engine(zpt::json _config);
 
 ```cpp
 auto add_resolver(zpt::events::resolver _resolver) -> engine&;
+auto remove_resolver(zpt::events::resolver _resolver) -> engine&;
 auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
     -> std::list<zpt::event>;
 auto dispatcher() -> zpt::events::dispatcher::ptr;
@@ -177,7 +210,7 @@ auto shutdown() -> engine&;
 ### `zpt::TRANSPORT_ENGINE`
 
 ```cpp
-auto TRANSPORT_ENGINE(zpt::json _config = nullptr) -> zpt::transports::engine::ptr;
+auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine::ptr;
 ```
 Returns the global transport engine instance.
 
@@ -192,7 +225,7 @@ Initialization data for transport events.
 ```cpp
 class transport_event_init : public zpt::event_initialization {
   public:
-    zpt::events::dispatcher::ptr __dispatcher;
+    zpt::events::dispatcher::weak_ptr __dispatcher;
     zpt::polling::ptr __polling;
     zpt::stream __stream;
 };
@@ -216,28 +249,78 @@ send(zpt::polling::ptr _polling, zpt::stream _stream, zpt::message _to_send);
 
 ### Class: `zpt::events::process`
 
-Abstract base class for message handlers.
+Abstract base class for message handlers. Subclass this to implement custom message processing.
+
+#### Type Alias
+
+```cpp
+using ptr = std::shared_ptr<process>;
+```
+
+#### Constructors
 
 ```cpp
 process(zpt::message _received);
-auto received() const -> zpt::message const;
-auto to_send() -> zpt::message;
-virtual auto blocked() const -> bool = 0;
+process(zpt::message _received, zpt::call_context::ptr _context);
+```
+
+#### Accessors (all `final`)
+
+```cpp
+auto transport_type() const -> std::string const& final;
+auto stream() const -> zpt::stream final;
+auto received() const -> zpt::message const final;
+auto to_send() -> zpt::message final;
+auto context() const -> zpt::call_context::ptr final;
+auto context(zpt::call_context::ptr _context) -> process& final;
+```
+
+#### Methods
+
+```cpp
+virtual auto initialize(zpt::event_initialization& init) -> void final;
+virtual auto blocked() const -> bool;
+virtual auto authorized() const -> bool;
+virtual auto catch_error(std::exception const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+virtual auto catch_error(std::bad_alloc const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool final;
+virtual auto catch_error(zpt::failed_expectation const& _e, zpt::events::dispatcher::ptr _dispatcher) -> bool final;
 virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
 ```
 
+`blocked()` defaults to `true`; override to return `false` for non-blocking handlers. `authorized()` defaults to `true`. The only pure virtual is `operator()`.
+
 ### Class: `zpt::events::discard`
 
-Default handler that discards messages.
+Default handler that discards messages without sending a response. Inherits from `process`.
 
 ### Class Template: `zpt::events::call<T>`
 
 Event for making outbound calls with response handling.
 
 ```cpp
-call(zpt::events::resolver _resolver, zpt::message _send);
+template<ProcessOperation T = zpt::events::discard>
+class call { ... };
 ```
-**Template parameter:** `T` - ProcessOperation type for handling responses.
+
+**Template parameter:** `T` - ProcessOperation type for handling responses (default: `discard`).
+
+#### Constructor
+
+```cpp
+call(zpt::events::resolver _resolver, zpt::call_context::ptr _context, zpt::message _send);
+```
+
+### Class: `zpt::events::process_call_reply`
+
+Default processor for call reply messages. Delivers the reply to the `call_context` so the caller can retrieve the response. Inherits from `process`.
+
+### `zpt::make_call`
+
+```cpp
+template<ProcessOperation T = zpt::events::process_call_reply>
+auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
+```
+Convenience function that creates a `call<T>` event and triggers it on the dispatcher. Returns the call context for tracking the response.
 
 ---
 
@@ -259,7 +342,7 @@ Standard HTTP/1.1 request-response protocol.
 **Header:** `<zapata/net/transport/tcp.h>`
 **Class:** `zpt::net::transport::tcp`
 **URI schemes:** `tcp`
-**Capabilities:** SYNCHRONOUS, PERSISTENT
+**Capabilities:** SYNCHRONOUS
 
 Raw TCP with JSON message framing.
 
@@ -270,9 +353,9 @@ Raw TCP with JSON message framing.
 **Header:** `<zapata/net/transport/websocket.h>`
 **Class:** `zpt::net::transport::websocket`
 **URI schemes:** `ws`, `wss`
-**Capabilities:** SYNCHRONOUS, PERSISTENT
+**Capabilities:** PERSISTENT, UPGRADED
 
-WebSocket (RFC 6455) bidirectional messaging.
+WebSocket (RFC 6455) bidirectional messaging. Upgraded from HTTP.
 
 #### WebSocket Utilities
 
@@ -398,7 +481,7 @@ zpt::net::ws::write(out, "Hello, World!");
 **Header:** `<zapata/net/transport/local.h>`
 **Class:** `zpt::net::transport::unix_socket`
 **URI schemes:** `unix`
-**Capabilities:** SYNCHRONOUS, PERSISTENT
+**Capabilities:** SYNCHRONOUS
 
 Unix domain socket for local IPC.
 
@@ -438,6 +521,24 @@ In-process message passing without serialization.
 **URI schemes:** `upnp`
 
 UPnP/SSDP device discovery via multicast UDP.
+
+### MQTT Transport
+
+**Header:** `<zapata/net/transport/mqtt.h>`
+**Class:** `zpt::net::transport::mqtt`
+**URI schemes:** `mqtt`
+**Capabilities:** PUB_SUB
+
+MQTT socket communication with JSON message framing. Uses length-prefixed messages for reliable delivery.
+
+### AMQP Transport
+
+**Header:** `<zapata/net/transport/amqp.h>`
+**Class:** `zpt::net::transport::amqp`
+**URI schemes:** `amqp`
+**Capabilities:** PUB_SUB
+
+AMQP socket communication with JSON message framing. Uses length-prefixed messages for reliable delivery.
 
 ---
 

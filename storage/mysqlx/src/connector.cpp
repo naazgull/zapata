@@ -713,6 +713,10 @@ auto zpt::storage::mysqlx::action_find::bind(zpt::json _map) -> zpt::storage::ac
 
 auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     if (this->__underlying->ok()) {
+        if (this->__underlying->is_object()) {
+            this->__underlying = zpt::storage::extract_find(this->__underlying);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__underlying->string(),
                          std::format(":{}", _key),

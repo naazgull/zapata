@@ -56,7 +56,11 @@ auto zpt::rest::resolver_t::add(zpt::performative _performative,
                   (_performative == zpt::Performative_end ? std::string{ "{}" }
                                                           : zpt::ontology::to_str(_performative)),
                   _path);
-    this->__catalog->add(_to_add, _callback_hash, _metadata);
+    this->__catalog->add(_to_add,
+                         _callback_hash,
+                         _metadata,
+                         (!_metadata("public")->ok() ||
+                          (_metadata("public")->is_bool() && _metadata("public")->boolean())));
     return (*this);
 }
 
@@ -68,7 +72,8 @@ auto zpt::rest::resolver_t::add(zpt::json const& _service_description) -> zpt::r
     this->__catalog->add(_service_description("_id")->string(),
                          _service_description("provider_id")->string(),
                          0,
-                         _service_description("metadata"));
+                         _service_description("metadata"),
+                         false);
     return (*this);
 }
 
