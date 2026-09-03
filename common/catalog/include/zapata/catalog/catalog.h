@@ -79,18 +79,24 @@ class catalog {
      * @param _key Entry key.
      * @param hash Entry hash code.
      * @param _metadata Entry metadata.
+     * @param _public Whether the given service should be broadcasted.
      * @return Reference to this catalog.
      */
-    auto add(K _key, std::uint64_t hash, M _metadata) -> catalog&;
+    auto add(K _key, std::uint64_t hash, M _metadata, bool _public) -> catalog&;
     /**
      * @brief Adds an entry with an explicit provider ID.
      * @param _key Entry key.
      * @param _provider_id Provider identifier.
      * @param _hash Entry hash code.
      * @param _metadata Entry metadata.
+     * @param _public Whether the given service should be broadcasted.
      * @return Reference to this catalog.
      */
-    auto add(K _key, std::string const& _provider_id, std::uint64_t _hash, M _metadata) -> catalog&;
+    auto add(K _key,
+             std::string const& _provider_id,
+             std::uint64_t _hash,
+             M _metadata,
+             bool _public) -> catalog&;
     /**
      * @brief Removes an entry by key.
      * @param _key Entry key to remove.
@@ -176,6 +182,7 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
                  "    provider_id TEXT NOT NULL,"
                  "    hash INTEGER NOT NULL,"
                  "    pattern TEXT NOT NULL,"
+                 "    public INTEGER DEFAULT 0,"
                  "    metadata TEXT,"
                  "    PRIMARY KEY(_id, provider_id, hash),"
                  "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
@@ -216,15 +223,16 @@ auto zpt::catalog<K, M>::clear() -> catalog& {
 }
 
 template<typename K, typename M>
-auto zpt::catalog<K, M>::add(K _key, std::uint64_t _hash, M _metadata) -> catalog& {
-    return this->add(_key, this->__self_id, _hash, _metadata);
+auto zpt::catalog<K, M>::add(K _key, std::uint64_t _hash, M _metadata, bool _public) -> catalog& {
+    return this->add(_key, this->__self_id, _hash, _metadata, _public);
 }
 
 template<typename K, typename M>
 auto zpt::catalog<K, M>::add(K _key,
                              std::string const& _provider_id,
                              std::uint64_t _hash,
-                             M _metadata) -> catalog& {
+                             M _metadata,
+                             bool _public) -> catalog& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -234,6 +242,7 @@ auto zpt::catalog<K, M>::add(K _key,
                      "provider_id", _provider_id,
                      "hash",        static_cast<long long int>(_hash),
                      "pattern",     zpt::r_replace(_t_key, "{}", "%"),
+                     "public",      static_cast<int>(_public),
                      "metadata",    _oss.str() };
 
     if (static_cast<long long int>(_hash) != 0) { zlog("Registered " << _t_key, zpt::trace); }
@@ -330,7 +339,8 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
     auto _result =
       this
         ->__catalog //
-        ->find({ "provider_id", _provider_id.empty() ? this->__self_id : _provider_id })
+        ->find(
+          { "provider_id", _provider_id.empty() ? this->__self_id : _provider_id, "public", 1 })
         ->fields({ zpt::array, "_id", "provider_id", "metadata" })
         ->execute()
         ->fetch();

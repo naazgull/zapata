@@ -31,7 +31,7 @@
  * @par Plugin Entry Point
  * Plugins must export a function with this signature:
  * @code
- * extern "C" bool _zpt_load_(zpt::plugin& plugin);
+ * extern "C" void _zpt_load_(zpt::plugin& plugin);
  * @endcode
  */
 
@@ -62,7 +62,7 @@ inline constexpr std::uint64_t PLUGIN_STATE_LOADED{ 2 };
  * @par Example Plugin
  * @code
  * // my_plugin.cpp
- * extern "C" bool _zpt_load_(zpt::plugin& plugin) {
+ * extern "C" void _zpt_load_(zpt::plugin& plugin) {
  *     auto& config = plugin.config();
  *     // Register handlers, start threads, etc.
  *     plugin.add_thread([&]() {
@@ -70,7 +70,6 @@ inline constexpr std::uint64_t PLUGIN_STATE_LOADED{ 2 };
  *             // Worker loop
  *         }
  *     });
- *     return true;
  * }
  * @endcode
  */
