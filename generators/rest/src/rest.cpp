@@ -133,8 +133,23 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
 }
 
 auto zpt::gen::rest::unit::generate_sql() -> unit& {
+    auto _driver_attribute = this->__schema("info")("dbDriver");
     for (auto const& [_, __, _schema] : this->__schema("components")("schemas")) {
-        if (_schema("dbCollection")->ok()) { this->generate_sql_schemata_mysql(_schema); }
+        if (_schema("dbCollection")->ok()) {
+            if (_driver_attribute->is_string()) {
+                auto _driver = _driver_attribute->string();
+                if (_driver == "mysqlx") { this->generate_sql_schemata_mysql(_schema); }
+                else if (_driver == "sqlite") { this->generate_sql_schemata_sqlite(_schema); }
+                else if (_driver == "pgsql") { this->generate_sql_schemata_pgsql(_schema); }
+            }
+            else {
+                for (auto&& [_, __, _driver] : _driver_attribute) {
+                    if (_driver == "mysqlx") { this->generate_sql_schemata_mysql(_schema); }
+                    else if (_driver == "sqlite") { this->generate_sql_schemata_sqlite(_schema); }
+                    else if (_driver == "pgsql") { this->generate_sql_schemata_pgsql(_schema); }
+                }
+            }
+        }
     }
     return (*this);
 }
@@ -1645,6 +1660,138 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     }
     _oss << "primary key (_id)\n);" << std::endl;
     _oss << "show create table " << _collection;
+
+    _file->add<zpt::ast::cpp_instruction>(_oss.str());
+    return _file;
+}
+
+auto zpt::gen::rest::unit::generate_sql_schemata_sqlite(zpt::json _def)
+  -> zpt::ast::basic_file::ptr {
+    auto _collection = _def("dbCollection")->string();
+    auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
+    auto _file_path = _directory / std::format("{}_sqlite.sql", _collection);
+    if (std::filesystem::exists(_file_path)) { return nullptr; }
+
+    std::cout << "> Generating " << _file_path << "." << std::endl;
+
+    std::filesystem::create_directories(_directory);
+    auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
+    this->__module.add(_file);
+
+    std::ostringstream _oss;
+    if (this->__schema("info")("database")->string().find("_config") != 0) {
+        _oss << "create schema if not exists " << this->__schema("info")("database")->string()
+             << ";" << std::endl
+             << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
+    }
+    _oss << "drop table if exists " << _collection << ";" << std::endl
+         << "create table " << _collection << " (\n";
+    if (!this->has_id(_def)) { _oss << "_id text not null,\n"; }
+
+    std::vector<std::string> _indexes;
+    for (auto const& [_, __, _object] : _def("allOf")) {
+        for (auto const& [_, _name, _field] : _object("properties")) {
+            if (!_field("sql:add_to_table")->ok()) { continue; }
+
+            std::string _type = zpt::gen::rest::unit::__sql_types[_field("type")->string()];
+            if (_field("sql:type")->ok()) { _type = _field("sql:type")->string(); }
+            else if (_field("type")->string() == "string") { _type = "text"; }
+            else if (_field("type")->string() == "uuid") { _type = "text"; }
+            else if (_field("type")->string() == "object") { _type = "text"; }
+            else if (_field("type")->string() == "array") { _type = "text"; }
+
+            _oss << _name << " " << _type
+                 << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
+        }
+    }
+    for (auto const& [_, __, _object] : _def("allOf")) {
+        for (auto const& [_, _name, _field] : _object("properties")) {
+            if (!_field("sql:add_to_table")->ok()) { continue; }
+            if (_field("sql:index")->ok()) {
+                auto _index_type = _field("sql:index")->string();
+                if (_index_type == "foreign") {
+                    _oss << "foreign key (" << _name << ") references "
+                         << _field("sql:references")->string()
+                         << " on delete cascade on update cascade," << std::endl;
+                }
+                else if (_index_type == "unique") {
+                    _oss << "unique (" << _name << ") on conflict fail," << std::endl;
+                }
+                else { _indexes.push_back(_name); }
+            }
+        }
+    }
+    _oss << "primary key (_id)\n)";
+
+    for (auto const& _name : _indexes) {
+        _oss << ";\ncreate index " << _name << "_idx on " << _collection << "(" << _name << ")";
+    }
+
+    _file->add<zpt::ast::cpp_instruction>(_oss.str());
+    return _file;
+}
+
+auto zpt::gen::rest::unit::generate_sql_schemata_pgsql(zpt::json _def)
+  -> zpt::ast::basic_file::ptr {
+    auto _collection = _def("dbCollection")->string();
+    auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
+    auto _file_path = _directory / std::format("{}_pgsql.sql", _collection);
+    if (std::filesystem::exists(_file_path)) { return nullptr; }
+
+    std::cout << "> Generating " << _file_path << "." << std::endl;
+
+    std::filesystem::create_directories(_directory);
+    auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
+    this->__module.add(_file);
+
+    std::ostringstream _oss;
+    if (this->__schema("info")("database")->string().find("_config") != 0) {
+        _oss << "create schema if not exists " << this->__schema("info")("database")->string()
+             << ";" << std::endl
+             << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
+    }
+    _oss << "drop table if exists " << _collection << ";" << std::endl
+         << "create table " << _collection << " (\n";
+    if (!this->has_id(_def)) { _oss << "_id varchar(22) not null,\n"; }
+
+    std::vector<std::string> _indexes;
+    for (auto const& [_, __, _object] : _def("allOf")) {
+        for (auto const& [_, _name, _field] : _object("properties")) {
+            if (!_field("sql:add_to_table")->ok()) { continue; }
+
+            std::string _type = zpt::gen::rest::unit::__sql_types[_field("type")->string()];
+            if (_field("sql:type")->ok()) { _type = _field("sql:type")->string(); }
+            else if (_field("type")->string() == "string") {
+                _type = (_field("maximum")->ok()
+                           ? std::format("varchar({})", _field("maximum")->integer())
+                           : "text");
+            }
+            else if (_field("type")->string() == "uuid") { _type = "varchar(22)"; }
+            else if (_field("type")->string() == "object") { _type = "json"; }
+            else if (_field("type")->string() == "array") { _type = "json"; }
+
+            _oss << _name << " " << _type
+                 << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;
+            if (_field("sql:index")->ok()) {
+                auto _index_type = _field("sql:index")->string();
+                if (_index_type == "foreign") {
+                    _oss << "foreign key (" << _name << ") references "
+                         << _field("sql:references")->string()
+                         << " on delete cascade on update cascade," << std::endl;
+                }
+                else if (_index_type == "unique") {
+                    _oss << "unique (" << _name << ")," << std::endl;
+                }
+                else { _indexes.push_back(_name); }
+            }
+        }
+    }
+    _oss << "primary key (_id)\n);" << std::endl;
+
+    for (auto const& _name : _indexes) {
+        _oss << "create index " << _name << "_idx on " << _collection << "(" << _name << ");"
+             << std::endl;
+    }
 
     _file->add<zpt::ast::cpp_instruction>(_oss.str());
     return _file;

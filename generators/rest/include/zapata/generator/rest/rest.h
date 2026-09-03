@@ -75,7 +75,7 @@ class unit {
     /** @brief Generates the plugin registration file.
      * @return Reference to this unit. */
     auto generate_plugin() -> unit&;
-    /** @brief Generates SQL DDL schemata for MySQL.
+    /** @brief Generates SQL DDL schemata for storage connectors.
      * @return Reference to this unit. */
     auto generate_sql() -> unit&;
     /** @brief Generates CMakeLists.txt build configuration.
@@ -241,6 +241,14 @@ class unit {
      * @param _def OpenAPI schema definition.
      * @return Shared pointer to the generated SQL file AST. */
     auto generate_sql_schemata_mysql(zpt::json _def) -> zpt::ast::basic_file::ptr;
+    /** @brief Generates SQLite DDL schemata from schema definition.
+     * @param _def OpenAPI schema definition.
+     * @return Shared pointer to the generated SQL file AST. */
+    auto generate_sql_schemata_sqlite(zpt::json _def) -> zpt::ast::basic_file::ptr;
+    /** @brief Generates PostgreSQL DDL schemata from schema definition.
+     * @param _def OpenAPI schema definition.
+     * @return Shared pointer to the generated SQL file AST. */
+    auto generate_sql_schemata_pgsql(zpt::json _def) -> zpt::ast::basic_file::ptr;
 };
 } // namespace rest
 } // namespace gen
