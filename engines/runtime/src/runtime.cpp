@@ -77,7 +77,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
     zpt::parameters::verify(_parameters, _parameter_setup);
 
     auto _config = zpt::GLOBAL_CONFIG();
-    zpt::log_lvl = 8;
+    zpt::log_lvl = 5;
     zpt::log_format = 0;
     _config += _default_config;
     zpt::startup::configuration::load(_parameters, _config);

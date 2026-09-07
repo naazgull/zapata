@@ -28,7 +28,7 @@
 #include <zapata/text/convert.h>
 
 namespace zpt {
-short int log_lvl = 8;
+short int log_lvl = 0;
 std::ostream* log_fd = &std::cout;
 long log_pid = 0;
 std::unique_ptr<std::string> log_pname = nullptr;
