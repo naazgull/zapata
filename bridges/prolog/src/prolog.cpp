@@ -49,11 +49,20 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
     PL_put_atom_chars(*_file, _external_path.data());
 
     predicate_t _consult = PL_predicate("consult", 1, nullptr);
-    qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _consult, _file);
-    zpt::sentry _cleanup{ [_qid]() { PL_close_query(_qid); } };
+    qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _consult, _file);
 
-    expect(PL_next_solution(_qid) != PL_S_FALSE,
-           "unable to properly load `" << _external_path << "`");
+    auto _result = PL_next_solution(_qid);
+    PL_close_query(_qid);
+
+    if (_result == PL_S_FALSE) {
+        auto _term = PL_exception(0);
+        if (_term != 0) {
+            auto _message = zpt::prolog::term_to_string(_term);
+            PL_clear_exception();
+            throw zpt::exception{ _message };
+        }
+        expect(_result != PL_S_FALSE, "unable to properly load `" << _external_path << "`");
+    }
 
     if (_persist) {
         zlog("Prolog: loading module " << _conf("module") << " from " << _external_path, zpt::info);
@@ -71,6 +80,22 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, callback_type _callback,
         this->__builtin_to_load.insert(
           std::make_pair(_conf("module")->string(), std::make_tuple(_callback, _conf)));
     }
+    return (*this);
+}
+
+auto zpt::prolog::bridge::unload_module(std::string _external_path) -> zpt::prolog::bridge& {
+    zpt::prolog::term _file;
+    PL_put_atom_chars(*_file, _external_path.data());
+
+    predicate_t _unload_file = PL_predicate("unload_file", 1, nullptr);
+    qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _unload_file, _file);
+    zpt::sentry _cleanup{ [_qid]() { PL_close_query(_qid); } };
+
+    expect(PL_next_solution(_qid) != PL_S_FALSE,
+           "unable to properly unload `" << _external_path << "`");
+
+    this->__external_to_load.erase(_external_path);
+
     return (*this);
 }
 
@@ -110,7 +135,7 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
         expect(PL_put_term(_args + 1, *_goal), "unable to set argument 2 in `findall`");
 
         predicate_t _findall = PL_predicate("findall", 3, nullptr);
-        qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _findall, _args);
+        qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _findall, _args);
         auto _cleanup = [_args, _qid]() {
             PL_close_query(_qid);
             PL_free_term_ref(_args + 2);
@@ -126,17 +151,34 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
             PL_erase(_record);
             return _return;
         }
-        _cleanup();
+        else {
+            _cleanup();
+            auto _term = PL_exception(0);
+            if (_term != 0) {
+                auto _message = zpt::prolog::term_to_string(_term);
+                PL_clear_exception();
+                throw zpt::exception{ _message };
+            }
+        }
     }
     else {
         term_t _args = PL_new_term_refs(1);
         expect(PL_put_term(_args + 0, *_to_call), "unable to set argument 1 in `call`");
 
         predicate_t _call = PL_predicate("call", 1, nullptr);
-        qid_t _qid = PL_open_query(nullptr, PL_Q_NORMAL, _call, _args);
+        qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _call, _args);
         auto _result = PL_next_solution(_qid);
         PL_close_query(_qid);
         PL_free_term_ref(_args + 0);
+
+        if (_result == PL_S_FALSE) {
+            auto _term = PL_exception(0);
+            if (_term != 0) {
+                auto _message = zpt::prolog::term_to_string(_term);
+                PL_clear_exception();
+                throw zpt::exception{ _message };
+            }
+        }
 
         zpt::prolog::term _return;
         expect(PL_put_integer(*_return, _result), "couldn't add integer to Prolog term");
