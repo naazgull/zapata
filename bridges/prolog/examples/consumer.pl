@@ -17,5 +17,6 @@ consume :-
     consume(200) ;
     (
         sleep(1),
+        zpt_is_in_shutdown(false),
         consume
     ).

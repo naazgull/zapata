@@ -31,7 +31,10 @@ target_include_directories(zapata-bridge-prolog
     zapata-bridge-base
     swipl::libswipl
     ${BRIDGE_PROLOG_INCLUDE_DIR}
+  PUBLIC
+    swipl::libswipl
   INTERFACE
+    swipl::libswipl
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
 target_compile_definitions(zapata-bridge-prolog PRIVATE SWICPP=1)

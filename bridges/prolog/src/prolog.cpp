@@ -45,14 +45,39 @@ auto zpt::prolog::bridge::thread_instance() -> bridge& {
 
 auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
   -> zpt::prolog::bridge& {
-    zpt::prolog::term _file;
-    PL_put_atom_chars(*_file, _external_path.data());
+    static atom_t _erase = PL_new_atom("erase");
 
-    predicate_t _consult = PL_predicate("consult", 1, nullptr);
-    qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _consult, _file);
+    zpt::prolog::term _setup{ R"(
+        asserta(
+            (user:thread_message_hook(Term, error, _Lines) :-
+                    zpt_consult_log(Term)
+            ),
+            Ref
+        )
+    )" };
+    zpt::prolog::term _ref;
+    PL_get_arg(2, _setup, *_ref);
+
+    zpt::prolog::term _call{ std::format("consult('{}')", _external_path) };
+
+    zpt::prolog::term _cleanup;
+    expect(PL_put_functor(*_cleanup, PL_new_functor(_erase, 1)),
+           "couldn't add functor to Prolog term");
+    expect(PL_unify_arg(1, *_cleanup, *_ref), "couldn't unify `Ref` in erase");
+
+    term_t _args = PL_new_term_refs(3);
+    expect(PL_put_term(_args + 0, *_setup), "unable to set argument 1 in `setup_call_cleanup`");
+    expect(PL_put_term(_args + 1, *_call), "unable to set argument 2 in `setup_call_cleanup`");
+    expect(PL_put_term(_args + 2, *_cleanup), "unable to set argument 3 in `setup_call_cleanup`");
+
+    predicate_t _setup_call_cleanup = PL_predicate("setup_call_cleanup", 3, nullptr);
+    qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _setup_call_cleanup, _args);
 
     auto _result = PL_next_solution(_qid);
     PL_close_query(_qid);
+    PL_free_term_ref(_args + 2);
+    PL_free_term_ref(_args + 1);
+    PL_free_term_ref(_args + 0);
 
     if (_result == PL_S_FALSE) {
         auto _term = PL_exception(0);
@@ -62,6 +87,19 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
             throw zpt::exception{ _message };
         }
         expect(_result != PL_S_FALSE, "unable to properly load `" << _external_path << "`");
+    }
+
+    auto& _global = zpt::PROLOG_GLOBALS();
+    std::unique_lock _guard{ _global.mutex() };
+    if ((*_global)("consult_log")(zpt::this_thread::name())->is_array()) {
+        std::ostringstream _oss;
+        _oss << "errors found while loading `" << _external_path << "`:";
+        for (auto&& [_idx, __, _message] : (*_global)("consult_log")(zpt::this_thread::name())) {
+            _oss << "\n    " << (_idx + 1) << ". " << _message;
+        }
+        _oss << std::flush;
+        (*_global)["consult_log"]->object()->pop(zpt::this_thread::name());
+        throw zpt::exception{ _oss.str() };
     }
 
     if (_persist) {
@@ -206,6 +244,9 @@ zpt::prolog::bridge::bridge(bridge const& _rhs)
 auto zpt::prolog::bridge::initialize() -> zpt::prolog::bridge& {
     char* _arg = const_cast<char*>(this->__engine_args.data());
     expect(PL_initialise(1, &_arg), "couldn't initialise Prolog engine");
+    auto& _global = zpt::PROLOG_GLOBALS();
+    std::unique_lock _guard{ _global.mutex() };
+    (*_global)["consult_log"] = zpt::json::object();
     return (*this);
 }
 
