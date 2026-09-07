@@ -254,6 +254,28 @@ static auto is_in_shutdown(term_t _result_pl /*?*/) -> foreign_t {
     auto _result = zpt::prolog::to_object(zpt::runtime::is_in_shutdown());
     return PL_unify_term(_result_pl, PL_TERM, *_result);
 }
+
+/**
+ * @brief Sets or unifies the global Prolog variable identified by the first parameter with the
+ * second parameter.
+ *
+ * @param _global_key_pl The identifier of the global
+ * @param _global_value_pl The Prolog term to unify with the value of the given global
+ * @return foreign_t 1 on success, throws exception on error
+ *
+ * @throws expect Failed if _global_key_pl is not a atom or string
+ */
+static auto consult_log(term_t _message_pl /*+*/) -> foreign_t {
+    auto _message = zpt::prolog::to_json(_message_pl);
+
+    auto& _global = zpt::PROLOG_GLOBALS();
+    std::unique_lock _guard{ _global.mutex() };
+    if (!(*_global)("consult_log")(zpt::this_thread::name())->is_array()) {
+        (*_global)["consult_log"][zpt::this_thread::name()] = zpt::json::array();
+    }
+    (*_global)["consult_log"][zpt::this_thread::name()] << _message;
+    return 1;
+}
 }
 } // namespace
 
@@ -281,4 +303,5 @@ extern "C" auto install_libzapata_bridge_prolog_bindings() -> install_t {
     PL_register_foreign("zpt_log", 1, (void*)::send_to_log, 0);
     PL_register_foreign("zpt_value_for", 3, (void*)::get_value_for_key, 0);
     PL_register_foreign("zpt_is_in_shutdown", 1, (void*)::is_in_shutdown, 0);
+    PL_register_foreign("zpt_consult_log", 1, (void*)::consult_log, 0);
 }
