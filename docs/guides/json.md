@@ -300,24 +300,105 @@ zpt::json arr = { zpt::array, 1, 2, 3 };
 arr->array()->pop(1);  // Removes element at index 1
 ```
 
-### Set Operations
+### The `+`, `-`, `|`, `&` Operators
+
+These four operators each have a container meaning (for objects and arrays) and a scalar meaning. Every one also has an in-place compound form (`+=`, `-=`, `|=`, `&=`) that modifies the left-hand value and returns it. The binary forms return a new value and leave both operands untouched.
+
+#### `+` — union
+
+On **objects**, combines both key sets. Where a key exists on both sides, the right-hand value wins for scalars, while nested objects and arrays are merged recursively:
+
+```cpp
+zpt::json a = { "x", 1, "y", 2, "opts", { "keep", true } };
+zpt::json b = { "y", 20, "z", 3, "opts", { "added", true } };
+
+a + b;  // {"x":1, "y":20, "z":3, "opts":{"keep":true, "added":true}}
+```
+
+On **arrays**, appends the right-hand elements:
+
+```cpp
+{ zpt::array, 1, 2 } + { zpt::array, 3, 4 };  // [1, 2, 3, 4]
+```
+
+On **scalars** it is arithmetic:
+
+```cpp
+"foo" + "bar";           // "foobar" (concatenation)
+3 + 4;                   // 7
+3.5 + 0.25;              // 3.75
+true + false;            // true (logical OR)
+"2024-01-15T10:30:00Z" + 3600;  // date advanced by one hour
+```
+
+#### `-` — difference
+
+On **objects**, removes every key that appears on the right-hand side (the right-hand values are ignored):
+
+```cpp
+zpt::json a = { "x", 1, "y", 2 };
+zpt::json b = { "y", 20 };
+
+a - b;  // {"x":1}
+```
+
+On **arrays**, subtracts element-wise by index. On **scalars** it is arithmetic:
+
+```cpp
+"hello world" - "world";  // "hello " (removes all occurrences of the substring)
+10 - 4;                   // 6
+0.5 - 0.25;               // 0.25
+true - false;             // true (logical AND)
+"2024-01-15T10:30:00Z" - 3600;  // date moved back by one hour
+```
+
+#### `|` — merge (strict union)
+
+On **objects**, performs a deep merge that resolves in favor of the **left-hand side** at every level: for each right-hand key, if the left holds an object or array at that key the merge descends into it recursively, if the left entry is missing (or nil) the right-hand value is used, and otherwise the left value is kept. In the example below, `logging` collides as an object on both sides, so the merge goes one level deeper: `level` is kept from the left and `format` is added from the right:
+
+```cpp
+zpt::json defaults = { "port", 8080, "logging", { "level", "info" } };
+zpt::json config   = { "port", 9090, "logging", { "format", "json" } };
+
+defaults | config;
+// {"port":8080, "logging":{"level":"info", "format":"json"}}
+// "port" stays 8080 — existing left values are never overwritten
+```
+
+On **arrays**, appends (same as `+`). On **scalars** it is a bitwise/logical OR:
+
+```cpp
+1 | 2;        // 3
+true | false; // true
+"ab" | "cd";  // "abcd" (concatenation)
+```
+
+#### `&` — intersection
+
+On **objects**, keeps only the keys present on **both** sides, using the left-hand values. Common nested objects and arrays are intersected recursively:
 
 ```cpp
 zpt::json a = { "x", 1, "y", 2 };
 zpt::json b = { "y", 20, "z", 3 };
 
-// Union (combines all keys)
-zpt::json united = a + b;  // {"x":1, "y":20, "z":3}
-
-// Merge (deep merge for nested objects)
-zpt::json merged = a | b;
-
-// Intersection (common keys only)
-zpt::json common = a & b;  // {"y":...}
-
-// Difference
-zpt::json diff = a - b;    // {"x":1}
+a & b;  // {"y":2}
 ```
+
+On **scalars** it is a bitwise/logical AND:
+
+```cpp
+6 & 3;        // 2
+true & false; // false
+```
+
+### Operator Summary
+
+| Operator | Objects | Arrays | Numbers | Strings | Booleans | Dates |
+|----------|---------|--------|---------|---------|----------|-------|
+| `+` | union, right wins at leaves | concatenate | add | concatenate | OR | add seconds |
+| `-` | drop keys present on the right | subtract by index | subtract | remove substring occurrences | AND | subtract seconds |
+| `\|` | deep merge, left wins | concatenate | bitwise OR | concatenate | OR | bitwise OR |
+| `&` | common keys only (left values) | common elements only | bitwise AND | — | AND | bitwise AND |
 
 ## Parsing and Serialization
 
@@ -463,7 +544,10 @@ zpt::json load_config(std::string const& path) {
     if (file) {
         zpt::json config;
         file >> config;
-        return defaults | config;  // Merge with config overriding defaults
+        // Deep merge, defaults winning at every level: colliding nested
+        // objects are merged recursively, and config values only fill in
+        // entries missing from the defaults.
+        return defaults | config;
     }
     return defaults;
 }

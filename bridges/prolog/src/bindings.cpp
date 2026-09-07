@@ -71,9 +71,8 @@ static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> fo
     expect(_request_js->is_object(),
            "`zpt_make_request`'s first parameter must be a term convertible to JSON");
 
-    auto _request = zpt::TRANSPORT_LAYER() //
-                      .get(_request_js("protocol")->string())
-                      ->make_request();
+    auto _transport = zpt::TRANSPORT_LAYER().get(_request_js("protocol")->string());
+    auto _request = _transport->make_request();
     _request //
       ->performative(zpt::ontology::from_str(_request_js("performative")->string()))
       .uri(_request_js("uri"))
@@ -81,31 +80,39 @@ static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> fo
 
     if (_request_js("body")->ok()) { _request->body() = _request_js("body"); }
 
-    static constexpr long long _timeout{ 20 };
-    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now().time_since_epoch())
-                    .count();
-    auto _context = zpt::make_call<>(zpt::REST_RESOLVER(), _request);
-    while (_context->state() <= zpt::CALL_STATE_SENT) {
-        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
-                      std::chrono::steady_clock::now().time_since_epoch())
-                      .count();
-        if (_lap - _start > _timeout) {
-            auto _reply = zpt::prolog::to_object({ "status", 408 });
-            return PL_unify_term(_reply_pl, PL_TERM, *_reply);
+    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+        static constexpr long long _timeout{ 20 };
+        auto _start = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::steady_clock::now().time_since_epoch())
+                        .count();
+        auto _context = zpt::make_call<>(zpt::REST_RESOLVER(), _request);
+        while (_context->state() <= zpt::CALL_STATE_SENT) {
+            auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
+                          std::chrono::steady_clock::now().time_since_epoch())
+                          .count();
+            if (_lap - _start > _timeout) {
+                auto _reply = zpt::prolog::to_object({ "status", 408 });
+                return PL_unify_term(_reply_pl, PL_TERM, *_reply);
+            }
+            std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
+
+            if (zpt::runtime::is_in_shutdown()) { return false; }
         }
-        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
+
+        auto _reply_js = _context->reply();
+        auto _reply = zpt::prolog::to_object({ "status", //
+                                               _reply_js->status(),
+                                               "headers",
+                                               _reply_js->headers(),
+                                               "body",
+                                               _reply_js->body() });
+
+        return PL_unify_term(_reply_pl, PL_TERM, *_reply);
     }
-
-    auto _reply_js = _context->reply();
-    auto _reply = zpt::prolog::to_object({ "status", //
-                                           _reply_js->status(),
-                                           "headers",
-                                           _reply_js->headers(),
-                                           "body",
-                                           _reply_js->body() });
-
-    return PL_unify_term(_reply_pl, PL_TERM, *_reply);
+    else {
+        zpt::make_call(zpt::REST_RESOLVER(), _request);
+        return true;
+    }
 }
 
 /**

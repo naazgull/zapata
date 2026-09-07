@@ -55,9 +55,11 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
                           .count();
             if (_lap - _start > _timeout) {
                 _bridge.to_object({ "status", 408 }, _state);
-                return 0;
+                return 1;
             }
             std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
+
+            if (zpt::runtime::is_in_shutdown()) { return 0; }
         }
 
         auto _reply = _context->reply();

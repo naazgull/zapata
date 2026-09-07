@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include <SWI-cpp2.h>
+#include <SWI-Prolog.h>
 #include <zapata/base/safe_access.h>
 #include <zapata/bridge.h>
 #include <zapata/prolog/helpers.h>
@@ -87,6 +87,10 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
      * @return Reference to this bridge. */
     auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
       -> zpt::prolog::bridge&;
+    /** @brief Retracts all clauses read from the given file.
+     * @param _external_path External file path to unload.
+     * @return Reference to this bridge. */
+    auto unload_module(std::string _external_path) -> zpt::prolog::bridge&;
     /** @brief Registers a C++ callback as a Prolog function.
      * @param _conf Configuration JSON.
      * @param _callback Lambda callback to register.
