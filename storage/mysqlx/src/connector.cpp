@@ -424,6 +424,10 @@ auto zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::
 
 auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
+        if (this->__filter->is_object()) {
+            this->__filter = zpt::storage::extract_find(this->__filter);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
@@ -519,6 +523,10 @@ auto zpt::storage::mysqlx::action_remove::bind(zpt::json _map) -> zpt::storage::
 
 auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
+        if (this->__filter->is_object()) {
+            this->__filter = zpt::storage::extract_find(this->__filter);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),

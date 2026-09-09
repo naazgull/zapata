@@ -49,7 +49,11 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
 
     zpt::prolog::term _setup{ R"(
         asserta(
-            (user:thread_message_hook(Term, error, _Lines) :-
+            (user:thread_message_hook(Term, Type, _Lines) :-
+                    (
+                        Type == error;
+                        (Type == warning, functor(Term, singletons, _))
+                    ),
                     zpt_consult_log(Term)
             ),
             Ref

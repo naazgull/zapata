@@ -11,9 +11,15 @@ namespace runtime {
  * @param _argc Argument count from main.
  * @param _argv Argument vector from main.
  * @param _default_config The default configuration, if any (default: zpt::undefined)
+ * @return The captured configuration (configuration files + command line).
+ */
+auto initialize(int _argc, char** _argv, zpt::json const& _default_config = zpt::undefined)
+  -> zpt::json;
+/**
+ * @brief Runs the server threads.
  * @return void
  */
-auto initialize(int _argc, char** _argv, zpt::json const& _default_config = zpt::undefined) -> void;
+auto run() -> void;
 /** @brief Shuts down the stream polling loop.
  * @return void
  */

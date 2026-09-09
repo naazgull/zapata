@@ -17,7 +17,8 @@ namespace {
 auto deallocate(int _signal) -> void;
 } // namespace
 
-auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default_config) -> void {
+auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default_config)
+  -> zpt::json {
     std::signal(SIGUSR1, ::deallocate);
     std::signal(SIGINT, ::deallocate);
     std::signal(SIGTERM, ::deallocate);
@@ -66,18 +67,18 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
 
     if (_parameters("--help")->ok()) {
         std::cout << zpt::parameters::usage(_parameter_setup) << std::flush;
-        return;
+        return zpt::undefined;
     }
 
     if (_parameters("--terminate")->ok()) {
         kill(static_cast<int>(_parameters("--terminate")), SIGUSR1);
-        return;
+        return zpt::undefined;
     }
 
     zpt::parameters::verify(_parameters, _parameter_setup);
 
     auto _config = zpt::GLOBAL_CONFIG();
-    zpt::log_lvl = 8;
+    zpt::log_lvl = 5;
     zpt::log_format = 0;
     _config += _default_config;
     zpt::startup::configuration::load(_parameters, _config);
@@ -85,7 +86,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
 
     if (_parameters("--print-config")->ok()) {
         std::cout << _config << std::endl << std::flush;
-        return;
+        return zpt::undefined;
     }
 
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
@@ -102,13 +103,19 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
       .max_size(_config("resources")("limits")("max_heap_allocation")->ok()
                   ? _config("resources")("limits")("max_heap_allocation")->integer()
                   : 0);
-
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
     zpt::DISPATCHER(_consumers, 10000) //
       ->start_consumers(_consumers);
+    zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
+
+    return _config;
+}
+
+auto zpt::runtime::run() -> void {
+    auto _config = zpt::GLOBAL_CONFIG();
+
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::system_event_type::BOOTING);
-    zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
 
     zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
