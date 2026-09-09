@@ -30,5 +30,6 @@
  */
 auto main(int _argc, char* _argv[]) -> int {
     zpt::runtime::initialize(_argc, _argv);
+    zpt::runtime::run();
     return 0;
 }
