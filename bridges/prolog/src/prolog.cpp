@@ -74,6 +74,14 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
     expect(PL_put_term(_args + 1, *_call), "unable to set argument 2 in `setup_call_cleanup`");
     expect(PL_put_term(_args + 2, *_cleanup), "unable to set argument 3 in `setup_call_cleanup`");
 
+    zpt::sentry _cleanup_log{ []() -> void {
+        auto& _global = zpt::PROLOG_GLOBALS();
+        std::unique_lock _guard{ _global.mutex() };
+        if ((*_global)("consult_log")(zpt::this_thread::name())->is_array()) {
+            (*_global)["consult_log"]->object()->pop(zpt::this_thread::name());
+        }
+    } };
+
     predicate_t _setup_call_cleanup = PL_predicate("setup_call_cleanup", 3, nullptr);
     qid_t _qid = PL_open_query(nullptr, PL_Q_PASS_EXCEPTION, _setup_call_cleanup, _args);
 
@@ -93,17 +101,19 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
         expect(_result != PL_S_FALSE, "unable to properly load `" << _external_path << "`");
     }
 
-    auto& _global = zpt::PROLOG_GLOBALS();
-    std::unique_lock _guard{ _global.mutex() };
-    if ((*_global)("consult_log")(zpt::this_thread::name())->is_array()) {
-        std::ostringstream _oss;
-        _oss << "errors found while loading `" << _external_path << "`:";
-        for (auto&& [_idx, __, _message] : (*_global)("consult_log")(zpt::this_thread::name())) {
-            _oss << "\n    " << (_idx + 1) << ". " << _message;
+    {
+        auto& _global = zpt::PROLOG_GLOBALS();
+        std::unique_lock _guard{ _global.mutex() };
+        if ((*_global)("consult_log")(zpt::this_thread::name())->is_array()) {
+            std::ostringstream _oss;
+            _oss << "errors found while loading `" << _external_path << "`:";
+            for (auto&& [_idx, __, _message] :
+                 (*_global)("consult_log")(zpt::this_thread::name())) {
+                _oss << "\n    " << (_idx + 1) << ". " << _message;
+            }
+            _oss << std::flush;
+            throw zpt::exception{ _oss.str() };
         }
-        _oss << std::flush;
-        (*_global)["consult_log"]->object()->pop(zpt::this_thread::name());
-        throw zpt::exception{ _oss.str() };
     }
 
     if (_persist) {
