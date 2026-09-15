@@ -85,24 +85,30 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
-        expect_c(_event->authorized(), "No permission to process this event", 401);
+        expect_c(_event->authorized(), "No permission to process `" << _event->type() << "`", 401);
         auto state = (*_event)(this->shared_from_this());
         if (state == zpt::events::retrigger) { this->trigger(std::move(_event)); }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (zpt::failed_expectation const& _e) {
         if (!_event->catch_error(_e, this->shared_from_this())) {
-            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+            zlog("Uncaught exception found while processing `" << _event->type()
+                                                               << "`: " << _e.what(),
+                 zpt::error);
         }
     }
     catch (std::bad_alloc const& _e) {
         if (!_event->catch_error(_e, this->shared_from_this())) {
-            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+            zlog("Uncaught exception found while processing `" << _event->type()
+                                                               << "`: " << _e.what(),
+                 zpt::error);
         }
     }
     catch (std::exception const& _e) {
         if (!_event->catch_error(_e, this->shared_from_this())) {
-            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+            zlog("Uncaught exception found while processing `" << _event->type()
+                                                               << "`: " << _e.what(),
+                 zpt::error);
         }
     }
 #endif

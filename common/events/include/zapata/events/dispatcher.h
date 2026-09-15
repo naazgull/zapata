@@ -239,6 +239,9 @@ class abstract_event {
     /** @brief Called when event is created with initialization data.
      * @param init_data Event initialization data. */
     virtual auto initialize(zpt::event_initialization& init_data) -> void = 0;
+    /** @brief Retrieves the textual representation of this event type.
+     * @return A string holding the underlying type name. */
+    virtual auto type() const -> std::string = 0;
     /** @brief Returns true if event is blocked waiting for something.
      * @return True if event is blocked. */
     virtual auto blocked() const -> bool = 0;
@@ -301,6 +304,9 @@ class event_t : public zpt::abstract_event {
     /** @brief Delegates to underlying Operation's initialize().
      * @param init_data Event initialization data. */
     virtual auto initialize(zpt::event_initialization& init_data) -> void override final;
+    /** @brief Retrieves the textual representation of this event type.
+     * @return A string holding the underlying type name. */
+    virtual auto type() const -> std::string override final;
     /** @brief Delegates to underlying Operation's blocked().
      * @return Result of underlying Operation's blocked(). */
     virtual auto blocked() const -> bool override final;
@@ -391,6 +397,11 @@ auto zpt::event_t<T>::operator*() const -> T const& {
 template<zpt::events::Operation T>
 auto zpt::event_t<T>::initialize(zpt::event_initialization& init_data) -> void {
     return this->__underlying.initialize(init_data);
+}
+
+template<zpt::events::Operation T>
+auto zpt::event_t<T>::type() const -> std::string {
+    return zpt::demangle(typeid(T).name());
 }
 
 template<zpt::events::Operation T>
