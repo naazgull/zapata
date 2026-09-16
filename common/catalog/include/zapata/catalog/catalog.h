@@ -176,34 +176,22 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
     auto _session = this->__connection->session();
     auto _database = _session->database(_catalog_name);
 
-    sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
-                 "CREATE TABLE IF NOT EXISTS catalog ("
-                 "    _id TEXT,"
-                 "    provider_id TEXT NOT NULL,"
-                 "    hash INTEGER NOT NULL,"
-                 "    pattern TEXT NOT NULL,"
-                 "    public INTEGER DEFAULT 0,"
-                 "    metadata TEXT,"
-                 "    PRIMARY KEY(_id, provider_id, hash),"
-                 "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
-                 ")",
-                 nullptr,
-                 nullptr,
-                 nullptr);
-    sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
-                 "CREATE INDEX pattern_idx ON catalog (pattern)",
-                 nullptr,
-                 nullptr,
-                 nullptr);
-    sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
-                 "CREATE TABLE IF NOT EXISTS provider ("
-                 "    _id TEXT PRIMARY KEY,"
-                 "    name TEXT NOT NULL,"
-                 "    protocols TEXT NOT NULL"
-                 ")",
-                 nullptr,
-                 nullptr,
-                 nullptr);
+    _database->sql("CREATE TABLE IF NOT EXISTS catalog ("
+                   "    _id TEXT,"
+                   "    provider_id TEXT NOT NULL,"
+                   "    hash INTEGER NOT NULL,"
+                   "    pattern TEXT NOT NULL,"
+                   "    public INTEGER DEFAULT 0,"
+                   "    metadata TEXT,"
+                   "    PRIMARY KEY(_id, provider_id, hash),"
+                   "    FOREIGN KEY(provider_id) REFERENCES provider(_id)"
+                   ")");
+    _database->sql("CREATE INDEX pattern_idx ON catalog (pattern)");
+    _database->sql("CREATE TABLE IF NOT EXISTS provider ("
+                   "    _id TEXT PRIMARY KEY,"
+                   "    name TEXT NOT NULL,"
+                   "    protocols TEXT NOT NULL"
+                   ")");
 
     this->__catalog = _database->collection("catalog");
     this->__provider = _database->collection("provider");

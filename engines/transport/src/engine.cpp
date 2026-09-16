@@ -53,7 +53,9 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 
     if (_polling->is_in_shutdown()) { return nullptr; }
     if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        _polling->unmute(_stream);
+        if (!_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
+            _polling->unmute(_stream);
+        }
         zlog(_e.what(), zpt::error);
         return nullptr;
     }
@@ -286,9 +288,7 @@ zpt::events::process::~process() {
                 }
             }
         }
-        if (this->__received->finish_processor() == 0) {
-            this->__polling->unmute(this->__stream);
-        }
+        if (this->__received->finish_processor() == 0) { this->__polling->unmute(this->__stream); }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {
