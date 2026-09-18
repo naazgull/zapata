@@ -370,6 +370,8 @@ auto zpt::storage::pgsql::action_add::execute() -> zpt::storage::result {
 
     auto _sql = std::vformat(zpt::storage::pgsql::to_insert(this->__underlying),
                              std::make_format_args(this->__schema, this->__table));
+    zlog(_sql, zpt::trace);
+
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     if (!_ok) {
@@ -482,6 +484,7 @@ auto zpt::storage::pgsql::action_modify::execute() -> zpt::storage::result {
                          std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
@@ -583,6 +586,7 @@ auto zpt::storage::pgsql::action_remove::execute() -> zpt::storage::result {
                          std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
@@ -675,6 +679,7 @@ auto zpt::storage::pgsql::action_replace::execute() -> zpt::storage::result {
                          std::make_format_args(this->__schema, this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
@@ -799,6 +804,7 @@ auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
 
     _oss << ";";
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
     auto _status = PQresultStatus(_res);
