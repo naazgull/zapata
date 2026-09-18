@@ -387,7 +387,7 @@ auto zpt::storage::mysqlx::to_update(zpt::json _to_update, zpt::json _pattern) -
 
     _oss << "update `{}` set ";
     zpt::storage::mysqlx::to_assignment_list(_to_update, _oss, ", ");
-    if (_pattern->ok()) { _oss << " where " << _pattern->string(); }
+    if (_pattern->ok() && _pattern->string().length()) { _oss << " where " << _pattern->string(); }
     _oss << ";" << std::flush;
 
     return _oss.str();
@@ -407,7 +407,7 @@ auto zpt::storage::mysqlx::to_delete(zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
     _oss << "delete from `{}`";
-    if (_pattern->ok()) { _oss << " where " << _pattern->string(); }
+    if (_pattern->ok() && _pattern->string().length()) { _oss << " where " << _pattern->string(); }
     _oss << ";" << std::flush;
 
     return _oss.str();

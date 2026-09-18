@@ -466,6 +466,10 @@ auto zpt::storage::pgsql::action_modify::bind(zpt::json _map) -> zpt::storage::a
 
 auto zpt::storage::pgsql::action_modify::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
+        if (this->__filter->is_object()) {
+            this->__filter = zpt::storage::extract_find(this->__filter);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
@@ -563,6 +567,10 @@ auto zpt::storage::pgsql::action_remove::bind(zpt::json _map) -> zpt::storage::a
 
 auto zpt::storage::pgsql::action_remove::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
+        if (this->__filter->is_object()) {
+            this->__filter = zpt::storage::extract_find(this->__filter);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
@@ -762,6 +770,10 @@ auto zpt::storage::pgsql::action_find::bind(zpt::json _map) -> zpt::storage::act
 
 auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
     if (this->__underlying->ok()) {
+        if (this->__underlying->is_object()) {
+            this->__underlying = zpt::storage::extract_find(this->__underlying);
+        }
+
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__underlying->string(),
                          std::format(":{}", _key),
