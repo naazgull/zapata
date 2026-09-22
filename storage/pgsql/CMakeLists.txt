@@ -57,8 +57,52 @@ set_target_properties(zapata-storage-pgsql
     LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-pgsql.so
 )
 
+add_library(zapata-storage-pgsql-plugin SHARED)
+add_dependencies(zapata-storage-pgsql-plugin
+  zapata-base
+  zapata-engine-startup
+  zapata-parser-json
+  zapata-parser-functional
+  zapata-storage-connector
+  zapata-storage-pgsql
+)
+target_sources(zapata-storage-pgsql-plugin
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+)
+target_include_directories(zapata-storage-pgsql-plugin
+  PRIVATE
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-pgsql
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+  INTERFACE
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+)
+target_link_libraries(zapata-storage-pgsql-plugin
+  PUBLIC
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-pgsql
+    ${PostgreSQL_LIBRARIES}
+)
+set_target_properties(zapata-storage-pgsql-plugin
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-pgsql-plugin.so
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-pgsql
+install(TARGETS zapata-storage-pgsql zapata-storage-pgsql-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

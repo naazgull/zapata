@@ -20,8 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <chrono>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
@@ -155,7 +155,7 @@ auto zpt::storage::pgsql::to_json(
 
         // Date/time types (always returned as strings by libpq)
         if (_type == 1082 || _type == 1083 || _type == 1114 || _type == 1184 ||
-            _type == 1186) { // date, time, timestamp, timestamptz, interval
+            _type == 1186) {                      // date, time, timestamp, timestamptz, interval
             if (_type == 1083 || _type == 1186) { // time, interval
                 _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
             }
@@ -369,10 +369,16 @@ auto to_epoch(std::string const& _value) -> std::chrono::milliseconds {
         _i = 1;
         size_t _n = 0;
         while (_i != _rest.length() && std::isdigit(static_cast<unsigned char>(_rest[_i]))) {
-            if (_n < 3) { _ms = _ms * 10 + (_rest[_i] - '0'); ++_n; }
+            if (_n < 3) {
+                _ms = _ms * 10 + (_rest[_i] - '0');
+                ++_n;
+            }
             ++_i;
         }
-        while (_n < 3) { _ms *= 10; ++_n; }
+        while (_n < 3) {
+            _ms *= 10;
+            ++_n;
+        }
     }
     if (_i < _rest.length() && (_rest[_i] == '+' || _rest[_i] == '-')) {
         auto _sign = (_rest[_i] == '-') ? -1 : 1;

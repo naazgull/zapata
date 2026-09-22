@@ -617,17 +617,27 @@ auto functional_to_sql(zpt::json _function,
  * @param _params Functor parameters.
  * @param _find Output stream for the SQL fragment. */
 auto functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
+auto default_connector(zpt::json const& _config) -> std::string;
+auto default_database(zpt::json const& _config, std::string const& _connector = "") -> std::string;
 } // namespace storage
 
+auto register_connector(std::string const& _key,
+                        std::function<zpt::storage::connection(zpt::json)> _callback) -> void;
+/**
+ * @brief Creates a thread-local connection of type consistent with the provided configuration.
+ * @param _config The configuration object including the "storage" attribute.
+ * @param _connector The string representing the connector type (@see register_connector).
+ * @return A new storage connection.
+ */
+auto make_connection(zpt::json const& _config, std::string const& _connector = "")
+  -> zpt::storage::connection;
 /**
  * @brief Creates a thread-local connection of type T.
  * @tparam T Connection implementation type.
- * @tparam Args Constructor argument types.
- * @param _args Arguments forwarded to constructor.
+ * @param _config The configuration object including the "storage" attribute.
  */
-template<typename T, typename... Args>
-auto make_connection(Args&... _args) -> zpt::storage::connection;
-
+template<typename T>
+auto make_connection(zpt::json const& _config) -> zpt::storage::connection;
 /**
  * @brief Creates a thread-local session of type T.
  * @tparam T Session implementation type.
@@ -637,7 +647,6 @@ auto make_connection(Args&... _args) -> zpt::storage::connection;
  */
 template<typename T, typename... Args>
 auto make_session(Args&... _args) -> zpt::storage::session;
-
 /**
  * @brief Creates a database of type T.
  * @tparam T Database implementation type.
@@ -647,7 +656,6 @@ auto make_session(Args&... _args) -> zpt::storage::session;
  */
 template<typename T, typename... Args>
 auto make_database(Args&... _args) -> zpt::storage::database;
-
 /**
  * @brief Creates a collection of type T.
  * @tparam T Collection implementation type.
@@ -657,7 +665,6 @@ auto make_database(Args&... _args) -> zpt::storage::database;
  */
 template<typename T, typename... Args>
 auto make_collection(Args&... _args) -> zpt::storage::collection;
-
 /**
  * @brief Creates an action of type T.
  * @tparam T Action implementation type.
@@ -667,7 +674,6 @@ auto make_collection(Args&... _args) -> zpt::storage::collection;
  */
 template<typename T, typename... Args>
 auto make_action(Args&... _args) -> zpt::storage::action;
-
 /**
  * @brief Creates a result of type T.
  * @tparam T Result implementation type.
@@ -679,9 +685,9 @@ template<typename T, typename... Args>
 auto make_result(Args&... _args) -> zpt::storage::result;
 } // namespace zpt
 
-template<typename T, typename... Args>
-auto zpt::make_connection(Args&... _args) -> zpt::storage::connection {
-    static thread_local zpt::storage::connection _to_return{ new T{ _args... } };
+template<typename T>
+auto zpt::make_connection(zpt::json const& _config) -> zpt::storage::connection {
+    static thread_local zpt::storage::connection _to_return{ new T{ _config } };
     return _to_return;
 }
 

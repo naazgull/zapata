@@ -188,7 +188,7 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
 }
 
 zpt::storage::sqlite::connection::connection(zpt::json _options)
-  : __options(_options("storage")("sqlite")) {}
+  : __options{ _options("storage")("sqlite") } {}
 
 auto zpt::storage::sqlite::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
@@ -410,7 +410,7 @@ auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> voi
       sqlite3_prepare_v2(
         this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
       "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
-    zlog(_statement, zpt::trace);    
+    zlog(_statement, zpt::trace);
     this->__prepared.push_back(
       sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
 }

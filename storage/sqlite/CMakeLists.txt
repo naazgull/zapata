@@ -50,8 +50,52 @@ set_target_properties(zapata-storage-sqlite
     LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-sqlite.so
 )
 
+add_library(zapata-storage-sqlite-plugin SHARED)
+add_dependencies(zapata-storage-sqlite-plugin
+  zapata-base
+  zapata-engine-startup
+  zapata-parser-json
+  zapata-parser-functional
+  zapata-storage-connector
+  zapata-storage-sqlite
+)
+target_sources(zapata-storage-sqlite-plugin
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+)
+target_include_directories(zapata-storage-sqlite-plugin
+  PRIVATE
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-sqlite
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+  INTERFACE
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+)
+target_link_libraries(zapata-storage-sqlite-plugin
+  PUBLIC
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-sqlite
+    ${SQLite3_LIBRARIES}
+)
+set_target_properties(zapata-storage-sqlite-plugin
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-sqlite-plugin.so
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-sqlite
+install(TARGETS zapata-storage-sqlite zapata-storage-sqlite-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
