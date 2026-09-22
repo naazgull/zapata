@@ -20,12 +20,17 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <chrono>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <zapata/pgsql/translate.h>
+
+namespace {
+auto to_epoch(std::string const& _value) -> std::chrono::milliseconds;
+}
 
 // ---- result_set_metadata (lightweight, for PGresult columns) ----
 
@@ -151,7 +156,13 @@ auto zpt::storage::pgsql::to_json(
         // Date/time types (always returned as strings by libpq)
         if (_type == 1082 || _type == 1083 || _type == 1114 || _type == 1184 ||
             _type == 1186) { // date, time, timestamp, timestamptz, interval
-            _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
+            if (_type == 1083 || _type == 1186) { // time, interval
+                _record[_name] = std::string{ _val, static_cast<size_t>(_len) };
+            }
+            else { // date, timestamp, timestamptz
+                _record[_name] = zpt::json::date(
+                  ::to_epoch(std::string{ _val, static_cast<size_t>(_len) }).count());
+            }
             continue;
         }
 
@@ -334,3 +345,47 @@ auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_qu
 auto zpt::storage::pgsql::quote(zpt::json _to_quote) -> std::string {
     return quote(nullptr, _to_quote);
 }
+
+namespace {
+auto to_epoch(std::string const& _value) -> std::chrono::milliseconds {
+    std::istringstream _is{ _value };
+
+    auto _tp = std::chrono::sys_time<std::chrono::seconds>{};
+    _is >> std::chrono::parse("%Y-%m-%d %H:%M:%S", _tp);
+    if (_is.fail()) {
+        _is.clear();
+        _is.str(_value);
+        _is >> std::chrono::parse("%Y-%m-%d", _tp); // date only -> midnight
+    }
+
+    std::string _rest;
+    _is >> _rest;
+
+    long long _ms = 0;
+    long long _offset_ms = 0;
+
+    size_t _i = 0;
+    if (!_rest.empty() && _rest[0] == '.') {
+        _i = 1;
+        size_t _n = 0;
+        while (_i != _rest.length() && std::isdigit(static_cast<unsigned char>(_rest[_i]))) {
+            if (_n < 3) { _ms = _ms * 10 + (_rest[_i] - '0'); ++_n; }
+            ++_i;
+        }
+        while (_n < 3) { _ms *= 10; ++_n; }
+    }
+    if (_i < _rest.length() && (_rest[_i] == '+' || _rest[_i] == '-')) {
+        auto _sign = (_rest[_i] == '-') ? -1 : 1;
+        auto _h = 10 * (_rest[_i + 1] - '0') + (_rest[_i + 2] - '0');
+        size_t _p = _i + 3;
+        auto _m = 0;
+        if (_p < _rest.length() && _rest[_p] == ':') {
+            _m = 10 * (_rest[_p + 1] - '0') + (_rest[_p + 2] - '0');
+        }
+        _offset_ms = _sign * (_h * 3600000 + _m * 60000);
+    }
+
+    return _tp.time_since_epoch() + std::chrono::milliseconds{ _ms } -
+           std::chrono::milliseconds{ _offset_ms };
+}
+} // namespace

@@ -95,9 +95,9 @@ class unit {
     std::map<std::string, zpt::json> __schema_components;
 
     static inline std::map<std::string, std::string> __sql_types{
-        { "string", "text" },     { "integer", "bigint" }, { "double", "double" },
-        { "boolean", "tinyint" }, { "date", "timestamp" }, { "object", "json" },
-        { "array", "json" }
+        { "string", "text" },     { "integer", "bigint" },    { "double", "double" },
+        { "boolean", "tinyint" }, { "date", "timestamp(3)" }, { "object", "json" },
+        { "array", "json" },      { "uuid", "varchar(22)" }
     };
 
     /** @brief Generates a C++ header file for an operation handler.

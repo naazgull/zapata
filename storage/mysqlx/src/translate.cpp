@@ -24,6 +24,10 @@
 #include <cassert>
 #include <zapata/mysqlx/translate.h>
 
+namespace {
+auto to_epoch(MYSQL_TIME const& _time) -> std::chrono::sys_time<std::chrono::milliseconds>;
+}
+
 zpt::storage::mysqlx::result_set_metadata::result_set_metadata(MYSQL_STMT* _statement) {
     if (_statement != nullptr) {
         this->__metadata = mysql_stmt_result_metadata(_statement);
@@ -280,37 +284,19 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
             case MYSQL_TYPE_NEWDATE:
             case MYSQL_TYPE_DATE: {
                 auto _date = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                std::ostringstream _oss;
-                _oss << _date.year << "-" << std::setfill('0') << std::setw(2) << _date.month << "-"
-                     << std::setfill('0') << std::setw(2) << _date.day;
-                _record[_name] = _oss.str();
+                _record[_name] = zpt::json::date(::to_epoch(_date).time_since_epoch().count());
                 break;
             }
             case MYSQL_TYPE_TIMESTAMP2:
             case MYSQL_TYPE_TIMESTAMP: {
                 auto _timestamp = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                std::ostringstream _oss;
-                _oss << _timestamp.year << "-" << std::setfill('0') << std::setw(2)
-                     << _timestamp.month << "-" << std::setfill('0') << std::setw(2)
-                     << _timestamp.day << "T" << std::setfill('0') << std::setw(2)
-                     << _timestamp.hour << ":" << std::setfill('0') << std::setw(2)
-                     << _timestamp.minute << ":" << std::setfill('0') << std::setw(2)
-                     << _timestamp.second << "." << std::setfill('0') << std::setw(3)
-                     << _timestamp.second_part;
-                _record[_name] = _oss.str();
+                _record[_name] = zpt::json::date(::to_epoch(_timestamp).time_since_epoch().count());
                 break;
             }
             case MYSQL_TYPE_DATETIME2:
             case MYSQL_TYPE_DATETIME: {
                 auto _datetime = _cols.get<MYSQL_TIME>(_statement, _col_idx);
-                std::ostringstream _oss;
-                _oss << _datetime.year << "-" << std::setfill('0') << std::setw(2)
-                     << _datetime.month << "-" << std::setfill('0') << std::setw(2) << _datetime.day
-                     << "T" << std::setfill('0') << std::setw(2) << _datetime.hour << ":"
-                     << std::setfill('0') << std::setw(2) << _datetime.minute << ":"
-                     << std::setfill('0') << std::setw(2) << _datetime.second << "."
-                     << std::setfill('0') << std::setw(3) << _datetime.second_part;
-                _record[_name] = _oss.str();
+                _record[_name] = zpt::json::date(::to_epoch(_datetime).time_since_epoch().count());
                 break;
             }
             case MYSQL_TYPE_INVALID: {
@@ -438,3 +424,19 @@ auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
          << (_needs ? "'" : "") << std::flush;
     return _oss.str();
 }
+
+namespace {
+auto to_epoch(MYSQL_TIME const& _time) -> std::chrono::sys_time<std::chrono::milliseconds> {
+    expect(_time.month != 0 && _time.day != 0, "Zero date in MYSQL_TIME");
+
+    auto _ymd = std::chrono::year{ static_cast<int>(_time.year) } /
+                std::chrono::month{ static_cast<unsigned>(_time.month) } / _time.day;
+    expect(_ymd.ok(), "Invalid date in MYSQL_TIME");
+
+    return static_cast<std::chrono::sys_days>(_ymd) +
+           std::chrono::hours{ static_cast<long long>(_time.hour) } +
+           std::chrono::minutes{ static_cast<long long>(_time.minute) } +
+           std::chrono::seconds{ static_cast<long long>(_time.second) } +
+           std::chrono::milliseconds{ static_cast<long long>(_time.second_part) / 1000 };
+}
+} // namespace

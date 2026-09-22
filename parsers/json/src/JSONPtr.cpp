@@ -1260,26 +1260,15 @@ auto zpt::timestamp(std::string const& _json_date) -> zpt::timestamp_t {
                  std::chrono::system_clock::now().time_since_epoch())
           .count();
     }
-    time_t _n{ 0 };
-    auto _ms{ 0 };
-    std::string _s{ _json_date.data() };
-    auto _idx = _s.rfind(".");
-    std::string _mss;
-    if (_idx != std::string::npos) {
-        auto _prev_is_zero = true;
-        if (_s[_idx + 1] != '0') {
-            _mss.push_back(_s[_idx + 1]);
-            _prev_is_zero = false;
-        }
-        if (!_prev_is_zero || _s[_idx + 2] != '0') { _mss.push_back(_s[_idx + 2]); }
-        _mss.push_back(_s[_idx + 3]);
-        _s.erase(_idx, 4);
-    }
-    if (_s.length() < 20) { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S"); }
-    else if (_s[_idx] == '+' || _s[_idx] == '-') { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z"); }
-    else { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z"); }
-    zpt::fromstr(_mss, &_ms);
-    return _n * 1000 + _ms;
+
+    auto _timestamp = std::chrono::sys_time<std::chrono::milliseconds>{};    
+    std::istringstream _is;
+    _is.str(_json_date);
+    _is >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", _timestamp);
+
+    expect(!_is.fail(), "Date string parse failed for " << _json_date);
+
+    return _timestamp.time_since_epoch().count();
 }
 
 auto zpt::timestamp(zpt::timestamp_t _timestamp) -> std::string {

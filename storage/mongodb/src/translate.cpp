@@ -193,8 +193,7 @@ auto zpt::storage::mongodb::from_bson(bsoncxx::document::view _doc) -> zpt::json
                 break;
             }
             case bsoncxx::type::k_date: {
-                _record[_key] =
-                  std::to_string(_elem.get_date().value.count()); // ms since epoch as string
+                _record[_key] = zpt::timestamp(_elem.get_date().value.count());
                 break;
             }
             case bsoncxx::type::k_null:
