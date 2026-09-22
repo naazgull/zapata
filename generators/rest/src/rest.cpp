@@ -27,10 +27,7 @@ zpt::gen::rest::unit::unit(std::string const& _module_name,
             this->__schema["info"]["database"] =
               std::format("\"{}\"", this->__schema("info")("database")->string());
         }
-        else {
-            this->__schema["info"]["database"] =
-              "_config(\"storage\")(db_driver_type)(\"database\")->string()";
-        }
+        else { this->__schema["info"]["database"] = "zpt::storage::default_database(_config)"; }
     }
 }
 
@@ -277,15 +274,8 @@ auto zpt::gen::rest::unit::generate_operation_cpp_file(zpt::json _def, std::stri
                                          _def(_method)("operationId")->string());
         _file->add<zpt::ast::cpp_instruction>(
           std::format("#include <{}>\n#include <zapata/uri.h>\n", _include_path));
-        if (this->__schema("info")("dbDriver")->is_string()) {
-            auto _db_driver = this->__schema("info")("dbDriver")->string();
-            _file->add<zpt::ast::cpp_instruction>(std::format(
-              "#include <zapata/connector.h>\n#include <zapata/{}.h>\n\nusing "
-              "db_connection_type = zpt::storage::{}::connection;\nconstexpr char const* "
-              "db_driver_type = \"{}\";\n",
-              _db_driver,
-              _db_driver,
-              _db_driver));
+        if (this->__schema("info")("dbDriver")->ok()) {
+            _file->add<zpt::ast::cpp_instruction>("#include <zapata/connector.h>\n\n");
         }
 
         std::cout << "> Generating " << _file_path << "." << std::endl;
@@ -1409,19 +1399,19 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()");
     if (this->__schema("info")("database")->is_string()) {
         _block->add<zpt::ast::cpp_instruction>(
-          "auto _session = zpt::make_connection<db_connection_type>(_config)->session()");
+          "auto _session = zpt::make_connection(_config)->session()");
         if (_with_collection) {
             if (_def("*")("requestBody")("dbCollection")->is_string()) {
                 _block-> //
                   add<zpt::ast::cpp_instruction>(
-                    std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                    std::format("auto _collection = _session//\n->database({})->collection(\"{}\")",
                                 this->__schema("info")("database")->string(),
                                 _def("*")("requestBody")("dbCollection")->string()));
             }
             else if (_def("*")("requestBody")("zpt:view")->is_string()) {
                 _block-> //
                   add<zpt::ast::cpp_instruction>(
-                    std::format("auto _collection = _session->database({})->collection(\"{}\")",
+                    std::format("auto _collection = _session//\n->database({})->collection(\"{}\")",
                                 this->__schema("info")("database")->string(),
                                 _def("*")("requestBody")("zpt:view")->string()));
             }

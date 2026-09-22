@@ -52,8 +52,52 @@ set_target_properties(zapata-storage-mysqlx
     LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-mysqlx.so
 )
 
+add_library(zapata-storage-mysqlx-plugin SHARED)
+add_dependencies(zapata-storage-mysqlx-plugin
+  zapata-base
+  zapata-engine-startup
+  zapata-parser-json
+  zapata-parser-functional
+  zapata-storage-connector
+  zapata-storage-mysqlx
+)
+target_sources(zapata-storage-mysqlx-plugin
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+)
+target_include_directories(zapata-storage-mysqlx-plugin
+  PRIVATE
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-mysqlx
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+  INTERFACE
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+)
+target_link_libraries(zapata-storage-mysqlx-plugin
+  PUBLIC
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-mysqlx
+    ${MYSQLCLIENT_LIBRARIES}
+)
+set_target_properties(zapata-storage-mysqlx-plugin
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-mysqlx-plugin.so
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-mysqlx
+install(TARGETS zapata-storage-mysqlx zapata-storage-mysqlx-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -47,7 +47,6 @@ auto zpt::storage::mysqlx::init() -> zpt::storage::mysqlx::library& {
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
   : __options{ _options("storage")("mysqlx") } {
-    zpt::storage::mysqlx::init();
     this->open(_options("storage")("mysqlx"));
 }
 

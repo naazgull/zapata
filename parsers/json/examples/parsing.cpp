@@ -136,7 +136,8 @@ auto test_unicode() -> void {
             static_cast<unsigned char>(_emoji[3]) == 0x80,
           "surrogate pair escape decodes to correct 4-byte UTF-8 sequence");
     // Surrogate pair adjacent to plain text on both sides
-    check(static_cast<std::string>(parse(R"("a\uD83D\uDE00b")")) == "a\xF0\x9F\x98\x80" "b",
+    check(static_cast<std::string>(parse(R"("a\uD83D\uDE00b")")) == "a\xF0\x9F\x98\x80"
+                                                                    "b",
           "surrogate pair decodes correctly surrounded by plain characters");
 }
 

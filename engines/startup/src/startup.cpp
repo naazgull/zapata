@@ -64,6 +64,11 @@ zpt::json __builtins = R"({
         "builtin:ws": { "name": "builtin:ws", "source": "libzapata-net-websocket-plugin.so",
             "requires" : [ "builtin:transport", "builtin:self" ],
             "needed_for" : [ "builtin:rest", "builtin:identity" ] },
+        "builtin:mongodb": { "name": "builtin:mongodb", "source": "libzapata-storage-mongodb-plugin.so" },
+        "builtin:mysqlx": { "name": "builtin:mysqlx", "source": "libzapata-storage-mysqlx-plugin.so" },
+        "builtin:pgsql": { "name": "builtin:pgsql", "source": "libzapata-storage-pgsql-plugin.so" },
+        "builtin:sqlite": { "name": "builtin:sqlite", "source": "libzapata-storage-sqlite-plugin.so",
+            "needed_for" : [ "builtin:rest" ] },
         "builtin:identity": { "name": "builtin:identity",
             "source": "libzapata-net-identity-plugin.so", "requires" : [ "builtin:transport" ] }
    })"_JSON;

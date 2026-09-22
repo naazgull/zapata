@@ -54,8 +54,53 @@ set_target_properties(zapata-storage-mongodb
     LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-mongodb.so
 )
 
+add_library(zapata-storage-mongodb-plugin SHARED)
+add_dependencies(zapata-storage-mongodb-plugin
+  zapata-base
+  zapata-engine-startup
+  zapata-parser-json
+  zapata-parser-functional
+  zapata-storage-connector
+  zapata-storage-mongodb
+)
+target_sources(zapata-storage-mongodb-plugin
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
+)
+target_include_directories(zapata-storage-mongodb-plugin
+  PRIVATE
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-mongodb
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+  INTERFACE
+    ${STORAGE_MONGODB_INCLUDE_DIR}
+)
+target_link_libraries(zapata-storage-mongodb-plugin
+  PUBLIC
+    zapata-base
+    zapata-engine-startup
+    zapata-parser-json
+    zapata-parser-functional
+    zapata-storage-connector
+    zapata-storage-mongodb
+    mongo::mongocxx_shared
+    mongo::bsoncxx_shared
+)
+set_target_properties(zapata-storage-mongodb-plugin
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-mongodb-plugin.so
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-mongodb
+install(TARGETS zapata-storage-mongodb zapata-storage-mongodb-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

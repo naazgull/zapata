@@ -1261,7 +1261,7 @@ auto zpt::timestamp(std::string const& _json_date) -> zpt::timestamp_t {
           .count();
     }
 
-    auto _timestamp = std::chrono::sys_time<std::chrono::milliseconds>{};    
+    auto _timestamp = std::chrono::sys_time<std::chrono::milliseconds>{};
     std::istringstream _is;
     _is.str(_json_date);
     _is >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", _timestamp);
