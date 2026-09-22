@@ -86,15 +86,13 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
       .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
-      .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
-                                      "_config(\"rest\")(\"prefix\")->string() : \"\"");
+      .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)");
     _unload_block //
       ->add<zpt::ast::cpp_instruction>(
         std::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()))
       .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
-      .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
-                                      "_config(\"rest\")(\"prefix\")->string() : \"\"");
+      .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)");
 
     for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
         std::string _method;
@@ -1335,11 +1333,9 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
-                                      "_config(\"rest\")(\"prefix\")->string() : \"\"")
+      .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)")
       .add<zpt::ast::cpp_instruction>(
-        "auto _transport = _config(\"transport\")(\"default\")->ok() ? "
-        "_config(\"transport\")(\"default\")->string() : \"tcp\"")
+        "auto _transport = zpt::network::default_transport(_config)")
       .add<zpt::ast::cpp_instruction>(
         "auto _params = this->received()->parameters()->is_object() ? "
         "this->received()->parameters()->clone() : zpt::json::object()");
@@ -1435,8 +1431,7 @@ auto zpt::gen::rest::unit::add_parameters_and_validation(zpt::ast::basic_code_bl
                 _block
                   ->add<zpt::ast::cpp_instruction>("auto _path = this->received()->uri()(\"path\")")
                   .add<zpt::ast::cpp_instruction>(
-                    "size_t _prefix_len = "
-                    "zpt::GLOBAL_CONFIG()(\"rest\")(\"prefix_path_len\")->integer()");
+                    "size_t _prefix_len = zpt::rest::default_prefix_len(_config)");
                 _has_path = true;
             }
         }

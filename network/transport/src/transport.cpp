@@ -308,6 +308,11 @@ auto zpt::network::resolve_content_type(zpt::message _message) -> std::string {
                                                      : "*/*";
 }
 
+auto zpt::network::default_transport(zpt::json const& _config) -> std::string {
+    return _config("transport")("default")->ok() ? _config("transport")("default")->string()
+                                                 : "tcp";
+}
+
 auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {
     static zpt::network::layer _global{ _config };
     return _global;

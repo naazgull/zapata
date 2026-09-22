@@ -189,6 +189,8 @@ class resolver_t : public zpt::events::resolver_t {
     /** @brief Configuration passed to the resolver at construction. */
     zpt::json __configuration;
 };
+auto default_prefix(zpt::json const& _config) -> std::string;
+auto default_prefix_len(zpt::json const& _config) -> size_t;
 } // namespace rest
 
 /**

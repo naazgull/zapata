@@ -160,6 +160,14 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
+auto zpt::rest::default_prefix(zpt::json const& _config) -> std::string {
+    return _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+}
+
+auto zpt::rest::default_prefix_len(zpt::json const& _config) -> size_t {
+    return _config("rest")("prefix_path_len")->integer();
+}
+
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::events::resolver {
     static zpt::events::resolver _global = zpt::allocate_shared<zpt::rest::resolver_t>(_config);
     return _global;
