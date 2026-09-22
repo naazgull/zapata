@@ -257,7 +257,7 @@ auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
  * @brief Returns the global configuration.
  * @return Global configuration JSON object.
  */
-auto GLOBAL_CONFIG() -> zpt::json;
+auto GLOBAL_CONFIG() -> zpt::json&;
 /**
  * @brief Returns the service identity.
  * @return Service identity JSON object.
