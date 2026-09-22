@@ -697,7 +697,7 @@ auto timestamp_to_str(std::uint64_t _millis) -> std::string;
  *
  * @par Example Usage
  * @code
- * auto ts = zpt::now<std::string>();     // "2024-01-15T10:30:00.000Z"
+ * auto ts = zpt::now<std::string>();     // "2024-01-15T10:30:00.000"
  * auto ms = zpt::now<uint64_t>();        // 1705315800000
  * auto sec = zpt::now<double>();         // 1705315800.0
  * @endcode

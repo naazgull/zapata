@@ -330,6 +330,8 @@ auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
 
     auto _sql = std::vformat(zpt::storage::mysqlx::to_insert(this->__underlying),
                              std::make_format_args(this->__table));
+    zlog(_sql, zpt::trace);
+
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
                             zpt::storage::mysqlx::mysql_stmt_end{});
     expect(
@@ -440,6 +442,7 @@ auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
                          std::make_format_args(this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
                             zpt::storage::mysqlx::mysql_stmt_end{});
@@ -539,6 +542,7 @@ auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
                          std::make_format_args(this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
                             zpt::storage::mysqlx::mysql_stmt_end{});
@@ -629,6 +633,7 @@ auto zpt::storage::mysqlx::action_replace::execute() -> zpt::storage::result {
                          std::make_format_args(this->__table));
     _oss << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
                             zpt::storage::mysqlx::mysql_stmt_end{});
@@ -750,6 +755,7 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
 
     _oss << ";" << std::flush;
     auto _sql = _oss.str();
+    zlog(_sql, zpt::trace);
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
                             zpt::storage::mysqlx::mysql_stmt_end{});

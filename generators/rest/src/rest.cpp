@@ -1766,9 +1766,6 @@ auto zpt::gen::rest::unit::generate_sql_schemata_pgsql(zpt::json _def)
                            ? std::format("varchar({})", _field("maximum")->integer())
                            : "text");
             }
-            else if (_field("type")->string() == "uuid") { _type = "varchar(22)"; }
-            else if (_field("type")->string() == "object") { _type = "json"; }
-            else if (_field("type")->string() == "array") { _type = "json"; }
 
             _oss << _name << " " << _type
                  << (_object("required")->contains(_name) ? " not null" : "") << "," << std::endl;

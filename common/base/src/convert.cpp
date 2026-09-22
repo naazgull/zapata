@@ -324,16 +324,7 @@ auto zpt::get_backtrace(int _skip) -> std::string {
 }
 
 auto zpt::timestamp_to_str(std::uint64_t _timestamp) -> std::string {
-    std::string _date = zpt::tostr((size_t)(_timestamp / 1000), "%Y-%m-%dT%H:%M:%S");
-    _date.append(".");
-    size_t _remainder = _timestamp % 1000;
-    if (_remainder < 100) {
-        _date.append("0");
-        if (_remainder < 10) { _date.append("0"); }
-    }
-    zpt::tostr(_date, _remainder);
-    size_t _time_offset = (size_t)(_timestamp / 1000);
-    zpt::tostr(_date, _time_offset, "%z");
-    _date.insert(_date.length() - 2, 1, ':');
-    return _date;
+    std::chrono::sys_time<std::chrono::milliseconds> _milli{ std::chrono::milliseconds{
+      _timestamp } };
+    return std::format("{:%Y-%m-%dT%H:%M:%S}", _milli);
 }
