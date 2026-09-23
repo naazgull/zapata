@@ -70,6 +70,8 @@ class exception : public std::exception {
      */
     virtual auto what() const noexcept -> const char* override;
 
+    static auto get_message(std::exception const& _exception) -> std::string;
+
     /**
      * @brief Stream output operator for printing exceptions.
      * @param _out Output stream.
