@@ -623,6 +623,7 @@ auto default_database(zpt::json const& _config, std::string const& _connector = 
 
 auto register_connector(std::string const& _key,
                         std::function<zpt::storage::connection(zpt::json)> _callback) -> void;
+auto unregister_connector(std::string const& _key) -> void;
 /**
  * @brief Creates a thread-local connection of type consistent with the provided configuration.
  * @param _config The configuration object including the "storage" attribute.

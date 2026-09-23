@@ -16,5 +16,6 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
  * @param _plugin The plugin instance being unloaded.
  */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zpt::unregister_connector("pgsql");
     zlog("Unloaded PostgreSQL connector", zpt::info);
 }

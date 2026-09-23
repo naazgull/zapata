@@ -16,4 +16,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
  * @brief Plugin unload callback: cleans up the MySQL connector state.
  * @param _plugin The plugin instance being unloaded.
  */
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded MySQL connector", zpt::info); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zpt::unregister_connector("mysqlx");
+    zlog("Unloaded MySQL connector", zpt::info);
+}

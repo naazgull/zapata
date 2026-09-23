@@ -15,4 +15,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
  * @brief Plugin unload callback: cleans up the SQLite connector state.
  * @param _plugin The plugin instance being unloaded.
  */
-extern "C" auto _zpt_unload_(zpt::plugin&) -> void { zlog("Unloaded SQLite connector", zpt::info); }
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zpt::unregister_connector("sqlite");
+    zlog("Unloaded SQLite connector", zpt::info);
+}

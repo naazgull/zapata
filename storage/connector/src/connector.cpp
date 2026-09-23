@@ -528,6 +528,11 @@ auto zpt::register_connector(std::string const& _key,
     _providers.insert(std::make_pair(_key, _callback));
 }
 
+auto zpt::unregister_connector(std::string const& _key) -> void {
+    auto& _providers = ::providers();
+    _providers.erase(_key);
+}
+
 auto zpt::make_connection(zpt::json const& _config, std::string const& _connector)
   -> zpt::storage::connection {
     auto& _providers = ::providers();
