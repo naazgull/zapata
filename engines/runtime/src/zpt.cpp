@@ -29,7 +29,8 @@
  * @return Exit code (always 0).
  */
 auto main(int _argc, char* _argv[]) -> int {
-    zpt::runtime::initialize(_argc, _argv);
-    zpt::runtime::run();
+    if (zpt::runtime::initialize(_argc, _argv)->ok()) {
+        zpt::runtime::run();
+    }
     return 0;
 }

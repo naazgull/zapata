@@ -84,13 +84,13 @@ auto zpt::gen::rest::unit::generate_plugin() -> unit& {
     _load_block //
       ->add<zpt::ast::cpp_instruction>(std::format(
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
-      .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      .add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)");
     _unload_block //
       ->add<zpt::ast::cpp_instruction>(
         std::format("zlog(\"Unloading module '{}'\", zpt::info)", this->__module.name()))
-      .add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      .add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _resolver = zpt::REST_RESOLVER()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)");
 
@@ -188,10 +188,9 @@ auto zpt::gen::rest::unit::generate_cmake() -> unit& {
                       _lib));
         _file->add<zpt::ast::cmake_instruction>(std::format("target_link_libraries({}\n"
                                                             "  PRIVATE\n"
-                                                            "    zapata-storage-mysqlx\n"
+                                                            "    zapata-storage-connector\n"
                                                             "    zapata-engine-transport\n"
                                                             "    zapata-engine-rest\n"
-                                                            "    mysqlclient\n"
                                                             ")",
                                                             _lib));
         _file->add<zpt::ast::cmake_instruction>(
@@ -1086,7 +1085,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
 
     if (_def("*")("requestBody")("dbCollection")->is_string()) {
         _method_body //
-          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
           .add<zpt::ast::cpp_instruction>(
             std::format("auto _collection = _session->database({})->collection(\"{}\")",
                         this->__schema("info")("database")->string(),
@@ -1100,7 +1099,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
     }
     else if (_def("*")("requestBody")("zpt:view")->is_string()) {
         _method_body //
-          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
           .add<zpt::ast::cpp_instruction>(
             std::format("auto _collection = _session->database({})->collection(\"{}\")",
                         this->__schema("info")("database")->string(),
@@ -1110,7 +1109,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
     }
     else {
         _method_body //
-          ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+          ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
           .add<zpt::ast::cpp_instruction>(std::format("auto _database = _session->database({})",
                                                       this->__schema("info")("database")->string()))
           .add<zpt::ast::cpp_instruction>(
@@ -1332,7 +1331,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     auto _if_block =
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()")
+      ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)")
       .add<zpt::ast::cpp_instruction>(
         "auto _transport = zpt::network::default_transport(_config)")
@@ -1392,7 +1391,7 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
                                                 zpt::json _def,
                                                 bool _with_collection) -> void {
     _block //
-      ->add<zpt::ast::cpp_instruction>("auto _config = zpt::GLOBAL_CONFIG()");
+      ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()");
     if (this->__schema("info")("database")->is_string()) {
         _block->add<zpt::ast::cpp_instruction>(
           "auto _session = zpt::make_connection(_config)->session()");

@@ -83,6 +83,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
     _config += _default_config;
     zpt::startup::configuration::load(_parameters, _config);
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
+    _config["self"]["args"] = _parameters;
 
     if (_parameters("--print-config")->ok()) {
         std::cout << _config << std::endl << std::flush;
