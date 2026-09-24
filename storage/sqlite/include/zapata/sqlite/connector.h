@@ -812,6 +812,12 @@ class result : public zpt::storage::result::type {
     zpt::json __result;
     std::vector<sqlite3_stmt_ptr> __prepared;
 };
+/** @brief Loads the multiple SQL statements stored in the given file into the given DB.
+ * @param _sql_file The file containing the SQL statements to load.
+ * @param _database The database to load the SQL into.
+ * @return void
+ */
+auto load_file(std::filesystem::path const& _sql_file, zpt::storage::database& _database) -> void;
 } // namespace sqlite
 } // namespace storage
 } // namespace zpt

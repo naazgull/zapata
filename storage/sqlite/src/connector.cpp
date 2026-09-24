@@ -1079,3 +1079,14 @@ auto zpt::storage::sqlite::result::message() const -> std::string {
 }
 
 auto zpt::storage::sqlite::result::to_json() const -> zpt::json { return this->__result; }
+
+auto zpt::storage::sqlite::load_file(std::filesystem::path const& _sql_file,
+                                     zpt::storage::database& _database) -> void {
+    auto _conn = static_cast<zpt::storage::sqlite::database&>(*_database).connection();
+    auto _size = std::filesystem::file_size(_sql_file.string());
+    auto _sql = std::string(_size, '\0');
+    std::ifstream _ifs{ _sql_file.string() };
+    _ifs.read(&_sql[0], _size);
+    sqlite_expect(sqlite3_exec(_conn.get(), _sql.data(), nullptr, nullptr, nullptr),
+                  "unable to execute prepared statement: " << sqlite3_errmsg(_conn.get()));
+}
