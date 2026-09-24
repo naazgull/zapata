@@ -129,7 +129,7 @@ auto zpt::rest::services_list::blocked() const -> bool { return false; }
 auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
   -> zpt::events::state {
     this->context()->reply(this->received());
-    
+
     auto _minion = this->received()->body();
     if (_minion("provider")->ok()) {
         zpt::rest::add_minion(_minion);

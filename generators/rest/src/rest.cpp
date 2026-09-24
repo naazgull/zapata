@@ -1333,8 +1333,7 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     _if_block //
       ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
       .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix(_config)")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _transport = zpt::network::default_transport(_config)")
+      .add<zpt::ast::cpp_instruction>("auto _transport = zpt::network::default_transport(_config)")
       .add<zpt::ast::cpp_instruction>(
         "auto _params = this->received()->parameters()->is_object() ? "
         "this->received()->parameters()->clone() : zpt::json::object()");
@@ -1708,7 +1707,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_sqlite(zpt::json _def)
     _oss << "primary key (_id)\n)";
 
     for (auto const& _name : _indexes) {
-        _oss << ";\ncreate index " << _name << "_idx on " << _collection << "(" << _name << ")";
+        _oss << ";\ncreate index " << _collection << "_" << _name << "_idx on " << _collection
+             << "(" << _name << ")";
     }
 
     _file->add<zpt::ast::cpp_instruction>(_oss.str());
@@ -1770,8 +1770,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_pgsql(zpt::json _def)
     _oss << "primary key (_id)\n);" << std::endl;
 
     for (auto const& _name : _indexes) {
-        _oss << "create index " << _name << "_idx on " << _collection << "(" << _name << ");"
-             << std::endl;
+        _oss << "create index " << _collection << "_" << _name << "_idx on " << _collection << "("
+             << _name << ");" << std::endl;
     }
 
     _file->add<zpt::ast::cpp_instruction>(_oss.str());

@@ -53,7 +53,8 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 
     if (_polling->is_in_shutdown()) { return nullptr; }
     if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        if (!_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
+        if (!_transport->has_capability(zpt::transport_capability::PUB_SUB) &&
+            !_transport->has_capability(zpt::transport_capability::PERSISTENT)) {
             _polling->unmute(_stream);
         }
         zlog(_e.what(), zpt::error);
