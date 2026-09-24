@@ -191,6 +191,12 @@ class resolver_t : public zpt::events::resolver_t {
 };
 auto default_prefix(zpt::json const& _config) -> std::string;
 auto default_prefix_len(zpt::json const& _config) -> size_t;
+/**
+ * @brief Registers a remote minion's provider and its services with the REST resolver.
+ * @param _minion JSON configuration for the minion (provider URL, services, etc.).
+ * @return void (minion services registered with REST resolver).
+ */
+auto add_minion(zpt::json const& _minion) -> void;
 } // namespace rest
 
 /**

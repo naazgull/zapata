@@ -77,9 +77,9 @@ auto zpt::mem::start_tracking() -> void {
 auto zpt::mem::print_still_allocated() -> void {
     std::shared_lock guard{ zpt::mem::__allocated_mutex };
     for (auto const& [_address, _class] : zpt::mem::__allocated) {
-        std::cout << _class << " @ 0x" << std::hex << _address << std::dec << "\n";
+        std::cerr << _class << " @ 0x" << std::hex << _address << std::dec << "\n";
     }
-    std::cout << std::flush;
+    std::cerr << std::flush;
 }
 
 auto zpt::mem::store(void* _ptr, std::string const& _name) -> void {

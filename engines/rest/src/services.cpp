@@ -2,15 +2,6 @@
 #include <zapata/rest/services.h>
 #include <zapata/uri.h>
 
-namespace {
-/**
- * @brief Registers a remote minion's provider and its services with the REST resolver.
- * @param _minion JSON configuration for the minion (provider URL, services, etc.).
- * @return void (minion services registered with REST resolver).
- */
-auto add_minion(zpt::json const& _minion) -> void;
-} // namespace
-
 auto zpt::rest::minion_boot::blocked() const -> bool { return false; }
 
 auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
@@ -89,7 +80,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
             zpt::DISPATCHER() //
               ->trigger<zpt::system_event>(zpt::system_event_type::MINION_HELLO_RECEIVED, _minion);
 
-            if (_minion("provider")->ok()) { ::add_minion(_minion); }
+            if (_minion("provider")->ok()) { zpt::rest::add_minion(_minion); }
             else { zlog("Malformed service list: " << _minion, zpt::error); }
         }
     }
@@ -137,9 +128,11 @@ auto zpt::rest::services_list::blocked() const -> bool { return false; }
 
 auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatcher [[maybe_unused]])
   -> zpt::events::state {
+    this->context()->reply(this->received());
+    
     auto _minion = this->received()->body();
     if (_minion("provider")->ok()) {
-        ::add_minion(_minion);
+        zpt::rest::add_minion(_minion);
         return zpt::events::finish;
     }
     zlog("Malformed service list: " << _minion, zpt::error);
@@ -163,27 +156,3 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
     _stream->set_peer<zpt::socketstream>(_upnp_host, _upnp_port);
     _transport->send(_stream, _message);
 }
-
-namespace {
-auto add_minion(zpt::json const& _minion) -> void {
-    try {
-        auto _resolver = zpt::REST_RESOLVER();
-        _resolver->register_provider(_minion("provider"));
-
-        for (auto const& [_, __, _service] : _minion("services")) {
-            if (_service("_id")->string().find("/minions") == std::string::npos) {
-                _resolver->add(_service);
-
-                zpt::DISPATCHER() //
-                  ->trigger<zpt::system_event>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE,
-                                               _service);
-            }
-        }
-
-        return;
-    }
-    catch (std::exception const& _e) {
-        zlog("Error caught while processing service list: " << _e.what(), zpt::error)
-    }
-}
-} // namespace

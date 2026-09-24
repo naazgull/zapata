@@ -150,7 +150,6 @@ auto zpt::runtime::run() -> void {
       .clear();
     zlog("Unloaded transport layer", zpt::info);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
-    if (_config("log")("target")->ok()) { delete zpt::log_fd; }
 
     expect(zpt::SYSTEM_EVENTS_RESOLVER()->count() == 0,
            zpt::SYSTEM_EVENTS_RESOLVER()->count()
