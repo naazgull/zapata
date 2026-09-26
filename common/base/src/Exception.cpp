@@ -30,3 +30,13 @@ zpt::exception::exception(std::string const& _what)
 zpt::exception::~exception() throw() {}
 
 auto zpt::exception::what() const noexcept -> const char* { return this->__what.data(); }
+
+auto zpt::exception::get_message(std::exception const& _exception) -> std::string {
+    std::string _what = _exception.what();
+    auto _idx = _what.rfind(" (");
+    if (_idx != std::string::npos && _what.rfind(")") == _what.length() - 1 &&
+        _what.find(":", _idx) != std::string::npos) {
+        return _what.substr(0, _idx);
+    }
+    return _what;
+}

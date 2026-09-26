@@ -56,14 +56,22 @@ class collection;
 class action;
 class result;
 
+/** @brief Function type for quoting SQL values.
+ * @param _data String to quote.
+ * @return Quoted string. */
+using quote_value_callback = std::function<std::string(zpt::json const&)>;
+/** @brief Function type for quoting SQL names.
+ * @param _data String to quote.
+ * @return Quoted string. */
+using quote_name_callback = std::function<std::string(std::string const&)>;
+struct quote_handler {
+    quote_value_callback __quote_value;
+    quote_name_callback __quote_name;
+};
 /** @brief Function type for custom SQL output.
  * @param _data JSON data to output.
  * @param _out Output stream to write to. */
-using functor = std::function<void(zpt::json, std::ostream&)>;
-/** @brief Function type for string output.
- * @param _data JSON data to output.
- * @param _out Output stream to write to. */
-using string_output = std::function<void(zpt::json, std::ostream&)>;
+using functor = std::function<void(zpt::json const&, std::ostream&, quote_handler const&)>;
 
 /** @brief SQL aggregate functions. */
 enum sql_functions { COUNT = 0 };
@@ -156,6 +164,9 @@ class session {
         /** @brief Returns true if session is open.
          * @return True if open. */
         virtual auto is_open() const -> bool = 0;
+        /** @brief Starts a transaction.
+         * @return Pointer to this session type. */
+        virtual auto begin() -> zpt::storage::session::type* = 0;
         /** @brief Executes raw SQL statement.
          * @param _statement SQL statement to execute.
          * @return Query result. */
@@ -342,6 +353,9 @@ class collection {
          * @param _search Optional search criteria.
          * @return Total count of matching documents. */
         virtual auto count(zpt::json _search = zpt::undefined) -> size_t = 0;
+        /** @brief Retrieves the functions to call to quote SQL expressions.
+         * @return The callbacks to invoke to quote an SQL expressions. */
+        virtual auto get_quote_handler() const -> zpt::storage::quote_handler = 0;
     };
 
     /** @brief Default constructor (null collection). */
@@ -602,27 +616,50 @@ auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zp
  * @param _params Query parameters. */
 auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
 /** @brief Extracts find criteria from JSON.
+ * @param _collection Collection to use for quoting.
  * @param _to_parse JSON object containing criteria.
  * @return SQL WHERE clause string. */
-auto extract_find(zpt::json _to_parse) -> std::string;
+auto extract_find(zpt::storage::collection& _collection, zpt::json _to_parse) -> std::string;
+/** @brief Extracts find criteria from JSON.
+ * @param _quote Handlers to use for quoting.
+ * @param _to_parse JSON object containing criteria.
+ * @return SQL WHERE clause string. */
+auto extract_find(zpt::storage::quote_handler const& _quote, zpt::json _to_parse) -> std::string;
 /** @brief Converts functional JSON to SQL.
  * @param _function JSON object describing the function.
  * @param _find Output stream for the SQL fragment.
  * @param _str_output String output callback. */
 auto functional_to_sql(zpt::json _function,
                        std::ostream& _find,
-                       zpt::storage::string_output _str_output) -> void;
+                       zpt::storage::quote_handler const& _quote,
+                       zpt::storage::quote_value_callback _str_output) -> void;
+auto functional_to_sql(zpt::json _function,
+                       std::ostream& _find,
+                       zpt::storage::quote_handler const& _quote,
+                       zpt::storage::quote_name_callback _str_output) -> void;
 /** @brief Converts functor name and params to SQL.
  * @param _functor Functor name.
  * @param _params Functor parameters.
  * @param _find Output stream for the SQL fragment. */
-auto functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
+auto functor_to_sql(std::string const& _functor,
+                    zpt::json _params,
+                    std::ostream& _find,
+                    zpt::storage::quote_handler const& _quote) -> void;
+/** @brief Quote callback which returns the exact same value.
+ * @param _to_quote The value to quote.
+ * @return The given unquoted value. */
+auto quote_value_identity(zpt::json const& _to_quote) -> std::string;
+/** @brief Quote callback which returns the exact same value.
+ * @param _to_quote The value to quote.
+ * @return The given unquoted value. */
+auto quote_name_identity(std::string const& _to_quote) -> std::string;
 auto default_connector(zpt::json const& _config) -> std::string;
 auto default_database(zpt::json const& _config, std::string const& _connector = "") -> std::string;
 } // namespace storage
 
 auto register_connector(std::string const& _key,
                         std::function<zpt::storage::connection(zpt::json)> _callback) -> void;
+auto unregister_connector(std::string const& _key) -> void;
 /**
  * @brief Creates a thread-local connection of type consistent with the provided configuration.
  * @param _config The configuration object including the "storage" attribute.

@@ -153,6 +153,9 @@ class session : public zpt::storage::session::type {
     /** @brief Returns true if the underlying MySQL connection is active.
      * @return True if connected, false otherwise. */
     virtual auto is_open() const -> bool override;
+    /** @brief Starts a transaction.
+     * @return Pointer to this session type. */
+    virtual auto begin() -> zpt::storage::session::type* override;
     /** @brief Commits the current transaction.
      * @return Pointer to this session type. */
     virtual auto commit() -> zpt::storage::session::type* override;
@@ -246,6 +249,9 @@ class collection : public zpt::storage::collection::type {
      * @param _search Optional search criteria (zpt::undefined for all rows).
      * @return The total row count. */
     virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    /** @brief Retrieves the functions to call to quote SQL expressions.
+     * @return The callbacks to invoke to quote an SQL expressions. */
+    virtual auto get_quote_handler() const -> zpt::storage::quote_handler override;
 
     /** @brief Returns the table name.
      * @return Reference to the table name string. */

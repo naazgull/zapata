@@ -149,15 +149,14 @@ auto to_delete(zpt::json _pattern) -> std::string;
  * @return void */
 auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_view _separator)
   -> void;
-/** @brief Escapes a value for use in a PostgreSQL SQL string literal.
- * @param _conn PostgreSQL connection handle for encoding-aware escaping.
+/** @brief Quotes a value for use in a PostgreSQL SQL string literal (no conn).
  * @param _to_quote JSON value to escape.
- * @return Escaped SQL string literal. */
-auto quote(PGconn* _conn, zpt::json _to_quote) -> std::string;
-/** @brief Escapes a value for use in a PostgreSQL SQL string literal (no conn).
- * @param _to_quote JSON value to escape.
- * @return Escaped SQL string literal. */
-auto quote(zpt::json _to_quote) -> std::string;
+ * @return Quoted SQL string literal. */
+auto quote_value(zpt::json const& _to_quote) -> std::string;
+/** @brief Quotes a name for use in a PostgreSQL SQL string literal (no conn).
+ * @param _to_quote String value to escape.
+ * @return Quoted SQL string literal. */
+auto quote_name(std::string const& _to_quote) -> std::string;
 } // namespace pgsql
 } // namespace storage
 } // namespace zpt

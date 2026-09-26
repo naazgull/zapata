@@ -321,11 +321,11 @@ auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std
         for (auto const& [_, __, _field] : _fields) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "`" << static_cast<std::string>(_field) << "`";
+            _oss << zpt::storage::mysqlx::quote_name(_field);
         }
     }
     else { _oss << "*"; }
-    _oss << " from `{}`";
+    _oss << " from {}";
 
     if (_filter->ok() && _filter->string().length() != 0) {
         _oss << " where " << _filter->string();
@@ -337,14 +337,14 @@ auto zpt::storage::mysqlx::to_query(zpt::json _fields, zpt::json _filter) -> std
 auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "insert into `{}` (";
+    _oss << "insert into {} (";
     bool _first{ true };
     for (auto&& [_, __, _record] : _to_insert) {
         if (!_record->is_object() || _record->size() == 0) { continue; }
         for (auto&& [_, _key, _value] : _record) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "`" << static_cast<std::string>(_key) << "`";
+            _oss << zpt::storage::mysqlx::quote_name(_key);
         }
         break;
     }
@@ -359,7 +359,7 @@ auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert) -> std::string {
         for (auto&& [_, _key, _value] : _record) {
             if (!_first_value) { _oss << ", "; }
             _first_value = false;
-            _oss << quote(_value);
+            _oss << zpt::storage::mysqlx::quote_value(_value);
         }
         _oss << ")";
     }
@@ -371,7 +371,7 @@ auto zpt::storage::mysqlx::to_insert(zpt::json _to_insert) -> std::string {
 auto zpt::storage::mysqlx::to_update(zpt::json _to_update, zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "update `{}` set ";
+    _oss << "update {} set ";
     zpt::storage::mysqlx::to_assignment_list(_to_update, _oss, ", ");
     if (_pattern->ok() && _pattern->string().length()) { _oss << " where " << _pattern->string(); }
     _oss << ";" << std::flush;
@@ -382,7 +382,7 @@ auto zpt::storage::mysqlx::to_update(zpt::json _to_update, zpt::json _pattern) -
 auto zpt::storage::mysqlx::to_replace(zpt::json _to_replace) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "replace into `{}` set ";
+    _oss << "replace into {} set ";
     zpt::storage::mysqlx::to_assignment_list(_to_replace, _oss, ", ");
     _oss << ";" << std::flush;
 
@@ -392,7 +392,7 @@ auto zpt::storage::mysqlx::to_replace(zpt::json _to_replace) -> std::string {
 auto zpt::storage::mysqlx::to_delete(zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "delete from `{}`";
+    _oss << "delete from {}";
     if (_pattern->ok() && _pattern->string().length()) { _oss << " where " << _pattern->string(); }
     _oss << ";" << std::flush;
 
@@ -406,12 +406,14 @@ auto zpt::storage::mysqlx::to_assignment_list(zpt::json _to_convert,
     for (auto const& [_, _key, _value] : _to_convert) {
         if (!_first) { _out << _separator; }
         _first = false;
-        _out << "`" << static_cast<std::string>(_key)
-             << "` = " << zpt::storage::mysqlx::quote(_value);
+        _out << zpt::storage::mysqlx::quote_name(_key) << " = "
+             << zpt::storage::mysqlx::quote_value(_value);
     }
 }
 
-auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
+auto zpt::storage::mysqlx::quote_value(zpt::json const& _to_quote) -> std::string {
+    if (_to_quote == "null") { return static_cast<std::string>(_to_quote); }
+
     bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
                   _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
                   _to_quote->type() == zpt::JSObject;
@@ -423,6 +425,10 @@ auto zpt::storage::mysqlx::quote(zpt::json _to_quote) -> std::string {
                              : "NULL")
          << (_needs ? "'" : "") << std::flush;
     return _oss.str();
+}
+
+auto zpt::storage::mysqlx::quote_name(std::string const& _to_quote) -> std::string {
+    return std::format("`{}`", zpt::r_replace_multiple(_to_quote, { "`" }, { "``" }));
 }
 
 namespace {

@@ -650,7 +650,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
         auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
         _reply->status(404);
         this->__context->reply(_reply);
-        return zpt::events::finish;
+        return zpt::events::abort;
     }
 
     switch (_which) {
@@ -661,7 +661,15 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
             return this->call_internally();
         }
         default: {
-            return this->send_externally();
+            try {
+                return this->send_externally();
+            }
+            catch (...) {
+                auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
+                _reply->status(503);
+                this->__context->reply(_reply);
+                return zpt::events::abort;
+            }
         }
     }
     return zpt::events::finish;

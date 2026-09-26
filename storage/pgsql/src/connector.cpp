@@ -102,11 +102,7 @@ auto zpt::storage::pgsql::connection::pgsql() const -> pgsql_ptr { return this->
 
 zpt::storage::pgsql::session::session(zpt::storage::pgsql::connection const& _connection)
   : __pgsql{ _connection.pgsql() } {
-    auto* _res = PQexec(this->__pgsql.get(), "BEGIN");
-    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    expect(_ok,
-           std::format("Transaction failed to start: {}", PQerrorMessage(this->__pgsql.get())));
+    this->begin();
 }
 
 zpt::storage::pgsql::session::~session() { this->rollback(); }
@@ -115,17 +111,20 @@ auto zpt::storage::pgsql::session::is_open() const -> bool {
     return this->__pgsql != nullptr && PQstatus(this->__pgsql.get()) == CONNECTION_OK;
 }
 
+auto zpt::storage::pgsql::session::begin() -> zpt::storage::session::type* {
+    auto* _res = PQexec(this->__pgsql.get(), "BEGIN");
+    auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
+    PQclear(_res);
+    expect(_ok,
+           std::format("Transaction failed to start: {}", PQerrorMessage(this->__pgsql.get())));
+    return this;
+}
+
 auto zpt::storage::pgsql::session::commit() -> zpt::storage::session::type* {
     auto* _res = PQexec(this->__pgsql.get(), "COMMIT");
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
     expect(_ok, std::format("Commit failed: {}", PQerrorMessage(this->__pgsql.get())));
-
-    _res = PQexec(this->__pgsql.get(), "BEGIN");
-    _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
-    PQclear(_res);
-    expect(_ok,
-           std::format("Transaction failed to start: {}", PQerrorMessage(this->__pgsql.get())));
     return this;
 }
 
@@ -175,7 +174,7 @@ zpt::storage::pgsql::database::database(zpt::storage::pgsql::session const& _ses
   , __schema{ _db } {
     auto* _res = PQexec(
       this->__pgsql.get(),
-      std::format("SET search_path TO {}", zpt::storage::pgsql::quote(this->__schema)).data());
+      std::format("SET search_path TO {}", zpt::storage::pgsql::quote_name(this->__schema)).data());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
     expect(_ok,
@@ -268,6 +267,10 @@ auto zpt::storage::pgsql::collection::count(zpt::json _search) -> size_t {
     if (PQntuples(_res) > 0) { _count = std::stoul(PQgetvalue(_res, 0, 0)); }
     PQclear(_res);
     return _count;
+}
+
+auto zpt::storage::pgsql::collection::get_quote_handler() const -> zpt::storage::quote_handler {
+    return { zpt::storage::pgsql::quote_value, zpt::storage::pgsql::quote_name };
 }
 
 auto zpt::storage::pgsql::collection::table() const -> std::string const& { return this->__table; }
@@ -368,8 +371,10 @@ auto zpt::storage::pgsql::action_add::execute() -> zpt::storage::result {
         }
     }
 
+    auto _schema = zpt::storage::pgsql::quote_name(this->__schema);
+    auto _table = zpt::storage::pgsql::quote_name(this->__table);
     auto _sql = std::vformat(zpt::storage::pgsql::to_insert(this->__underlying),
-                             std::make_format_args(this->__schema, this->__table));
+                             std::make_format_args(_schema, _table));
     zlog(_sql, zpt::trace);
 
     auto* _res = PQexec(this->__pgsql.get(), _sql.c_str());
@@ -469,19 +474,23 @@ auto zpt::storage::pgsql::action_modify::bind(zpt::json _map) -> zpt::storage::a
 auto zpt::storage::pgsql::action_modify::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         if (this->__filter->is_object()) {
-            this->__filter = zpt::storage::extract_find(this->__filter);
+            this->__filter = zpt::storage::extract_find(
+              { zpt::storage::pgsql::quote_value, zpt::storage::pgsql::quote_name },
+              this->__filter);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
-                         zpt::storage::pgsql::quote(_value));
+                         zpt::storage::pgsql::quote_value(_value));
         }
     }
 
+    auto _schema = zpt::storage::pgsql::quote_name(this->__schema);
+    auto _table = zpt::storage::pgsql::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_update(this->__underlying, this->__filter),
-                         std::make_format_args(this->__schema, this->__table));
+                         std::make_format_args(_schema, _table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -571,19 +580,23 @@ auto zpt::storage::pgsql::action_remove::bind(zpt::json _map) -> zpt::storage::a
 auto zpt::storage::pgsql::action_remove::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         if (this->__filter->is_object()) {
-            this->__filter = zpt::storage::extract_find(this->__filter);
+            this->__filter = zpt::storage::extract_find(
+              { zpt::storage::pgsql::quote_value, zpt::storage::pgsql::quote_name },
+              this->__filter);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
-                         zpt::storage::pgsql::quote(_value));
+                         zpt::storage::pgsql::quote_value(_value));
         }
     }
 
+    auto _schema = zpt::storage::pgsql::quote_name(this->__schema);
+    auto _table = zpt::storage::pgsql::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_delete(this->__filter),
-                         std::make_format_args(this->__schema, this->__table));
+                         std::make_format_args(_schema, _table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -674,9 +687,11 @@ auto zpt::storage::pgsql::action_replace::bind(zpt::json) -> zpt::storage::actio
 }
 
 auto zpt::storage::pgsql::action_replace::execute() -> zpt::storage::result {
+    auto _schema = zpt::storage::pgsql::quote_name(this->__schema);
+    auto _table = zpt::storage::pgsql::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_upsert(this->__underlying),
-                         std::make_format_args(this->__schema, this->__table));
+                         std::make_format_args(_schema, _table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -776,19 +791,23 @@ auto zpt::storage::pgsql::action_find::bind(zpt::json _map) -> zpt::storage::act
 auto zpt::storage::pgsql::action_find::execute() -> zpt::storage::result {
     if (this->__underlying->ok()) {
         if (this->__underlying->is_object()) {
-            this->__underlying = zpt::storage::extract_find(this->__underlying);
+            this->__underlying = zpt::storage::extract_find(
+              { zpt::storage::pgsql::quote_value, zpt::storage::pgsql::quote_name },
+              this->__underlying);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__underlying->string(),
                          std::format(":{}", _key),
-                         zpt::storage::pgsql::quote(_value));
+                         zpt::storage::pgsql::quote_value(_value));
         }
     }
 
+    auto _schema = zpt::storage::pgsql::quote_name(this->__schema);
+    auto _table = zpt::storage::pgsql::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::pgsql::to_query(this->__fields, this->__underlying),
-                         std::make_format_args(this->__schema, this->__table));
+                         std::make_format_args(_schema, _table));
 
     if (this->__suffix["order by"]->ok()) {
         _oss << " ORDER BY ";

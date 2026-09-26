@@ -160,6 +160,34 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
+auto zpt::rest::default_prefix(zpt::json const& _config) -> std::string {
+    return _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+}
+
+auto zpt::rest::default_prefix_len(zpt::json const& _config) -> size_t {
+    return _config("rest")("prefix_path_len")->integer();
+}
+
+auto zpt::rest::add_minion(zpt::json const& _minion) -> void {
+    try {
+        auto _resolver = zpt::REST_RESOLVER();
+        _resolver->register_provider(_minion("provider"));
+
+        for (auto const& [_, __, _service] : _minion("services")) {
+            if (_service("_id")->string().find("/minions") == std::string::npos) {
+                _resolver->add(_service);
+
+                zpt::DISPATCHER() //
+                  ->trigger<zpt::system_event>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE,
+                                               _service);
+            }
+        }
+    }
+    catch (std::exception const& _e) {
+        zlog("Error caught while processing service list: " << _e.what(), zpt::error)
+    }
+}
+
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::events::resolver {
     static zpt::events::resolver _global = zpt::allocate_shared<zpt::rest::resolver_t>(_config);
     return _global;

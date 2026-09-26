@@ -284,6 +284,7 @@ class layer {
  * @param _message Message to extract content type from.
  * @return Content type string (e.g., "application/json"). */
 auto resolve_content_type(zpt::message _message) -> std::string;
+auto default_transport(zpt::json const& _config) -> std::string;
 } // namespace network
 
 /**

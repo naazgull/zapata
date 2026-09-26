@@ -375,7 +375,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
                 expect(!_iss.fail(), "value provided for '" << _key << "' is not a double");
                 _js_value = zpt::json::floating(_dbl_value);
             }
-            else { expect(false, "option type must be one of [ string, bool, int, double ]"); }
+            else { _js_value = zpt::json::string(_value); }
 
             _values = _return[_key];
             if (_values == zpt::undefined) { _return << _key << _js_value; }
@@ -416,9 +416,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
 
 auto zpt::parameters::verify(zpt::json _to_check, zpt::json _rules) -> void {
     for (auto const& [_, _key, _parameter] : _to_check) {
-        if (_key == "--") { continue; }
-
-        expect(_rules(_key)->type() == zpt::JSObject, "'" << _key << "' is not a valid parameter");
+        if (_key == "--" || !_rules(_key)->is_object()) { continue; }
 
         for (auto const& [_, _cfg_name, _cfg_value] : _rules(_key)) {
             if (_cfg_name == "type") {

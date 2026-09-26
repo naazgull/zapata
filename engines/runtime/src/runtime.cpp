@@ -83,6 +83,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
     _config += _default_config;
     zpt::startup::configuration::load(_parameters, _config);
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
+    _config["self"]["args"] = _parameters;
 
     if (_parameters("--print-config")->ok()) {
         std::cout << _config << std::endl << std::flush;
@@ -149,7 +150,6 @@ auto zpt::runtime::run() -> void {
       .clear();
     zlog("Unloaded transport layer", zpt::info);
     zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
-    if (_config("log")("target")->ok()) { delete zpt::log_fd; }
 
     expect(zpt::SYSTEM_EVENTS_RESOLVER()->count() == 0,
            zpt::SYSTEM_EVENTS_RESOLVER()->count()

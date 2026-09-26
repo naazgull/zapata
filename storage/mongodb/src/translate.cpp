@@ -26,8 +26,6 @@
 #include <bsoncxx/types.hpp>
 #include <zapata/mongodb/translate.h>
 
-using namespace bsoncxx::builder::basic;
-
 // ---- append_value ----
 
 auto zpt::storage::mongodb::append_value(bsoncxx::builder::basic::document& _doc,
@@ -37,66 +35,68 @@ auto zpt::storage::mongodb::append_value(bsoncxx::builder::basic::document& _doc
         case zpt::JSString:
         case zpt::JSDate:
         case zpt::JSRegex: {
-            _doc.append(kvp(_key, static_cast<std::string>(_value)));
+            _doc.append(bsoncxx::builder::basic::kvp(_key, static_cast<std::string>(_value)));
             break;
         }
         case zpt::JSInteger: {
-            _doc.append(kvp(_key, bsoncxx::types::b_int64{ _value->integer() }));
+            _doc.append(
+              bsoncxx::builder::basic::kvp(_key, bsoncxx::types::b_int64{ _value->integer() }));
             break;
         }
         case zpt::JSDouble: {
-            _doc.append(kvp(_key, _value->floating()));
+            _doc.append(bsoncxx::builder::basic::kvp(_key, _value->floating()));
             break;
         }
         case zpt::JSBoolean: {
-            _doc.append(kvp(_key, _value->boolean()));
+            _doc.append(bsoncxx::builder::basic::kvp(_key, _value->boolean()));
             break;
         }
         case zpt::JSObject: {
-            _doc.append(kvp(_key, zpt::storage::mongodb::to_bson(_value)));
+            _doc.append(bsoncxx::builder::basic::kvp(_key, zpt::storage::mongodb::to_bson(_value)));
             break;
         }
         case zpt::JSArray: {
-            _doc.append(kvp(_key, [&_value](sub_array _arr) {
-                for (auto const& [_, __, _v] : _value) {
-                    switch (_v->type()) {
-                        case zpt::JSString:
-                        case zpt::JSDate:
-                        case zpt::JSRegex: {
-                            _arr.append(static_cast<std::string>(_v));
-                            break;
-                        }
-                        case zpt::JSInteger: {
-                            _arr.append(bsoncxx::types::b_int64{ _v->integer() });
-                            break;
-                        }
-                        case zpt::JSDouble: {
-                            _arr.append(_v->floating());
-                            break;
-                        }
-                        case zpt::JSBoolean: {
-                            _arr.append(_v->boolean());
-                            break;
-                        }
-                        case zpt::JSObject: {
-                            bsoncxx::builder::basic::document _sub;
-                            for (auto const& [_i, _k, _vv] : _v) {
-                                append_value(_sub, static_cast<std::string>(_k), _vv);
-                            }
-                            _arr.append(_sub.extract());
-                            break;
-                        }
-                        default: {
-                            _arr.append(bsoncxx::types::b_null{});
-                            break;
-                        }
-                    }
-                }
-            }));
+            _doc.append(bsoncxx::builder::basic::kvp(
+              _key, [&_value](bsoncxx::builder::basic::sub_array _arr) {
+                  for (auto const& [_, __, _v] : _value) {
+                      switch (_v->type()) {
+                          case zpt::JSString:
+                          case zpt::JSDate:
+                          case zpt::JSRegex: {
+                              _arr.append(static_cast<std::string>(_v));
+                              break;
+                          }
+                          case zpt::JSInteger: {
+                              _arr.append(bsoncxx::types::b_int64{ _v->integer() });
+                              break;
+                          }
+                          case zpt::JSDouble: {
+                              _arr.append(_v->floating());
+                              break;
+                          }
+                          case zpt::JSBoolean: {
+                              _arr.append(_v->boolean());
+                              break;
+                          }
+                          case zpt::JSObject: {
+                              bsoncxx::builder::basic::document _sub;
+                              for (auto const& [_i, _k, _vv] : _v) {
+                                  append_value(_sub, static_cast<std::string>(_k), _vv);
+                              }
+                              _arr.append(_sub.extract());
+                              break;
+                          }
+                          default: {
+                              _arr.append(bsoncxx::types::b_null{});
+                              break;
+                          }
+                      }
+                  }
+              }));
             break;
         }
         default: {
-            _doc.append(kvp(_key, bsoncxx::types::b_null{}));
+            _doc.append(bsoncxx::builder::basic::kvp(_key, bsoncxx::types::b_null{}));
             break;
         }
     }
@@ -231,14 +231,14 @@ auto zpt::storage::mongodb::to_update_doc(zpt::json _to_update) -> bsoncxx::docu
         auto _k = static_cast<std::string>(_key);
         if (_value->ok()) { append_value(_set, _k, _value); }
         else {
-            _unset.append(kvp(_k, std::string{ "" }));
+            _unset.append(bsoncxx::builder::basic::kvp(_k, std::string{ "" }));
             _has_unset = true;
         }
     }
 
     bsoncxx::builder::basic::document _update;
-    _update.append(kvp("$set", _set.extract()));
-    if (_has_unset) { _update.append(kvp("$unset", _unset.extract())); }
+    _update.append(bsoncxx::builder::basic::kvp("$set", _set.extract()));
+    if (_has_unset) { _update.append(bsoncxx::builder::basic::kvp("$unset", _unset.extract())); }
     return _update.extract();
 }
 
@@ -247,7 +247,7 @@ auto zpt::storage::mongodb::to_update_doc(zpt::json _to_update) -> bsoncxx::docu
 auto zpt::storage::mongodb::to_projection(zpt::json _fields) -> bsoncxx::document::value {
     bsoncxx::builder::basic::document _proj;
     for (auto const& [_, _field, __] : _fields) {
-        _proj.append(kvp(static_cast<std::string>(_field), 1));
+        _proj.append(bsoncxx::builder::basic::kvp(static_cast<std::string>(_field), 1));
     }
     return _proj.extract();
 }
@@ -258,7 +258,7 @@ auto zpt::storage::mongodb::to_sort(zpt::json _sort_spec) -> bsoncxx::document::
     bsoncxx::builder::basic::document _sort;
     for (auto const& [_, _field, _dir] : _sort_spec) {
         int _order = (_dir->string() == "asc") ? 1 : -1;
-        _sort.append(kvp(static_cast<std::string>(_field), _order));
+        _sort.append(bsoncxx::builder::basic::kvp(static_cast<std::string>(_field), _order));
     }
     return _sort.extract();
 }

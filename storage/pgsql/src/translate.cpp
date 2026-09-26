@@ -189,11 +189,11 @@ auto zpt::storage::pgsql::to_query(zpt::json _fields, zpt::json _filter) -> std:
         for (auto const& [_, __, _field] : _fields) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "\"" << static_cast<std::string>(_field) << "\"";
+            _oss << zpt::storage::pgsql::quote_name(_field);
         }
     }
     else { _oss << "*"; }
-    _oss << " FROM \"{}\".\"{}\"";
+    _oss << " FROM {}.{}";
 
     if (_filter->ok() && _filter->string().length() != 0) {
         _oss << " WHERE " << _filter->string();
@@ -206,14 +206,14 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
     std::ostringstream _oss;
 
     // Collect column names and values
-    _oss << "INSERT INTO \"{}\".\"{}\" (";
+    _oss << "INSERT INTO {}.{} (";
     bool _first{ true };
     for (auto&& [_, __, _record] : _to_insert) {
         if (!_record->is_object() || _record->size() == 0) { continue; }
         for (auto&& [_, _key, _value] : _record) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "\"" << static_cast<std::string>(_key) << "\"";
+            _oss << zpt::storage::pgsql::quote_name(_key);
         }
         break;
     }
@@ -228,7 +228,7 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
         for (auto&& [_, _key, _value] : _record) {
             if (!_first_value) { _oss << ", "; }
             _first_value = false;
-            _oss << quote(_value);
+            _oss << zpt::storage::pgsql::quote_value(_value);
         }
         _oss << ")";
     }
@@ -240,7 +240,7 @@ auto zpt::storage::pgsql::to_insert(zpt::json _to_insert) -> std::string {
 auto zpt::storage::pgsql::to_update(zpt::json _to_update, zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "UPDATE \"{}\".\"{}\" SET ";
+    _oss << "UPDATE {}.{} SET ";
     to_assignment_list(_to_update, _oss, ", ");
     if (_pattern->ok() && _pattern->string().length() != 0) {
         _oss << " WHERE " << _pattern->string();
@@ -262,19 +262,19 @@ auto zpt::storage::pgsql::to_upsert(zpt::json _to_upsert) -> std::string {
         _first = false;
     }
 
-    _oss << "INSERT INTO \"{}\".\"{}\" (";
+    _oss << "INSERT INTO {}.{} (";
     _first = true;
     for (auto const& _k : _keys) {
         if (!_first) { _oss << ", "; }
         _first = false;
-        _oss << "\"" << _k << "\"";
+        _oss << zpt::storage::pgsql::quote_name(_k);
     }
     _oss << ") VALUES (";
     _first = true;
     for (auto const& [_, _key, _value] : _to_upsert) {
         if (!_first) { _oss << ", "; }
         _first = false;
-        _oss << quote(_value);
+        _oss << zpt::storage::pgsql::quote_value(_value);
     }
     _oss << ") ON CONFLICT (_id) DO UPDATE SET ";
 
@@ -283,8 +283,8 @@ auto zpt::storage::pgsql::to_upsert(zpt::json _to_upsert) -> std::string {
         if (_key == "_id") { continue; }
         if (!_first) { _oss << ", "; }
         _first = false;
-        _oss << "\"" << _key << "\" = EXCLUDED.\"";
-        _oss << _key << "\"";
+        _oss << zpt::storage::pgsql::quote_name(_key) << " = EXCLUDED.";
+        _oss << zpt::storage::pgsql::quote_name(_key);
     }
     _oss << ";";
 
@@ -294,7 +294,7 @@ auto zpt::storage::pgsql::to_upsert(zpt::json _to_upsert) -> std::string {
 auto zpt::storage::pgsql::to_delete(zpt::json _pattern) -> std::string {
     std::ostringstream _oss;
 
-    _oss << "DELETE FROM \"{}\".\"{}\"";
+    _oss << "DELETE FROM {}.{}";
     if (_pattern->ok() && _pattern->string().length() != 0) {
         _oss << " WHERE " << _pattern->string();
     }
@@ -310,14 +310,16 @@ auto zpt::storage::pgsql::to_assignment_list(zpt::json _to_convert,
     for (auto const& [_, _key, _value] : _to_convert) {
         if (!_first) { _out << _separator; }
         _first = false;
-        _out << "\"" << static_cast<std::string>(_key) << "\" = " << quote(_value);
+        _out << zpt::storage::pgsql::quote_name(_key) << " = "
+             << zpt::storage::pgsql::quote_value(_value);
     }
 }
 
 // ---- quoting ----
 
-auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_quote)
-  -> std::string {
+auto zpt::storage::pgsql::quote_value(zpt::json const& _to_quote) -> std::string {
+    if (_to_quote == "null") { return static_cast<std::string>(_to_quote); }
+
     bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
                   _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
                   _to_quote->type() == zpt::JSObject;
@@ -342,8 +344,8 @@ auto zpt::storage::pgsql::quote([[maybe_unused]] PGconn* _conn, zpt::json _to_qu
     return _oss.str();
 }
 
-auto zpt::storage::pgsql::quote(zpt::json _to_quote) -> std::string {
-    return quote(nullptr, _to_quote);
+auto zpt::storage::pgsql::quote_name(std::string const& _to_quote) -> std::string {
+    return std::format("\"{}\"", zpt::r_replace_multiple(_to_quote, { "\"" }, { "\"\"" }));
 }
 
 namespace {

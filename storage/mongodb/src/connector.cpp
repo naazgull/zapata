@@ -92,9 +92,13 @@ auto zpt::storage::mongodb::connection::mongodb() const -> mongodb_ptr { return 
 // ---- Session ----
 
 zpt::storage::mongodb::session::session(zpt::storage::mongodb::connection const& _connection)
-  : __mongodb{ _connection.mongodb() } {}
+  : __mongodb{ _connection.mongodb() } {
+    this->begin();
+}
 
 auto zpt::storage::mongodb::session::is_open() const -> bool { return this->__mongodb != nullptr; }
+
+auto zpt::storage::mongodb::session::begin() -> zpt::storage::session::type* { return this; }
 
 auto zpt::storage::mongodb::session::commit() -> zpt::storage::session::type* { return this; }
 
@@ -188,6 +192,10 @@ auto zpt::storage::mongodb::collection::count(zpt::json _search) -> size_t {
         expect(false, std::format("count failed: {}", _e.what()));
     }
     return 0;
+}
+
+auto zpt::storage::mongodb::collection::get_quote_handler() const -> zpt::storage::quote_handler {
+    return { zpt::storage::quote_value_identity, zpt::storage::quote_name_identity };
 }
 
 auto zpt::storage::mongodb::collection::coll() const -> std::string const& {
