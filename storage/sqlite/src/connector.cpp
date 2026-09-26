@@ -187,6 +187,25 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
     }
 }
 
+auto zpt::storage::sqlite::quote_value(zpt::json const& _to_quote) -> std::string {
+    if (_to_quote == "null") { return static_cast<std::string>(_to_quote); }
+
+    bool _needs = _to_quote->type() == zpt::JSString || _to_quote->type() == zpt::JSDate ||
+                  _to_quote->type() == zpt::JSRegex || _to_quote->type() == zpt::JSArray ||
+                  _to_quote->type() == zpt::JSObject;
+    std::ostringstream _oss;
+    _oss << (_needs ? "'" : "")
+         << (_to_quote->ok()
+               ? zpt::r_replace_multiple(static_cast<std::string>(_to_quote), { "'" }, { "''" })
+               : "NULL")
+         << (_needs ? "'" : "") << std::flush;
+    return _oss.str();
+}
+
+auto zpt::storage::sqlite::quote_name(std::string const& _to_quote) -> std::string {
+    return std::format("\"{}\"", zpt::r_replace_multiple(_to_quote, { "\"" }, { "\"\"" }));
+}
+
 zpt::storage::sqlite::connection::connection(zpt::json _options)
   : __options{ _options("storage")("sqlite") } {}
 
@@ -204,17 +223,33 @@ auto zpt::storage::sqlite::connection::session() -> zpt::storage::session {
 auto zpt::storage::sqlite::connection::options() const -> zpt::json { return this->__options; }
 
 zpt::storage::sqlite::session::session(zpt::storage::sqlite::connection const& _connection)
-  : __underlying{ nullptr }
-  , __options{ _connection.__options } {}
+  : __options{ _connection.__options } {}
 
 auto zpt::storage::sqlite::session::is_open() const -> bool {
     return this->__underlying.size() != 0;
+}
+
+auto zpt::storage::sqlite::session::begin() -> zpt::storage::session::type* {
+    std::string _to_execute{ "begin" };
+    for (auto _db : this->__underlying) {
+        sqlite3_stmt* _stmt{ nullptr };
+        zlog(_to_execute, zpt::trace);
+        sqlite_expect(
+          sqlite3_prepare_v2(_db.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
+          "unable to prepare statement for commit: " << sqlite3_errmsg(_db.get()));
+        sqlite_expect(sqlite3_step(_stmt),
+                      "unable to execute commit statement: " << sqlite3_errmsg(_db.get()));
+        sqlite_expect(sqlite3_finalize(_stmt),
+                      "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
+    }
+    return this;
 }
 
 auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
     std::string _to_execute{ "commit" };
     for (auto _db : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
+        zlog(_to_execute, zpt::trace);
         sqlite_expect(
           sqlite3_prepare_v2(_db.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
           "unable to prepare statement for commit: " << sqlite3_errmsg(_db.get()));
@@ -230,6 +265,7 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
     std::string _to_execute{ "rollback" };
     for (auto _db : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
+        zlog(_to_execute, zpt::trace);
         sqlite_expect(
           sqlite3_prepare_v2(_db.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
           "unable to prepare statement for rollback: " << sqlite3_errmsg(_db.get()));
@@ -253,6 +289,16 @@ auto zpt::storage::sqlite::session::database(std::string const& _db) const
 
 auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _database) -> void {
     this->__underlying.push_back(_database);
+    std::string _to_execute{ "begin" };
+    sqlite3_stmt* _stmt{ nullptr };
+    zlog(_to_execute, zpt::trace);
+    sqlite_expect(sqlite3_prepare_v2(
+                    _database.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
+                  "unable to prepare statement for commit: " << sqlite3_errmsg(_database.get()));
+    sqlite_expect(sqlite3_step(_stmt),
+                  "unable to execute commit statement: " << sqlite3_errmsg(_database.get()));
+    sqlite_expect(sqlite3_finalize(_stmt),
+                  "unable to cleanup statement: " << sqlite3_errmsg(_database.get()));
 }
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
@@ -276,6 +322,7 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _s
 auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt::storage::result {
     std::vector<sqlite3_stmt_ptr> _prepared;
     sqlite3_stmt* _stmt{ nullptr };
+    zlog(_to_execute, zpt::trace);
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
@@ -369,13 +416,15 @@ auto zpt::storage::sqlite::collection::find(zpt::json _search) const -> zpt::sto
 
 auto zpt::storage::sqlite::collection::count(zpt::json _search) -> size_t {
     std::ostringstream _oss;
-    _oss << "select count(*) from \"" << this->__collection_name << "\"" << std::flush;
+    _oss << "select count(*) from " << zpt::storage::sqlite::quote_name(this->__collection_name)
+         << std::flush;
     if (_search->ok() && _search->string().length() != 0) {
         _oss << " where " << _search->string();
     }
 
     std::string _to_execute{ _oss.str() };
     sqlite3_stmt* _stmt{ nullptr };
+    zlog(_to_execute, zpt::trace);
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
@@ -386,6 +435,10 @@ auto zpt::storage::sqlite::collection::count(zpt::json _search) -> size_t {
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
     return _count("count(*)");
+}
+
+auto zpt::storage::sqlite::collection::get_quote_handler() const -> zpt::storage::quote_handler {
+    return { zpt::storage::sqlite::quote_value, zpt::storage::sqlite::quote_name };
 }
 
 zpt::storage::sqlite::action::action(zpt::storage::sqlite::collection const& _collection)
@@ -406,11 +459,11 @@ auto zpt::storage::sqlite::action::get_state() const -> zpt::json { return this-
 
 auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> void {
     sqlite3_stmt* _stmt{ nullptr };
+    zlog(_statement, zpt::trace);
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
       "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
-    zlog(_statement, zpt::trace);
     this->__prepared.push_back(
       sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
 }
@@ -511,7 +564,8 @@ auto zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
 
     std::ostringstream _names;
     std::ostringstream _values;
-    _names << "insert into \"" << this->__collection_name << "\" (" << std::flush;
+    _names << "insert into " << zpt::storage::sqlite::quote_name(this->__collection_name) << " ("
+           << std::flush;
     _values << " values (" << std::flush;
     bool _first{ true };
     for (auto&& [_, _key, _value] : _document) {
@@ -520,11 +574,8 @@ auto zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
             _values << ", ";
         }
         else { _first = false; }
-        _names << "\"" << _key << "\"" << std::flush;
-        if (_value->is_string() || _value->is_object() || _value->is_array()) {
-            _values << "'" << static_cast<std::string>(_value) << "'" << std::flush;
-        }
-        else { _values << _value << std::flush; }
+        _names << zpt::storage::sqlite::quote_name(_key) << std::flush;
+        _values << zpt::storage::sqlite::quote_value(_value) << std::flush;
     }
     _names << ")" << std::flush;
     _values << ")" << std::flush;
@@ -640,25 +691,24 @@ auto zpt::storage::sqlite::action_modify::add_update() -> void {
     if (this->__set->size() == 0 && this->__unset->size() == 0) { return; }
 
     std::ostringstream _oss;
-    _oss << "update \"" << this->__collection_name << "\" set " << std::flush;
+    _oss << "update " << zpt::storage::sqlite::quote_name(this->__collection_name) << " set "
+         << std::flush;
     bool _first{ true };
     for (auto&& [_, _key, _value] : this->__set) {
         if (!_first) { _oss << ", "; }
         else { _first = false; }
-        _oss << "\"" << _key << "\" = " << std::flush;
-        if (_value->is_string() || _value->is_object() || _value->is_array()) {
-            _oss << "'" << static_cast<std::string>(_value) << "'" << std::flush;
-        }
-        else { _oss << _value << std::flush; }
+        _oss << zpt::storage::sqlite::quote_name(_key) << " = " << std::flush;
+        _oss << zpt::storage::sqlite::quote_value(_value) << std::flush;
     }
     this->__set->clear();
     for (auto&& [_, _key, _value] : this->__unset) {
         if (!_first) { _oss << ", "; }
         else { _first = false; }
-        _oss << "\"" << _key << "\" = NULL " << std::flush;
+        _oss << zpt::storage::sqlite::quote_name(_key) << " = NULL " << std::flush;
     }
     this->__unset->clear();
-    std::string _where = zpt::storage::extract_find(this->__search);
+    std::string _where = zpt::storage::extract_find(
+      { zpt::storage::sqlite::quote_value, zpt::storage::sqlite::quote_name }, this->__search);
     if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
     this->prepare(_oss.str());
 }
@@ -762,8 +812,10 @@ auto zpt::storage::sqlite::action_remove::execute() -> zpt::storage::result {
 auto zpt::storage::sqlite::action_remove::add_delete() -> void {
     if (this->__added) { return; }
     std::ostringstream _oss;
-    _oss << "delete from \"" << this->__collection_name << "\"" << std::flush;
-    std::string _where = zpt::storage::extract_find(this->__search);
+    _oss << "delete from " << zpt::storage::sqlite::quote_name(this->__collection_name)
+         << std::flush;
+    std::string _where = zpt::storage::extract_find(
+      { zpt::storage::sqlite::quote_value, zpt::storage::sqlite::quote_name }, this->__search);
     if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
     this->prepare(_oss.str());
     this->__added = true;
@@ -862,7 +914,8 @@ auto zpt::storage::sqlite::action_replace::add_replace() -> void {
 
     std::ostringstream _names;
     std::ostringstream _values;
-    _names << "replace into \"" << this->__collection_name << "\" (" << std::flush;
+    _names << "replace into " << zpt::storage::sqlite::quote_name(this->__collection_name) << " ("
+           << std::flush;
     _values << " values (" << std::flush;
     bool _first{ true };
     for (auto&& [_, _key, _value] : this->__set) {
@@ -871,11 +924,8 @@ auto zpt::storage::sqlite::action_replace::add_replace() -> void {
             _values << ", ";
         }
         else { _first = false; }
-        _names << "\"" << _key << "\"" << std::flush;
-        if (_value->is_string() || _value->is_object() || _value->is_array()) {
-            _values << "'" << static_cast<std::string>(_value) << "'" << std::flush;
-        }
-        else { _values << _value << std::flush; }
+        _names << zpt::storage::sqlite::quote_name(_key) << std::flush;
+        _values << zpt::storage::sqlite::quote_value(_value) << std::flush;
     }
     _names << ")" << std::flush;
     _values << ")" << std::flush;
@@ -1012,10 +1062,11 @@ auto zpt::storage::sqlite::action_find::add_select() -> void {
     }
     else { _oss << "*"; }
 
-    _oss << " from \"" << this->__collection_name << "\"" << std::flush;
+    _oss << " from " << zpt::storage::sqlite::quote_name(this->__collection_name) << std::flush;
 
     if (this->__search->ok()) {
-        std::string _where = zpt::storage::extract_find(this->__search);
+        std::string _where = zpt::storage::extract_find(
+          { zpt::storage::sqlite::quote_value, zpt::storage::sqlite::quote_name }, this->__search);
         if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
     }
 
@@ -1031,7 +1082,7 @@ auto zpt::storage::sqlite::action_find::add_select() -> void {
         for (auto&& [_, _key, _value] : this->__sort) {
             if (!_first) { _oss << ", "; }
             else { _first = false; }
-            _oss << "\"" << _key << "\" " << _value;
+            _oss << zpt::storage::sqlite::quote_name(_key) << " " << _value;
         }
         _oss << std::flush;
     }

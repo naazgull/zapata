@@ -127,7 +127,11 @@ auto to_assignment_list(zpt::json _to_convert, std::ostream& _out, std::string_v
 /** @brief Wraps a value in single quotes for SQL string literal output.
  * @param _to_quote JSON value to quote.
  * @return SQL string literal with single quotes. */
-auto quote(zpt::json _to_quote) -> std::string;
+auto quote_value(zpt::json const& _to_quote) -> std::string;
+/** @brief Wraps a name in quotes for SQL string literal output.
+ * @param _to_quote String value to quote.
+ * @return SQL string literal with quotes. */
+auto quote_name(std::string const& _to_quote) -> std::string;
 } // namespace mysqlx
 } // namespace storage
 } // namespace zpt

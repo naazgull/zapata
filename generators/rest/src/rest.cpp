@@ -995,7 +995,8 @@ auto zpt::gen::rest::unit::generate_list_elements(zpt::ast::basic_file::ptr _cpp
         _if_block //
           ->add<zpt::ast::cpp_instruction>(
             "this //\n->to_send()->status(200).body() = { \"items\", "
-            "_result, \"size\", _collection->count(zpt::storage::extract_find(_params)) }")
+            "_result, \"size\", _collection->count(zpt::storage::extract_find(_collection, "
+            "_params)) }")
           .add<zpt::ast::cpp_instruction>(
             "zpt::storage::reply_find(this->to_send()->body(), _params)");
         _method_try_body->add(_if_block);

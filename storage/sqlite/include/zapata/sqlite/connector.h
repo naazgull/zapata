@@ -88,11 +88,14 @@ auto free_byte_array(void* _to_delete) -> void;
  * @return void
  */
 auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
-/** @brief Converts a SQLite return code to its corresponding HTTP status code.
- * @param _error SQLite return code to convert
- * @return Corresponding zpt::status value for the error code
- */
-auto to_status(int _error) -> zpt::status;
+/** @brief Wraps a value in single quotes for SQL string literal output.
+ * @param _to_quote JSON value to quote.
+ * @return SQL string literal with single quotes. */
+auto quote_value(zpt::json const& _to_quote) -> std::string;
+/** @brief Wraps a name in quotes for SQL string literal output.
+ * @param _to_quote String value to quote.
+ * @return SQL string literal with quotes. */
+auto quote_name(std::string const& _to_quote) -> std::string;
 
 /** @brief SQLite connection implementation. */
 class connection : public zpt::storage::connection::type {
@@ -148,6 +151,9 @@ class session : public zpt::storage::session::type {
      * @return True if open, false otherwise
      */
     virtual auto is_open() const -> bool override;
+    /** @brief Starts a transaction.
+     * @return Pointer to this session type. */
+    virtual auto begin() -> zpt::storage::session::type* override;
     /** @brief Commits the current transaction on all underlying SQLite connections.
      * @return Pointer to this session instance
      */
@@ -265,6 +271,9 @@ class collection : public zpt::storage::collection::type {
      * @return Number of matching rows
      */
     virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    /** @brief Retrieves the functions to call to quote SQL expressions.
+     * @return The callbacks to invoke to quote an SQL expressions. */
+    virtual auto get_quote_handler() const -> zpt::storage::quote_handler override;
 
   private:
     sqlite3_ptr __underlying{ nullptr };

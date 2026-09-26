@@ -21,7 +21,7 @@ auto main(int, char**) -> int {
 
     std::cout << _ids << std::endl;
     std::cout << _collection //
-                   ->find(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
+                   ->find(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
                    ->execute()
                    ->fetch()
               << std::endl;
@@ -37,12 +37,12 @@ auto main(int, char**) -> int {
               << std::endl;
 
     _collection //
-      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
+      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
       ->set("name", "Zé Povinho 'or with {}'")
       ->execute();
 
     _collection //
-      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote(_ids(0)->string())))
+      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
       ->patch({ "name", "Pixie", "address", "Neverland or a placeholder like '{}'" })
       ->execute();
 

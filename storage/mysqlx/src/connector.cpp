@@ -96,19 +96,22 @@ auto zpt::storage::mysqlx::connection::mysql() const -> mysql_ptr { return this-
 
 zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection const& _connection)
   : __mysql{ _connection.mysql() } {
-    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
-           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
+    this->begin();
 }
 
 zpt::storage::mysqlx::session::~session() { this->rollback(); }
 
 auto zpt::storage::mysqlx::session::is_open() const -> bool { return this->__mysql != nullptr; }
 
+auto zpt::storage::mysqlx::session::begin() -> zpt::storage::session::type* {
+    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
+           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
+    return this;
+}
+
 auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
     expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
            std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
-    expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
-           std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
@@ -143,7 +146,7 @@ zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session const& _s
                                          std::string const& _db)
   : __mysql{ _session.mysql() }
   , __database{ _db } {
-    auto _statement = std::format("USE `{}`", this->__database);
+    auto _statement = std::format("USE {}", zpt::storage::mysqlx::quote_name(this->__database));
     expect(0 == mysql_query(this->__mysql.get(), _statement.data()),
            std::format(
              "failed to execute statement '{}': {}", _statement, mysql_error(this->__mysql.get())));
@@ -209,8 +212,8 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) const -> zpt::sto
 }
 
 auto zpt::storage::mysqlx::collection::count(zpt::json _search) -> size_t {
-    auto _statement = std::format("select count(1) from `{}`{}",
-                                  this->__table,
+    auto _statement = std::format("select count(1) from {}{}",
+                                  zpt::storage::mysqlx::quote_name(this->__table),
                                   (_search->ok() && _search->string().length() != 0
                                      ? std::format(" where {}", _search->string())
                                      : ""));
@@ -234,6 +237,10 @@ auto zpt::storage::mysqlx::collection::count(zpt::json _search) -> size_t {
 
     auto _result = zpt::storage::mysqlx::to_json(_to_exec.get(), _metadata);
     return _result("count(1)")->ok() ? _result("count(1)")->integer() : 0;
+}
+
+auto zpt::storage::mysqlx::collection::get_quote_handler() const -> zpt::storage::quote_handler {
+    return { zpt::storage::mysqlx::quote_value, zpt::storage::mysqlx::quote_name };
 }
 
 auto zpt::storage::mysqlx::collection::table() const -> std::string const& { return this->__table; }
@@ -327,8 +334,9 @@ auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
         }
     }
 
+    auto _table = zpt::storage::mysqlx::quote_name(this->__table);
     auto _sql = std::vformat(zpt::storage::mysqlx::to_insert(this->__underlying),
-                             std::make_format_args(this->__table));
+                             std::make_format_args(_table));
     zlog(_sql, zpt::trace);
 
     this->__statement.reset(mysql_stmt_init(this->__mysql.get()),
@@ -426,19 +434,22 @@ auto zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::
 auto zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         if (this->__filter->is_object()) {
-            this->__filter = zpt::storage::extract_find(this->__filter);
+            this->__filter = zpt::storage::extract_find(
+              { zpt::storage::mysqlx::quote_value, zpt::storage::mysqlx::quote_name },
+              this->__filter);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
-                         zpt::storage::mysqlx::quote(_value));
+                         zpt::storage::mysqlx::quote_value(_value));
         }
     }
 
+    auto _table = zpt::storage::mysqlx::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::mysqlx::to_update(this->__underlying, this->__filter),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(_table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -526,19 +537,22 @@ auto zpt::storage::mysqlx::action_remove::bind(zpt::json _map) -> zpt::storage::
 auto zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
     if (this->__filter->ok()) {
         if (this->__filter->is_object()) {
-            this->__filter = zpt::storage::extract_find(this->__filter);
+            this->__filter = zpt::storage::extract_find(
+              { zpt::storage::mysqlx::quote_value, zpt::storage::mysqlx::quote_name },
+              this->__filter);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__filter->string(),
                          std::format(":{}", _key),
-                         zpt::storage::mysqlx::quote(_value));
+                         zpt::storage::mysqlx::quote_value(_value));
         }
     }
 
+    auto _table = zpt::storage::mysqlx::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::mysqlx::to_delete(this->__filter),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(_table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -627,9 +641,10 @@ auto zpt::storage::mysqlx::action_replace::bind(zpt::json) -> zpt::storage::acti
 }
 
 auto zpt::storage::mysqlx::action_replace::execute() -> zpt::storage::result {
+    auto _table = zpt::storage::mysqlx::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::mysqlx::to_replace(this->__underlying),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(_table));
     _oss << std::flush;
     auto _sql = _oss.str();
     zlog(_sql, zpt::trace);
@@ -726,19 +741,22 @@ auto zpt::storage::mysqlx::action_find::bind(zpt::json _map) -> zpt::storage::ac
 auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     if (this->__underlying->ok()) {
         if (this->__underlying->is_object()) {
-            this->__underlying = zpt::storage::extract_find(this->__underlying);
+            this->__underlying = zpt::storage::extract_find(
+              { zpt::storage::mysqlx::quote_value, zpt::storage::mysqlx::quote_name },
+              this->__underlying);
         }
 
         for (auto const& [_, _key, _value] : this->__bind) {
             zpt::replace(this->__underlying->string(),
                          std::format(":{}", _key),
-                         zpt::storage::mysqlx::quote(_value));
+                         zpt::storage::mysqlx::quote_value(_value));
         }
     }
 
+    auto _table = zpt::storage::mysqlx::quote_name(this->__table);
     std::ostringstream _oss;
     _oss << std::vformat(zpt::storage::mysqlx::to_query(this->__fields, this->__underlying),
-                         std::make_format_args(this->__table));
+                         std::make_format_args(_table));
 
     if (this->__suffix["order by"]->ok()) {
         _oss << " order by ";
@@ -746,7 +764,7 @@ auto zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
         for (auto const& [_, _field, _direction] : this->__suffix["order by"]) {
             if (!_first) { _oss << ", "; }
             _first = false;
-            _oss << "`" << _field << "` " << _direction->string();
+            _oss << zpt::storage::mysqlx::quote_name(_field) << " " << _direction->string();
         }
     }
     if (this->__suffix["limit"]->ok()) { _oss << " limit " << this->__suffix["limit"]; }
