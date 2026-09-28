@@ -233,7 +233,7 @@ auto zpt::storage::sqlite::session::is_open() const -> bool {
 
 auto zpt::storage::sqlite::session::begin() -> zpt::storage::session::type* {
     std::string _to_execute{ "begin" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
@@ -249,7 +249,7 @@ auto zpt::storage::sqlite::session::begin() -> zpt::storage::session::type* {
 
 auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
     std::string _to_execute{ "commit" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
@@ -265,7 +265,7 @@ auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
 
 auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
     std::string _to_execute{ "rollback" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
@@ -284,11 +284,16 @@ auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::res
 
 auto zpt::storage::sqlite::session::database(std::string const& _db) const
   -> zpt::storage::database {
-    return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
+    auto _found = this->__underlying.find(_db);
+    if (_found == this->__underlying.end()) {
+        return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
+    }
+    else { return zpt::make_database<zpt::storage::sqlite::database>(_found->second, _db); }
 }
 
-auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _database) -> void {
-    this->__underlying.push_back(_database);
+auto zpt::storage::sqlite::session::add_database_connection(std::string const& _name,
+                                                            sqlite3_ptr _database) -> void {
+    this->__underlying.insert(std::make_pair(_name, _database));
 }
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
@@ -308,8 +313,12 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _s
                   "couldn't open database at " << this->__path);
     this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
     const_cast<zpt::storage::sqlite::session&>(_session).add_database_connection(
-      this->__underlying);
+      _db, this->__underlying);
 }
+
+zpt::storage::sqlite::database::database(sqlite3_ptr _connection, std::string const& _db)
+  : __name{ _db }
+  , __underlying{ _connection } {}
 
 auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt::storage::result {
     std::vector<sqlite3_stmt_ptr> _prepared;

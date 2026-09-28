@@ -177,13 +177,14 @@ class session : public zpt::storage::session::type {
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
     /** @brief Registers an additional SQLite database handle with this session.
      * Allows managing multiple SQLite files within a single transaction session.
+     * @param _name The name of the database being added.
      * @param _database Shared pointer to sqlite3 handle to register
      * @return None
      */
-    auto add_database_connection(sqlite3_ptr _database) -> void;
+    auto add_database_connection(std::string const& _name, sqlite3_ptr _database) -> void;
 
   private:
-    std::vector<sqlite3_ptr> __underlying;
+    std::unordered_map<std::string, sqlite3_ptr> __underlying;
     zpt::json __options;
 };
 /** @brief SQLite database implementation (represents a single .db file). */
@@ -196,6 +197,7 @@ class database : public zpt::storage::database::type {
      * @param _db Name of the SQLite database file (e.g., "main" or a path)
      */
     explicit database(zpt::storage::sqlite::session const& _session, std::string const& _db);
+    database(sqlite3_ptr _connection, std::string const& _db);
     database(zpt::storage::sqlite::database const& _rhs) = delete;
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
