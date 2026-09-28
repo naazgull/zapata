@@ -101,9 +101,7 @@ auto zpt::storage::pgsql::connection::pgsql() const -> pgsql_ptr { return this->
 // ---- Session ----
 
 zpt::storage::pgsql::session::session(zpt::storage::pgsql::connection const& _connection)
-  : __pgsql{ _connection.pgsql() } {
-    this->begin();
-}
+  : __pgsql{ _connection.pgsql() } {}
 
 zpt::storage::pgsql::session::~session() { this->rollback(); }
 

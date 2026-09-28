@@ -1,16 +1,19 @@
 #include <zapata/sqlite.h>
 
 auto main(int, char**) -> int {
-    zpt::json _config{ "storage", { "sqlite", { "memory", true } } };
+    zpt::json _config{ "storage", { "sqlite", { "path", "/tmp" } } };
     {
+        zpt::log_lvl = 9;
         auto _connection = zpt::make_connection<zpt::storage::sqlite::connection>(_config);
         auto _session = _connection->session();
         auto _database = _session->database("zapata");
-        _database->sql("create table users (_id varchar primary key, nick varchar, email varchar)");
+        _database->sql("create table if not exists users (_id varchar primary key, nick varchar, "
+                       "email varchar)");
         auto _collection = _database->collection("users");
         auto _id1 = zpt::generate::r_key(16);
         std::string _id2;
 
+        _session->begin();
         {
             _collection //
               ->add({ "_id", _id1, "nick", "fimber", "email", "address@host" })
@@ -92,6 +95,7 @@ auto main(int, char**) -> int {
               "---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()),
               zpt::info);
         }
+        _session->commit();
         {
             auto _result = zpt::make_connection<zpt::storage::sqlite::connection>(_config) //
                              ->session()
@@ -102,6 +106,7 @@ auto main(int, char**) -> int {
             zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
         }
         _database->backup("/tmp/sqlite_test.db");
+        _session->begin();
         {
             auto _result = _collection //
                              ->remove({})
@@ -114,6 +119,7 @@ auto main(int, char**) -> int {
                              ->execute();
             zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
         }
+        _session->commit();
     }
     {
         auto _connection = zpt::make_connection<zpt::storage::sqlite::connection>(_config);

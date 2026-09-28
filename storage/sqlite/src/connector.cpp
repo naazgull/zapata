@@ -225,6 +225,8 @@ auto zpt::storage::sqlite::connection::options() const -> zpt::json { return thi
 zpt::storage::sqlite::session::session(zpt::storage::sqlite::connection const& _connection)
   : __options{ _connection.__options } {}
 
+zpt::storage::sqlite::session::~session() { this->rollback(); }
+
 auto zpt::storage::sqlite::session::is_open() const -> bool {
     return this->__underlying.size() != 0;
 }
@@ -269,10 +271,8 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
         sqlite_expect(
           sqlite3_prepare_v2(_db.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
           "unable to prepare statement for rollback: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_step(_stmt),
-                      "unable to execute rollback statement: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_finalize(_stmt),
-                      "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
+        sqlite3_step(_stmt);
+        sqlite3_finalize(_stmt);
     }
     return this;
 }
@@ -289,29 +289,21 @@ auto zpt::storage::sqlite::session::database(std::string const& _db) const
 
 auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _database) -> void {
     this->__underlying.push_back(_database);
-    std::string _to_execute{ "begin" };
-    sqlite3_stmt* _stmt{ nullptr };
-    zlog(_to_execute, zpt::trace);
-    sqlite_expect(sqlite3_prepare_v2(
-                    _database.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
-                  "unable to prepare statement for commit: " << sqlite3_errmsg(_database.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute commit statement: " << sqlite3_errmsg(_database.get()));
-    sqlite_expect(sqlite3_finalize(_stmt),
-                  "unable to cleanup statement: " << sqlite3_errmsg(_database.get()));
 }
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
                                          std::string const& _db)
-  : __path{ std::string{ "file:" } +
-            (_session.__options("path")->ok()
-               ? _session.__options("path")->string() + std::string{ "/" } + _db
-               : _db + std::string{ "?mode=memory&cache=shared" }) }
+  : __path{ std::string{ "file:" } + (_session.__options("path")->ok()
+                                        ? _session.__options("path")->string() +
+                                            std::string{ "/" } + _db + std::string{ "?mode=rwc" }
+                                        : _db + std::string{ "?mode=memory" }) }
   , __name{ _db } {
+    zlog("Opening " << this->__path, zpt::trace);
     sqlite3* _underlying{ nullptr };
     sqlite_expect(sqlite3_open_v2(this->__path.data(),
                                   &_underlying,
-                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
+                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI |
+                                    SQLITE_OPEN_FULLMUTEX,
                                   nullptr),
                   "couldn't open database at " << this->__path);
     this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
@@ -327,9 +319,16 @@ auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt:
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
       "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
     _prepared.push_back(sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
+
+    auto _idx = _to_execute.find(" ");
+    auto _statement_type = (_idx != std::string::npos ? _to_execute.substr(0, _idx) : _to_execute);
+    std::transform(
+      _statement_type.begin(), _statement_type.end(), _statement_type.begin(), ::tolower);
+    if (_statement_type != "select") {
+        sqlite_expect(sqlite3_step(_stmt),
+                      "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
+    }
 
     zpt::json _result{ "state", zpt::json::object(), "generated", zpt::json::array() };
     return zpt::make_result<zpt::storage::sqlite::result>(_result, _prepared);

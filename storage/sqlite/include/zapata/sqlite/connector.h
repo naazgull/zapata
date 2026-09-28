@@ -50,7 +50,10 @@ class result;
 
 /** @brief Deleter for sqlite3 handles used with shared_ptr. */
 struct close_connection {
-    void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
+    void operator()(sqlite3* _connection) const {
+        zlog("Closing SQLite connection", zpt::trace);
+        sqlite3_close_v2(_connection);
+    }
 };
 
 /** @brief Deleter for sqlite3_stmt handles used with shared_ptr. */
@@ -146,7 +149,7 @@ class session : public zpt::storage::session::type {
     explicit session(zpt::storage::sqlite::connection const& _connection);
     session(zpt::storage::sqlite::session const& _rhs) = delete;
     session(zpt::storage::sqlite::session&& _rhs) = delete;
-    virtual ~session() override = default;
+    virtual ~session() override;
     /** @brief Returns true if at least one underlying SQLite handle is open.
      * @return True if open, false otherwise
      */

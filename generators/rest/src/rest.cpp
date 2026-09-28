@@ -1417,6 +1417,8 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
                                 this->__schema("info")("database")->string()));
             }
         }
+        _block-> //
+          add<zpt::ast::cpp_instruction>("_session->begin()");
     }
 }
 

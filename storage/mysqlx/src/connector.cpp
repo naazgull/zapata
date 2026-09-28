@@ -95,9 +95,7 @@ auto zpt::storage::mysqlx::connection::options() const -> zpt::json { return thi
 auto zpt::storage::mysqlx::connection::mysql() const -> mysql_ptr { return this->__mysql; }
 
 zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection const& _connection)
-  : __mysql{ _connection.mysql() } {
-    this->begin();
-}
+  : __mysql{ _connection.mysql() } {}
 
 zpt::storage::mysqlx::session::~session() { this->rollback(); }
 

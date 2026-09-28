@@ -92,9 +92,7 @@ auto zpt::storage::mongodb::connection::mongodb() const -> mongodb_ptr { return 
 // ---- Session ----
 
 zpt::storage::mongodb::session::session(zpt::storage::mongodb::connection const& _connection)
-  : __mongodb{ _connection.mongodb() } {
-    this->begin();
-}
+  : __mongodb{ _connection.mongodb() } {}
 
 auto zpt::storage::mongodb::session::is_open() const -> bool { return this->__mongodb != nullptr; }
 
