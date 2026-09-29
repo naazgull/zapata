@@ -724,7 +724,7 @@ auto make_result(Args&... _args) -> zpt::storage::result;
 
 template<typename T>
 auto zpt::make_connection(zpt::json const& _config) -> zpt::storage::connection {
-    static thread_local zpt::storage::connection _to_return{ new T{ _config } };
+    zpt::storage::connection _to_return{ new T{ _config } };
     return _to_return;
 }
 

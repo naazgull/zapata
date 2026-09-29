@@ -130,6 +130,7 @@ class connection : public zpt::storage::connection::type {
   private:
     zpt::json __options;
     mysql_ptr __mysql{ nullptr };
+    static thread_local inline std::map<std::string, mysql_ptr> __thread_connections;
 };
 
 /**

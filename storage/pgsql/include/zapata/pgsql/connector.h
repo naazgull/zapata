@@ -109,6 +109,7 @@ class connection : public zpt::storage::connection::type {
   private:
     zpt::json __options;
     pgsql_ptr __pgsql{ nullptr };
+    static thread_local inline std::map<std::string, pgsql_ptr> __thread_connections;
 };
 
 /**

@@ -1,51 +1,62 @@
 #include <zapata/pgsql.h>
 
 auto main(int, char**) -> int {
+    zpt::log_lvl = 9;
     zpt::json _config{ { "storage", { "pgsql", { "user", "zpt", "host", "127.0.0.1" } } } };
-    auto _connection = zpt::make_connection<zpt::storage::pgsql::connection>(_config);
-    auto _session = _connection->session();
-    _session->sql("create schema if not exists test");
-    _session->sql("create table if not exists test.users (_id varchar(36) primary key, name TEXT, "
-                  "address TEXT)");
-    auto _database = _session->database("test");
-    auto _collection = _database->collection("users");
-    _collection //
-      ->remove({})
-      ->execute();
-    auto _ids = _collection //
-                  ->add({ "name", "John Smith", "address", "Upside Down 'just for fun' with {}" })
-                  ->add({ "name", "John Smith 2", "address", "Upside Down 'just for fun' with {}" })
-                  ->add({ "name", "John Smith 3", "address", "Upside Down 'just for fun' with {}" })
-                  ->execute()
-                  ->generated_id();
+    {
+        auto _connection = zpt::make_connection<zpt::storage::pgsql::connection>(_config);
+        auto _session = _connection->session();
+        _session->sql("create schema if not exists test");
+        _session->sql(
+          "create table if not exists test.users (_id varchar(36) primary key, name TEXT, "
+          "address TEXT)");
+        _session->begin();
+        auto _database = _session->database("test");
+        auto _collection = _database->collection("users");
+        _collection //
+          ->remove({})
+          ->execute();
+        auto _ids =
+          _collection //
+            ->add({ "name", "John Smith", "address", "Upside Down 'just for fun' with {}" })
+            ->add({ "name", "John Smith 2", "address", "Upside Down 'just for fun' with {}" })
+            ->add({ "name", "John Smith 3", "address", "Upside Down 'just for fun' with {}" })
+            ->execute()
+            ->generated_id();
 
-    std::cout << _ids << std::endl;
-    std::cout << _collection //
-                   ->find(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
-                   ->execute()
-                   ->fetch()
-              << std::endl;
+        std::cout << _ids << std::endl;
+        std::cout << _collection //
+                       ->find(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
+                       ->execute()
+                       ->fetch()
+                  << std::endl;
 
-    std::cout << _session //
-                   ->sql("select * from test.users where address like '%Down%'")
-                   ->fetch()
-              << std::endl;
+        std::cout << _session //
+                       ->sql("select * from test.users where address like '%Down%'")
+                       ->fetch()
+                  << std::endl;
 
-    std::cout << _database //
-                   ->sql("select * from users where address like '%Down%'")
-                   ->fetch()
-              << std::endl;
+        std::cout << _database //
+                       ->sql("select * from users where address like '%Down%'")
+                       ->fetch()
+                  << std::endl;
 
-    _collection //
-      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
-      ->set("name", "Zé Povinho 'or with {}'")
-      ->execute();
+        _collection //
+          ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
+          ->set("name", "Zé Povinho 'or with {}'")
+          ->execute();
 
-    _collection //
-      ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
-      ->patch({ "name", "Pixie", "address", "Neverland or a placeholder like '{}'" })
-      ->execute();
+        _collection //
+          ->modify(std::format("_id = {}", zpt::storage::pgsql::quote_value(_ids(0))))
+          ->patch({ "name", "Pixie", "address", "Neverland or a placeholder like '{}'" })
+          ->execute();
 
-    std::cout << zpt::pretty(_collection->find({})->execute()->fetch()) << std::endl;
-    _session->commit();
+        std::cout << zpt::pretty(_collection->find({})->execute()->fetch()) << std::endl;
+        _session->commit();
+    }
+    {
+        auto _connection = zpt::make_connection<zpt::storage::pgsql::connection>(_config);
+        auto _session = _connection->session();
+        std::cout << _session->sql("select * from users")->fetch() << std::endl;
+    }
 }

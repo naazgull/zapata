@@ -62,25 +62,36 @@ auto zpt::storage::pgsql::connection::open(zpt::json _options) -> zpt::storage::
     auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _port =
       this->__options("port")->ok() ? std::to_string(this->__options("port")->integer()) : "5432";
-    auto _db = this->__options("db")->ok() ? this->__options("db")->string() : "";
+    auto _uri = std::format("pgsql://{}@{}:{}", _user, _host, _port);
 
-    std::ostringstream _connstr;
-    _connstr << "host='" << _host << "'";
-    _connstr << " port=" << _port;
-    _connstr << " user='" << _user << "'";
-    if (!_pass.empty()) { _connstr << " password='" << _pass << "'"; }
-    if (!_db.empty()) { _connstr << " dbname='" << _db << "'"; }
-
-    std::cout << _connstr.str() << std::endl;
-
-    auto* _pg = PQconnectdb(_connstr.str().c_str());
-    if (PQstatus(_pg) != CONNECTION_OK) {
-        auto _err = std::string{ PQerrorMessage(_pg) };
-        PQfinish(_pg);
-        expect(false, std::format("Unable to connect to PostgreSQL: {}", _err));
+    bool _reuse = !this->__options("scope")->is_string() || this->__options("scope") == "thread";
+    if (_reuse) {
+        auto _found = this->__thread_connections.find(_uri);
+        if (_found != this->__thread_connections.end()) {
+            zlog("Reusing " << _uri, zpt::trace);
+            this->__pgsql = _found->second;
+        }
     }
 
-    this->__pgsql.reset(_pg, zpt::storage::pgsql::pgsql_conn_deinit{});
+    if (this->__pgsql == nullptr) {
+        std::ostringstream _connstr;
+        _connstr << "host='" << _host << "'";
+        _connstr << " port=" << _port;
+        _connstr << " user='" << _user << "'";
+        if (!_pass.empty()) { _connstr << " password='" << _pass << "'"; }
+        zlog("Opening " << _uri, zpt::trace);
+
+        auto* _pg = PQconnectdb(_connstr.str().c_str());
+        if (PQstatus(_pg) != CONNECTION_OK) {
+            auto _err = std::string{ PQerrorMessage(_pg) };
+            PQfinish(_pg);
+            expect(false, std::format("Unable to connect to PostgreSQL: {}", _err));
+        }
+
+        this->__pgsql.reset(_pg, zpt::storage::pgsql::pgsql_conn_deinit{});
+
+        if (_reuse) { this->__thread_connections.insert(std::make_pair(_uri, this->__pgsql)); }
+    }
     return this;
 }
 
@@ -110,6 +121,7 @@ auto zpt::storage::pgsql::session::is_open() const -> bool {
 }
 
 auto zpt::storage::pgsql::session::begin() -> zpt::storage::session::type* {
+    zlog("BEGIN", zpt::trace);
     auto* _res = PQexec(this->__pgsql.get(), "BEGIN");
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
@@ -119,6 +131,7 @@ auto zpt::storage::pgsql::session::begin() -> zpt::storage::session::type* {
 }
 
 auto zpt::storage::pgsql::session::commit() -> zpt::storage::session::type* {
+    zlog("COMMIT", zpt::trace);
     auto* _res = PQexec(this->__pgsql.get(), "COMMIT");
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
@@ -127,6 +140,7 @@ auto zpt::storage::pgsql::session::commit() -> zpt::storage::session::type* {
 }
 
 auto zpt::storage::pgsql::session::rollback() -> zpt::storage::session::type* {
+    zlog("ROLLBACK", zpt::trace);
     auto* _res = PQexec(this->__pgsql.get(), "ROLLBACK");
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK;
     PQclear(_res);
@@ -142,6 +156,7 @@ auto zpt::storage::pgsql::session::rollback() -> zpt::storage::session::type* {
 }
 
 auto zpt::storage::pgsql::session::sql(std::string const& _statement) -> zpt::storage::result {
+    zlog(_statement, zpt::trace);
     auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
     if (!_ok) {
@@ -181,6 +196,7 @@ zpt::storage::pgsql::database::database(zpt::storage::pgsql::session const& _ses
 }
 
 auto zpt::storage::pgsql::database::sql(std::string const& _statement) -> zpt::storage::result {
+    zlog(_statement, zpt::trace);
     auto* _res = PQexec(this->__pgsql.get(), _statement.c_str());
     auto _ok = PQresultStatus(_res) == PGRES_COMMAND_OK || PQresultStatus(_res) == PGRES_TUPLES_OK;
     if (!_ok) {
