@@ -69,7 +69,7 @@
 #include <sstream>
 #include <zapata/base.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
-#include <HTTPParser.bison.h>
+#include <zapata/http/HTTPParser.bison.h>
 
 namespace {
 /*!re2c

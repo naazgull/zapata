@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <FunctionalParser.bison.h>
+#include <zapata/functional/FunctionalParser.bison.h>
 #include <zapata/functional/FunctionalTokenizer.h>
 
 auto zpt::FunctionalTokenizer::parse() -> int {

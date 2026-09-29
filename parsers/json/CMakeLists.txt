@@ -2,49 +2,15 @@ set(PARSERS_JSON_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_program(RE2C_EXECUTABLE re2c REQUIRED)
-find_program(BISON_EXECUTABLE bison REQUIRED)
-
-set(JSON_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-file(MAKE_DIRECTORY ${JSON_GEN_DIR})
-
-set(JSON_LEXER_RE ${CMAKE_CURRENT_SOURCE_DIR}/src/JSON.re)
-set(JSON_LEXER_CPP ${JSON_GEN_DIR}/JSONLexer.re2c.cpp)
-
-set(JSON_GRAMMAR_Y ${CMAKE_CURRENT_SOURCE_DIR}/src/JSON.y)
-set(JSON_PARSER_CPP ${JSON_GEN_DIR}/JSONParser.bison.cpp)
-set(JSON_PARSER_H ${JSON_GEN_DIR}/JSONParser.bison.h)
-
-add_custom_command(
-  OUTPUT ${JSON_PARSER_CPP} ${JSON_PARSER_H}
-  COMMAND ${BISON_EXECUTABLE}
-          -Wall -Werror=conflicts-sr -Werror=conflicts-rr
-          --defines=${JSON_PARSER_H}
-          -o ${JSON_PARSER_CPP}
-          ${JSON_GRAMMAR_Y}
-  DEPENDS ${JSON_GRAMMAR_Y}
-  COMMENT "Generating JSON parser with bison"
-  VERBATIM
-)
-
-add_custom_command(
-  OUTPUT ${JSON_LEXER_CPP}
-  COMMAND ${RE2C_EXECUTABLE}
-          -o ${JSON_LEXER_CPP}
-          ${JSON_LEXER_RE}
-  DEPENDS ${JSON_LEXER_RE} ${JSON_PARSER_H}
-  COMMENT "Generating JSON lexer with re2c"
-  VERBATIM
-)
-
-add_custom_target(zapata-parser-json-generated
-  DEPENDS ${JSON_PARSER_CPP} ${JSON_PARSER_H} ${JSON_LEXER_CPP}
-)
+# The bison/re2c parser artifacts are pre-generated and checked in:
+#   include/zapata/json/JSONParser.bison.h
+#   src/JSONParser.bison.cpp
+#   src/JSONLexer.re2c.cpp
+# Regenerate them (requires bison + re2c) with:  fish parsers/json/generate.fish
 
 add_library(zapata-parser-json SHARED)
 add_dependencies(zapata-parser-json
   zapata-base
-  zapata-parser-json-generated
 )
 target_sources(zapata-parser-json
   PRIVATE
@@ -59,8 +25,8 @@ target_sources(zapata-parser-json
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONRegex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONArr.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONLambda.cpp
-    ${JSON_PARSER_CPP}
-    ${JSON_LEXER_CPP}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONParser.bison.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONLexer.re2c.cpp
   INTERFACE
     ${PARSERS_JSON_INCLUDE_DIR}/zapata/json.h
     ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/json.h
@@ -74,7 +40,6 @@ target_include_directories(zapata-parser-json
   PRIVATE
     zapata-base
     ${PARSERS_JSON_INCLUDE_DIR}
-    ${JSON_GEN_DIR}
   INTERFACE
     ${PARSERS_JSON_INCLUDE_DIR}
 )

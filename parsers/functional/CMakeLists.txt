@@ -2,50 +2,16 @@ set(PARSERS_FUNCTIONAL_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_program(RE2C_EXECUTABLE re2c REQUIRED)
-find_program(BISON_EXECUTABLE bison REQUIRED)
-
-set(FUNCTIONAL_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-file(MAKE_DIRECTORY ${FUNCTIONAL_GEN_DIR})
-
-set(FUNCTIONAL_LEXER_RE ${CMAKE_CURRENT_SOURCE_DIR}/src/Functional.re)
-set(FUNCTIONAL_LEXER_CPP ${FUNCTIONAL_GEN_DIR}/FunctionalLexer.re2c.cpp)
-
-set(FUNCTIONAL_GRAMMAR_Y ${CMAKE_CURRENT_SOURCE_DIR}/src/Functional.y)
-set(FUNCTIONAL_PARSER_CPP ${FUNCTIONAL_GEN_DIR}/FunctionalParser.bison.cpp)
-set(FUNCTIONAL_PARSER_H ${FUNCTIONAL_GEN_DIR}/FunctionalParser.bison.h)
-
-add_custom_command(
-  OUTPUT ${FUNCTIONAL_PARSER_CPP} ${FUNCTIONAL_PARSER_H}
-  COMMAND ${BISON_EXECUTABLE}
-          -Wall -Werror=conflicts-sr -Werror=conflicts-rr
-          --defines=${FUNCTIONAL_PARSER_H}
-          -o ${FUNCTIONAL_PARSER_CPP}
-          ${FUNCTIONAL_GRAMMAR_Y}
-  DEPENDS ${FUNCTIONAL_GRAMMAR_Y}
-  COMMENT "Generating Functional parser with bison"
-  VERBATIM
-)
-
-add_custom_command(
-  OUTPUT ${FUNCTIONAL_LEXER_CPP}
-  COMMAND ${RE2C_EXECUTABLE}
-          -o ${FUNCTIONAL_LEXER_CPP}
-          ${FUNCTIONAL_LEXER_RE}
-  DEPENDS ${FUNCTIONAL_LEXER_RE} ${FUNCTIONAL_PARSER_H}
-  COMMENT "Generating Functional lexer with re2c"
-  VERBATIM
-)
-
-add_custom_target(zapata-parser-functional-generated
-  DEPENDS ${FUNCTIONAL_PARSER_CPP} ${FUNCTIONAL_PARSER_H} ${FUNCTIONAL_LEXER_CPP}
-)
+# The bison/re2c parser artifacts are pre-generated and checked in:
+#   include/zapata/functional/FunctionalParser.bison.h
+#   src/FunctionalParser.bison.cpp
+#   src/FunctionalLexer.re2c.cpp
+# Regenerate them (requires bison + re2c) with:  fish parsers/functional/generate.fish
 
 add_library(zapata-parser-functional SHARED)
 add_dependencies(zapata-parser-functional
   zapata-base
   zapata-parser-json
-  zapata-parser-functional-generated
 )
 target_sources(zapata-parser-functional
   PRIVATE
@@ -54,8 +20,8 @@ target_sources(zapata-parser-functional
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalTokenizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Re2cFunctionalLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/functional.cpp
-    ${FUNCTIONAL_PARSER_CPP}
-    ${FUNCTIONAL_LEXER_CPP}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalParser.bison.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalLexer.re2c.cpp
   INTERFACE
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional.h
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalParser.h
@@ -69,7 +35,6 @@ target_include_directories(zapata-parser-functional
     zapata-base
     zapata-parser-json
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
-    ${FUNCTIONAL_GEN_DIR}
   INTERFACE
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
 )

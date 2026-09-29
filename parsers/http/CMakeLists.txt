@@ -2,9 +2,6 @@ set(PARSERS_HTTP_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_program(RE2C_EXECUTABLE re2c REQUIRED)
-find_program(BISON_EXECUTABLE bison REQUIRED)
-
 find_package(OpenSSL QUIET)
 
 if(NOT OPENSSL_FOUND)
@@ -12,41 +9,11 @@ if(NOT OPENSSL_FOUND)
   return()
 endif()
 
-set(HTTP_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-file(MAKE_DIRECTORY ${HTTP_GEN_DIR})
-
-set(HTTP_LEXER_RE ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTP.re)
-set(HTTP_LEXER_CPP ${HTTP_GEN_DIR}/HTTPLexer.re2c.cpp)
-
-set(HTTP_GRAMMAR_Y ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTP.y)
-set(HTTP_PARSER_CPP ${HTTP_GEN_DIR}/HTTPParser.bison.cpp)
-set(HTTP_PARSER_H ${HTTP_GEN_DIR}/HTTPParser.bison.h)
-
-add_custom_command(
-  OUTPUT ${HTTP_PARSER_CPP} ${HTTP_PARSER_H}
-  COMMAND ${BISON_EXECUTABLE}
-          -Wall -Werror=conflicts-sr -Werror=conflicts-rr
-          --defines=${HTTP_PARSER_H}
-          -o ${HTTP_PARSER_CPP}
-          ${HTTP_GRAMMAR_Y}
-  DEPENDS ${HTTP_GRAMMAR_Y}
-  COMMENT "Generating HTTP parser with bison"
-  VERBATIM
-)
-
-add_custom_command(
-  OUTPUT ${HTTP_LEXER_CPP}
-  COMMAND ${RE2C_EXECUTABLE}
-          -o ${HTTP_LEXER_CPP}
-          ${HTTP_LEXER_RE}
-  DEPENDS ${HTTP_LEXER_RE} ${HTTP_PARSER_H}
-  COMMENT "Generating HTTP lexer with re2c"
-  VERBATIM
-)
-
-add_custom_target(zapata-parser-http-generated
-  DEPENDS ${HTTP_PARSER_CPP} ${HTTP_PARSER_H} ${HTTP_LEXER_CPP}
-)
+# The bison/re2c parser artifacts are pre-generated and checked in:
+#   include/zapata/http/HTTPParser.bison.h
+#   src/HTTPParser.bison.cpp
+#   src/HTTPLexer.re2c.cpp
+# Regenerate them (requires bison + re2c) with:  fish parsers/http/generate.fish
 
 add_library(zapata-parser-http SHARED)
 add_dependencies(zapata-parser-http
@@ -55,7 +22,6 @@ add_dependencies(zapata-parser-http
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
-  zapata-parser-http-generated
 )
 target_sources(zapata-parser-http
   PRIVATE
@@ -66,8 +32,8 @@ target_sources(zapata-parser-http
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPReq.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPElement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPRep.cpp
-    ${HTTP_PARSER_CPP}
-    ${HTTP_LEXER_CPP}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPParser.bison.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPLexer.re2c.cpp
   INTERFACE
     ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http.h
     ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPParser.h
@@ -84,7 +50,6 @@ target_include_directories(zapata-parser-http
     zapata-parser-json
     zapata-parser-uri
     ${PARSERS_HTTP_INCLUDE_DIR}
-    ${HTTP_GEN_DIR}
   INTERFACE
     ${PARSERS_HTTP_INCLUDE_DIR}
 )
