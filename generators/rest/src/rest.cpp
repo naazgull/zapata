@@ -823,7 +823,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
             this->generate_remove_elements(_cpp_file, _def, _path);
         }
 
-        std::string _allowed{ "GET, POST, DELETE" };
+        std::string _allowed{ "GET, PUT, DELETE" };
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
@@ -921,9 +921,16 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
                                               "_received + zpt::json{ \"_id\", _id }");
         }
         else {
+            if (_def("resource")->string() == "store") {
+                _method_try_body->add<zpt::ast::cpp_instruction>(
+                  "_collection //\n->replace(_params(\"_id\")->string(), _received)->execute()");
+            }
+            else {
+                _method_try_body->add<zpt::ast::cpp_instruction>(
+                  "_collection //\n->add(_received)->execute()");
+            }
             _method_try_body //
-              ->add<zpt::ast::cpp_instruction>("_collection //\n->add(_received)->execute()")
-              .add<zpt::ast::cpp_instruction>("_session->commit()")
+              ->add<zpt::ast::cpp_instruction>("_session->commit()")
               .add<zpt::ast::cpp_instruction>(
                 "this //\n->to_send()->status(201).body() = _received");
         }
@@ -1475,6 +1482,10 @@ auto zpt::gen::rest::unit::add_schema_validation(zpt::ast::basic_code_block::ptr
             }
         }
     }
+    if (_def("resource")->string() == "store") {
+        _block->add<zpt::ast::cpp_instruction>(
+          "expect(_received(\"_id\")->ok(), \"Required request member field '_id'\")");
+    }
 }
 
 auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
@@ -1577,6 +1588,7 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
 }
 
 auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
+    if (_def("resource")->string() == "store") { return true; }
     if (_def("*")("requestBody")("allOf")->ok()) {
         for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
             if (_object("properties")("_id")->ok()) { return true; }

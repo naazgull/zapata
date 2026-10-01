@@ -917,8 +917,6 @@ auto zpt::storage::sqlite::action_replace::execute() -> zpt::storage::result {
 }
 
 auto zpt::storage::sqlite::action_replace::add_replace() -> void {
-    if (this->__set->size() == 0) { return; }
-
     std::ostringstream _names;
     std::ostringstream _values;
     _names << "replace into " << zpt::storage::sqlite::quote_name(this->__collection_name) << " ("
