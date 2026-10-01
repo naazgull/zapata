@@ -352,7 +352,7 @@ class collection {
         /** @brief Returns the total count of documents.
          * @param _search Optional search criteria.
          * @return Total count of matching documents. */
-        virtual auto count(zpt::json _search = zpt::undefined) -> size_t = 0;
+        virtual auto count(zpt::json _search = json_null) -> size_t = 0;
         /** @brief Retrieves the functions to call to quote SQL expressions.
          * @return The callbacks to invoke to quote an SQL expressions. */
         virtual auto get_quote_handler() const -> zpt::storage::quote_handler = 0;

@@ -92,7 +92,7 @@ lua.add_module([](lua_State* L) {
 // Call a Lua function with arguments
 auto result = lua.call(
     zpt::json{ "module", "mymodule", "function", "my_func" },
-    zpt::json{ zpt::array, "arg1", "arg2" }
+    zpt::json{ json_array, "arg1", "arg2" }
 );
 
 // Result is zpt::json
@@ -135,7 +135,7 @@ auto& local_lua = lua.thread_instance();
 // Use it for calls
 auto result = local_lua.call(
     zpt::json{ "module", "mymodule", "function", "my_func" },
-    zpt::json{ zpt::array, "arg" }
+    zpt::json{ json_array, "arg" }
 );
 ```
 
@@ -173,7 +173,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
         auto& lua1 = lua.thread_instance();
         auto result = lua1.call(
             zpt::json{ "module", "mathlib", "function", "add" },
-            zpt::json{ zpt::array, 10, 20 }
+            zpt::json{ json_array, 10, 20 }
         );
         std::cout << "Thread 1: " << int(result) << std::endl;
     });
@@ -182,7 +182,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
         auto& lua2 = lua.thread_instance();
         auto result = lua2.call(
             zpt::json{ "module", "mathlib", "function", "add" },
-            zpt::json{ zpt::array, 30, 40 }
+            zpt::json{ json_array, 30, 40 }
         );
         std::cout << "Thread 2: " << int(result) << std::endl;
     });

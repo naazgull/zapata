@@ -56,8 +56,8 @@
  */
 
 #include <sstream>
-#include <zapata/functional/Re2cFunctionalLexer.h>
 #include <zapata/functional/FunctionalParser.bison.h>
+#include <zapata/functional/Re2cFunctionalLexer.h>
 
 namespace {
 #line 68 "parsers/functional/src/Functional.re"
@@ -65,166 +65,163 @@ namespace {
 } // namespace
 
 auto zpt::Re2cFunctionalLexer::lexInitial() -> int {
-    
+
 #line 70 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy1;
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case ' ': goto yy4;
-		case '"': goto yy5;
-		case '(': goto yy6;
-		case ')': goto yy7;
-		case ',': goto yy8;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy9;
-		default: goto yy2;
-	}
-yy1:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy1;
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case ' ': goto yy4;
+            case '"': goto yy5;
+            case '(': goto yy6;
+            case ')': goto yy7;
+            case ',': goto yy8;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy9;
+            default: goto yy2;
+        }
+    yy1:
+        ++this->__cursor;
 #line 102 "parsers/functional/src/Functional.re"
-	{ return 0; }
+        { return 0; }
 #line 102 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy2:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case ' ':
-		case '"':
-		case '(':
-		case ')':
-		case ',':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy3;
-		default: goto yy2;
-	}
-yy3:
+    yy2:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case ' ':
+            case '"':
+            case '(':
+            case ')':
+            case ',':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy3;
+            default: goto yy2;
+        }
+    yy3:
 #line 79 "parsers/functional/src/Functional.re"
-	{
-            this->captureMatch();
-            return VARIABLE;
-        }
+    {
+        this->captureMatch();
+        return VARIABLE;
+    }
 #line 136 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy4:
-	++this->__cursor;
+    yy4:
+        ++this->__cursor;
 #line 99 "parsers/functional/src/Functional.re"
-	{
-            return 0;
-        }
+        { return 0; }
 #line 143 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy5:
-	++this->__cursor;
+    yy5:
+        ++this->__cursor;
 #line 95 "parsers/functional/src/Functional.re"
-	{
+        {
             this->begin(re2c_functional_cond::quoted);
             return 0;
         }
 #line 151 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy6:
-	++this->__cursor;
+    yy6:
+        ++this->__cursor;
 #line 83 "parsers/functional/src/Functional.re"
-	{
+        {
             this->captureMatch();
             return LPAREN;
         }
 #line 159 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy7:
-	++this->__cursor;
+    yy7:
+        ++this->__cursor;
 #line 87 "parsers/functional/src/Functional.re"
-	{
+        {
             this->captureMatch();
             return RPAREN;
         }
 #line 167 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy8:
-	++this->__cursor;
+    yy8:
+        ++this->__cursor;
 #line 91 "parsers/functional/src/Functional.re"
-	{
+        {
             this->captureMatch();
             return COMMA;
         }
 #line 175 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy9:
-	++this->__cursor;
+    yy9:
+        ++this->__cursor;
 #line 73 "parsers/functional/src/Functional.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(re2c_functional_cond::number);
             return 0;
         }
 #line 185 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-}
+    }
 #line 103 "parsers/functional/src/Functional.re"
-
 }
 
 auto zpt::Re2cFunctionalLexer::lexQuoted() -> int {
-    
+
 #line 193 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy11;
-		case '"': goto yy14;
-		default: goto yy12;
-	}
-yy11:
-	++this->__cursor;
-#line 120 "parsers/functional/src/Functional.re"
-	{ return 0; }
-#line 207 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy12:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '"': goto yy13;
-		default: goto yy12;
-	}
-yy13:
-#line 115 "parsers/functional/src/Functional.re"
-	{
-            this->captureMatch();
-            this->more();
-            return 0;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy11;
+            case '"': goto yy14;
+            default: goto yy12;
         }
+    yy11:
+        ++this->__cursor;
+#line 120 "parsers/functional/src/Functional.re"
+        { return 0; }
+#line 207 "parsers/functional/src/FunctionalLexer.re2c.cpp"
+    yy12:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '"': goto yy13;
+            default: goto yy12;
+        }
+    yy13:
+#line 115 "parsers/functional/src/Functional.re"
+    {
+        this->captureMatch();
+        this->more();
+        return 0;
+    }
 #line 224 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-yy14:
-	++this->__cursor;
+    yy14:
+        ++this->__cursor;
 #line 108 "parsers/functional/src/Functional.re"
-	{
+        {
             this->captureMatch();
             std::string _content(this->matched());
             this->setMatched(_content.substr(0, _content.length() - 1));
@@ -232,45 +229,43 @@ yy14:
             return STRING;
         }
 #line 235 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-}
+    }
 #line 121 "parsers/functional/src/Functional.re"
-
 }
 
 auto zpt::Re2cFunctionalLexer::lexNumber() -> int {
-    
-#line 243 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-{
-	char yych;
-	goto yy15;
-yy16:
-	++this->__cursor;
-yy15:
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '.':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy16;
-		default: goto yy17;
-	}
-yy17:
-#line 126 "parsers/functional/src/Functional.re"
-	{
-            this->captureMatch();
-            this->begin(re2c_functional_cond::INITIAL);
-            return NUMBER;
-        }
-#line 273 "parsers/functional/src/FunctionalLexer.re2c.cpp"
-}
-#line 131 "parsers/functional/src/Functional.re"
 
+#line 243 "parsers/functional/src/FunctionalLexer.re2c.cpp"
+    {
+        char yych;
+        goto yy15;
+    yy16:
+        ++this->__cursor;
+    yy15:
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '.':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy16;
+            default: goto yy17;
+        }
+    yy17:
+#line 126 "parsers/functional/src/Functional.re"
+    {
+        this->captureMatch();
+        this->begin(re2c_functional_cond::INITIAL);
+        return NUMBER;
+    }
+#line 273 "parsers/functional/src/FunctionalLexer.re2c.cpp"
+    }
+#line 131 "parsers/functional/src/Functional.re"
 }

@@ -31,12 +31,12 @@ resolver_t(zpt::json _rest_config);
 **Template-based (Operation classes) — recommended:**
 ```cpp
 template<zpt::events::Operation T>
-auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+auto add(zpt::json const& _id, zpt::json const& _metadata = json_null) -> resolver_t&;
 
 template<zpt::events::Operation T>
 auto add(zpt::performative _performative,
          zpt::json const& _id,
-         zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+         zpt::json const& _metadata = json_null) -> resolver_t&;
 ```
 
 Registers a handler Operation class. `zpt::events::Operation` types are registered with `resolver->add<MyHandler>("/path")`. The resolver creates instances of the handler when matching requests arrive.

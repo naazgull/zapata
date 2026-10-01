@@ -498,19 +498,15 @@ auto zpt::storage::extract_find(zpt::storage::quote_handler const& _quote, zpt::
         if (_value->is_string()) {
             auto _string = _value->string();
             if (_string.find("{.") == 0) {
-                try {
-                    auto _to_eval = _string.substr(2, _string.length() - 4);
-                    auto _function = zpt::functional::parse(_to_eval);
-                    auto _params = _function("params");
-                    if (_params->ok()) {
-                        (**_params->array())
-                          .insert((**_params->array()).begin(), zpt::json::string(_key));
-                    }
-                    else { _function << "params" << _key; }
-                    zpt::storage::functional_to_sql(_function, _find, _quote, _quote.__quote_name);
+                auto _to_eval = _string.substr(2, _string.length() - 4);
+                auto _function = zpt::functional::parse(_to_eval);
+                auto _params = _function("params");
+                if (_params->ok()) {
+                    (**_params->array())
+                      .insert((**_params->array()).begin(), zpt::json::string(_key));
                 }
-                catch (...) {
-                }
+                else { _function << "params" << _key; }
+                zpt::storage::functional_to_sql(_function, _find, _quote, _quote.__quote_name);
             }
             else {
                 _find << "(" << _quote.__quote_name(_key) << " = " << _quote.__quote_value(_value)

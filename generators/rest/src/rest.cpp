@@ -1122,7 +1122,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
     _method_body->add(_if_block);
 
-    _method_body->add<zpt::ast::cpp_instruction>("return zpt::undefined");
+    _method_body->add<zpt::ast::cpp_instruction>("return json_null");
 
     _method->add(_method_body);
     _cpp_file->add(_method);
@@ -1495,14 +1495,14 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     std::string _value = _prop("default");
                     _value = _value.substr(1);
                     _value = _value.substr(0, _value.length() - 1);
-                    zpt::replace(_value, "{", "zpt::json{");
+                    zpt::replace(_value, "{", "{");
                     zpt::replace(_value, "[]", "zpt::json::array()");
-                    zpt::replace(_value, "[", "zpt::json{zpt::array,");
+                    zpt::replace(_value, "[", "{json_array,");
                     zpt::replace(_value, "]", "}");
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::object()"; }
-                    else { _value = std::format("zpt::json{{ {} }}", _value); }
+                    else { _value = std::format("{{ {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}", _name, _value));
                 }
@@ -1510,14 +1510,14 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     std::string _value = _prop("default");
                     _value = _value.substr(1);
                     _value = _value.substr(0, _value.length() - 1);
-                    zpt::replace(_value, "{", "zpt::json{");
+                    zpt::replace(_value, "{", "{");
                     zpt::replace(_value, "[]", "zpt::json::array()");
-                    zpt::replace(_value, "[", "zpt::json{zpt::array,");
+                    zpt::replace(_value, "[", "{json_array,");
                     zpt::replace(_value, "]", "}");
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::array()"; }
-                    else { _value = std::format("zpt::json{{ zpt::array, {} }}", _value); }
+                    else { _value = std::format("{{ json_array, {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}", _name, _value));
                 }
@@ -1525,7 +1525,7 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}",
                                   _name,
-                                  _prop("default")->ok() ? _prop("default") : "zpt::undefined"));
+                                  _prop("default")->ok() ? _prop("default") : "json_null"));
                 }
                 _block->add(_if_block);
             }
@@ -1557,7 +1557,7 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
             for (auto const& [___, _name, _prop] : _type("properties")) { _visible.insert(_name); }
             for (auto const& [___, __, _prop] : _type("hidden")) { _visible.erase(_prop); }
         }
-        _oss << "zpt::json{ zpt::array";
+        _oss << "zpt::json{ json_array";
         for (auto const& _prop : _visible) { _oss << ", \"" << _prop << "\""; }
         _oss << " })" << std::flush;
     }
@@ -1567,7 +1567,7 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
 auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     if (_def("*")("requestBody")("allOf")->ok()) {
-        _oss << "_fields -= zpt::json{ zpt::array";
+        _oss << "_fields -= { json_array";
         for (auto const& [_, __, _type] : _def("*")("requestBody")("allOf")) {
             for (auto const& [___, ____, _prop] : _type("hidden")) { _oss << ", " << _prop; }
         }

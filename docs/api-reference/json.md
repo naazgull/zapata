@@ -181,7 +181,6 @@ Internal variant-based element storage.
 | `is_lambda()` | Value is a lambda |
 | `is_regex()` | Value is a regex |
 | `is_nil()` | Value is null |
-| `is_undefined()` | Value is undefined |
 
 ### State Methods
 

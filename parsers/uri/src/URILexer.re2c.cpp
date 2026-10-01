@@ -62,8 +62,8 @@
  *    buffer without bound.
  */
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <zapata/uri/Re2cURILexer.h>
 #include <zapata/uri/URIParser.bison.h>
 
@@ -73,505 +73,499 @@ namespace {
 } // namespace
 
 auto zpt::Re2cURILexer::lexInitial() -> int {
-    
+
 #line 78 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case ':': goto yy1;
-		case '#': goto yy4;
-		case '*': goto yy5;
-		case '.': goto yy6;
-		case '/': goto yy8;
-		case '?': goto yy9;
-		case '{': goto yy10;
-		default: goto yy2;
-	}
-yy1:
-	++this->__cursor;
-#line 122 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 98 "parsers/uri/src/URILexer.re2c.cpp"
-yy2:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '#':
-		case '*':
-		case '.':
-		case '/':
-		case ':':
-		case '?':
-		case '{': goto yy3;
-		default: goto yy2;
-	}
-yy3:
-#line 81 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->begin(re2c_uri_cond::scheme);
-            this->d_part_is_placeholder = false;
-            return STRING;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case ':': goto yy1;
+            case '#': goto yy4;
+            case '*': goto yy5;
+            case '.': goto yy6;
+            case '/': goto yy8;
+            case '?': goto yy9;
+            case '{': goto yy10;
+            default: goto yy2;
         }
+    yy1:
+        ++this->__cursor;
+#line 122 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 98 "parsers/uri/src/URILexer.re2c.cpp"
+    yy2:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '#':
+            case '*':
+            case '.':
+            case '/':
+            case ':':
+            case '?':
+            case '{': goto yy3;
+            default: goto yy2;
+        }
+    yy3:
+#line 81 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->begin(re2c_uri_cond::scheme);
+        this->d_part_is_placeholder = false;
+        return STRING;
+    }
 #line 122 "parsers/uri/src/URILexer.re2c.cpp"
-yy4:
-	++this->__cursor;
+    yy4:
+        ++this->__cursor;
 #line 113 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::anchor);
             return CARDINAL;
         }
 #line 131 "parsers/uri/src/URILexer.re2c.cpp"
-yy5:
-	++this->__cursor;
+    yy5:
+        ++this->__cursor;
 #line 118 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             return STAR;
         }
 #line 139 "parsers/uri/src/URILexer.re2c.cpp"
-yy6:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy11;
-		default: goto yy7;
-	}
-yy7:
-#line 98 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->begin(re2c_uri_cond::path);
-            return DOT;
+    yy6:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy11;
+            default: goto yy7;
         }
+    yy7:
+#line 98 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->begin(re2c_uri_cond::path);
+        return DOT;
+    }
 #line 153 "parsers/uri/src/URILexer.re2c.cpp"
-yy8:
-	++this->__cursor;
+    yy8:
+        ++this->__cursor;
 #line 93 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::path);
             return SLASH;
         }
 #line 162 "parsers/uri/src/URILexer.re2c.cpp"
-yy9:
-	++this->__cursor;
+    yy9:
+        ++this->__cursor;
 #line 108 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::params);
             return QMARK;
         }
 #line 171 "parsers/uri/src/URILexer.re2c.cpp"
-yy10:
-	++this->__cursor;
+    yy10:
+        ++this->__cursor;
 #line 87 "parsers/uri/src/URI.re"
-	{
+        {
             this->d_path_helper.assign("{");
             this->d_intermediate_state = re2c_uri_cond::scheme;
             this->begin(re2c_uri_cond::placeholder);
             return 0;
         }
 #line 181 "parsers/uri/src/URILexer.re2c.cpp"
-yy11:
-	++this->__cursor;
+    yy11:
+        ++this->__cursor;
 #line 103 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::path);
             return DOT_DOT;
         }
 #line 190 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 123 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexScheme() -> int {
-    
+
 #line 198 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '.': goto yy14;
-		case '/': goto yy16;
-		case ':': goto yy17;
-		default: goto yy13;
-	}
-yy13:
-	++this->__cursor;
-#line 147 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 213 "parsers/uri/src/URILexer.re2c.cpp"
-yy14:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy18;
-		default: goto yy15;
-	}
-yy15:
-#line 132 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->begin(re2c_uri_cond::path);
-            return DOT;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '.': goto yy14;
+            case '/': goto yy16;
+            case ':': goto yy17;
+            default: goto yy13;
         }
+    yy13:
+        ++this->__cursor;
+#line 147 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 213 "parsers/uri/src/URILexer.re2c.cpp"
+    yy14:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy18;
+            default: goto yy15;
+        }
+    yy15:
+#line 132 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->begin(re2c_uri_cond::path);
+        return DOT;
+    }
 #line 227 "parsers/uri/src/URILexer.re2c.cpp"
-yy16:
-	++this->__cursor;
+    yy16:
+        ++this->__cursor;
 #line 142 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::server_path);
             return SLASH;
         }
 #line 236 "parsers/uri/src/URILexer.re2c.cpp"
-yy17:
-	++this->__cursor;
+    yy17:
+        ++this->__cursor;
 #line 128 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             return DOUBLE_DOT;
         }
 #line 244 "parsers/uri/src/URILexer.re2c.cpp"
-yy18:
-	++this->__cursor;
+    yy18:
+        ++this->__cursor;
 #line 137 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::path);
             return DOT_DOT;
         }
 #line 253 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 148 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexServerPath() -> int {
-    
+
 #line 261 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy20;
-		case '/': goto yy22;
-		default: goto yy21;
-	}
-yy20:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy20;
+            case '/': goto yy22;
+            default: goto yy21;
+        }
+    yy20:
+        ++this->__cursor;
 #line 164 "parsers/uri/src/URI.re"
-	{ return 0; }
+        { return 0; }
 #line 275 "parsers/uri/src/URILexer.re2c.cpp"
-yy21:
-	++this->__cursor;
+    yy21:
+        ++this->__cursor;
 #line 153 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->d_path_helper.assign(this->matched());
             this->begin(re2c_uri_cond::path);
             return 0;
         }
 #line 285 "parsers/uri/src/URILexer.re2c.cpp"
-yy22:
-	++this->__cursor;
+    yy22:
+        ++this->__cursor;
 #line 159 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::server);
             return SLASH;
         }
 #line 294 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 165 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexServer() -> int {
-    
+
 #line 302 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy24;
-		case '/': goto yy27;
-		case ':': goto yy28;
-		case '@': goto yy29;
-		case '{': goto yy30;
-		default: goto yy25;
-	}
-yy24:
-	++this->__cursor;
-#line 198 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 319 "parsers/uri/src/URILexer.re2c.cpp"
-yy25:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '/':
-		case ':':
-		case '@':
-		case '{': goto yy26;
-		default: goto yy25;
-	}
-yy26:
-#line 170 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->d_server_part.assign(this->matched());
-            this->d_part_is_placeholder = false;
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy24;
+            case '/': goto yy27;
+            case ':': goto yy28;
+            case '@': goto yy29;
+            case '{': goto yy30;
+            default: goto yy25;
         }
+    yy24:
+        ++this->__cursor;
+#line 198 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 319 "parsers/uri/src/URILexer.re2c.cpp"
+    yy25:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '/':
+            case ':':
+            case '@':
+            case '{': goto yy26;
+            default: goto yy25;
+        }
+    yy26:
+#line 170 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->d_server_part.assign(this->matched());
+        this->d_part_is_placeholder = false;
+        return STRING;
+    }
 #line 340 "parsers/uri/src/URILexer.re2c.cpp"
-yy27:
-	++this->__cursor;
+    yy27:
+        ++this->__cursor;
 #line 176 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->setMatched(this->d_server_part);
             this->begin(re2c_uri_cond::path);
             return SLASH;
         }
 #line 350 "parsers/uri/src/URILexer.re2c.cpp"
-yy28:
-	++this->__cursor;
+    yy28:
+        ++this->__cursor;
 #line 182 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->setMatched(this->d_server_part);
             return DOUBLE_DOT;
         }
 #line 359 "parsers/uri/src/URILexer.re2c.cpp"
-yy29:
-	++this->__cursor;
+    yy29:
+        ++this->__cursor;
 #line 187 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->setMatched(this->d_server_part);
             return AT;
         }
 #line 368 "parsers/uri/src/URILexer.re2c.cpp"
-yy30:
-	++this->__cursor;
+    yy30:
+        ++this->__cursor;
 #line 192 "parsers/uri/src/URI.re"
-	{
+        {
             this->d_path_helper.assign("{");
             this->d_intermediate_state = re2c_uri_cond::server;
             this->begin(re2c_uri_cond::placeholder);
             return 0;
         }
 #line 378 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 199 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexPath() -> int {
-    
+
 #line 386 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy32;
-		case '#': goto yy35;
-		case '/': goto yy36;
-		case '?': goto yy37;
-		case '{': goto yy38;
-		default: goto yy33;
-	}
-yy32:
-	++this->__cursor;
-#line 234 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 403 "parsers/uri/src/URILexer.re2c.cpp"
-yy33:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '#':
-		case '/':
-		case '?':
-		case '{': goto yy34;
-		default: goto yy33;
-	}
-yy34:
-#line 225 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            std::string _m(this->matched());
-            _m.insert(0, this->d_path_helper);
-            this->d_path_helper.assign("");
-            this->setMatched(_m);
-            this->d_part_is_placeholder = false;
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy32;
+            case '#': goto yy35;
+            case '/': goto yy36;
+            case '?': goto yy37;
+            case '{': goto yy38;
+            default: goto yy33;
         }
+    yy32:
+        ++this->__cursor;
+#line 234 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 403 "parsers/uri/src/URILexer.re2c.cpp"
+    yy33:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '#':
+            case '/':
+            case '?':
+            case '{': goto yy34;
+            default: goto yy33;
+        }
+    yy34:
+#line 225 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        std::string _m(this->matched());
+        _m.insert(0, this->d_path_helper);
+        this->d_path_helper.assign("");
+        this->setMatched(_m);
+        this->d_part_is_placeholder = false;
+        return STRING;
+    }
 #line 427 "parsers/uri/src/URILexer.re2c.cpp"
-yy35:
-	++this->__cursor;
+    yy35:
+        ++this->__cursor;
 #line 220 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::anchor);
             return CARDINAL;
         }
 #line 436 "parsers/uri/src/URILexer.re2c.cpp"
-yy36:
-	++this->__cursor;
+    yy36:
+        ++this->__cursor;
 #line 204 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->d_path_helper.assign("");
             return SLASH;
         }
 #line 445 "parsers/uri/src/URILexer.re2c.cpp"
-yy37:
-	++this->__cursor;
+    yy37:
+        ++this->__cursor;
 #line 215 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::params);
             return QMARK;
         }
 #line 454 "parsers/uri/src/URILexer.re2c.cpp"
-yy38:
-	++this->__cursor;
+    yy38:
+        ++this->__cursor;
 #line 209 "parsers/uri/src/URI.re"
-	{
+        {
             this->d_path_helper.assign("{");
             this->d_intermediate_state = re2c_uri_cond::path;
             this->begin(re2c_uri_cond::placeholder);
             return 0;
         }
 #line 464 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 235 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexParams() -> int {
-    
+
 #line 472 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy40;
-		case '#': goto yy43;
-		case '&': goto yy44;
-		case '=': goto yy45;
-		default: goto yy41;
-	}
-yy40:
-	++this->__cursor;
-#line 258 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 488 "parsers/uri/src/URILexer.re2c.cpp"
-yy41:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '#':
-		case '&':
-		case '=': goto yy42;
-		default: goto yy41;
-	}
-yy42:
-#line 253 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->d_part_is_placeholder = false;
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy40;
+            case '#': goto yy43;
+            case '&': goto yy44;
+            case '=': goto yy45;
+            default: goto yy41;
         }
+    yy40:
+        ++this->__cursor;
+#line 258 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 488 "parsers/uri/src/URILexer.re2c.cpp"
+    yy41:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '#':
+            case '&':
+            case '=': goto yy42;
+            default: goto yy41;
+        }
+    yy42:
+#line 253 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->d_part_is_placeholder = false;
+        return STRING;
+    }
 #line 507 "parsers/uri/src/URILexer.re2c.cpp"
-yy43:
-	++this->__cursor;
+    yy43:
+        ++this->__cursor;
 #line 248 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->begin(re2c_uri_cond::anchor);
             return CARDINAL;
         }
 #line 516 "parsers/uri/src/URILexer.re2c.cpp"
-yy44:
-	++this->__cursor;
+    yy44:
+        ++this->__cursor;
 #line 244 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             return E;
         }
 #line 524 "parsers/uri/src/URILexer.re2c.cpp"
-yy45:
-	++this->__cursor;
+    yy45:
+        ++this->__cursor;
 #line 240 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             return EQ;
         }
 #line 532 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 259 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexPlaceholder() -> int {
-    
+
 #line 540 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00: goto yy47;
-		case '}': goto yy50;
-		default: goto yy48;
-	}
-yy47:
-	++this->__cursor;
-#line 278 "parsers/uri/src/URI.re"
-	{ return 0; }
-#line 554 "parsers/uri/src/URILexer.re2c.cpp"
-yy48:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '}': goto yy49;
-		default: goto yy48;
-	}
-yy49:
-#line 264 "parsers/uri/src/URI.re"
-	{
-            this->captureMatch();
-            this->d_path_helper.append(this->matched());
-            return 0;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00: goto yy47;
+            case '}': goto yy50;
+            default: goto yy48;
         }
+    yy47:
+        ++this->__cursor;
+#line 278 "parsers/uri/src/URI.re"
+        { return 0; }
+#line 554 "parsers/uri/src/URILexer.re2c.cpp"
+    yy48:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '}': goto yy49;
+            default: goto yy48;
+        }
+    yy49:
+#line 264 "parsers/uri/src/URI.re"
+    {
+        this->captureMatch();
+        this->d_path_helper.append(this->matched());
+        return 0;
+    }
 #line 571 "parsers/uri/src/URILexer.re2c.cpp"
-yy50:
-	++this->__cursor;
+    yy50:
+        ++this->__cursor;
 #line 269 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->d_path_helper.append(this->matched());
             this->setMatched(this->d_path_helper);
@@ -581,9 +575,8 @@ yy50:
             return STRING;
         }
 #line 584 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 279 "parsers/uri/src/URI.re"
-
 }
 
 auto zpt::Re2cURILexer::lexFunction() -> int {
@@ -593,30 +586,29 @@ auto zpt::Re2cURILexer::lexFunction() -> int {
 }
 
 auto zpt::Re2cURILexer::lexAnchor() -> int {
-    
+
 #line 598 "parsers/uri/src/URILexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	if (yych >= 0x01) goto yy52;
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        if (yych >= 0x01) goto yy52;
+        ++this->__cursor;
 #line 295 "parsers/uri/src/URI.re"
-	{ return 0; }
+        { return 0; }
 #line 607 "parsers/uri/src/URILexer.re2c.cpp"
-yy52:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	if (yych >= 0x01) goto yy52;
+    yy52:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        if (yych >= 0x01) goto yy52;
 #line 290 "parsers/uri/src/URI.re"
-	{
+        {
             this->captureMatch();
             this->d_part_is_placeholder = false;
             return STRING;
         }
 #line 619 "parsers/uri/src/URILexer.re2c.cpp"
-}
+    }
 #line 296 "parsers/uri/src/URI.re"
-
 }

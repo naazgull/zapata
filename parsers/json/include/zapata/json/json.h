@@ -74,7 +74,7 @@ auto parse(std::string const& _email) -> zpt::json;
  * @param _uri Parsed URI JSON object.
  * @param _opts Formatting options (default undefined).
  * @return URI string. */
-auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;
+auto to_str(zpt::json _uri, zpt::json _opts = json_null) -> std::string;
 
 /**
  * @brief Configuration loading and management utilities.

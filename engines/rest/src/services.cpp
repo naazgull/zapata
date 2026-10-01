@@ -113,7 +113,7 @@ auto zpt::rest::minion_state::operator()(zpt::events::dispatcher::ptr _dispatche
           .body() = { "memory",
                       zpt::json::parse_json_str(zpt::MEM_POOL().to_string()),
                       "dispatchers",
-                      { zpt::array, _dispatcher->get_state(), zpt::DISPATCHER()->get_state() } };
+                      { json_array, _dispatcher->get_state(), zpt::DISPATCHER()->get_state() } };
         return zpt::events::finish;
     }
 

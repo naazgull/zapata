@@ -40,7 +40,7 @@
  * @code
  * // Create JSON objects using initializer lists
  * zpt::json obj = { "name", "John", "age", 30 };
- * zpt::json arr = { zpt::array, 1, 2, 3, 4, 5 };
+ * zpt::json arr = { json_array, 1, 2, 3, 4, 5 };
  *
  * // Access values with automatic type conversion
  * std::string name = obj["name"];
@@ -80,6 +80,9 @@
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 
+#define json_null                                                                                  \
+    zpt::json {}
+
 namespace zpt {
 
 /** @brief Timestamp type representing milliseconds since Unix epoch. */
@@ -91,17 +94,16 @@ using timestamp_t = unsigned long long;
  * Each value corresponds to a JSON data type or special Zapata extension type.
  */
 enum JSONType {
-    JSNil = 0,       ///< Null value (JSON `null`)
-    JSBoolean = 1,   ///< Boolean value (`true` or `false`)
-    JSInteger = 2,   ///< Integer number (stored as `long long`)
-    JSDouble = 3,    ///< Floating-point number (stored as `double`)
-    JSString = 4,    ///< String value
-    JSDate = 5,      ///< Timestamp value (milliseconds since epoch)
-    JSArray = 6,     ///< Array of JSON values
-    JSObject = 7,    ///< Object with string keys and JSON values
-    JSRegex = 8,     ///< Regular expression (Zapata extension)
-    JSLambda = 9,    ///< Lambda function reference (Zapata extension)
-    JSUndefined = 10 ///< Undefined value (distinct from null)
+    JSNil = 0,     ///< Null value (JSON `null`)
+    JSBoolean = 1, ///< Boolean value (`true` or `false`)
+    JSInteger = 2, ///< Integer number (stored as `long long`)
+    JSDouble = 3,  ///< Floating-point number (stored as `double`)
+    JSString = 4,  ///< String value
+    JSDate = 5,    ///< Timestamp value (milliseconds since epoch)
+    JSArray = 6,   ///< Array of JSON values
+    JSObject = 7,  ///< Object with string keys and JSON values
+    JSRegex = 8,   ///< Regular expression (Zapata extension)
+    JSLambda = 9   ///< Lambda function reference (Zapata extension)
 };
 
 /**
@@ -227,8 +229,8 @@ namespace zpt {
  * // Object using initializer list (alternating key-value pairs)
  * zpt::json obj = { "name", "John", "age", 30 };
  *
- * // Array using zpt::array marker
- * zpt::json arr = { zpt::array, 1, 2, 3, 4 };
+ * // Array using json_array marker
+ * zpt::json arr = { json_array, 1, 2, 3, 4 };
  *
  * // Parse from string
  * zpt::json parsed;
@@ -294,7 +296,7 @@ class json {
     /**
      * @brief Constructs from an initializer list.
      *
-     * If the list starts with `zpt::array`, creates an array.
+     * If the list starts with `json_array`, creates an array.
      * Otherwise creates an object from alternating key-value pairs.
      * @return void (constructors implicitly initialize the object).
      */
@@ -486,12 +488,6 @@ class json {
      * @return Reference to the element at the given index/key. */
     template<typename T>
     auto operator[](T _idx) -> json&;
-    /** @brief Accesses element by index or key (const).
-     * @tparam T Index or key type.
-     * @param _idx Index (integer) or key (string/C-string) to access.
-     * @return Const JSON value at the given index/key. */
-    template<typename T>
-    auto operator[](T _idx) const -> zpt::json const;
     /** @brief Returns element or undefined if not found (safe access).
      * @tparam T Index or key type.
      * @param _idx Index (integer) or key (string/C-string) to access.
@@ -502,6 +498,9 @@ class json {
 
     /** @name Type Conversion Operators */
     ///@{
+    /** @brief Converts to nullptr.
+     * @return The `nullptr` constant or an exception thrown. */
+    operator std::nullptr_t();
     /** @brief Converts to string.
      * @return String representation of the JSON value. */
     operator std::string();
@@ -556,6 +555,9 @@ class json {
      * @return Reference to underlying std::regex. */
     operator std::regex&();
 
+    /** @brief Converts to nullptr (const).
+     * @return The `nullptr` constant or an exception thrown. */
+    operator std::nullptr_t() const;
     /** @brief Converts to string (const).
      * @return String representation of the JSON value. */
     operator std::string() const;
@@ -1048,12 +1050,8 @@ class JSONIterator {
 };
 } // namespace zpt
 
-namespace zpt {
-/** @brief Global undefined JSON value. Use to represent missing/unset values. */
-inline zpt::json undefined{ zpt::JSUndefined };
 /** @brief Marker for array construction in initializer lists. */
-inline zpt::json array;
-} // namespace zpt
+inline zpt::json json_array;
 
 namespace zpt {
 
@@ -2142,7 +2140,7 @@ namespace zpt {
  *
  * // Store in JSON and invoke
  * zpt::json func = zpt::json::lambda("add", 2);
- * zpt::json result = zpt::lambda::call("add", { zpt::array, 1, 2 }, ctx);  // 3
+ * zpt::json result = zpt::lambda::call("add", { json_array, 1, 2 }, ctx);  // 3
  * @endcode
  *
  * @see zpt::json::lambda()
@@ -2311,6 +2309,7 @@ class JSONElementT {
 
     /** @name Value Constructors */
     ///@{
+    JSONElementT(std::nullptr_t _value);
     JSONElementT(JSONObj& _value);
     JSONElementT(JSONArr& _value);
     JSONElementT(std::string const& _value);
@@ -2326,8 +2325,6 @@ class JSONElementT {
 #endif
     JSONElementT(zpt::lambda _value);
     JSONElementT(zpt::regex _value);
-    JSONElementT(std::nullptr_t _rhs);
-    JSONElementT(void* _rhs);
     ///@}
     /** @brief Destroys the JSON element.
      * @return void (destructors implicitly clean up the object). */
@@ -2422,9 +2419,6 @@ class JSONElementT {
     /** @brief Returns true if this element is JSON null.
      * @return True if null. */
     virtual auto is_nil() const -> bool;
-    /** @brief Returns true if this element is undefined (void*).
-     * @return True if undefined. */
-    virtual auto is_undefined() const -> bool;
     ///@}
 
     /** @name Value Accessors (Mutable) */
@@ -2590,6 +2584,9 @@ class JSONElementT {
      * @return Reference to this element. */
     auto operator=(void*) -> JSONElementT&;
 
+    /** @brief Converts to nullptr.
+     * @return The `nullptr` constant or an exception thrown. */
+    operator std::nullptr_t();
     /** @brief Converts to string.
      * @return String value. */
     operator std::string();
@@ -2852,9 +2849,8 @@ class JSONElementT {
                  JSONArr,          // JSArray
                  JSONObj,          // JSObject
                  JSONRegex,        // JSRegex
-                 zpt::lambda,      // JSLambda
-                 void*>            // JSUndefined
-      __underlying;
+                 zpt::lambda>      // JSLambda
+      __underlying{ nullptr };
 };
 } // namespace zpt
 
@@ -2884,7 +2880,7 @@ auto get(std::string const& _path, zpt::json _source) -> zpt::json;
  * @return Modified document.
  */
 template<typename T>
-auto set(std::string const& _path, T _value, zpt::json _target = zpt::undefined) -> zpt::json;
+auto set(std::string const& _path, T _value, zpt::json _target = json_null) -> zpt::json;
 
 /**
  * @brief Converts timestamp to ISO 8601 date string.
@@ -2963,10 +2959,6 @@ auto zpt::json::data(const T _delegate) -> zpt::json {
 template<typename T>
 auto zpt::json::operator[](T _idx) -> zpt::json& {
     return (*this->__underlying.get())[_idx];
-}
-template<typename T>
-auto zpt::json::operator[](T _idx) const -> zpt::json const {
-    return const_cast<zpt::JSONElementT const&>(*this->__underlying.get())[_idx];
 }
 template<typename T>
 auto zpt::json::operator()(T _idx) const -> zpt::json const {
@@ -3185,23 +3177,25 @@ auto zpt::JSONElementT::operator[](T _idx) -> json& {
             return this->array()[_idx];
         }
     }
-    return zpt::undefined;
+    throw zpt::failed_expectation{
+        std::format("The underlying JSON element doesn't allow for indexed access to `{}`", _idx),
+        "",
+        __LINE__,
+        __FILE__
+    };
 }
-
 template<typename T>
 auto zpt::JSONElementT::operator[](T _idx) const -> json const {
     if (this->type() == zpt::JSObject) { return static_cast<JSONObj const&>(this->object())[_idx]; }
     else if (this->type() == zpt::JSArray) {
         return static_cast<JSONArr const&>(this->array())[_idx];
     }
-    return zpt::undefined;
+    return json_null;
 }
 template<typename T>
 auto zpt::JSONElementT::operator==(T _in) const -> bool {
     if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
-        if (_in == nullptr) {
-            return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined;
-        }
+        if (_in == nullptr) { return this->type() == zpt::JSNil; }
     }
     JSONElementT _rhs{ _in };
     return (*this) == _rhs;
@@ -3209,9 +3203,7 @@ auto zpt::JSONElementT::operator==(T _in) const -> bool {
 template<typename T>
 auto zpt::JSONElementT::operator!=(T _in) const -> bool {
     if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
-        if (_in == nullptr) {
-            return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined;
-        }
+        if (_in == nullptr) { return this->type() == zpt::JSNil; }
     }
     JSONElementT _rhs{ _in };
     return (*this) != _rhs;

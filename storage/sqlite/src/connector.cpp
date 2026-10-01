@@ -120,7 +120,7 @@ auto zpt::storage::sqlite::from_db_doc(sqlite3_stmt* _stmt) -> zpt::json {
                 break;
             }
             case SQLITE_NULL: {
-                _to_return << zpt::undefined;
+                _to_return << json_null;
                 break;
             }
             case SQLITE3_TEXT: {
@@ -175,7 +175,6 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
             sqlite3_bind_text(_stmt, _index, _bytes, _size, zpt::storage::sqlite::free_byte_array);
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             sqlite3_bind_null(_stmt, _index);
             break;
@@ -279,7 +278,7 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
 
 auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::result {
     expect(false, "Session `sql` method not implemented for SQLite, use database's");
-    return zpt::make_result<zpt::storage::sqlite::result>(zpt::undefined);
+    return zpt::make_result<zpt::storage::sqlite::result>();
 }
 
 auto zpt::storage::sqlite::session::database(std::string const& _db) const
@@ -1117,7 +1116,7 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
             _return << _row;
         }
     }
-    return (_return->size() != 0 ? _return : zpt::undefined);
+    return (_return->size() != 0 ? _return : json_null);
 }
 
 auto zpt::storage::sqlite::result::generated_id() -> zpt::json {

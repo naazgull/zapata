@@ -104,12 +104,12 @@ auto zpt::system_events::resolver_t::resolve(zpt::message _received,
 auto zpt::system_events::resolver_t::search(zpt::json const&, std::string const&) const
   -> zpt::json {
     expect(false, "Not implemented for `zpt::system_events`");
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::system_events::resolver_t::list(std::string const&) const -> zpt::json {
     expect(false, "Not implemented for `zpt::system_events`");
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::system_events::resolver_t::register_provider(zpt::json const&) -> resolver_t& {
@@ -123,7 +123,7 @@ auto zpt::system_events::resolver_t::unregister_provider(std::string const&) -> 
 
 auto zpt::system_events::resolver_t::get_provider(std::string const&) const -> zpt::json {
     expect(false, "Not implemented for `zpt::system_events`");
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::SYSTEM_EVENTS_RESOLVER() -> zpt::system_events::resolver {

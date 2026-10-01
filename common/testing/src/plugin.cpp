@@ -86,7 +86,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
     else if (!_config("target")->is_array()) {
         auto _target = static_cast<std::string>(_config("target"));
-        _config["target"] = { zpt::array, _target };
+        _config["target"] = { json_array, _target };
     }
 
     auto _targets = zpt::json::array();

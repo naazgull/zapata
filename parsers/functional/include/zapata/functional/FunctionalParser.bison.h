@@ -36,10 +36,10 @@
    private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_PARSERS_FUNCTIONAL_INCLUDE_ZAPATA_FUNCTIONAL_FUNCTIONALPARSER_BISON_H_INCLUDED
-# define YY_YY_PARSERS_FUNCTIONAL_INCLUDE_ZAPATA_FUNCTIONAL_FUNCTIONALPARSER_BISON_H_INCLUDED
+#define YY_YY_PARSERS_FUNCTIONAL_INCLUDE_ZAPATA_FUNCTIONAL_FUNCTIONALPARSER_BISON_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -55,34 +55,29 @@ class FunctionalTokenizerLexer;
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
-  {
+#define YYTOKENTYPE
+enum yytokentype {
     YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    STRING = 258,                  /* STRING  */
-    NUMBER = 259,                  /* NUMBER  */
-    VARIABLE = 260,                /* VARIABLE  */
-    LPAREN = 261,                  /* LPAREN  */
-    RPAREN = 262,                  /* RPAREN  */
-    COMMA = 263                    /* COMMA  */
-  };
-  typedef enum yytokentype yytoken_kind_t;
+    YYEOF = 0,      /* "end of file"  */
+    YYerror = 256,  /* error  */
+    YYUNDEF = 257,  /* "invalid token"  */
+    STRING = 258,   /* STRING  */
+    NUMBER = 259,   /* NUMBER  */
+    VARIABLE = 260, /* VARIABLE  */
+    LPAREN = 261,   /* LPAREN  */
+    RPAREN = 262,   /* RPAREN  */
+    COMMA = 263     /* COMMA  */
+};
+typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
+int yyparse(zpt::FunctionalTokenizerLexer* ctx);
 
-
-
-int yyparse (zpt::FunctionalTokenizerLexer* ctx);
-
-
-#endif /* !YY_YY_PARSERS_FUNCTIONAL_INCLUDE_ZAPATA_FUNCTIONAL_FUNCTIONALPARSER_BISON_H_INCLUDED  */
+#endif /* !YY_YY_PARSERS_FUNCTIONAL_INCLUDE_ZAPATA_FUNCTIONAL_FUNCTIONALPARSER_BISON_H_INCLUDED */

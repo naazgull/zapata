@@ -36,10 +36,10 @@
    private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_PARSERS_JSON_INCLUDE_ZAPATA_JSON_JSONPARSER_BISON_H_INCLUDED
-# define YY_YY_PARSERS_JSON_INCLUDE_ZAPATA_JSON_JSONPARSER_BISON_H_INCLUDED
+#define YY_YY_PARSERS_JSON_INCLUDE_ZAPATA_JSON_JSONPARSER_BISON_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -55,41 +55,36 @@ class JSONTokenizerLexer;
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
-  {
+#define YYTOKENTYPE
+enum yytokentype {
     YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    STRING = 258,                  /* STRING  */
-    BOOLEAN = 259,                 /* BOOLEAN  */
-    INTEGER = 260,                 /* INTEGER  */
-    DOUBLE = 261,                  /* DOUBLE  */
-    NIL = 262,                     /* NIL  */
-    LAMBDA = 263,                  /* LAMBDA  */
-    REGEX = 264,                   /* REGEX  */
-    LCB = 265,                     /* LCB  */
-    RCB = 266,                     /* RCB  */
-    LB = 267,                      /* LB  */
-    RB = 268,                      /* RB  */
-    COMMA = 269,                   /* COMMA  */
-    COLON = 270                    /* COLON  */
-  };
-  typedef enum yytokentype yytoken_kind_t;
+    YYEOF = 0,     /* "end of file"  */
+    YYerror = 256, /* error  */
+    YYUNDEF = 257, /* "invalid token"  */
+    STRING = 258,  /* STRING  */
+    BOOLEAN = 259, /* BOOLEAN  */
+    INTEGER = 260, /* INTEGER  */
+    DOUBLE = 261,  /* DOUBLE  */
+    NIL = 262,     /* NIL  */
+    LAMBDA = 263,  /* LAMBDA  */
+    REGEX = 264,   /* REGEX  */
+    LCB = 265,     /* LCB  */
+    RCB = 266,     /* RCB  */
+    LB = 267,      /* LB  */
+    RB = 268,      /* RB  */
+    COMMA = 269,   /* COMMA  */
+    COLON = 270    /* COLON  */
+};
+typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
-
-
-
-int yyparse (zpt::JSONTokenizerLexer* ctx);
-
+int yyparse(zpt::JSONTokenizerLexer* ctx);
 
 #endif /* !YY_YY_PARSERS_JSON_INCLUDE_ZAPATA_JSON_JSONPARSER_BISON_H_INCLUDED  */

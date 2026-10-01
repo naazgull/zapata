@@ -299,12 +299,12 @@ Abstract interface for mapping messages to event handlers.
 
 ```cpp
 template<zpt::events::Operation T>
-auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+auto add(zpt::json const& _id, zpt::json const& _metadata = json_null) -> resolver_t&;
 
 template<zpt::events::Operation T>
 auto add(zpt::performative _performative,
          zpt::json const& _id,
-         zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+         zpt::json const& _metadata = json_null) -> resolver_t&;
 ```
 
 Registers an Operation class as an event handler.
@@ -371,7 +371,7 @@ System event operation implementing the Operation concept.
 ```cpp
 system_event();
 system_event(zpt::message _received);
-system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
+system_event(zpt::system_event_type _type, zpt::json const& _data = json_null);
 ```
 
 ### `zpt::SYSTEM_EVENTS_RESOLVER`

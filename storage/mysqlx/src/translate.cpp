@@ -180,13 +180,13 @@ auto zpt::storage::mysqlx::to_json(MYSQL_STMT* _statement,
     for (size_t _col_idx = 0; _col_idx != _cols.__column_count; ++_col_idx) {
         auto _name = _cols.name(_col_idx);
         if (*_cols.__bind[_col_idx].is_null) {
-            _record[_name] = zpt::undefined;
+            _record[_name] = json_null;
             continue;
         }
 
         switch (_cols.type(_col_idx)) {
             case MYSQL_TYPE_NULL: {
-                _record[_name] = zpt::undefined;
+                _record[_name] = json_null;
                 break;
             }
             case MYSQL_TYPE_BIT: {

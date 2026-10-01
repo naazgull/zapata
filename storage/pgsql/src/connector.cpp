@@ -453,7 +453,7 @@ auto zpt::storage::pgsql::action_modify::set(std::string const& _attribute, zpt:
 
 auto zpt::storage::pgsql::action_modify::unset(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying << _attribute << zpt::undefined;
+    this->__underlying << _attribute << json_null;
     return this;
 }
 

@@ -45,8 +45,8 @@
  */
 
 #include <sstream>
-#include <zapata/json/JSONTokenizerLexer.h>
 #include <zapata/json/JSONParser.bison.h>
+#include <zapata/json/JSONTokenizerLexer.h>
 
 namespace {
 #line 57 "parsers/json/src/JSON.re"
@@ -54,195 +54,197 @@ namespace {
 } // namespace
 
 auto zpt::Re2cJSONLexer::lexInitial() -> int {
-    
+
 #line 59 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case ' ': goto yy2;
-		case '"': goto yy4;
-		case '\'': goto yy5;
-		case '+':
-		case '-':
-		case '.':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'e': goto yy6;
-		case ',': goto yy8;
-		case '/': goto yy9;
-		case ':': goto yy10;
-		case '[': goto yy11;
-		case ']': goto yy12;
-		case 'f': goto yy13;
-		case 'l': goto yy14;
-		case 'n': goto yy15;
-		case 't': goto yy16;
-		case 'u': goto yy17;
-		case '{': goto yy18;
-		case '}': goto yy19;
-		default: goto yy1;
-	}
-yy1:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case ' ': goto yy2;
+            case '"': goto yy4;
+            case '\'': goto yy5;
+            case '+':
+            case '-':
+            case '.':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case 'e': goto yy6;
+            case ',': goto yy8;
+            case '/': goto yy9;
+            case ':': goto yy10;
+            case '[': goto yy11;
+            case ']': goto yy12;
+            case 'f': goto yy13;
+            case 'l': goto yy14;
+            case 'n': goto yy15;
+            case 't': goto yy16;
+            case 'u': goto yy17;
+            case '{': goto yy18;
+            case '}': goto yy19;
+            default: goto yy1;
+        }
+    yy1:
+        ++this->__cursor;
 #line 148 "parsers/json/src/JSON.re"
-	{ return -1; }
+        { return -1; }
 #line 104 "parsers/json/src/JSONLexer.re2c.cpp"
-yy2:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case ' ': goto yy2;
-		default: goto yy3;
-	}
-yy3:
+    yy2:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case ' ': goto yy2;
+            default: goto yy3;
+        }
+    yy3:
 #line 62 "parsers/json/src/JSON.re"
-	{ return 0; }
+    {
+        return 0;
+    }
 #line 120 "parsers/json/src/JSONLexer.re2c.cpp"
-yy4:
-	++this->__cursor;
+    yy4:
+        ++this->__cursor;
 #line 136 "parsers/json/src/JSON.re"
-	{
+        {
             this->begin(zpt::re2c_json_cond::string);
             return 0;
         }
 #line 128 "parsers/json/src/JSONLexer.re2c.cpp"
-yy5:
-	++this->__cursor;
+    yy5:
+        ++this->__cursor;
 #line 140 "parsers/json/src/JSON.re"
-	{
+        {
             this->begin(zpt::re2c_json_cond::string_single);
             return 0;
         }
 #line 136 "parsers/json/src/JSONLexer.re2c.cpp"
-yy6:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '+':
-		case '-':
-		case '.':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'e': goto yy6;
-		default: goto yy7;
-	}
-yy7:
-#line 127 "parsers/json/src/JSON.re"
-	{
-            this->captureMatch();
-            this->leaveIfComplete();
-            if (this->matched().find(".") != std::string::npos ||
-                this->matched().find("e+") != std::string::npos) {
-                return DOUBLE;
-            }
-            return INTEGER;
+    yy6:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '+':
+            case '-':
+            case '.':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case 'e': goto yy6;
+            default: goto yy7;
         }
+    yy7:
+#line 127 "parsers/json/src/JSON.re"
+    {
+        this->captureMatch();
+        this->leaveIfComplete();
+        if (this->matched().find(".") != std::string::npos ||
+            this->matched().find("e+") != std::string::npos) {
+            return DOUBLE;
+        }
+        return INTEGER;
+    }
 #line 169 "parsers/json/src/JSONLexer.re2c.cpp"
-yy8:
-	++this->__cursor;
+    yy8:
+        ++this->__cursor;
 #line 119 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             return COMMA;
         }
 #line 177 "parsers/json/src/JSONLexer.re2c.cpp"
-yy9:
-	++this->__cursor;
+    yy9:
+        ++this->__cursor;
 #line 144 "parsers/json/src/JSON.re"
-	{
+        {
             this->begin(zpt::re2c_json_cond::regexp);
             return 0;
         }
 #line 185 "parsers/json/src/JSONLexer.re2c.cpp"
-yy10:
-	++this->__cursor;
+    yy10:
+        ++this->__cursor;
 #line 123 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             return COLON;
         }
 #line 193 "parsers/json/src/JSONLexer.re2c.cpp"
-yy11:
-	++this->__cursor;
+    yy11:
+        ++this->__cursor;
 #line 108 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             ++this->d_paren_count;
             return LB;
         }
 #line 202 "parsers/json/src/JSONLexer.re2c.cpp"
-yy12:
-	++this->__cursor;
+    yy12:
+        ++this->__cursor;
 #line 113 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             --this->d_paren_count;
             this->leaveIfComplete();
             return RB;
         }
 #line 212 "parsers/json/src/JSONLexer.re2c.cpp"
-yy13:
-	++this->__cursor;
+    yy13:
+        ++this->__cursor;
 #line 73 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(zpt::re2c_json_cond::kw_false);
             return 0;
         }
 #line 222 "parsers/json/src/JSONLexer.re2c.cpp"
-yy14:
-	++this->__cursor;
+    yy14:
+        ++this->__cursor;
 #line 91 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(zpt::re2c_json_cond::kw_lambda);
             return 0;
         }
 #line 232 "parsers/json/src/JSONLexer.re2c.cpp"
-yy15:
-	++this->__cursor;
+    yy15:
+        ++this->__cursor;
 #line 79 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(zpt::re2c_json_cond::kw_null);
             return 0;
         }
 #line 242 "parsers/json/src/JSONLexer.re2c.cpp"
-yy16:
-	++this->__cursor;
+    yy16:
+        ++this->__cursor;
 #line 63 "parsers/json/src/JSON.re"
-	{
+        {
             // "true" is the only JSON token starting with 't', so this single
             // byte unambiguously commits to kw_true - see the re2c_json_cond
             // comment in Re2cJSONLexer.h for why the keyword body is matched
@@ -253,368 +255,372 @@ yy16:
             return 0;
         }
 #line 256 "parsers/json/src/JSONLexer.re2c.cpp"
-yy17:
-	++this->__cursor;
+    yy17:
+        ++this->__cursor;
 #line 85 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(zpt::re2c_json_cond::kw_undefined);
             return 0;
         }
 #line 266 "parsers/json/src/JSONLexer.re2c.cpp"
-yy18:
-	++this->__cursor;
+    yy18:
+        ++this->__cursor;
 #line 97 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             ++this->d_paren_count;
             return LCB;
         }
 #line 275 "parsers/json/src/JSONLexer.re2c.cpp"
-yy19:
-	++this->__cursor;
+    yy19:
+        ++this->__cursor;
 #line 102 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             --this->d_paren_count;
             this->leaveIfComplete();
             return RCB;
         }
 #line 285 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 149 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexKwTrue() -> int {
-    
+
 #line 293 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 'r': goto yy23;
-		default: goto yy21;
-	}
-yy21:
-	++this->__cursor;
-yy22:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 'r': goto yy23;
+            default: goto yy21;
+        }
+    yy21:
+        ++this->__cursor;
+    yy22:
 #line 160 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 307 "parsers/json/src/JSONLexer.re2c.cpp"
-yy23:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'u': goto yy24;
-		default: goto yy22;
-	}
-yy24:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'e': goto yy26;
-		default: goto yy25;
-	}
-yy25:
-	this->__cursor = this->__marker;
-	goto yy22;
-yy26:
-	++this->__cursor;
+    yy23:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'u': goto yy24;
+            default: goto yy22;
+        }
+    yy24:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'e': goto yy26;
+            default: goto yy25;
+        }
+    yy25:
+        this->__cursor = this->__marker;
+        goto yy22;
+    yy26:
+        ++this->__cursor;
 #line 154 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_json_cond::INITIAL);
             this->leaveIfComplete();
             return BOOLEAN;
         }
 #line 332 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 161 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexKwFalse() -> int {
-    
+
 #line 340 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 'a': goto yy30;
-		default: goto yy28;
-	}
-yy28:
-	++this->__cursor;
-yy29:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 'a': goto yy30;
+            default: goto yy28;
+        }
+    yy28:
+        ++this->__cursor;
+    yy29:
 #line 172 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 354 "parsers/json/src/JSONLexer.re2c.cpp"
-yy30:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'l': goto yy31;
-		default: goto yy29;
-	}
-yy31:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 's': goto yy33;
-		default: goto yy32;
-	}
-yy32:
-	this->__cursor = this->__marker;
-	goto yy29;
-yy33:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'e': goto yy34;
-		default: goto yy32;
-	}
-yy34:
-	++this->__cursor;
+    yy30:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'l': goto yy31;
+            default: goto yy29;
+        }
+    yy31:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 's': goto yy33;
+            default: goto yy32;
+        }
+    yy32:
+        this->__cursor = this->__marker;
+        goto yy29;
+    yy33:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'e': goto yy34;
+            default: goto yy32;
+        }
+    yy34:
+        ++this->__cursor;
 #line 166 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_json_cond::INITIAL);
             this->leaveIfComplete();
             return BOOLEAN;
         }
 #line 385 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 173 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexKwNull() -> int {
-    
+
 #line 393 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 'u': goto yy38;
-		default: goto yy36;
-	}
-yy36:
-	++this->__cursor;
-yy37:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 'u': goto yy38;
+            default: goto yy36;
+        }
+    yy36:
+        ++this->__cursor;
+    yy37:
 #line 184 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 407 "parsers/json/src/JSONLexer.re2c.cpp"
-yy38:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'l': goto yy39;
-		default: goto yy37;
-	}
-yy39:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'l': goto yy41;
-		default: goto yy40;
-	}
-yy40:
-	this->__cursor = this->__marker;
-	goto yy37;
-yy41:
-	++this->__cursor;
+    yy38:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'l': goto yy39;
+            default: goto yy37;
+        }
+    yy39:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'l': goto yy41;
+            default: goto yy40;
+        }
+    yy40:
+        this->__cursor = this->__marker;
+        goto yy37;
+    yy41:
+        ++this->__cursor;
 #line 178 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_json_cond::INITIAL);
             this->leaveIfComplete();
             return NIL;
         }
 #line 432 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 185 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexKwUndefined() -> int {
-    
+
 #line 440 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 8) this->yyfill(8);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 'n': goto yy45;
-		default: goto yy43;
-	}
-yy43:
-	++this->__cursor;
-yy44:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 8) this->yyfill(8);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 'n': goto yy45;
+            default: goto yy43;
+        }
+    yy43:
+        ++this->__cursor;
+    yy44:
 #line 196 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 454 "parsers/json/src/JSONLexer.re2c.cpp"
-yy45:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'd': goto yy46;
-		default: goto yy44;
-	}
-yy46:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'e': goto yy48;
-		default: goto yy47;
-	}
-yy47:
-	this->__cursor = this->__marker;
-	goto yy44;
-yy48:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'f': goto yy49;
-		default: goto yy47;
-	}
-yy49:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'i': goto yy50;
-		default: goto yy47;
-	}
-yy50:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'n': goto yy51;
-		default: goto yy47;
-	}
-yy51:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'e': goto yy52;
-		default: goto yy47;
-	}
-yy52:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'd': goto yy53;
-		default: goto yy47;
-	}
-yy53:
-	++this->__cursor;
+    yy45:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'd': goto yy46;
+            default: goto yy44;
+        }
+    yy46:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'e': goto yy48;
+            default: goto yy47;
+        }
+    yy47:
+        this->__cursor = this->__marker;
+        goto yy44;
+    yy48:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'f': goto yy49;
+            default: goto yy47;
+        }
+    yy49:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'i': goto yy50;
+            default: goto yy47;
+        }
+    yy50:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'n': goto yy51;
+            default: goto yy47;
+        }
+    yy51:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'e': goto yy52;
+            default: goto yy47;
+        }
+    yy52:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'd': goto yy53;
+            default: goto yy47;
+        }
+    yy53:
+        ++this->__cursor;
 #line 190 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_json_cond::INITIAL);
             this->leaveIfComplete();
             return NIL;
         }
 #line 509 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 197 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexKwLambda() -> int {
-    
+
 #line 517 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 7) this->yyfill(7);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 'a': goto yy57;
-		default: goto yy55;
-	}
-yy55:
-	++this->__cursor;
-yy56:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 7) this->yyfill(7);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 'a': goto yy57;
+            default: goto yy55;
+        }
+    yy55:
+        ++this->__cursor;
+    yy56:
 #line 208 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 531 "parsers/json/src/JSONLexer.re2c.cpp"
-yy57:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'm': goto yy58;
-		default: goto yy56;
-	}
-yy58:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'b': goto yy60;
-		default: goto yy59;
-	}
-yy59:
-	this->__cursor = this->__marker;
-	goto yy56;
-yy60:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'd': goto yy61;
-		default: goto yy59;
-	}
-yy61:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'a': goto yy62;
-		default: goto yy59;
-	}
-yy62:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '(': goto yy63;
-		default: goto yy59;
-	}
-yy63:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case ')': goto yy59;
-		default: goto yy64;
-	}
-yy64:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case ')': goto yy65;
-		default: goto yy64;
-	}
-yy65:
-	++this->__cursor;
+    yy57:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'm': goto yy58;
+            default: goto yy56;
+        }
+    yy58:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'b': goto yy60;
+            default: goto yy59;
+        }
+    yy59:
+        this->__cursor = this->__marker;
+        goto yy56;
+    yy60:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'd': goto yy61;
+            default: goto yy59;
+        }
+    yy61:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'a': goto yy62;
+            default: goto yy59;
+        }
+    yy62:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '(': goto yy63;
+            default: goto yy59;
+        }
+    yy63:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case ')': goto yy59;
+            default: goto yy64;
+        }
+    yy64:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case ')': goto yy65;
+            default: goto yy64;
+        }
+    yy65:
+        ++this->__cursor;
 #line 202 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_json_cond::INITIAL);
             this->leaveIfComplete();
             return LAMBDA;
         }
 #line 588 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 209 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexString() -> int {
-    
+
 #line 596 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '"': goto yy68;
-		case '\\': goto yy69;
-		default: goto yy67;
-	}
-yy67:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '"': goto yy68;
+            case '\\': goto yy69;
+            default: goto yy67;
+        }
+    yy67:
+        ++this->__cursor;
 #line 233 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             return 0;
         }
 #line 614 "parsers/json/src/JSONLexer.re2c.cpp"
-yy68:
-	++this->__cursor;
+    yy68:
+        ++this->__cursor;
 #line 214 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -624,10 +630,10 @@ yy68:
             return STRING;
         }
 #line 627 "parsers/json/src/JSONLexer.re2c.cpp"
-yy69:
-	++this->__cursor;
+    yy69:
+        ++this->__cursor;
 #line 223 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -638,36 +644,35 @@ yy69:
             return 0;
         }
 #line 641 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 239 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexStringSingle() -> int {
-    
+
 #line 649 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\'': goto yy72;
-		case '\\': goto yy73;
-		default: goto yy71;
-	}
-yy71:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\'': goto yy72;
+            case '\\': goto yy73;
+            default: goto yy71;
+        }
+    yy71:
+        ++this->__cursor;
 #line 263 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             return 0;
         }
 #line 667 "parsers/json/src/JSONLexer.re2c.cpp"
-yy72:
-	++this->__cursor;
+    yy72:
+        ++this->__cursor;
 #line 244 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -677,10 +682,10 @@ yy72:
             return STRING;
         }
 #line 680 "parsers/json/src/JSONLexer.re2c.cpp"
-yy73:
-	++this->__cursor;
+    yy73:
+        ++this->__cursor;
 #line 253 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -691,36 +696,35 @@ yy73:
             return 0;
         }
 #line 694 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 269 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexRegexp() -> int {
-    
+
 #line 702 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '/': goto yy76;
-		case '\\': goto yy77;
-		default: goto yy75;
-	}
-yy75:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '/': goto yy76;
+            case '\\': goto yy77;
+            default: goto yy75;
+        }
+    yy75:
+        ++this->__cursor;
 #line 293 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             return 0;
         }
 #line 720 "parsers/json/src/JSONLexer.re2c.cpp"
-yy76:
-	++this->__cursor;
+    yy76:
+        ++this->__cursor;
 #line 274 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -730,10 +734,10 @@ yy76:
             return REGEX;
         }
 #line 733 "parsers/json/src/JSONLexer.re2c.cpp"
-yy77:
-	++this->__cursor;
+    yy77:
+        ++this->__cursor;
 #line 283 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -744,41 +748,40 @@ yy77:
             return 0;
         }
 #line 747 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 299 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexEscaped() -> int {
-    
+
 #line 755 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\\': goto yy80;
-		case 'f': goto yy81;
-		case 'n': goto yy82;
-		case 'r': goto yy83;
-		case 't': goto yy84;
-		case 'u': goto yy85;
-		default: goto yy79;
-	}
-yy79:
-	++this->__cursor;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\\': goto yy80;
+            case 'f': goto yy81;
+            case 'n': goto yy82;
+            case 'r': goto yy83;
+            case 't': goto yy84;
+            case 'u': goto yy85;
+            default: goto yy79;
+        }
+    yy79:
+        ++this->__cursor;
 #line 363 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             this->more();
             this->begin(this->d_intermediate_state);
             return 0;
         }
 #line 778 "parsers/json/src/JSONLexer.re2c.cpp"
-yy80:
-	++this->__cursor;
+    yy80:
+        ++this->__cursor;
 #line 353 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -789,10 +792,10 @@ yy80:
             return 0;
         }
 #line 792 "parsers/json/src/JSONLexer.re2c.cpp"
-yy81:
-	++this->__cursor;
+    yy81:
+        ++this->__cursor;
 #line 334 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -803,10 +806,10 @@ yy81:
             return 0;
         }
 #line 806 "parsers/json/src/JSONLexer.re2c.cpp"
-yy82:
-	++this->__cursor;
+    yy82:
+        ++this->__cursor;
 #line 304 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -817,10 +820,10 @@ yy82:
             return 0;
         }
 #line 820 "parsers/json/src/JSONLexer.re2c.cpp"
-yy83:
-	++this->__cursor;
+    yy83:
+        ++this->__cursor;
 #line 324 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -831,10 +834,10 @@ yy83:
             return 0;
         }
 #line 834 "parsers/json/src/JSONLexer.re2c.cpp"
-yy84:
-	++this->__cursor;
+    yy84:
+        ++this->__cursor;
 #line 314 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -845,10 +848,10 @@ yy84:
             return 0;
         }
 #line 848 "parsers/json/src/JSONLexer.re2c.cpp"
-yy85:
-	++this->__cursor;
+    yy85:
+        ++this->__cursor;
 #line 344 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
             _out.erase(_out.length() - 1, 1);
@@ -858,54 +861,55 @@ yy85:
             return 0;
         }
 #line 861 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 370 "parsers/json/src/JSON.re"
-
 }
 
 auto zpt::Re2cJSONLexer::lexUnicode() -> int {
-    
+
 #line 869 "parsers/json/src/JSONLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\n': goto yy89;
-		default: goto yy87;
-	}
-yy87:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case '\n': goto yy88;
-		default: goto yy90;
-	}
-yy88:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\n': goto yy89;
+            default: goto yy87;
+        }
+    yy87:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case '\n': goto yy88;
+            default: goto yy90;
+        }
+    yy88:
 #line 418 "parsers/json/src/JSON.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 887 "parsers/json/src/JSONLexer.re2c.cpp"
-yy89:
-	++this->__cursor;
-	goto yy88;
-yy90:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy91;
-		default: goto yy92;
-	}
-yy91:
-	this->__cursor = this->__marker;
-	goto yy88;
-yy92:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy91;
-		default: goto yy93;
-	}
-yy93:
-	++this->__cursor;
+    yy89:
+        ++this->__cursor;
+        goto yy88;
+    yy90:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy91;
+            default: goto yy92;
+        }
+    yy91:
+        this->__cursor = this->__marker;
+        goto yy88;
+    yy92:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy91;
+            default: goto yy93;
+        }
+    yy93:
+        ++this->__cursor;
 #line 375 "parsers/json/src/JSON.re"
-	{
+        {
             this->captureMatch();
             std::string _out(this->matched());
 
@@ -918,9 +922,7 @@ yy93:
             std::uint32_t w = this->combine_surrogate_pair(static_cast<std::uint32_t>(c));
             std::string dest("");
 
-            if (w <= 0x7f) {
-                dest.insert(dest.begin(), w);
-            }
+            if (w <= 0x7f) { dest.insert(dest.begin(), w); }
             else if (w <= 0x7ff) {
                 dest.insert(dest.end(), 0xc0 | ((w >> 6) & 0x1f));
                 dest.insert(dest.end(), 0x80 | (w & 0x3f));
@@ -936,9 +938,7 @@ yy93:
                 dest.insert(dest.end(), 0x80 | ((w >> 6) & 0x3f));
                 dest.insert(dest.end(), 0x80 | (w & 0x3f));
             }
-            else {
-                dest.insert(dest.end(), '?');
-            }
+            else { dest.insert(dest.end(), '?'); }
 
             _out.assign(_out.substr(0, _out.length() - 4));
             _out.append(dest);
@@ -949,7 +949,6 @@ yy93:
             return 0;
         }
 #line 952 "parsers/json/src/JSONLexer.re2c.cpp"
-}
+    }
 #line 419 "parsers/json/src/JSON.re"
-
 }

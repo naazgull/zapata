@@ -36,10 +36,10 @@
    private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_PARSERS_URI_INCLUDE_ZAPATA_URI_URIPARSER_BISON_H_INCLUDED
-# define YY_YY_PARSERS_URI_INCLUDE_ZAPATA_URI_URIPARSER_BISON_H_INCLUDED
+#define YY_YY_PARSERS_URI_INCLUDE_ZAPATA_URI_URIPARSER_BISON_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -55,39 +55,34 @@ class URITokenizerLexer;
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
-  {
+#define YYTOKENTYPE
+enum yytokentype {
     YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    STAR = 258,                    /* STAR  */
-    STRING = 259,                  /* STRING  */
-    DOUBLE_DOT = 260,              /* DOUBLE_DOT  */
-    SLASH = 261,                   /* SLASH  */
-    AT = 262,                      /* AT  */
-    QMARK = 263,                   /* QMARK  */
-    EQ = 264,                      /* EQ  */
-    E = 265,                       /* E  */
-    CARDINAL = 266,                /* CARDINAL  */
-    DOT = 267,                     /* DOT  */
-    DOT_DOT = 268                  /* DOT_DOT  */
-  };
-  typedef enum yytokentype yytoken_kind_t;
+    YYEOF = 0,        /* "end of file"  */
+    YYerror = 256,    /* error  */
+    YYUNDEF = 257,    /* "invalid token"  */
+    STAR = 258,       /* STAR  */
+    STRING = 259,     /* STRING  */
+    DOUBLE_DOT = 260, /* DOUBLE_DOT  */
+    SLASH = 261,      /* SLASH  */
+    AT = 262,         /* AT  */
+    QMARK = 263,      /* QMARK  */
+    EQ = 264,         /* EQ  */
+    E = 265,          /* E  */
+    CARDINAL = 266,   /* CARDINAL  */
+    DOT = 267,        /* DOT  */
+    DOT_DOT = 268     /* DOT_DOT  */
+};
+typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
-
-
-
-int yyparse (zpt::URITokenizerLexer* ctx);
-
+int yyparse(zpt::URITokenizerLexer* ctx);
 
 #endif /* !YY_YY_PARSERS_URI_INCLUDE_ZAPATA_URI_URIPARSER_BISON_H_INCLUDED  */

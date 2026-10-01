@@ -36,10 +36,10 @@
    private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_PARSERS_HTTP_INCLUDE_ZAPATA_HTTP_HTTPPARSER_BISON_H_INCLUDED
-# define YY_YY_PARSERS_HTTP_INCLUDE_ZAPATA_HTTP_HTTPPARSER_BISON_H_INCLUDED
+#define YY_YY_PARSERS_HTTP_INCLUDE_ZAPATA_HTTP_HTTPPARSER_BISON_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -55,37 +55,32 @@ class HTTPTokenizerLexer;
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
-  {
+#define YYTOKENTYPE
+enum yytokentype {
     YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    METHOD = 258,                  /* METHOD  */
-    PROTOCOL_VERSION = 259,        /* PROTOCOL_VERSION  */
-    URL = 260,                     /* URL  */
-    STAR = 261,                    /* STAR  */
-    STATUS = 262,                  /* STATUS  */
-    CR_LF = 263,                   /* CR_LF  */
-    COLON = 264,                   /* COLON  */
-    STRING = 265,                  /* STRING  */
-    SPACE = 266                    /* SPACE  */
-  };
-  typedef enum yytokentype yytoken_kind_t;
+    YYEOF = 0,              /* "end of file"  */
+    YYerror = 256,          /* error  */
+    YYUNDEF = 257,          /* "invalid token"  */
+    METHOD = 258,           /* METHOD  */
+    PROTOCOL_VERSION = 259, /* PROTOCOL_VERSION  */
+    URL = 260,              /* URL  */
+    STAR = 261,             /* STAR  */
+    STATUS = 262,           /* STATUS  */
+    CR_LF = 263,            /* CR_LF  */
+    COLON = 264,            /* COLON  */
+    STRING = 265,           /* STRING  */
+    SPACE = 266             /* SPACE  */
+};
+typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
-
-
-
-int yyparse (zpt::HTTPTokenizerLexer* ctx);
-
+int yyparse(zpt::HTTPTokenizerLexer* ctx);
 
 #endif /* !YY_YY_PARSERS_HTTP_INCLUDE_ZAPATA_HTTP_HTTPPARSER_BISON_H_INCLUDED  */

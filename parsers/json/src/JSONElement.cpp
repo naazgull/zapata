@@ -33,6 +33,8 @@ zpt::JSONElementT::JSONElementT(const JSONElementT& _rhs) { (*this) = _rhs; }
 
 zpt::JSONElementT::JSONElementT(JSONElementT&& _rhs) { (*this) = _rhs; }
 
+zpt::JSONElementT::JSONElementT(std::nullptr_t) {}
+
 zpt::JSONElementT::JSONElementT(std::string const& _rhs) { (*this) = _rhs; }
 
 zpt::JSONElementT::JSONElementT(const char* _rhs) { (*this) = _rhs; }
@@ -60,10 +62,6 @@ zpt::JSONElementT::JSONElementT(zpt::JSONArr& _rhs) { (*this) = _rhs; }
 zpt::JSONElementT::JSONElementT(zpt::lambda _rhs) { (*this) = _rhs; }
 
 zpt::JSONElementT::JSONElementT(zpt::regex _rhs) { (*this) = _rhs; }
-
-zpt::JSONElementT::JSONElementT(std::nullptr_t _rhs) { (*this) = _rhs; }
-
-zpt::JSONElementT::JSONElementT(void* _rhs) { (*this) = _rhs; }
 
 zpt::JSONElementT::~JSONElementT() {}
 
@@ -102,9 +100,6 @@ auto zpt::JSONElementT::demangle() const -> std::string {
         }
         case zpt::JSRegex: {
             return "regex";
-        }
-        case zpt::JSUndefined: {
-            return "unefined";
         }
     }
     return "null";
@@ -152,18 +147,11 @@ auto zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
             this->__underlying = zpt::JSONRegex{};
             break;
         }
-        case zpt::JSUndefined: {
-            this->__underlying = static_cast<void*>(this);
-            break;
-        }
     }
     return (*this);
 }
 
-auto zpt::JSONElementT::ok() const -> bool {
-    return this->__underlying.index() != zpt::JSNil &&
-           this->__underlying.index() != zpt::JSUndefined;
-}
+auto zpt::JSONElementT::ok() const -> bool { return this->__underlying.index() != zpt::JSNil; }
 
 auto zpt::JSONElementT::empty() const -> bool {
     switch (this->__underlying.index()) {
@@ -195,9 +183,6 @@ auto zpt::JSONElementT::empty() const -> bool {
             return false;
         }
         case zpt::JSRegex: {
-            return false;
-        }
-        case zpt::JSUndefined: {
             return false;
         }
     }
@@ -369,10 +354,6 @@ auto zpt::JSONElementT::is_regex() const -> bool {
 
 auto zpt::JSONElementT::is_nil() const -> bool { return this->__underlying.index() == zpt::JSNil; }
 
-auto zpt::JSONElementT::is_undefined() const -> bool {
-    return this->__underlying.index() == zpt::JSUndefined;
-}
-
 auto zpt::JSONElementT::object() -> zpt::JSONObj& {
     return const_cast<zpt::JSONObj&>(static_cast<const zpt::JSONElementT&>(*this).object());
 }
@@ -517,9 +498,8 @@ auto zpt::JSONElementT::clone() const -> zpt::json {
             bool _v = this->boolean();
             return zpt::json{ _v };
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
-            return zpt::undefined;
+            return {};
         }
         case zpt::JSDate: {
             zpt::timestamp_t _v = this->date();
@@ -533,7 +513,7 @@ auto zpt::JSONElementT::clone() const -> zpt::json {
             return zpt::json{ _v };
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::JSONElementT::operator=(const JSONElementT& _rhs) -> JSONElementT& {
@@ -549,13 +529,13 @@ auto zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
     return (*this);
 }
 
-auto zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
-    this->__underlying = _rhs;
+auto zpt::JSONElementT::operator=(std::nullptr_t) -> JSONElementT& {
+    this->__underlying = nullptr;
     return (*this);
 }
 
-auto zpt::JSONElementT::operator=(std::nullptr_t) -> JSONElementT& {
-    this->__underlying = nullptr;
+auto zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
+    this->__underlying = _rhs;
     return (*this);
 }
 
@@ -626,9 +606,9 @@ auto zpt::JSONElementT::operator=(zpt::regex _rhs) -> JSONElementT& {
     return (*this);
 }
 
-auto zpt::JSONElementT::operator=(void* _rhs) -> JSONElementT& {
-    this->__underlying = _rhs;
-    return (*this);
+zpt::JSONElementT::operator std::nullptr_t() {
+    expect(this->type() == zpt::JSNil, "Invalid cast to `std::nullptr_t`");
+    return nullptr;
 }
 
 zpt::JSONElementT::operator std::string() {
@@ -642,7 +622,6 @@ zpt::JSONElementT::operator std::string() {
             _out.assign(zpt::timestamp(this->date()));
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             break;
         }
@@ -673,7 +652,6 @@ zpt::JSONElementT::operator bool() {
         case zpt::JSBoolean: {
             return this->boolean();
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return false;
         }
@@ -713,7 +691,6 @@ zpt::JSONElementT::operator int() {
         case zpt::JSBoolean: {
             return static_cast<int>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -753,7 +730,6 @@ zpt::JSONElementT::operator long() {
         case zpt::JSBoolean: {
             return static_cast<long>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -793,7 +769,6 @@ zpt::JSONElementT::operator long long() {
         case zpt::JSBoolean: {
             return static_cast<long long>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -834,7 +809,6 @@ zpt::JSONElementT::operator unsigned int() {
         case zpt::JSBoolean: {
             return static_cast<unsigned int>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -875,7 +849,6 @@ zpt::JSONElementT::operator size_t() {
         case zpt::JSBoolean: {
             return static_cast<size_t>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -915,7 +888,6 @@ zpt::JSONElementT::operator double() {
         case zpt::JSBoolean: {
             return static_cast<double>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -952,7 +924,6 @@ zpt::JSONElementT::operator zpt::timestamp_t() {
         case zpt::JSBoolean: {
             return static_cast<zpt::timestamp_t>(this->boolean());
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return 0;
         }
@@ -1048,7 +1019,6 @@ auto zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT&
             this->__underlying = _converted;
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             break;
         }
@@ -1093,7 +1063,6 @@ auto zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
             this->__underlying = _in->boolean();
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             break;
         }
@@ -1147,13 +1116,8 @@ auto zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
             }
             return this->boolean() == _in.number();
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
-            if (_in.__underlying.index() == zpt::JSNil ||
-                _in.__underlying.index() == zpt::JSUndefined) {
-                return true;
-            }
-            return false;
+            return _in.__underlying.index() == zpt::JSNil;
         }
         case zpt::JSDate: {
             if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
@@ -1227,7 +1191,6 @@ auto zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
             }
             return this->boolean() < _in.number();
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return this->hash() < _in.hash();
         }
@@ -1294,7 +1257,6 @@ auto zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
             }
             return this->boolean() > _in.number();
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return this->hash() > _in.hash();
         }
@@ -1342,15 +1304,14 @@ auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _s
         case zpt::JSInteger:
         case zpt::JSDouble:
         case zpt::JSBoolean:
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSDate:
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return {};
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::JSONElementT::set_path(std::string const& _path,
@@ -1368,7 +1329,6 @@ auto zpt::JSONElementT::set_path(std::string const& _path,
         case zpt::JSString:
         case zpt::JSInteger:
         case zpt::JSDouble:
-        case zpt::JSUndefined:
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSLambda:
@@ -1395,7 +1355,6 @@ auto zpt::JSONElementT::del_path(std::string const& _path, std::string const& _s
         case zpt::JSInteger:
         case zpt::JSDouble:
         case zpt::JSBoolean:
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSDate:
@@ -1444,7 +1403,6 @@ auto zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT
             _out << std::boolalpha << this->boolean();
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             _out << "null";
             break;
@@ -1495,7 +1453,6 @@ auto zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const
             zpt::tostr(_out, this->boolean());
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             _out.append("null");
             break;
@@ -1564,7 +1521,6 @@ auto zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSON
             _out << std::boolalpha << this->boolean();
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             _out << "null";
             break;
@@ -1616,7 +1572,6 @@ auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONE
             zpt::tostr(_out, this->boolean());
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             _out.append("null");
             break;
@@ -1656,7 +1611,6 @@ auto zpt::JSONElementT::element(size_t _pos) -> zpt::json::element {
         case zpt::JSInteger:
         case zpt::JSDouble:
         case zpt::JSBoolean:
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSDate:
         case zpt::JSLambda:

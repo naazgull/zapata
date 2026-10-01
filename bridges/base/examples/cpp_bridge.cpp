@@ -27,7 +27,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
   public:
     using lambda_type = std::function<object_type(object_type, class_type&)>;
 
-    cpp_bridge() { this->__modules.insert(std::make_pair("::", zpt::undefined)); }
+    cpp_bridge() { this->__modules.insert(std::make_pair("::", json_null)); }
 
     auto name() const -> std::string { return "cpp_example"; }
 
@@ -66,7 +66,7 @@ auto init_module_x(cpp_bridge::object_type, cpp_bridge& _bridge) -> zpt::json {
     _bridge.add_lambda(
       [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json { return { "a", _a }; },
       { "module", "x", "name", "to_a" });
-    return zpt::undefined;
+    return json_null;
 }
 
 auto main(int, char**) -> int {

@@ -110,7 +110,7 @@ auto zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separ
                 if (_current->ok()) { return _current; }
             }
         }
-        return zpt::undefined;
+        return json_null;
     }
 
     if (_remainder.length() == 0) { return _current; }
@@ -288,7 +288,7 @@ auto zpt::JSONObjT::operator[](const char* _idx) const -> zpt::json const {
 auto zpt::JSONObjT::operator[](std::string const& _idx) const -> zpt::json const {
     auto _found = this->__underlying.find(_idx);
     if (_found != this->__underlying.end()) { return _found->second; }
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::JSONObjT::stringify(std::string& _out) -> zpt::JSONObjT& {

@@ -26,7 +26,7 @@ class list_handler : public zpt::events::process {
         auto _session = _conn->session();
         auto _db = _session->database("zapata");
         auto results = _db->collection("items")->find({})->execute();
-        zpt::json items_list = { zpt::array };
+        zpt::json items_list = { json_array };
         for (auto&& [_, __, doc] : results->fetch()) {
             items_list << doc;
         }

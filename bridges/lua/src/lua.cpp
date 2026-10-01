@@ -100,10 +100,10 @@ auto zpt::lua::bridge::clear_stack() -> zpt::lua::bridge& {
 }
 
 auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert) -> zpt::json {
-    if (_to_convert == nullptr) { return zpt::undefined; }
+    if (_to_convert == nullptr) { return json_null; }
 
     int _size = lua_gettop(_to_convert);
-    if (_size == 0) { return zpt::undefined; }
+    if (_size == 0) { return json_null; }
     if (_size == 1) { return this->to_json(_to_convert, 1); }
 
     zpt::json _return = zpt::json::array();
@@ -115,7 +115,7 @@ auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert) -> zpt
 auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert, int _index) -> zpt::json {
     switch (lua_type(_to_convert, _index)) {
         case LUA_TNIL: {
-            return zpt::undefined;
+            return json_null;
         }
         case LUA_TNUMBER: {
             return lua_tonumber(_to_convert, _index);
@@ -157,11 +157,11 @@ auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert, int _i
                    "Lua: unmanaged lua type LUA_TTHREAD");
         }
     }
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::lua::bridge::to_ref(zpt::lua::bridge::object_type _to_convert, int _index) -> zpt::json {
-    if (_to_convert == nullptr) { return zpt::undefined; }
+    if (_to_convert == nullptr) { return json_null; }
     std::ostringstream _oss;
     _oss << std::hex << lua_touserdata(_to_convert, _index) << std::flush;
     return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
@@ -222,8 +222,7 @@ auto zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
         case zpt::JSLambda: {
             break;
         }
-        case zpt::JSNil:
-        case zpt::JSUndefined: {
+        case zpt::JSNil: {
             lua_pushnil(_return);
             break;
         }

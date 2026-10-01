@@ -70,8 +70,8 @@
 #include <algorithm>
 #include <sstream>
 #include <zapata/base.h>
-#include <zapata/http/HTTPTokenizerLexer.h>
 #include <zapata/http/HTTPParser.bison.h>
+#include <zapata/http/HTTPTokenizerLexer.h>
 
 namespace {
 #line 82 "parsers/http/src/HTTP.re"
@@ -79,979 +79,980 @@ namespace {
 } // namespace
 
 auto zpt::Re2cHTTPLexer::lexInitial() -> int {
-    
+
 #line 84 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 8) this->yyfill(8);
-	yych = *this->__cursor;
-	switch (yych) {
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case ' ': goto yy3;
-		case 'C': goto yy4;
-		case 'D': goto yy5;
-		case 'G': goto yy6;
-		case 'H': goto yy7;
-		case 'M': goto yy8;
-		case 'N': goto yy9;
-		case 'O': goto yy10;
-		case 'P': goto yy11;
-		case 'T': goto yy12;
-		case 'U': goto yy13;
-		default: goto yy1;
-	}
-yy1:
-	++this->__cursor;
-yy2:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 8) this->yyfill(8);
+        yych = *this->__cursor;
+        switch (yych) {
+            case '\t':
+            case '\n':
+            case '\f':
+            case '\r':
+            case ' ': goto yy3;
+            case 'C': goto yy4;
+            case 'D': goto yy5;
+            case 'G': goto yy6;
+            case 'H': goto yy7;
+            case 'M': goto yy8;
+            case 'N': goto yy9;
+            case 'O': goto yy10;
+            case 'P': goto yy11;
+            case 'T': goto yy12;
+            case 'U': goto yy13;
+            default: goto yy1;
+        }
+    yy1:
+        ++this->__cursor;
+    yy2:
 #line 163 "parsers/http/src/HTTP.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 112 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy3:
-	++this->__cursor;
+    yy3:
+        ++this->__cursor;
 #line 87 "parsers/http/src/HTTP.re"
-	{ return 0; }
+        { return 0; }
 #line 117 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy4:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'O': goto yy14;
-		default: goto yy2;
-	}
-yy5:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'E': goto yy16;
-		default: goto yy2;
-	}
-yy6:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'E': goto yy17;
-		default: goto yy2;
-	}
-yy7:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'E': goto yy18;
-		case 'T': goto yy19;
-		default: goto yy2;
-	}
-yy8:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case '-': goto yy20;
-		default: goto yy2;
-	}
-yy9:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'O': goto yy21;
-		default: goto yy2;
-	}
-yy10:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'P': goto yy22;
-		default: goto yy2;
-	}
-yy11:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'A': goto yy23;
-		case 'O': goto yy24;
-		case 'U': goto yy25;
-		default: goto yy2;
-	}
-yy12:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'R': goto yy26;
-		default: goto yy2;
-	}
-yy13:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 'P': goto yy27;
-		default: goto yy2;
-	}
-yy14:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'N': goto yy28;
-		default: goto yy15;
-	}
-yy15:
-	this->__cursor = this->__marker;
-	goto yy2;
-yy16:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'L': goto yy29;
-		default: goto yy15;
-	}
-yy17:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy30;
-		default: goto yy15;
-	}
-yy18:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'A': goto yy31;
-		default: goto yy15;
-	}
-yy19:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy32;
-		default: goto yy15;
-	}
-yy20:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'S': goto yy33;
-		default: goto yy15;
-	}
-yy21:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy34;
-		default: goto yy15;
-	}
-yy22:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy35;
-		default: goto yy15;
-	}
-yy23:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy36;
-		default: goto yy15;
-	}
-yy24:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'S': goto yy37;
-		default: goto yy15;
-	}
-yy25:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy38;
-		default: goto yy15;
-	}
-yy26:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'A': goto yy39;
-		default: goto yy15;
-	}
-yy27:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'N': goto yy40;
-		default: goto yy15;
-	}
-yy28:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'N': goto yy41;
-		default: goto yy15;
-	}
-yy29:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'E': goto yy42;
-		default: goto yy15;
-	}
-yy30:
-	++this->__cursor;
+    yy4:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'O': goto yy14;
+            default: goto yy2;
+        }
+    yy5:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'E': goto yy16;
+            default: goto yy2;
+        }
+    yy6:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'E': goto yy17;
+            default: goto yy2;
+        }
+    yy7:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'E': goto yy18;
+            case 'T': goto yy19;
+            default: goto yy2;
+        }
+    yy8:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case '-': goto yy20;
+            default: goto yy2;
+        }
+    yy9:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'O': goto yy21;
+            default: goto yy2;
+        }
+    yy10:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'P': goto yy22;
+            default: goto yy2;
+        }
+    yy11:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'A': goto yy23;
+            case 'O': goto yy24;
+            case 'U': goto yy25;
+            default: goto yy2;
+        }
+    yy12:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'R': goto yy26;
+            default: goto yy2;
+        }
+    yy13:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 'P': goto yy27;
+            default: goto yy2;
+        }
+    yy14:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'N': goto yy28;
+            default: goto yy15;
+        }
+    yy15:
+        this->__cursor = this->__marker;
+        goto yy2;
+    yy16:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'L': goto yy29;
+            default: goto yy15;
+        }
+    yy17:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy30;
+            default: goto yy15;
+        }
+    yy18:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'A': goto yy31;
+            default: goto yy15;
+        }
+    yy19:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy32;
+            default: goto yy15;
+        }
+    yy20:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'S': goto yy33;
+            default: goto yy15;
+        }
+    yy21:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy34;
+            default: goto yy15;
+        }
+    yy22:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy35;
+            default: goto yy15;
+        }
+    yy23:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy36;
+            default: goto yy15;
+        }
+    yy24:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'S': goto yy37;
+            default: goto yy15;
+        }
+    yy25:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy38;
+            default: goto yy15;
+        }
+    yy26:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'A': goto yy39;
+            default: goto yy15;
+        }
+    yy27:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'N': goto yy40;
+            default: goto yy15;
+        }
+    yy28:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'N': goto yy41;
+            default: goto yy15;
+        }
+    yy29:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'E': goto yy42;
+            default: goto yy15;
+        }
+    yy30:
+        ++this->__cursor;
 #line 88 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 282 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy31:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'D': goto yy43;
-		default: goto yy15;
-	}
-yy32:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'P': goto yy44;
-		default: goto yy15;
-	}
-yy33:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'E': goto yy45;
-		default: goto yy15;
-	}
-yy34:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'I': goto yy46;
-		default: goto yy15;
-	}
-yy35:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'I': goto yy47;
-		default: goto yy15;
-	}
-yy36:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'C': goto yy48;
-		default: goto yy15;
-	}
-yy37:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy49;
-		default: goto yy15;
-	}
-yy38:
-	++this->__cursor;
+    yy31:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'D': goto yy43;
+            default: goto yy15;
+        }
+    yy32:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'P': goto yy44;
+            default: goto yy15;
+        }
+    yy33:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'E': goto yy45;
+            default: goto yy15;
+        }
+    yy34:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'I': goto yy46;
+            default: goto yy15;
+        }
+    yy35:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'I': goto yy47;
+            default: goto yy15;
+        }
+    yy36:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'C': goto yy48;
+            default: goto yy15;
+        }
+    yy37:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy49;
+            default: goto yy15;
+        }
+    yy38:
+        ++this->__cursor;
 #line 93 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 333 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy39:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'C': goto yy50;
-		default: goto yy15;
-	}
-yy40:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'P': goto yy51;
-		default: goto yy15;
-	}
-yy41:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'E': goto yy52;
-		default: goto yy15;
-	}
-yy42:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy53;
-		default: goto yy15;
-	}
-yy43:
-	++this->__cursor;
+    yy39:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'C': goto yy50;
+            default: goto yy15;
+        }
+    yy40:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'P': goto yy51;
+            default: goto yy15;
+        }
+    yy41:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'E': goto yy52;
+            default: goto yy15;
+        }
+    yy42:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy53;
+            default: goto yy15;
+        }
+    yy43:
+        ++this->__cursor;
 #line 108 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 366 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy44:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '/': goto yy54;
-		default: goto yy15;
-	}
-yy45:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'A': goto yy55;
-		default: goto yy15;
-	}
-yy46:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'F': goto yy56;
-		default: goto yy15;
-	}
-yy47:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'O': goto yy57;
-		default: goto yy15;
-	}
-yy48:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'H': goto yy58;
-		default: goto yy15;
-	}
-yy49:
-	++this->__cursor;
+    yy44:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '/': goto yy54;
+            default: goto yy15;
+        }
+    yy45:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'A': goto yy55;
+            default: goto yy15;
+        }
+    yy46:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'F': goto yy56;
+            default: goto yy15;
+        }
+    yy47:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'O': goto yy57;
+            default: goto yy15;
+        }
+    yy48:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'H': goto yy58;
+            default: goto yy15;
+        }
+    yy49:
+        ++this->__cursor;
 #line 98 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 405 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy50:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'E': goto yy59;
-		default: goto yy15;
-	}
-yy51:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '/': goto yy60;
-		default: goto yy15;
-	}
-yy52:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'C': goto yy61;
-		default: goto yy15;
-	}
-yy53:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'E': goto yy62;
-		default: goto yy15;
-	}
-yy54:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '1': goto yy63;
-		default: goto yy15;
-	}
-yy55:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'R': goto yy64;
-		default: goto yy15;
-	}
-yy56:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'Y': goto yy65;
-		default: goto yy15;
-	}
-yy57:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'N': goto yy66;
-		default: goto yy15;
-	}
-yy58:
-	++this->__cursor;
+    yy50:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'E': goto yy59;
+            default: goto yy15;
+        }
+    yy51:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '/': goto yy60;
+            default: goto yy15;
+        }
+    yy52:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'C': goto yy61;
+            default: goto yy15;
+        }
+    yy53:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'E': goto yy62;
+            default: goto yy15;
+        }
+    yy54:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '1': goto yy63;
+            default: goto yy15;
+        }
+    yy55:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'R': goto yy64;
+            default: goto yy15;
+        }
+    yy56:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'Y': goto yy65;
+            default: goto yy15;
+        }
+    yy57:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'N': goto yy66;
+            default: goto yy15;
+        }
+    yy58:
+        ++this->__cursor;
 #line 123 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 462 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy59:
-	++this->__cursor;
+    yy59:
+        ++this->__cursor;
 #line 113 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 471 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy60:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '1': goto yy67;
-		default: goto yy15;
-	}
-yy61:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy68;
-		default: goto yy15;
-	}
-yy62:
-	++this->__cursor;
+    yy60:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '1': goto yy67;
+            default: goto yy15;
+        }
+    yy61:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy68;
+            default: goto yy15;
+        }
+    yy62:
+        ++this->__cursor;
 #line 103 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 492 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy63:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy69;
-		default: goto yy15;
-	}
-yy64:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'C': goto yy70;
-		default: goto yy15;
-	}
-yy65:
-	++this->__cursor;
+    yy63:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy69;
+            default: goto yy15;
+        }
+    yy64:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'C': goto yy70;
+            default: goto yy15;
+        }
+    yy65:
+        ++this->__cursor;
 #line 138 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 513 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy66:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'S': goto yy71;
-		default: goto yy15;
-	}
-yy67:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy72;
-		default: goto yy15;
-	}
-yy68:
-	++this->__cursor;
+    yy66:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'S': goto yy71;
+            default: goto yy15;
+        }
+    yy67:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy72;
+            default: goto yy15;
+        }
+    yy68:
+        ++this->__cursor;
 #line 128 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 534 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy69:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '0': goto yy73;
-		case '1': goto yy74;
-		default: goto yy15;
-	}
-yy70:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'H': goto yy75;
-		default: goto yy15;
-	}
-yy71:
-	++this->__cursor;
+    yy69:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '0': goto yy73;
+            case '1': goto yy74;
+            default: goto yy15;
+        }
+    yy70:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'H': goto yy75;
+            default: goto yy15;
+        }
+    yy71:
+        ++this->__cursor;
 #line 118 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 556 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy72:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '0': goto yy76;
-		case '1': goto yy77;
-		default: goto yy15;
-	}
-yy73:
-	++this->__cursor;
+    yy72:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '0': goto yy76;
+            case '1': goto yy77;
+            default: goto yy15;
+        }
+    yy73:
+        ++this->__cursor;
 #line 143 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::reply);
             return PROTOCOL_VERSION;
         }
 #line 572 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy74:
-	++this->__cursor;
+    yy74:
+        ++this->__cursor;
 #line 148 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::reply);
             return PROTOCOL_VERSION;
         }
 #line 581 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy75:
-	++this->__cursor;
+    yy75:
+        ++this->__cursor;
 #line 133 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::request);
             return METHOD;
         }
 #line 590 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy76:
-	++this->__cursor;
+    yy76:
+        ++this->__cursor;
 #line 153 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::reply);
             return PROTOCOL_VERSION;
         }
 #line 599 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy77:
-	++this->__cursor;
+    yy77:
+        ++this->__cursor;
 #line 158 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::reply);
             return PROTOCOL_VERSION;
         }
 #line 608 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 164 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexRequest() -> int {
-    
+
 #line 616 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 9) this->yyfill(9);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy79;
-		case '\r': goto yy84;
-		case ' ': goto yy85;
-		case '*': goto yy86;
-		case 'H': goto yy87;
-		case 'U': goto yy88;
-		default: goto yy81;
-	}
-yy79:
-	++this->__cursor;
-yy80:
-#line 202 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 636 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy81:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-yy82:
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ' ':
-		case '*': goto yy83;
-		default: goto yy81;
-	}
-yy83:
-#line 190 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            return URL;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 9) this->yyfill(9);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy79;
+            case '\r': goto yy84;
+            case ' ': goto yy85;
+            case '*': goto yy86;
+            case 'H': goto yy87;
+            case 'U': goto yy88;
+            default: goto yy81;
         }
+    yy79:
+        ++this->__cursor;
+    yy80:
+#line 202 "parsers/http/src/HTTP.re"
+    {
+        return -1;
+    }
+#line 636 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy81:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+    yy82:
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ' ':
+            case '*': goto yy83;
+            default: goto yy81;
+        }
+    yy83:
+#line 190 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        return URL;
+    }
 #line 656 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy84:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy89;
-		default: goto yy80;
-	}
-yy85:
-	++this->__cursor;
+    yy84:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy89;
+            default: goto yy80;
+        }
+    yy85:
+        ++this->__cursor;
 #line 198 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return SPACE;
         }
 #line 670 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy86:
-	++this->__cursor;
+    yy86:
+        ++this->__cursor;
 #line 194 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return STAR;
         }
 #line 678 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy87:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy90;
-		default: goto yy82;
-	}
-yy88:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'P': goto yy91;
-		default: goto yy82;
-	}
-yy89:
-	++this->__cursor;
+    yy87:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy90;
+            default: goto yy82;
+        }
+    yy88:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'P': goto yy91;
+            default: goto yy82;
+        }
+    yy89:
+        ++this->__cursor;
 #line 185 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
 #line 699 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy90:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'T': goto yy92;
-		default: goto yy82;
-	}
-yy91:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'N': goto yy93;
-		default: goto yy82;
-	}
-yy92:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'P': goto yy94;
-		default: goto yy82;
-	}
-yy93:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 'P': goto yy95;
-		default: goto yy82;
-	}
-yy94:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '/': goto yy96;
-		default: goto yy82;
-	}
-yy95:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '/': goto yy97;
-		default: goto yy82;
-	}
-yy96:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '1': goto yy98;
-		default: goto yy82;
-	}
-yy97:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '1': goto yy99;
-		default: goto yy82;
-	}
-yy98:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy100;
-		default: goto yy82;
-	}
-yy99:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '.': goto yy101;
-		default: goto yy82;
-	}
-yy100:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '0': goto yy102;
-		case '1': goto yy104;
-		default: goto yy82;
-	}
-yy101:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '0': goto yy106;
-		case '1': goto yy108;
-		default: goto yy82;
-	}
-yy102:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ' ':
-		case '*': goto yy103;
-		default: goto yy81;
-	}
-yy103:
+    yy90:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'T': goto yy92;
+            default: goto yy82;
+        }
+    yy91:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'N': goto yy93;
+            default: goto yy82;
+        }
+    yy92:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'P': goto yy94;
+            default: goto yy82;
+        }
+    yy93:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 'P': goto yy95;
+            default: goto yy82;
+        }
+    yy94:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '/': goto yy96;
+            default: goto yy82;
+        }
+    yy95:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '/': goto yy97;
+            default: goto yy82;
+        }
+    yy96:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '1': goto yy98;
+            default: goto yy82;
+        }
+    yy97:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '1': goto yy99;
+            default: goto yy82;
+        }
+    yy98:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy100;
+            default: goto yy82;
+        }
+    yy99:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '.': goto yy101;
+            default: goto yy82;
+        }
+    yy100:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '0': goto yy102;
+            case '1': goto yy104;
+            default: goto yy82;
+        }
+    yy101:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '0': goto yy106;
+            case '1': goto yy108;
+            default: goto yy82;
+        }
+    yy102:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ' ':
+            case '*': goto yy103;
+            default: goto yy81;
+        }
+    yy103:
 #line 169 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            return PROTOCOL_VERSION;
-        }
+    {
+        this->captureMatch();
+        return PROTOCOL_VERSION;
+    }
 #line 790 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy104:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ' ':
-		case '*': goto yy105;
-		default: goto yy81;
-	}
-yy105:
+    yy104:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ' ':
+            case '*': goto yy105;
+            default: goto yy81;
+        }
+    yy105:
 #line 173 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            return PROTOCOL_VERSION;
-        }
+    {
+        this->captureMatch();
+        return PROTOCOL_VERSION;
+    }
 #line 807 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy106:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ' ':
-		case '*': goto yy107;
-		default: goto yy81;
-	}
-yy107:
+    yy106:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ' ':
+            case '*': goto yy107;
+            default: goto yy81;
+        }
+    yy107:
 #line 177 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            return PROTOCOL_VERSION;
-        }
+    {
+        this->captureMatch();
+        return PROTOCOL_VERSION;
+    }
 #line 824 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy108:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ' ':
-		case '*': goto yy109;
-		default: goto yy81;
-	}
-yy109:
-#line 181 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            return PROTOCOL_VERSION;
+    yy108:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ' ':
+            case '*': goto yy109;
+            default: goto yy81;
         }
+    yy109:
+#line 181 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        return PROTOCOL_VERSION;
+    }
 #line 841 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 203 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexReply() -> int {
-    
+
 #line 849 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy111;
-		case '\r': goto yy115;
-		case ' ': goto yy116;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy117;
-		default: goto yy113;
-	}
-yy111:
-	++this->__cursor;
-yy112:
-#line 232 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 876 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy113:
-	++this->__cursor;
-yy114:
-#line 217 "parsers/http/src/HTTP.re"
-	{
-            // Seeds matched() with this one character, then arms more() so
-            // statustext's upcoming STRING rule appends to it instead of
-            // replacing it - order matters: captureMatch() must run before
-            // more(), since more() only affects how the *next* rule's match
-            // combines with what was just captured here.
-            this->captureMatch();
-            this->more();
-            this->begin(zpt::re2c_cond::statustext);
-            return 0;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy111;
+            case '\r': goto yy115;
+            case ' ': goto yy116;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy117;
+            default: goto yy113;
         }
+    yy111:
+        ++this->__cursor;
+    yy112:
+#line 232 "parsers/http/src/HTTP.re"
+    {
+        return -1;
+    }
+#line 876 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy113:
+        ++this->__cursor;
+    yy114:
+#line 217 "parsers/http/src/HTTP.re"
+    {
+        // Seeds matched() with this one character, then arms more() so
+        // statustext's upcoming STRING rule appends to it instead of
+        // replacing it - order matters: captureMatch() must run before
+        // more(), since more() only affects how the *next* rule's match
+        // combines with what was just captured here.
+        this->captureMatch();
+        this->more();
+        this->begin(zpt::re2c_cond::statustext);
+        return 0;
+    }
 #line 892 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy115:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy118;
-		default: goto yy112;
-	}
-yy116:
-	++this->__cursor;
+    yy115:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy118;
+            default: goto yy112;
+        }
+    yy116:
+        ++this->__cursor;
 #line 228 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return SPACE;
         }
 #line 906 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy117:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy119;
-		default: goto yy114;
-	}
-yy118:
-	++this->__cursor;
+    yy117:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy119;
+            default: goto yy114;
+        }
+    yy118:
+        ++this->__cursor;
 #line 212 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
 #line 930 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy119:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy121;
-		default: goto yy120;
-	}
-yy120:
-	this->__cursor = this->__marker;
-	goto yy114;
-yy121:
-	++this->__cursor;
+    yy119:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': goto yy121;
+            default: goto yy120;
+        }
+    yy120:
+        this->__cursor = this->__marker;
+        goto yy114;
+    yy121:
+        ++this->__cursor;
 #line 208 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return STATUS;
         }
 #line 956 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 233 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
-    
+
 #line 964 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy123;
-		case '\r': goto yy127;
-		case ':': goto yy128;
-		default: goto yy125;
-	}
-yy123:
-	++this->__cursor;
-yy124:
-#line 291 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 981 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy125:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ':': goto yy126;
-		default: goto yy125;
-	}
-yy126:
-#line 276 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            std::string _m(this->matched());
-            std::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
-            if (_m == std::string("content-length")) {
-                this->begin(zpt::re2c_cond::contentlengthval);
-            }
-            else if (_m == std::string("transfer-encoding")) {
-                this->begin(zpt::re2c_cond::transferencodingval);
-            }
-            else if (_m == std::string("trailer")) {
-                this->begin(zpt::re2c_cond::trailerval);
-            }
-            return STRING;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 4) this->yyfill(4);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy123;
+            case '\r': goto yy127;
+            case ':': goto yy128;
+            default: goto yy125;
         }
+    yy123:
+        ++this->__cursor;
+    yy124:
+#line 291 "parsers/http/src/HTTP.re"
+    {
+        return -1;
+    }
+#line 981 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy125:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ':': goto yy126;
+            default: goto yy125;
+        }
+    yy126:
+#line 276 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        std::string _m(this->matched());
+        std::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
+        if (_m == std::string("content-length")) { this->begin(zpt::re2c_cond::contentlengthval); }
+        else if (_m == std::string("transfer-encoding")) {
+            this->begin(zpt::re2c_cond::transferencodingval);
+        }
+        else if (_m == std::string("trailer")) { this->begin(zpt::re2c_cond::trailerval); }
+        return STRING;
+    }
 #line 1010 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy127:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy129;
-		default: goto yy124;
-	}
-yy128:
-	++this->__cursor;
+    yy127:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy129;
+            default: goto yy124;
+        }
+    yy128:
+        ++this->__cursor;
 #line 238 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::headerval);
             return COLON;
         }
 #line 1025 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy129:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case '\r': goto yy131;
-		default: goto yy130;
-	}
-yy130:
-#line 268 "parsers/http/src/HTTP.re"
-	{
-            // A single line ending: headers continue (this is not the
-            // terminating blank line - the rule above already claimed that
-            // case via longest-match). Stay in `headers` and let the next
-            // STRING rule match the following header's name.
-            this->captureMatch();
-            return CR_LF;
+    yy129:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case '\r': goto yy131;
+            default: goto yy130;
         }
+    yy130:
+#line 268 "parsers/http/src/HTTP.re"
+    {
+        // A single line ending: headers continue (this is not the
+        // terminating blank line - the rule above already claimed that
+        // case via longest-match). Stay in `headers` and let the next
+        // STRING rule match the following header's name.
+        this->captureMatch();
+        return CR_LF;
+    }
 #line 1042 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy131:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy133;
-		default: goto yy132;
-	}
-yy132:
-	this->__cursor = this->__marker;
-	goto yy130;
-yy133:
-	++this->__cursor;
+    yy131:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy133;
+            default: goto yy132;
+        }
+    yy132:
+        this->__cursor = this->__marker;
+        goto yy130;
+    yy133:
+        ++this->__cursor;
 #line 243 "parsers/http/src/HTTP.re"
-	{
+        {
             // End of headers: this single rule consumes the *entire*
             // terminating blank-line sequence (2-4 bytes, in any CRLF/LF
             // combination) atomically. This is the structural fix for the
@@ -1068,275 +1069,267 @@ yy133:
                 this->d_chunked_length = -1;
                 this->begin(zpt::re2c_cond::chunked_body);
             }
-            else if (this->d_content_length != 0) {
-                this->begin(zpt::re2c_cond::plain_body);
-            }
-            else {
-                this->leave(0);
-            }
+            else if (this->d_content_length != 0) { this->begin(zpt::re2c_cond::plain_body); }
+            else { this->leave(0); }
             return CR_LF;
         }
 #line 1080 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 292 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexHeaderval() -> int {
-    
-#line 1088 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy135;
-		default: goto yy136;
-	}
-yy135:
-	++this->__cursor;
-#line 302 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 1103 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy136:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy137;
-		default: goto yy136;
-	}
-yy137:
-#line 297 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            this->begin(zpt::re2c_cond::headers);
-            return STRING;
-        }
-#line 1121 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
-#line 303 "parsers/http/src/HTTP.re"
 
+#line 1088 "parsers/http/src/HTTPLexer.re2c.cpp"
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy135;
+            default: goto yy136;
+        }
+    yy135:
+        ++this->__cursor;
+#line 302 "parsers/http/src/HTTP.re"
+        { return -1; }
+#line 1103 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy136:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy137;
+            default: goto yy136;
+        }
+    yy137:
+#line 297 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        this->begin(zpt::re2c_cond::headers);
+        return STRING;
+    }
+#line 1121 "parsers/http/src/HTTPLexer.re2c.cpp"
+    }
+#line 303 "parsers/http/src/HTTP.re"
 }
 
 auto zpt::Re2cHTTPLexer::lexStatustext() -> int {
-    
+
 #line 1129 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy139;
-		case '\r': goto yy143;
-		default: goto yy141;
-	}
-yy139:
-	++this->__cursor;
-yy140:
-#line 320 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 1145 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy141:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy142;
-		default: goto yy141;
-	}
-yy142:
-#line 313 "parsers/http/src/HTTP.re"
-	{
-            // If reached directly from lexReply's one-character transition
-            // rule, captureMatch() here appends to the single character
-            // already captured there (more() was armed by that rule).
-            this->captureMatch();
-            return STRING;
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy139;
+            case '\r': goto yy143;
+            default: goto yy141;
         }
+    yy139:
+        ++this->__cursor;
+    yy140:
+#line 320 "parsers/http/src/HTTP.re"
+    {
+        return -1;
+    }
+#line 1145 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy141:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy142;
+            default: goto yy141;
+        }
+    yy142:
+#line 313 "parsers/http/src/HTTP.re"
+    {
+        // If reached directly from lexReply's one-character transition
+        // rule, captureMatch() here appends to the single character
+        // already captured there (more() was armed by that rule).
+        this->captureMatch();
+        return STRING;
+    }
 #line 1165 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy143:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy144;
-		default: goto yy140;
-	}
-yy144:
-	++this->__cursor;
+    yy143:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy144;
+            default: goto yy140;
+        }
+    yy144:
+        ++this->__cursor;
 #line 308 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             this->begin(zpt::re2c_cond::headers);
             return CR_LF;
         }
 #line 1180 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 321 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexContentLengthVal() -> int {
-    
+
 #line 1188 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy146;
-		case ':': goto yy149;
-		default: goto yy147;
-	}
-yy146:
-	++this->__cursor;
-#line 337 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 1204 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy147:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ':': goto yy148;
-		default: goto yy147;
-	}
-yy148:
-#line 330 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            std::string _s(this->matched());
-            zpt::fromstr(_s, &this->d_content_length);
-            this->begin(zpt::re2c_cond::headers);
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy146;
+            case ':': goto yy149;
+            default: goto yy147;
         }
+    yy146:
+        ++this->__cursor;
+#line 337 "parsers/http/src/HTTP.re"
+        { return -1; }
+#line 1204 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy147:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ':': goto yy148;
+            default: goto yy147;
+        }
+    yy148:
+#line 330 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        std::string _s(this->matched());
+        zpt::fromstr(_s, &this->d_content_length);
+        this->begin(zpt::re2c_cond::headers);
+        return STRING;
+    }
 #line 1225 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy149:
-	++this->__cursor;
+    yy149:
+        ++this->__cursor;
 #line 326 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return COLON;
         }
 #line 1233 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 338 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexTransferEncodingVal() -> int {
-    
+
 #line 1241 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy151;
-		case ':': goto yy154;
-		default: goto yy152;
-	}
-yy151:
-	++this->__cursor;
-#line 353 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 1257 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy152:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ':': goto yy153;
-		default: goto yy152;
-	}
-yy153:
-#line 347 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            this->d_chunked_body = (this->matched().find(std::string("chunked")) != std::string::npos);
-            this->begin(zpt::re2c_cond::headers);
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy151;
+            case ':': goto yy154;
+            default: goto yy152;
         }
+    yy151:
+        ++this->__cursor;
+#line 353 "parsers/http/src/HTTP.re"
+        { return -1; }
+#line 1257 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy152:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ':': goto yy153;
+            default: goto yy152;
+        }
+    yy153:
+#line 347 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        this->d_chunked_body = (this->matched().find(std::string("chunked")) != std::string::npos);
+        this->begin(zpt::re2c_cond::headers);
+        return STRING;
+    }
 #line 1277 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy154:
-	++this->__cursor;
+    yy154:
+        ++this->__cursor;
 #line 343 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return COLON;
         }
 #line 1285 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 354 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexTrailerVal() -> int {
-    
+
 #line 1293 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r': goto yy156;
-		case ':': goto yy159;
-		default: goto yy157;
-	}
-yy156:
-	++this->__cursor;
-#line 369 "parsers/http/src/HTTP.re"
-	{ return -1; }
-#line 1309 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy157:
-	++this->__cursor;
-	if (this->__limit <= this->__cursor) this->yyfill(1);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n':
-		case '\r':
-		case ':': goto yy158;
-		default: goto yy157;
-	}
-yy158:
-#line 363 "parsers/http/src/HTTP.re"
-	{
-            this->captureMatch();
-            this->d_chunked_trailer = this->matched();
-            this->begin(zpt::re2c_cond::headers);
-            return STRING;
+    {
+        char yych;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r': goto yy156;
+            case ':': goto yy159;
+            default: goto yy157;
         }
+    yy156:
+        ++this->__cursor;
+#line 369 "parsers/http/src/HTTP.re"
+        { return -1; }
+#line 1309 "parsers/http/src/HTTPLexer.re2c.cpp"
+    yy157:
+        ++this->__cursor;
+        if (this->__limit <= this->__cursor) this->yyfill(1);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n':
+            case '\r':
+            case ':': goto yy158;
+            default: goto yy157;
+        }
+    yy158:
+#line 363 "parsers/http/src/HTTP.re"
+    {
+        this->captureMatch();
+        this->d_chunked_trailer = this->matched();
+        this->begin(zpt::re2c_cond::headers);
+        return STRING;
+    }
 #line 1329 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy159:
-	++this->__cursor;
+    yy159:
+        ++this->__cursor;
 #line 359 "parsers/http/src/HTTP.re"
-	{
+        {
             this->captureMatch();
             return COLON;
         }
 #line 1337 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 370 "parsers/http/src/HTTP.re"
-
 }
 
 auto zpt::Re2cHTTPLexer::lexPlainBody() -> int {
@@ -1351,61 +1344,63 @@ auto zpt::Re2cHTTPLexer::lexPlainBody() -> int {
 }
 
 auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
-    
+
 #line 1356 "parsers/http/src/HTTPLexer.re2c.cpp"
-{
-	char yych;
-	if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
-	yych = *this->__cursor;
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy161;
-		case '\r': goto yy164;
-		default: goto yy163;
-	}
-yy161:
-	++this->__cursor;
-yy162:
+    {
+        char yych;
+        if ((this->__limit - this->__cursor) < 3) this->yyfill(3);
+        yych = *this->__cursor;
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy161;
+            case '\r': goto yy164;
+            default: goto yy163;
+        }
+    yy161:
+        ++this->__cursor;
+    yy162:
 #line 433 "parsers/http/src/HTTP.re"
-	{ return -1; }
+    {
+        return -1;
+    }
 #line 1372 "parsers/http/src/HTTPLexer.re2c.cpp"
-yy163:
-	yych = *(this->__marker = ++this->__cursor);
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy162;
-		default: goto yy166;
-	}
-yy164:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy169;
-		default: goto yy162;
-	}
-yy165:
-	++this->__cursor;
-	if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
-	yych = *this->__cursor;
-yy166:
-	switch (yych) {
-		case 0x00:
-		case '\n': goto yy167;
-		case '\r': goto yy168;
-		default: goto yy165;
-	}
-yy167:
-	this->__cursor = this->__marker;
-	goto yy162;
-yy168:
-	yych = *++this->__cursor;
-	switch (yych) {
-		case '\n': goto yy169;
-		default: goto yy167;
-	}
-yy169:
-	++this->__cursor;
+    yy163:
+        yych = *(this->__marker = ++this->__cursor);
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy162;
+            default: goto yy166;
+        }
+    yy164:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy169;
+            default: goto yy162;
+        }
+    yy165:
+        ++this->__cursor;
+        if ((this->__limit - this->__cursor) < 2) this->yyfill(2);
+        yych = *this->__cursor;
+    yy166:
+        switch (yych) {
+            case 0x00:
+            case '\n': goto yy167;
+            case '\r': goto yy168;
+            default: goto yy165;
+        }
+    yy167:
+        this->__cursor = this->__marker;
+        goto yy162;
+    yy168:
+        yych = *++this->__cursor;
+        switch (yych) {
+            case '\n': goto yy169;
+            default: goto yy167;
+        }
+    yy169:
+        ++this->__cursor;
 #line 386 "parsers/http/src/HTTP.re"
-	{
+        {
             // Matches one full text line up to and including its line
             // ending: either a chunk-size line (hex digit run, optionally
             // followed by chunk-extensions that are not stripped, matching
@@ -1453,7 +1448,6 @@ yy169:
             return 0;
         }
 #line 1456 "parsers/http/src/HTTPLexer.re2c.cpp"
-}
+    }
 #line 434 "parsers/http/src/HTTP.re"
-
 }

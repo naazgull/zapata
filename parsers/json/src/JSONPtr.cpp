@@ -58,14 +58,14 @@ zpt::json::json()
   : __underlying(zpt::allocate_shared<zpt::JSONElementT>()) {}
 
 zpt::json::json(std::nullptr_t)
-  : zpt::json(zpt::JSUndefined) {}
+  : zpt::json{ zpt::JSNil } {}
 
 zpt::json::json(const zpt::json& _rhs) { (*this) = _rhs; }
 
-zpt::json::json(zpt::json&& _rhs) { (*this) = _rhs; }
+zpt::json::json(zpt::json&& _rhs) { (*this) = std::move(_rhs); }
 
 zpt::json::json(zpt::allocator<zpt::JSONElementT>::shared_pointer _target)
-  : __underlying(std::move(_target)) {}
+  : __underlying{ std::move(_target) } {}
 
 zpt::json::json(std::initializer_list<zpt::json> _init) { (*this) = _init; }
 
@@ -78,7 +78,7 @@ auto zpt::json::size() const -> size_t { return this->__underlying->size(); }
 auto zpt::json::hash() const -> size_t { return this->__underlying->hash(); }
 
 auto zpt::json::value() -> zpt::JSONElementT& {
-    if (this->__underlying.get() == nullptr) { return *(zpt::undefined.__underlying.get()); }
+    expect(this->__underlying.get() != nullptr, "The JSON variable has no underlying value");
     return *(this->__underlying.get());
 }
 
@@ -159,6 +159,8 @@ auto zpt::json::operator<<(std::initializer_list<zpt::json> _in) -> zpt::json& {
     return (*this);
 }
 
+zpt::json::operator std::nullptr_t() { return this->__underlying.get()->operator std::nullptr_t(); }
+
 zpt::json::operator std::string() { return this->__underlying.get()->operator std::string(); }
 
 zpt::json::operator bool() { return this->__underlying.get()->operator bool(); }
@@ -197,6 +199,10 @@ zpt::json::operator zpt::regex&() { return this->__underlying.get()->operator zp
 
 zpt::json::operator std::regex&() {
     return this->__underlying.get()->regex().operator std::regex&();
+}
+
+zpt::json::operator std::nullptr_t() const {
+    return this->__underlying.get()->operator std::nullptr_t();
 }
 
 zpt::json::operator std::string() const { return this->__underlying.get()->operator std::string(); }
@@ -286,7 +292,6 @@ auto zpt::json::operator&=(std::initializer_list<zpt::json> _rhs) -> json& {
 }
 
 auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
@@ -346,9 +351,8 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
             }
             else { return zpt::json(this->__underlying->boolean() || _rhs->number()); }
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
@@ -362,20 +366,16 @@ auto zpt::json::operator+(zpt::json _rhs) const -> zpt::json {
             }
         }
         case zpt::JSLambda: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
-    if (this->__underlying->type() == zpt::JSNil) {
-        (*this) = _rhs->clone();
-        return (*this);
-    }
     if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
@@ -406,8 +406,8 @@ auto zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
             this->__underlying->boolean() += _rhs->number();
             return (*this);
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
+            (*this) = _rhs->clone();
             return (*this);
         }
         case zpt::JSDate: {
@@ -415,17 +415,16 @@ auto zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSLambda: {
-            return zpt::undefined;
+            return (*this);
         }
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return (*this);
         }
     }
-    return zpt::undefined;
+    return (*this);
 }
 
 auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
@@ -485,9 +484,8 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
             }
             else { return zpt::json(this->__underlying->boolean() && _rhs->number()); }
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
@@ -498,13 +496,13 @@ auto zpt::json::operator-(zpt::json _rhs) const -> zpt::json {
             else { return zpt::json(this->__underlying->date() - _rhs->number()); }
         }
         case zpt::JSLambda: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
@@ -544,7 +542,6 @@ auto zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
             this->__underlying->boolean() -= _rhs->number();
             return (*this);
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             return (*this);
         }
@@ -553,17 +550,16 @@ auto zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSLambda: {
-            return zpt::undefined;
+            return (*this);
         }
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return (*this);
         }
     }
-    return zpt::undefined;
+    return (*this);
 }
 
 auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
@@ -622,9 +618,8 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
             }
             else { return zpt::json(this->__underlying->boolean() / _rhs->number()); }
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
@@ -635,17 +630,16 @@ auto zpt::json::operator/(zpt::json _rhs) const -> zpt::json {
             else { return zpt::json(this->__underlying->date() / _rhs->number()); }
         }
         case zpt::JSLambda: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::json::operator|(zpt::json _rhs) const -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject:
@@ -676,21 +670,16 @@ auto zpt::json::operator|(zpt::json _rhs) const -> zpt::json {
             return zpt::json(static_cast<unsigned long long>(*this) |
                              static_cast<unsigned long long>(_rhs));
         }
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return _rhs->clone();
         }
     }
-    return zpt::undefined;
+    return {};
 }
 
 auto zpt::json::operator|=(zpt::json _rhs) -> zpt::json& {
-    if (this->__underlying->type() == zpt::JSNil) {
-        (*this) = _rhs->clone();
-        return (*this);
-    }
     if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject:
@@ -723,8 +712,10 @@ auto zpt::json::operator|=(zpt::json _rhs) -> zpt::json& {
                       static_cast<unsigned long long>(_rhs);
             return (*this);
         }
-        case zpt::JSUndefined:
-        case zpt::JSNil:
+        case zpt::JSNil: {
+            (*this) = _rhs->clone();
+            return (*this);
+        }
         case zpt::JSLambda:
         case zpt::JSRegex: {
             return (*this);
@@ -734,7 +725,6 @@ auto zpt::json::operator|=(zpt::json _rhs) -> zpt::json& {
 }
 
 auto zpt::json::operator&(zpt::json _rhs) const -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject:
@@ -776,14 +766,13 @@ auto zpt::json::operator&(zpt::json _rhs) const -> zpt::json {
             return zpt::json(static_cast<unsigned long long>(*this) &
                              static_cast<unsigned long long>(_rhs));
         }
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSRegex: {
-            return zpt::undefined;
+            return {};
         }
     }
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::json::operator&=(zpt::json _rhs) -> zpt::json& {
@@ -836,7 +825,6 @@ auto zpt::json::operator&=(zpt::json _rhs) -> zpt::json& {
                       static_cast<unsigned long long>(_rhs);
             return (*this);
         }
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSRegex: {
@@ -872,7 +860,6 @@ auto zpt::json::strict_union(zpt::json _rhs) -> void {
         case zpt::JSInteger:
         case zpt::JSDouble:
         case zpt::JSBoolean:
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSDate:
         case zpt::JSLambda:
@@ -921,7 +908,6 @@ auto zpt::json::strict_intersection(zpt::json _rhs) -> void {
         case zpt::JSInteger:
         case zpt::JSDouble:
         case zpt::JSBoolean:
-        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSDate:
         case zpt::JSLambda:

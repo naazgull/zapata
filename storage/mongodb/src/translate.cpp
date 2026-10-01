@@ -180,7 +180,7 @@ auto zpt::storage::mongodb::from_bson(bsoncxx::document::view _doc) -> zpt::json
                             break;
                         }
                         default: {
-                            _arr << zpt::undefined;
+                            _arr << json_null;
                             break;
                         }
                     }
@@ -198,11 +198,11 @@ auto zpt::storage::mongodb::from_bson(bsoncxx::document::view _doc) -> zpt::json
             }
             case bsoncxx::type::k_null:
             case bsoncxx::type::k_undefined: {
-                _record[_key] = zpt::undefined;
+                _record[_key] = json_null;
                 break;
             }
             default: {
-                _record[_key] = zpt::undefined;
+                _record[_key] = json_null;
                 break;
             }
         }

@@ -164,7 +164,7 @@ auto zpt::prolog::bridge::find(zpt::json) -> object_type {
 }
 
 auto zpt::prolog::bridge::to_json(object_type _to_convert) -> zpt::json {
-    if (_to_convert == zpt::prolog::term::null()) { return zpt::undefined; }
+    if (_to_convert == zpt::prolog::term::null()) { return json_null; }
     return zpt::prolog::to_json(*_to_convert);
 }
 
@@ -287,7 +287,7 @@ auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
             break;
         }
         case PL_NIL: {
-            return zpt::undefined;
+            return json_null;
         }
         case PL_BLOB: {
             expect(_supported_type, "unsupported type PL_VARIABLE");
@@ -359,7 +359,7 @@ auto zpt::prolog::to_json(term_t _to_convert) -> zpt::json {
         }
     }
 
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
@@ -443,7 +443,6 @@ auto zpt::prolog::to_object(zpt::json _to_convert) -> zpt::prolog::term {
                    "couldn't add boolean atom to Prolog term");
             return _boolean;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             zpt::prolog::term _nil;
             PL_put_nil(*_nil);

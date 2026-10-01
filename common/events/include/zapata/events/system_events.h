@@ -66,7 +66,7 @@ class system_event {
      * @param _data Optional associated data.
      * @return void (constructors implicitly initialize the object).
      */
-    system_event(zpt::system_event_type _type, zpt::json const& _data = zpt::undefined);
+    system_event(zpt::system_event_type _type, zpt::json const& _data = json_null);
     /**
      * @brief Destructor.
      * @return void (destructors implicitly clean up the object).

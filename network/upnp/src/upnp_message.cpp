@@ -68,7 +68,7 @@ auto zpt::upnp::basic_request::from_stream(std::istream& _in) -> zpt::basic_mess
         _p.parse();
     }
     catch (zpt::SyntaxErrorException const& _e) {
-        this->__underlying = zpt::undefined;
+        this->__underlying = json_null;
         throw;
     }
     catch (...) {

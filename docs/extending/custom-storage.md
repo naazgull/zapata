@@ -107,7 +107,7 @@ class collection : public zpt::storage::collection::type {
     auto remove(zpt::json _search) const -> zpt::storage::action override;
     auto replace(std::string const& _id, zpt::json _document) const -> zpt::storage::action override;
     auto find(zpt::json _search) const -> zpt::storage::action override;
-    auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    auto count(zpt::json _search = json_null) -> size_t override;
 };
 
 class action : public zpt::storage::action::type {

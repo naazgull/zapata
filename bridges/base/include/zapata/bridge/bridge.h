@@ -111,7 +111,7 @@ class bridge : public zpt::programming::integration {
      * @return Reference to this bridge instance.
      * @throws std::runtime_error if the file cannot be loaded.
      */
-    auto add_module(std::string _external_path, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_module(std::string _external_path, zpt::json _conf = json_null) -> bridge<C, O>&;
     /**
      * @brief Adds a module via callback.
      * @param _callback The callback function to register as a module.
@@ -119,7 +119,7 @@ class bridge : public zpt::programming::integration {
      * @return Reference to this bridge instance.
      */
     template<typename Callback>
-    auto add_module(Callback _callback, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_module(Callback _callback, zpt::json _conf = json_null) -> bridge<C, O>&;
     /**
      * @brief Registers a lambda function.
      * @param _lambda The lambda function to register.
@@ -127,7 +127,7 @@ class bridge : public zpt::programming::integration {
      * @return Reference to this bridge instance.
      */
     template<typename Lambda>
-    auto add_lambda(Lambda _lambda, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_lambda(Lambda _lambda, zpt::json _conf = json_null) -> bridge<C, O>&;
     /**
      * @brief Initializes the bridge after configuration.
      * @return Reference to this bridge instance.

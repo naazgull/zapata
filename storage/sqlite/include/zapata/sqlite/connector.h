@@ -275,7 +275,7 @@ class collection : public zpt::storage::collection::type {
      * @param _search Optional search criteria to filter the count
      * @return Number of matching rows
      */
-    virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    virtual auto count(zpt::json _search = json_null) -> size_t override;
     /** @brief Retrieves the functions to call to quote SQL expressions.
      * @return The callbacks to invoke to quote an SQL expressions. */
     virtual auto get_quote_handler() const -> zpt::storage::quote_handler override;
@@ -786,6 +786,7 @@ class action_find : public zpt::storage::sqlite::action {
 /** @brief SQLite query result set. */
 class result : public zpt::storage::result::type {
   public:
+    result() = default;
     /** @brief Constructs a result from a pre-materialized JSON value (e.g., error or empty set).
      * @param _result Pre-materialized result data
      */

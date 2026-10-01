@@ -36,11 +36,8 @@ auto zpt::to_string(zpt::JSONType _type) -> const char* {
         case JSRegex: {
             return "regexp";
         }
-        case JSUndefined: {
-            return "undefined";
-        }
     }
-    return "undefined";
+    return "null";
 }
 
 auto zpt::to_string(zpt::json _in) -> std::string { return static_cast<std::string>(_in); }
@@ -176,7 +173,7 @@ auto zpt::conf::evaluate_external_ref(zpt::json _options,
                 for (auto&& [_idx, __, _reference] : _ref_list) {
                     auto& _ref = _reference->string();
                     if (_ref.find("file:") == 0) {
-                        if (_return == zpt::undefined) { _return = _options->clone(); }
+                        if (!_return->ok()) { _return = _options->clone(); }
 
                         _ref = _ref.substr(5);
                         std::filesystem::path _path{ _ref };
@@ -191,7 +188,7 @@ auto zpt::conf::evaluate_external_ref(zpt::json _options,
             else {
                 auto _intermediate = zpt::conf::evaluate_external_ref(_value, _context, _root);
                 if (_intermediate->ok()) {
-                    if (_return == zpt::undefined) { _return = _options->clone(); }
+                    if (!_return->ok()) { _return = _options->clone(); }
                     _return[_key] = _intermediate;
                 }
             }
@@ -199,7 +196,7 @@ auto zpt::conf::evaluate_external_ref(zpt::json _options,
         else if (_options->is_array()) {
             auto _intermediate = zpt::conf::evaluate_external_ref(_value, _context, _root);
             if (_intermediate->ok()) {
-                if (_return == zpt::undefined) { _return = _options->clone(); }
+                if (!_return->ok()) { _return = _options->clone(); }
                 _return[_idx] = _intermediate;
             }
         }
@@ -223,7 +220,7 @@ auto zpt::conf::evaluate_internal_ref(zpt::json _options,
                 for (auto&& [_, __, _reference] : _ref_list) {
                     auto& _ref = _reference->string();
                     if (_ref[0] == '#') {
-                        if (_return == zpt::undefined) { _return = _options->clone(); }
+                        if (!_return->ok()) { _return = _options->clone(); }
 
                         _ref = _ref.substr(2);
                         _return |= _root->get_path(_ref, "/")->clone();
@@ -233,7 +230,7 @@ auto zpt::conf::evaluate_internal_ref(zpt::json _options,
             else {
                 auto _intermediate = zpt::conf::evaluate_internal_ref(_value, _context, _root);
                 if (_intermediate->ok()) {
-                    if (_return == zpt::undefined) { _return = _options->clone(); }
+                    if (!_return->ok()) { _return = _options->clone(); }
                     _return[_key] = _intermediate;
                 }
             }
@@ -241,7 +238,7 @@ auto zpt::conf::evaluate_internal_ref(zpt::json _options,
         else if (_options->is_array()) {
             auto _intermediate = zpt::conf::evaluate_internal_ref(_value, _context, _root);
             if (_intermediate->ok()) {
-                if (_return == zpt::undefined) { _return = _options->clone(); }
+                if (!_return->ok()) { _return = _options->clone(); }
                 _return[_idx] = _intermediate;
             }
         }
@@ -265,7 +262,7 @@ auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zp
         else { _options |= _conf; }
     }
     catch (zpt::SyntaxErrorException const& _e) {
-        _conf = zpt::undefined;
+        _conf = json_null;
         expect(_conf->ok(), "syntax error parsing file: " << _file << ": " << _e.what());
     }
 
@@ -321,7 +318,7 @@ auto zpt::email::parse(std::string const& _email) -> zpt::json {
         ((std::string)_email_matches[0]),
         "name",
         (((std::string)_email_matches[1]).length() == 0
-           ? zpt::undefined
+           ? json_null
            : zpt::json::string(((std::string)_email_matches[1]))),
         "user",
         (((std::string)_email_matches[2]) + ((std::string)_email_matches[3])),
@@ -378,7 +375,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
             else { _js_value = zpt::json::string(_value); }
 
             _values = _return[_key];
-            if (_values == zpt::undefined) { _return << _key << _js_value; }
+            if (!_values->ok()) { _return << _key << _js_value; }
             else if (_values->type() == zpt::JSArray) { _values << _js_value; }
             else {
                 zpt::json _old = _values;
@@ -391,7 +388,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
         else {
             _value.assign(_arg);
             _values = _return["--"];
-            if (_values == zpt::undefined) {
+            if (!_values->ok()) {
                 _values = zpt::json::array();
                 _return << "--" << _values;
             }
@@ -405,7 +402,7 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
         for (auto const& [_, __, _cfg_value] : _config(_key)("options")) {
             if (_cfg_value == "multiple") {
                 if (_option->type() != zpt::JSArray) {
-                    _return << _key << zpt::json{ zpt::array, _option };
+                    _return << _key << zpt::json{ json_array, _option };
                 }
             }
         }

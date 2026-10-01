@@ -95,7 +95,7 @@ auto zpt::storage::pgsql::to_json(
         auto _name = std::string{ PQfname(_result, _col_idx) };
 
         if (PQgetisnull(_result, _row, _col_idx)) {
-            _record[_name] = zpt::undefined;
+            _record[_name] = json_null;
             continue;
         }
 

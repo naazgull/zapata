@@ -40,7 +40,7 @@
  *
  * // Create JSON objects
  * zpt::json obj = { "name", "John", "age", 30 };
- * zpt::json arr = { zpt::array, 1, 2, 3 };
+ * zpt::json arr = { json_array, 1, 2, 3 };
  *
  * // Access values
  * std::string name = obj["name"];
