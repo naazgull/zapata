@@ -1604,7 +1604,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("::default_database") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
@@ -1665,7 +1666,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_sqlite(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("_config") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
@@ -1732,7 +1734,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_pgsql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("_config") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
