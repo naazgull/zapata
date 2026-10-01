@@ -1112,7 +1112,6 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
         for (size_t _idx = 0; _idx != _amount; ++_idx) {
             if (sqlite3_step(_prepared.get()) != SQLITE_ROW) { break; }
             auto _row = zpt::storage::sqlite::from_db_doc(_prepared.get());
-            if (_amount == 1) { return _row; }
             _return << _row;
         }
     }

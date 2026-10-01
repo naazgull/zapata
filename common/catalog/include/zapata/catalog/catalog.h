@@ -268,7 +268,6 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
         _t_pattern.assign(_oss.str());
     }
     auto _parts = std::count(_t_pattern.begin(), _t_pattern.end(), '/');
-
     auto _query = std::format("('{}' like pattern) and "
                               "((length(pattern) - length(replace(pattern, '/', ''))) = {}) and "
                               "(hash <> 0)",
