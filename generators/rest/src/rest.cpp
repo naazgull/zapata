@@ -923,7 +923,7 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
         else {
             if (_def("resource")->string() == "store") {
                 _method_try_body->add<zpt::ast::cpp_instruction>(
-                  "_collection //\n->replace(_params(\"_id\")->string(), _received)->execute()");
+                  "_collection //\n->replace(_received(\"_id\")->string(), _received)->execute()");
             }
             else {
                 _method_try_body->add<zpt::ast::cpp_instruction>(
