@@ -210,7 +210,7 @@ auto shutdown() -> engine&;
 ### `zpt::TRANSPORT_ENGINE`
 
 ```cpp
-auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine::ptr;
+auto TRANSPORT_ENGINE(zpt::json _config = json_null) -> zpt::transports::engine::ptr;
 ```
 Returns the global transport engine instance.
 

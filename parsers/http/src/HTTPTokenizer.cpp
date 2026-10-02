@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <HTTPParser.bison.h>
+#include <zapata/http/HTTPParser.bison.h>
 #include <zapata/http/HTTPTokenizer.h>
 
 auto zpt::HTTPTokenizer::parse() -> int {

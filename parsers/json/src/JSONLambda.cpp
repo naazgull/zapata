@@ -69,7 +69,7 @@ auto zpt::JSONLambda::signature() const -> std::string {
 
 auto zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) -> zpt::json {
     if (_args->type() != zpt::JSArray) {
-        return zpt::lambda::call(this->__name, zpt::json{ zpt::array, _args }, _ctx);
+        return zpt::lambda::call(this->__name, zpt::json{ json_array, _args }, _ctx);
     }
     return zpt::lambda::call(this->__name, _args, _ctx);
 }

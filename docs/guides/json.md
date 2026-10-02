@@ -55,17 +55,17 @@ zpt::json config = {
 
 ### Arrays
 
-Arrays use the `zpt::array` marker as the first element:
+Arrays use the `json_array` marker as the first element:
 
 ```cpp
 // Simple array
-zpt::json numbers = { zpt::array, 1, 2, 3, 4, 5 };
+zpt::json numbers = { json_array, 1, 2, 3, 4, 5 };
 
 // Mixed types
-zpt::json mixed = { zpt::array, "hello", 42, true, nullptr };
+zpt::json mixed = { json_array, "hello", 42, true, nullptr };
 
 // Array of objects
-zpt::json users = { zpt::array,
+zpt::json users = { json_array,
     { "name", "Alice", "id", 1 },
     { "name", "Bob", "id", 2 }
 };
@@ -101,7 +101,7 @@ std::string name = obj("name");
 int age = obj("age");
 
 // By index (for arrays)
-zpt::json arr = { zpt::array, "a", "b", "c" };
+zpt::json arr = { json_array, "a", "b", "c" };
 std::string first = arr(0);  // "a"
 ```
 
@@ -201,7 +201,6 @@ obj("x")->is_number();   // integer or floating
 obj("x")->is_bool();
 obj("x")->is_date();
 obj("x")->is_nil();
-obj("x")->is_undefined();
 ```
 
 ### Path-Based Access
@@ -245,7 +244,7 @@ for (auto&& [index, key, value] : obj) {
 // 1: b = 2
 // 2: c = 3
 
-zpt::json arr = { zpt::array, 10, 20, 30 };
+zpt::json arr = { json_array, 10, 20, 30 };
 for (auto&& [index, key, value] : arr) {
     std::cout << index << ": " << value << std::endl;
 }
@@ -284,7 +283,7 @@ obj << { "email", "john@example.com", "active", true };
 // Arrays: use << to append
 zpt::json arr = zpt::json::array();
 arr << 1 << 2 << 3;
-arr << { zpt::array, 4, 5, 6 };  // Append another array's contents
+arr << { json_array, 4, 5, 6 };  // Append another array's contents
 ```
 
 ### Removing Elements
@@ -296,7 +295,7 @@ zpt::json obj = { "a", 1, "b", 2, "c", 3 };
 obj->object()->pop("b");
 
 // Arrays: remove by index
-zpt::json arr = { zpt::array, 1, 2, 3 };
+zpt::json arr = { json_array, 1, 2, 3 };
 arr->array()->pop(1);  // Removes element at index 1
 ```
 
@@ -318,7 +317,7 @@ a + b;  // {"x":1, "y":20, "z":3, "opts":{"keep":true, "added":true}}
 On **arrays**, appends the right-hand elements:
 
 ```cpp
-{ zpt::array, 1, 2 } + { zpt::array, 3, 4 };  // [1, 2, 3, 4]
+{ json_array, 1, 2 } + { json_array, 3, 4 };  // [1, 2, 3, 4]
 ```
 
 On **scalars** it is arithmetic:
@@ -421,7 +420,7 @@ auto json = R"({"key": "value"})"_JSON;
 ### Serializing JSON
 
 ```cpp
-zpt::json obj = { "name", "John", "scores", { zpt::array, 95, 87, 92 } };
+zpt::json obj = { "name", "John", "scores", { json_array, 95, 87, 92 } };
 
 // To string
 std::string compact = obj.stringify();
@@ -449,7 +448,7 @@ std::cout << zpt::pretty(obj) << std::endl;
 JSON values use shared pointer semantics. To create an independent copy:
 
 ```cpp
-zpt::json original = { "data", { zpt::array, 1, 2, 3 } };
+zpt::json original = { "data", { json_array, 1, 2, 3 } };
 zpt::json reference = original;  // Same underlying data
 zpt::json copy = original->clone();  // Independent copy
 
@@ -463,7 +462,7 @@ Visit all elements recursively:
 
 ```cpp
 zpt::json doc = {
-    "users", { zpt::array,
+    "users", { json_array,
         { "name", "Alice" },
         { "name", "Bob" }
     }

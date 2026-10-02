@@ -55,7 +55,7 @@
 
 #include <sstream>
 #include <zapata/functional/Re2cFunctionalLexer.h>
-#include <FunctionalParser.bison.h>
+#include <zapata/functional/FunctionalParser.bison.h>
 
 namespace {
 /*!re2c

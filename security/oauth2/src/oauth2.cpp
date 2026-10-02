@@ -65,7 +65,7 @@ auto zpt::auth::oauth2::server::authorize(zpt::performative _performative,
     else if (_response_type == "password") {
         return this->authorize_with_password(_performative, _envelope[_param], _envelope, _opts);
     }
-    else if (_response_type == "implicit") { return zpt::undefined; }
+    else if (_response_type == "implicit") { return json_null; }
     else if (_response_type == "client_credentials") {
         return this->authorize_with_client_credentials(
           _performative, _envelope[_param], _envelope, _opts);
@@ -436,7 +436,7 @@ auto zpt::auth::oauth2::server::generate_token(zpt::json _data) -> zpt::json {
                       "client_id",
                       _client_id,
                       "owner_id",
-                      (_owner_id.length() != 0 ? zpt::json::string(_owner_id) : zpt::undefined) };
+                      (_owner_id.length() != 0 ? zpt::json::string(_owner_id) : json_null) };
 
     return _token + this->__token_provider->get_roles_permissions(_token);
 }

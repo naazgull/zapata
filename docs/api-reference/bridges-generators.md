@@ -46,11 +46,11 @@ class bridge : public integration {
     auto set_options(zpt::json _conf) -> bridge<C, O>&;
     auto options() const -> zpt::json;
 
-    auto add_module(std::string _external_path, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_module(std::string _external_path, zpt::json _conf = json_null) -> bridge<C, O>&;
     template<typename Callback>
-    auto add_module(Callback _callback, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_module(Callback _callback, zpt::json _conf = json_null) -> bridge<C, O>&;
     template<typename Lambda>
-    auto add_lambda(Lambda _lambda, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto add_lambda(Lambda _lambda, zpt::json _conf = json_null) -> bridge<C, O>&;
     auto init() -> bridge<C, O>&;
 
     auto locate(zpt::json _to_locate) -> object_type;
@@ -342,7 +342,7 @@ lua.add_module("/path/to/script.lua")
 // Call a Lua function
 auto result = lua.call(
     zpt::json{ "module", "mymodule", "function", "my_lua_func" },
-    zpt::json{ zpt::array, "arg1", "arg2" }
+    zpt::json{ json_array, "arg1", "arg2" }
 );
 
 // Register a C++ callback callable from Lua

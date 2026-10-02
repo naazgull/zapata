@@ -68,10 +68,10 @@ auto zpt::FunctionalTokenizerLexer::set_variable() -> void {
 auto zpt::FunctionalTokenizerLexer::add_param() -> void {
     auto _param = this->__stack.top();
     this->__stack.pop();
-    if (!this->__stack.top()["params"]->ok()) {
+    if (!this->__stack.top()("params")->ok()) {
         this->__stack.top() << "params" << zpt::json::array();
     }
-    this->__stack.top()["params"] << (_param["params"]->ok() || !_param["functor"]->ok()
+    this->__stack.top()["params"] << (_param("params")->ok() || !_param("functor")->ok()
                                         ? _param
-                                        : _param["functor"]);
+                                        : _param("functor"));
 }

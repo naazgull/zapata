@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <JSONParser.bison.h>
+#include <zapata/json/JSONParser.bison.h>
 #include <zapata/json/JSONTokenizer.h>
 
 auto zpt::JSONTokenizer::parse() -> int {

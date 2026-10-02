@@ -172,7 +172,7 @@ auto split(std::string const& _pattern) -> zpt::json;
 template<typename K, typename M>
 zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const& _self_id)
   : __self_id{ _self_id } {
-    this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(zpt::undefined);
+    this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(json_null);
     auto _session = this->__connection->session();
     auto _database = _session->database(_catalog_name);
 
@@ -268,7 +268,6 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
         _t_pattern.assign(_oss.str());
     }
     auto _parts = std::count(_t_pattern.begin(), _t_pattern.end(), '/');
-
     auto _query = std::format("('{}' like pattern) and "
                               "((length(pattern) - length(replace(pattern, '/', ''))) = {}) and "
                               "(hash <> 0)",
@@ -277,7 +276,7 @@ auto zpt::catalog<K, M>::resolve(K const& _pattern) const -> zpt::json const {
     auto _result = this
                      ->__catalog //
                      ->find(_query)
-                     ->fields({ zpt::array, "hash" })
+                     ->fields({ json_array, "hash" })
                      ->execute()
                      ->fetch();
 
@@ -305,7 +304,7 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
     auto _result = this
                      ->__catalog //
                      ->find(_query)
-                     ->fields({ zpt::array, "_id", "provider_id", "hash", "metadata" })
+                     ->fields({ json_array, "_id", "provider_id", "hash", "metadata" })
                      ->execute()
                      ->fetch();
 
@@ -329,7 +328,7 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
         ->__catalog //
         ->find(
           { "provider_id", _provider_id.empty() ? this->__self_id : _provider_id, "public", 1 })
-        ->fields({ zpt::array, "_id", "provider_id", "metadata" })
+        ->fields({ json_array, "_id", "provider_id", "metadata" })
         ->execute()
         ->fetch();
 

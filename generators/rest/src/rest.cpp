@@ -823,7 +823,7 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
             this->generate_remove_elements(_cpp_file, _def, _path);
         }
 
-        std::string _allowed{ "GET, POST, DELETE" };
+        std::string _allowed{ "GET, PUT, DELETE" };
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           std::format("{}operator()", _class_method_prefix), "zpt::events::state");
         _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
@@ -921,9 +921,16 @@ auto zpt::gen::rest::unit::generate_add_element(zpt::ast::basic_file::ptr _cpp_f
                                               "_received + zpt::json{ \"_id\", _id }");
         }
         else {
+            if (_def("resource")->string() == "store") {
+                _method_try_body->add<zpt::ast::cpp_instruction>(
+                  "_collection //\n->replace(_received(\"_id\")->string(), _received)->execute()");
+            }
+            else {
+                _method_try_body->add<zpt::ast::cpp_instruction>(
+                  "_collection //\n->add(_received)->execute()");
+            }
             _method_try_body //
-              ->add<zpt::ast::cpp_instruction>("_collection //\n->add(_received)->execute()")
-              .add<zpt::ast::cpp_instruction>("_session->commit()")
+              ->add<zpt::ast::cpp_instruction>("_session->commit()")
               .add<zpt::ast::cpp_instruction>(
                 "this //\n->to_send()->status(201).body() = _received");
         }
@@ -1122,7 +1129,7 @@ auto zpt::gen::rest::unit::generate_retrieve_element(zpt::ast::basic_file::ptr _
       ->add<zpt::ast::cpp_instruction>("return _result(0)");
     _method_body->add(_if_block);
 
-    _method_body->add<zpt::ast::cpp_instruction>("return zpt::undefined");
+    _method_body->add<zpt::ast::cpp_instruction>("return json_null");
 
     _method->add(_method_body);
     _cpp_file->add(_method);
@@ -1417,6 +1424,8 @@ auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr 
                                 this->__schema("info")("database")->string()));
             }
         }
+        _block-> //
+          add<zpt::ast::cpp_instruction>("_session->begin()");
     }
 }
 
@@ -1473,6 +1482,10 @@ auto zpt::gen::rest::unit::add_schema_validation(zpt::ast::basic_code_block::ptr
             }
         }
     }
+    if (_def("resource")->string() == "store") {
+        _block->add<zpt::ast::cpp_instruction>(
+          "expect(_received(\"_id\")->ok(), \"Required request member field '_id'\")");
+    }
 }
 
 auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
@@ -1493,14 +1506,14 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     std::string _value = _prop("default");
                     _value = _value.substr(1);
                     _value = _value.substr(0, _value.length() - 1);
-                    zpt::replace(_value, "{", "zpt::json{");
+                    zpt::replace(_value, "{", "{");
                     zpt::replace(_value, "[]", "zpt::json::array()");
-                    zpt::replace(_value, "[", "zpt::json{zpt::array,");
+                    zpt::replace(_value, "[", "{json_array,");
                     zpt::replace(_value, "]", "}");
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::object()"; }
-                    else { _value = std::format("zpt::json{{ {} }}", _value); }
+                    else { _value = std::format("{{ {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}", _name, _value));
                 }
@@ -1508,14 +1521,14 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     std::string _value = _prop("default");
                     _value = _value.substr(1);
                     _value = _value.substr(0, _value.length() - 1);
-                    zpt::replace(_value, "{", "zpt::json{");
+                    zpt::replace(_value, "{", "{");
                     zpt::replace(_value, "[]", "zpt::json::array()");
-                    zpt::replace(_value, "[", "zpt::json{zpt::array,");
+                    zpt::replace(_value, "[", "{json_array,");
                     zpt::replace(_value, "]", "}");
                     zpt::replace(_value, ":", ",");
                     zpt::trim(_value);
                     if (_value.length() == 0) { _value = "zpt::json::array()"; }
-                    else { _value = std::format("zpt::json{{ zpt::array, {} }}", _value); }
+                    else { _value = std::format("{{ json_array, {} }}", _value); }
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}", _name, _value));
                 }
@@ -1523,7 +1536,7 @@ auto zpt::gen::rest::unit::add_generated(zpt::ast::basic_code_block::ptr _block,
                     _if_block->add<zpt::ast::cpp_instruction>(
                       std::format("_received[\"{}\"] = {}",
                                   _name,
-                                  _prop("default")->ok() ? _prop("default") : "zpt::undefined"));
+                                  _prop("default")->ok() ? _prop("default") : "json_null"));
                 }
                 _block->add(_if_block);
             }
@@ -1555,7 +1568,7 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
             for (auto const& [___, _name, _prop] : _type("properties")) { _visible.insert(_name); }
             for (auto const& [___, __, _prop] : _type("hidden")) { _visible.erase(_prop); }
         }
-        _oss << "zpt::json{ zpt::array";
+        _oss << "zpt::json{ json_array";
         for (auto const& _prop : _visible) { _oss << ", \"" << _prop << "\""; }
         _oss << " })" << std::flush;
     }
@@ -1565,7 +1578,7 @@ auto zpt::gen::rest::unit::get_visible_fields(zpt::json _def) -> std::string {
 auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
     std::ostringstream _oss;
     if (_def("*")("requestBody")("allOf")->ok()) {
-        _oss << "_fields -= zpt::json{ zpt::array";
+        _oss << "_fields -= { json_array";
         for (auto const& [_, __, _type] : _def("*")("requestBody")("allOf")) {
             for (auto const& [___, ____, _prop] : _type("hidden")) { _oss << ", " << _prop; }
         }
@@ -1575,6 +1588,7 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
 }
 
 auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
+    if (_def("resource")->string() == "store") { return true; }
     if (_def("*")("requestBody")("allOf")->ok()) {
         for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
             if (_object("properties")("_id")->ok()) { return true; }
@@ -1602,7 +1616,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_mysql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("_config") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
@@ -1663,7 +1678,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_sqlite(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("_config") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
@@ -1730,7 +1746,8 @@ auto zpt::gen::rest::unit::generate_sql_schemata_pgsql(zpt::json _def)
     this->__module.add(_file);
 
     std::ostringstream _oss;
-    if (this->__schema("info")("database")->string().find("_config") != 0) {
+    if (this->__schema("info")("database")->string().find("::default_database") ==
+        std::string::npos) {
         _oss << "create schema if not exists " << this->__schema("info")("database")->string()
              << ";" << std::endl
              << "use " << this->__schema("info")("database")->string() << ";" << std::endl;

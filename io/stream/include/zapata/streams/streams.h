@@ -34,6 +34,7 @@
 #pragma once
 
 #include <any>
+#include <array>
 #include <atomic>
 #include <iostream>
 #include <memory>
@@ -50,11 +51,13 @@ namespace zpt {
 /**
  * @brief Stream processing states for polling.
  */
-enum class stream_state {
-    IDLE,        ///< Stream is idle, not being processed
-    WAITING,     ///< Stream is waiting for I/O
-    PROCESSING,  ///< Stream is being processed by a delegate
-    ERRORING_OUT ///< Stream encountered an error
+enum stream_state {
+    CONNECTED = 0,
+    IDLE = 1,         ///< Stream is idle, not being processed
+    WAITING = 2,      ///< Stream is waiting for I/O
+    PROCESSING = 3,   ///< Stream is being processed by a delegate
+    ERRORING_OUT = 4, ///< Stream encountered an error
+    DISCONNECTED = 5
 };
 
 /** @brief Type alias for epoll event structure. */
@@ -314,6 +317,7 @@ class polling : public std::enable_shared_from_this<polling> {
     using polled_streams_by_uri_type = std::unordered_map<std::string, zpt::stream>;
     /** @brief Delegate function signature: returns true to keep stream, false to remove. */
     using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
+    using state_fn_type = std::function<void(zpt::uuid const&, std::string const&)>;
     /** @brief Maximum events processed per poll() call. */
     constexpr static int MAX_EVENT_PER_POLL{ 100 };
 
@@ -345,6 +349,10 @@ class polling : public std::enable_shared_from_this<polling> {
      * @return Reference to this polling instance.
      */
     auto unregister_delegate(delegate_fn_type _callback) -> zpt::polling&;
+    auto register_stream_state_listener(zpt::stream_state _type, state_fn_type _callback)
+      -> zpt::polling&;
+    auto unregister_stream_state_listener(zpt::stream_state _type, state_fn_type _callback)
+      -> zpt::polling&;
     /**
      * @brief Adds a stream to be monitored for I/O.
      * @param _stream Stream to monitor.
@@ -412,6 +420,8 @@ class polling : public std::enable_shared_from_this<polling> {
     polled_streams_by_uri_type __polled_streams_by_uri;
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
+    /** @brief List of stream state listener callbacks. */
+    std::array<std::vector<state_fn_type>, zpt::stream_state::DISCONNECTED + 1> __state_callbacks;
     /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
@@ -440,6 +450,7 @@ class polling : public std::enable_shared_from_this<polling> {
      * @param _already_muted Whether or not the stream is already muted.
      * @return Reference to this polling instance. */
     auto delegate(zpt::stream _stream, bool _already_muted = false) -> zpt::polling&;
+    auto callback(zpt::stream_state _type, zpt::stream const& _stream) -> zpt::polling&;
 };
 
 /**
@@ -483,8 +494,10 @@ zpt::basic_stream::basic_stream(std::in_place_type_t<T>,
     }
     if constexpr (std::is_convertible<T, std::string>::value) {
         auto _socket_uri = static_cast<std::string>(static_cast<T&>(*this->__underlying));
-        this->__uri =
-          std::format("{}{}", this->__transport, _socket_uri.substr(_socket_uri.find("://")));
+        this->__uri = std::format("{}{}{}",
+                                  this->__transport,
+                                  _socket_uri.find("+ssl") != std::string::npos ? "+ssl" : "",
+                                  _socket_uri.substr(_socket_uri.find("://")));
     }
     zlog("Opening connection to " << this->__uri, zpt::trace);
     expect(!this->__underlying->fail() && !this->__underlying->bad(),

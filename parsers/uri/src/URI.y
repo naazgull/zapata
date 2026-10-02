@@ -241,7 +241,7 @@ paramvalue :
     {
         auto __name = static_cast<std::string>((**ctx)["__aux"]);
         if ((*ctx)->type() == zpt::JSObject) {
-            (**ctx)["params"] << __name << zpt::undefined;
+            (**ctx)["params"] << __name << json_null;
         }
         else {
             (**ctx) << ctx->matched();

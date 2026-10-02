@@ -15,6 +15,8 @@ namespace {
  * polling shutdown sequence, which causes the runtime to cleanly unwind.
  */
 auto deallocate(int _signal) -> void;
+auto on_stream_connect(zpt::uuid const& _stream_id, std::string const& _address) -> void;
+auto on_stream_disconnect(zpt::uuid const& _stream_id, std::string const& _address) -> void;
 } // namespace
 
 auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default_config)
@@ -25,14 +27,14 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
     zpt::json _parameter_setup{
         "--config",
         { "options",
-          { zpt::array, "optional", "multiple" },
+          { json_array, "optional", "multiple" },
           "type",
           "string",
           "description",
           "configuration file" },
         "--conf-dir",
         { "options",
-          { zpt::array, "optional", "multiple" },
+          { json_array, "optional", "multiple" },
           "type",
           "string",
           "description",
@@ -40,21 +42,21 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
           "files" },
         "--help",
         { "options",
-          { zpt::array, "optional", "single" },
+          { json_array, "optional", "single" },
           "type",
           "bool",
           "description",
           "Print this message" },
         "--print-config",
         { "options",
-          { zpt::array, "optional", "single" },
+          { json_array, "optional", "single" },
           "type",
           "bool",
           "description",
           "Prints the processed configuration" },
         "--terminate",
         { "options",
-          { zpt::array, "optional", "single" },
+          { json_array, "optional", "single" },
           "type",
           "int",
           "description",
@@ -67,12 +69,12 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
 
     if (_parameters("--help")->ok()) {
         std::cout << zpt::parameters::usage(_parameter_setup) << std::flush;
-        return zpt::undefined;
+        return json_null;
     }
 
     if (_parameters("--terminate")->ok()) {
         kill(static_cast<int>(_parameters("--terminate")), SIGUSR1);
-        return zpt::undefined;
+        return json_null;
     }
 
     zpt::parameters::verify(_parameters, _parameter_setup);
@@ -87,7 +89,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
 
     if (_parameters("--print-config")->ok()) {
         std::cout << _config << std::endl << std::flush;
-        return zpt::undefined;
+        return json_null;
     }
 
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
@@ -120,6 +122,9 @@ auto zpt::runtime::run() -> void {
 
     zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
+    zpt::STREAM_POLLING() //
+      ->register_stream_state_listener(zpt::stream_state::CONNECTED, ::on_stream_connect)
+      .register_stream_state_listener(zpt::stream_state::DISCONNECTED, ::on_stream_disconnect);
     zpt::TRANSPORT_LAYER(_config);
     zlog("Initialized transport layer", zpt::info);
     zpt::BOOT(_config) //
@@ -140,6 +145,9 @@ auto zpt::runtime::run() -> void {
       ->stop_consumers();
     zpt::events::dispatcher::join_threads();
     zlog("Stopped all dispatcher worker threads", zpt::info);
+    zpt::STREAM_POLLING() //
+      ->unregister_stream_state_listener(zpt::stream_state::CONNECTED, ::on_stream_connect)
+      .unregister_stream_state_listener(zpt::stream_state::DISCONNECTED, ::on_stream_disconnect);
     zpt::STREAM_POLLING() //
       ->close();
     zlog("Unloaded stream polling service", zpt::info);
@@ -163,4 +171,18 @@ auto zpt::runtime::is_in_shutdown() -> bool { return zpt::STREAM_POLLING()->is_i
 
 namespace {
 auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
+
+auto on_stream_connect(zpt::uuid const& _stream_id, std::string const& _address) -> void {
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(
+        zpt::system_event_type::STREAM_OPENED,
+        zpt::json{ "state", "opened", "_id", _stream_id.to_string(), "address", _address });
+}
+
+auto on_stream_disconnect(zpt::uuid const& _stream_id, std::string const& _address) -> void {
+    zpt::DISPATCHER() //
+      ->trigger<zpt::system_event>(
+        zpt::system_event_type::STREAM_CLOSED,
+        zpt::json{ "state", "closed", "_id", _stream_id.to_string(), "address", _address });
+}
 } // namespace

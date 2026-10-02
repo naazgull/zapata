@@ -101,5 +101,5 @@ Creates or returns a shared MQTT stream using global configuration.
 @param _config Optional config override; uses global config if undefined.
 @return A shared pointer to the MQTT stream singleton.
 */
-auto MQTT_STREAM(zpt::json _config = zpt::undefined) -> zpt::mqtt_stream::ptr;
+auto MQTT_STREAM(zpt::json _config = json_null) -> zpt::mqtt_stream::ptr;
 } // namespace zpt

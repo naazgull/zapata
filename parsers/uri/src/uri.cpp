@@ -140,7 +140,7 @@ auto zpt::uri::path::to_string(zpt::json const& _uri) -> std::string {
              << (_uri("path")->ok() ? zpt::join(_uri("path"), "/") : "") << std::flush;
     }
     else {
-        _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri, "/")
+        _oss << (_uri(0) == "." || _uri(0) == ".." ? "" : "/") << zpt::join(_uri, "/")
              << std::flush;
     }
     return _oss.str();

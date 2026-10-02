@@ -45,7 +45,7 @@ auto to_c(lua_State* _state) -> int {
     auto& _instance = _bridge.thread_instance();
     zpt::json _json = _instance.object_to_json(_state);
     zlog(_json, zpt::debug);
-    _instance.to_object({ "a", _json, "b", { zpt::array, 1, 2, 3, 4, 10 } }, _state);
+    _instance.to_object({ "a", _json, "b", { json_array, 1, 2, 3, 4, 10 } }, _state);
     return 1;
 }
 
@@ -73,16 +73,16 @@ auto main(int, char**) -> int {
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin2", "function", "fact" },
-                                            zpt::json{ zpt::array, 10 }),
+                                            zpt::json{ json_array, 10 }),
              zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
-                                            zpt::undefined),
+                                            json_null),
              zpt::info);
         zlog(
           _bridge.thread_instance().call(
             zpt::json{ "module", "builtin", "function", "to_c" },
-            zpt::json{ zpt::array,
-                       zpt::json{ "c", 1, "d", zpt::json{ "e", zpt::json{ zpt::array, 1, 2, 3 } } },
+            zpt::json{ json_array,
+                       zpt::json{ "c", 1, "d", zpt::json{ "e", zpt::json{ json_array, 1, 2, 3 } } },
                        1,
                        "testing",
                        false }),
@@ -92,13 +92,13 @@ auto main(int, char**) -> int {
     std::thread _thread2{ [&]() -> void {
         std::cout << "Thread2:" << std::endl << std::flush;
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin2", "function", "fact" },
-                                            zpt::json{ zpt::array, 20 }),
+                                            zpt::json{ json_array, 20 }),
              zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
-                                            zpt::undefined),
+                                            json_null),
              zpt::info);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
-                                            zpt::json{ zpt::array, "something" }),
+                                            zpt::json{ json_array, "something" }),
              zpt::info);
     } };
 

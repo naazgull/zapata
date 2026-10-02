@@ -50,7 +50,10 @@ class result;
 
 /** @brief Deleter for sqlite3 handles used with shared_ptr. */
 struct close_connection {
-    void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
+    void operator()(sqlite3* _connection) const {
+        zlog("Closing SQLite connection", zpt::trace);
+        sqlite3_close_v2(_connection);
+    }
 };
 
 /** @brief Deleter for sqlite3_stmt handles used with shared_ptr. */
@@ -146,7 +149,7 @@ class session : public zpt::storage::session::type {
     explicit session(zpt::storage::sqlite::connection const& _connection);
     session(zpt::storage::sqlite::session const& _rhs) = delete;
     session(zpt::storage::sqlite::session&& _rhs) = delete;
-    virtual ~session() override = default;
+    virtual ~session() override;
     /** @brief Returns true if at least one underlying SQLite handle is open.
      * @return True if open, false otherwise
      */
@@ -174,13 +177,14 @@ class session : public zpt::storage::session::type {
     virtual auto database(std::string const& _db) const -> zpt::storage::database override;
     /** @brief Registers an additional SQLite database handle with this session.
      * Allows managing multiple SQLite files within a single transaction session.
+     * @param _name The name of the database being added.
      * @param _database Shared pointer to sqlite3 handle to register
      * @return None
      */
-    auto add_database_connection(sqlite3_ptr _database) -> void;
+    auto add_database_connection(std::string const& _name, sqlite3_ptr _database) -> void;
 
   private:
-    std::vector<sqlite3_ptr> __underlying;
+    std::unordered_map<std::string, sqlite3_ptr> __underlying;
     zpt::json __options;
 };
 /** @brief SQLite database implementation (represents a single .db file). */
@@ -193,6 +197,7 @@ class database : public zpt::storage::database::type {
      * @param _db Name of the SQLite database file (e.g., "main" or a path)
      */
     explicit database(zpt::storage::sqlite::session const& _session, std::string const& _db);
+    database(sqlite3_ptr _connection, std::string const& _db);
     database(zpt::storage::sqlite::database const& _rhs) = delete;
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
@@ -270,7 +275,7 @@ class collection : public zpt::storage::collection::type {
      * @param _search Optional search criteria to filter the count
      * @return Number of matching rows
      */
-    virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    virtual auto count(zpt::json _search = json_null) -> size_t override;
     /** @brief Retrieves the functions to call to quote SQL expressions.
      * @return The callbacks to invoke to quote an SQL expressions. */
     virtual auto get_quote_handler() const -> zpt::storage::quote_handler override;
@@ -781,6 +786,7 @@ class action_find : public zpt::storage::sqlite::action {
 /** @brief SQLite query result set. */
 class result : public zpt::storage::result::type {
   public:
+    result() = default;
     /** @brief Constructs a result from a pre-materialized JSON value (e.g., error or empty set).
      * @param _result Pre-materialized result data
      */

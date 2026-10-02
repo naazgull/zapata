@@ -130,6 +130,7 @@ class connection : public zpt::storage::connection::type {
   private:
     zpt::json __options;
     mysql_ptr __mysql{ nullptr };
+    static thread_local inline std::map<std::string, mysql_ptr> __thread_connections;
 };
 
 /**
@@ -246,9 +247,9 @@ class collection : public zpt::storage::collection::type {
      * @return A SELECT action builder. */
     virtual auto find(zpt::json _search) const -> zpt::storage::action override;
     /** @brief Returns the total number of rows in the table.
-     * @param _search Optional search criteria (zpt::undefined for all rows).
+     * @param _search Optional search criteria (json_null for all rows).
      * @return The total row count. */
-    virtual auto count(zpt::json _search = zpt::undefined) -> size_t override;
+    virtual auto count(zpt::json _search = json_null) -> size_t override;
     /** @brief Retrieves the functions to call to quote SQL expressions.
      * @return The callbacks to invoke to quote an SQL expressions. */
     virtual auto get_quote_handler() const -> zpt::storage::quote_handler override;

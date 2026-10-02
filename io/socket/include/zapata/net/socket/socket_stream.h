@@ -1061,8 +1061,9 @@ zpt::basic_socketstream<Char>::operator std::string() {
             break;
         }
         case UNIXPROTO_RAW: {
-            _oss << "unix:" << this->host()
-                 << (this->__is_accepted ? std::format("@{}", this->__buf.get_socket()) : "");
+            _oss << "unix:"
+                 << (this->__is_accepted ? std::format("{}@", this->__buf.get_socket()) : "")
+                 << this->host();
             break;
         }
         default: {

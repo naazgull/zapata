@@ -101,5 +101,5 @@ Creates or returns a shared AMQP stream using global configuration.
 @param _config Optional config override; uses global config if undefined.
 @return A shared pointer to the AMQP stream singleton.
 */
-auto AMQP_STREAM(zpt::json _config = zpt::undefined) -> zpt::amqp_stream::ptr;
+auto AMQP_STREAM(zpt::json _config = json_null) -> zpt::amqp_stream::ptr;
 } // namespace zpt

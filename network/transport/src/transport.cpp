@@ -189,7 +189,7 @@ auto zpt::network::layer::translate(std::istream& _io, std::string _mime) const 
     auto _found = this->__content_providers.find(_mime);
     if (_found != this->__content_providers.end()) { return std::get<0>(_found->second)(_io); }
     else { return zpt::network::layer::translate_from_default(_io); }
-    return zpt::undefined;
+    return json_null;
 }
 
 auto zpt::network::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const

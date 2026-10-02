@@ -34,7 +34,7 @@ class list_handler : public zpt::events::process {
         // Send response via this->to_send()
         this->to_send()->status(200)->body() = zpt::json{
             "status", 200,
-            "body", { zpt::array,
+            "body", { json_array,
                 { "id", 1, "name", "Alice" },
                 { "id", 2, "name", "Bob" }
             }
@@ -156,7 +156,7 @@ this->to_send()->status(404)->body() = zpt::json{
 // 400 Bad Request
 this->to_send()->status(400)->body() = zpt::json{
     "error", "Validation failed",
-    "details", { zpt::array,
+    "details", { json_array,
         "name is required",
         "email is invalid"
     }

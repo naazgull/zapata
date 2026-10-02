@@ -44,7 +44,7 @@
 
 #include <sstream>
 #include <zapata/json/JSONTokenizerLexer.h>
-#include <JSONParser.bison.h>
+#include <zapata/json/JSONParser.bison.h>
 
 namespace {
 /*!re2c

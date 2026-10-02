@@ -56,7 +56,7 @@ class resolver_t {
      * @return Reference to this resolver.
      */
     template<zpt::events::Operation T>
-    auto add(zpt::json const& _id, zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+    auto add(zpt::json const& _id, zpt::json const& _metadata = json_null) -> resolver_t&;
 
     /**
      * @brief Registers an Operation handler for a specific performative.
@@ -69,7 +69,7 @@ class resolver_t {
     template<zpt::events::Operation T>
     auto add(zpt::performative _performative,
              zpt::json const& _id,
-             zpt::json const& _metadata = zpt::undefined) -> resolver_t&;
+             zpt::json const& _metadata = json_null) -> resolver_t&;
     /** @brief Registers a handler from a service description.
      * @param _service_description Service description JSON object.
      * @return Reference to this resolver. */

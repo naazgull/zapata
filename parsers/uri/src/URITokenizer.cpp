@@ -20,7 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <URIParser.bison.h>
+#include <zapata/uri/URIParser.bison.h>
 #include <zapata/uri/URITokenizer.h>
 
 auto zpt::URITokenizer::parse() -> int {

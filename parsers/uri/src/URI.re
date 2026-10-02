@@ -63,7 +63,7 @@
 #include <string>
 #include <sstream>
 #include <zapata/uri/Re2cURILexer.h>
-#include <URIParser.bison.h>
+#include <zapata/uri/URIParser.bison.h>
 
 namespace {
 /*!re2c

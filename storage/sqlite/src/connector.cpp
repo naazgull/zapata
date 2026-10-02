@@ -120,7 +120,7 @@ auto zpt::storage::sqlite::from_db_doc(sqlite3_stmt* _stmt) -> zpt::json {
                 break;
             }
             case SQLITE_NULL: {
-                _to_return << zpt::undefined;
+                _to_return << json_null;
                 break;
             }
             case SQLITE3_TEXT: {
@@ -175,7 +175,6 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
             sqlite3_bind_text(_stmt, _index, _bytes, _size, zpt::storage::sqlite::free_byte_array);
             break;
         }
-        case zpt::JSUndefined:
         case zpt::JSNil: {
             sqlite3_bind_null(_stmt, _index);
             break;
@@ -225,13 +224,15 @@ auto zpt::storage::sqlite::connection::options() const -> zpt::json { return thi
 zpt::storage::sqlite::session::session(zpt::storage::sqlite::connection const& _connection)
   : __options{ _connection.__options } {}
 
+zpt::storage::sqlite::session::~session() { this->rollback(); }
+
 auto zpt::storage::sqlite::session::is_open() const -> bool {
     return this->__underlying.size() != 0;
 }
 
 auto zpt::storage::sqlite::session::begin() -> zpt::storage::session::type* {
     std::string _to_execute{ "begin" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
@@ -247,7 +248,7 @@ auto zpt::storage::sqlite::session::begin() -> zpt::storage::session::type* {
 
 auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
     std::string _to_execute{ "commit" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
@@ -263,61 +264,60 @@ auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
 
 auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
     std::string _to_execute{ "rollback" };
-    for (auto _db : this->__underlying) {
+    for (auto& [_, _db] : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         zlog(_to_execute, zpt::trace);
         sqlite_expect(
           sqlite3_prepare_v2(_db.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
           "unable to prepare statement for rollback: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_step(_stmt),
-                      "unable to execute rollback statement: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_finalize(_stmt),
-                      "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
+        sqlite3_step(_stmt);
+        sqlite3_finalize(_stmt);
     }
     return this;
 }
 
 auto zpt::storage::sqlite::session::sql(std::string const&) -> zpt::storage::result {
     expect(false, "Session `sql` method not implemented for SQLite, use database's");
-    return zpt::make_result<zpt::storage::sqlite::result>(zpt::undefined);
+    return zpt::make_result<zpt::storage::sqlite::result>();
 }
 
 auto zpt::storage::sqlite::session::database(std::string const& _db) const
   -> zpt::storage::database {
-    return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
+    auto _found = this->__underlying.find(_db);
+    if (_found == this->__underlying.end()) {
+        return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
+    }
+    else { return zpt::make_database<zpt::storage::sqlite::database>(_found->second, _db); }
 }
 
-auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _database) -> void {
-    this->__underlying.push_back(_database);
-    std::string _to_execute{ "begin" };
-    sqlite3_stmt* _stmt{ nullptr };
-    zlog(_to_execute, zpt::trace);
-    sqlite_expect(sqlite3_prepare_v2(
-                    _database.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
-                  "unable to prepare statement for commit: " << sqlite3_errmsg(_database.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute commit statement: " << sqlite3_errmsg(_database.get()));
-    sqlite_expect(sqlite3_finalize(_stmt),
-                  "unable to cleanup statement: " << sqlite3_errmsg(_database.get()));
+auto zpt::storage::sqlite::session::add_database_connection(std::string const& _name,
+                                                            sqlite3_ptr _database) -> void {
+    this->__underlying.insert(std::make_pair(_name, _database));
 }
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session const& _session,
                                          std::string const& _db)
-  : __path{ std::string{ "file:" } +
-            (_session.__options("path")->ok()
-               ? _session.__options("path")->string() + std::string{ "/" } + _db
-               : _db + std::string{ "?mode=memory&cache=shared" }) }
+  : __path{ std::string{ "file:" } + (_session.__options("path")->ok()
+                                        ? _session.__options("path")->string() +
+                                            std::string{ "/" } + _db + std::string{ "?mode=rwc" }
+                                        : _db + std::string{ "?mode=memory" }) }
   , __name{ _db } {
+    zlog("Opening " << this->__path, zpt::trace);
     sqlite3* _underlying{ nullptr };
     sqlite_expect(sqlite3_open_v2(this->__path.data(),
                                   &_underlying,
-                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
+                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI |
+                                    SQLITE_OPEN_FULLMUTEX,
                                   nullptr),
                   "couldn't open database at " << this->__path);
     this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
     const_cast<zpt::storage::sqlite::session&>(_session).add_database_connection(
-      this->__underlying);
+      _db, this->__underlying);
 }
+
+zpt::storage::sqlite::database::database(sqlite3_ptr _connection, std::string const& _db)
+  : __name{ _db }
+  , __underlying{ _connection } {}
 
 auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt::storage::result {
     std::vector<sqlite3_stmt_ptr> _prepared;
@@ -327,9 +327,16 @@ auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt:
       sqlite3_prepare_v2(
         this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
       "unable to prepare statement: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
     _prepared.push_back(sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
+
+    auto _idx = _to_execute.find(" ");
+    auto _statement_type = (_idx != std::string::npos ? _to_execute.substr(0, _idx) : _to_execute);
+    std::transform(
+      _statement_type.begin(), _statement_type.end(), _statement_type.begin(), ::tolower);
+    if (_statement_type != "select") {
+        sqlite_expect(sqlite3_step(_stmt),
+                      "unable to execute statement: " << sqlite3_errmsg(this->__underlying.get()));
+    }
 
     zpt::json _result{ "state", zpt::json::object(), "generated", zpt::json::array() };
     return zpt::make_result<zpt::storage::sqlite::result>(_result, _prepared);
@@ -910,8 +917,6 @@ auto zpt::storage::sqlite::action_replace::execute() -> zpt::storage::result {
 }
 
 auto zpt::storage::sqlite::action_replace::add_replace() -> void {
-    if (this->__set->size() == 0) { return; }
-
     std::ostringstream _names;
     std::ostringstream _values;
     _names << "replace into " << zpt::storage::sqlite::quote_name(this->__collection_name) << " ("
@@ -1105,11 +1110,10 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
         for (size_t _idx = 0; _idx != _amount; ++_idx) {
             if (sqlite3_step(_prepared.get()) != SQLITE_ROW) { break; }
             auto _row = zpt::storage::sqlite::from_db_doc(_prepared.get());
-            if (_amount == 1) { return _row; }
             _return << _row;
         }
     }
-    return (_return->size() != 0 ? _return : zpt::undefined);
+    return (_return->size() != 0 ? _return : json_null);
 }
 
 auto zpt::storage::sqlite::result::generated_id() -> zpt::json {

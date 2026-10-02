@@ -581,7 +581,7 @@ class process_call_reply : public zpt::events::process {
  * @param _config Optional configuration (used only on first call).
  * @return Reference to the global transport engine.
  */
-auto TRANSPORT_ENGINE(zpt::json _config = zpt::undefined) -> zpt::transports::engine::ptr;
+auto TRANSPORT_ENGINE(zpt::json _config = json_null) -> zpt::transports::engine::ptr;
 
 template<ProcessOperation T = zpt::events::process_call_reply>
 auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;

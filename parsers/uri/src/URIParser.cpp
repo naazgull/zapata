@@ -34,4 +34,4 @@ auto zpt::URIParser::switchStreams(std::istream& _in, std::ostream& _out) -> voi
     this->d_scanner.switchStreams(_in, _out);
 }
 
-auto zpt::URIParser::clear() -> void { *this->d_scanner = zpt::undefined; }
+auto zpt::URIParser::clear() -> void { *this->d_scanner = json_null; }

@@ -95,7 +95,7 @@ auto zpt::JSONArrT::get_path(std::string const& _path, std::string const& _separ
             }
             return _return;
         }
-        return zpt::undefined;
+        return json_null;
     }
 
     if (_remainder.length() == 0) { return _current; }
@@ -247,7 +247,7 @@ auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json& {
 auto zpt::JSONArrT::operator[](int _idx) const -> zpt::json const { return (*this)[(size_t)_idx]; }
 
 auto zpt::JSONArrT::operator[](size_t _idx) const -> zpt::json const {
-    if (_idx >= this->__underlying.size()) { return zpt::undefined; }
+    if (_idx >= this->__underlying.size()) { return json_null; }
     return this->__underlying.at(_idx);
 }
 

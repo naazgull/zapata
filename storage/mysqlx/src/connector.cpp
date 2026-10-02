@@ -52,31 +52,41 @@ zpt::storage::mysqlx::connection::connection(zpt::json _options)
 
 auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
-
-    this->__mysql.reset(mysql_init(nullptr), zpt::storage::mysqlx::mysql_deinit{});
-    thread_local std::unique_ptr<zpt::storage::mysqlx::mysql_thread_deinit> _thread_end =
-      std::make_unique<zpt::storage::mysqlx::mysql_thread_deinit>();
-
     auto _host = this->__options("host")->ok() ? this->__options("host")->string() : "127.0.0.1";
     auto _user = this->__options("user")->string();
     auto _pass = this->__options("password")->ok() ? this->__options("password")->string() : "";
     auto _port = this->__options("port")->ok() ? this->__options("port")->integer() : 3306;
     auto _ssl_mode = this->__options("ssl_mode")->ok() && this->__options("ssl_mode")->boolean();
+    auto _uri = std::format("mysqlx://{}@{}:{}?ssl_mode={}", _user, _host, _port, _ssl_mode);
 
-    expect(nullptr != mysql_real_connect(this->__mysql.get(), //
-                                         _host.data(),
-                                         _user.data(),
-                                         _pass.empty() ? nullptr : _pass.data(),
-                                         nullptr,
-                                         _port,
-                                         nullptr,
-                                         _ssl_mode ? CLIENT_SSL : 0),
-           std::format("Unable to connect to 'mysqlx://{}@{}:{}?ssl_mode={}: {}",
-                       _user,
-                       _host,
-                       _port,
-                       _ssl_mode,
-                       mysql_error(this->__mysql.get())));
+    bool _reuse = !this->__options("scope")->is_string() || this->__options("scope") == "thread";
+    if (_reuse) {
+        auto _found = this->__thread_connections.find(_uri);
+        if (_found != this->__thread_connections.end()) {
+            zlog("Reusing " << _uri, zpt::trace);
+            this->__mysql = _found->second;
+        }
+    }
+
+    if (this->__mysql == nullptr) {
+        zlog("Opening " << _uri, zpt::trace);
+        this->__mysql.reset(mysql_init(nullptr), zpt::storage::mysqlx::mysql_deinit{});
+        thread_local std::unique_ptr<zpt::storage::mysqlx::mysql_thread_deinit> _thread_end =
+          std::make_unique<zpt::storage::mysqlx::mysql_thread_deinit>();
+
+        expect(
+          nullptr != mysql_real_connect(this->__mysql.get(), //
+                                        _host.data(),
+                                        _user.data(),
+                                        _pass.empty() ? nullptr : _pass.data(),
+                                        nullptr,
+                                        _port,
+                                        nullptr,
+                                        _ssl_mode ? CLIENT_SSL : 0),
+          std::format("Unable to connect to '{}': {}", _uri, mysql_error(this->__mysql.get())));
+
+        if (_reuse) { this->__thread_connections.insert(std::make_pair(_uri, this->__mysql)); }
+    }
     return this;
 }
 
@@ -95,33 +105,35 @@ auto zpt::storage::mysqlx::connection::options() const -> zpt::json { return thi
 auto zpt::storage::mysqlx::connection::mysql() const -> mysql_ptr { return this->__mysql; }
 
 zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection const& _connection)
-  : __mysql{ _connection.mysql() } {
-    this->begin();
-}
+  : __mysql{ _connection.mysql() } {}
 
 zpt::storage::mysqlx::session::~session() { this->rollback(); }
 
 auto zpt::storage::mysqlx::session::is_open() const -> bool { return this->__mysql != nullptr; }
 
 auto zpt::storage::mysqlx::session::begin() -> zpt::storage::session::type* {
+    zlog("START TRANSACTION", zpt::trace);
     expect(0 == mysql_query(this->__mysql.get(), "START TRANSACTION"),
            std::format("Transaction failed to start: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
 auto zpt::storage::mysqlx::session::commit() -> zpt::storage::session::type* {
+    zlog("COMMIT", zpt::trace);
     expect(0 == mysql_query(this->__mysql.get(), "COMMIT"),
            std::format("Commit failed: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
 auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
+    zlog("ROLLBACK", zpt::trace);
     expect(0 == mysql_query(this->__mysql.get(), "ROLLBACK"),
            std::format("Rollback failed: {}", mysql_error(this->__mysql.get())));
     return this;
 }
 
 auto zpt::storage::mysqlx::session::sql(std::string const& _statement) -> zpt::storage::result {
+    zlog(_statement, zpt::trace);
     mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
                              zpt::storage::mysqlx::mysql_stmt_end{} };
     expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
@@ -153,6 +165,7 @@ zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session const& _s
 }
 
 auto zpt::storage::mysqlx::database::sql(std::string const& _statement) -> zpt::storage::result {
+    zlog(_statement, zpt::trace);
     mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
                              zpt::storage::mysqlx::mysql_stmt_end{} };
     expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
@@ -218,6 +231,7 @@ auto zpt::storage::mysqlx::collection::count(zpt::json _search) -> size_t {
                                      ? std::format(" where {}", _search->string())
                                      : ""));
 
+    zlog(_statement, zpt::trace);
     mysql_stmt_ptr _to_exec{ mysql_stmt_init(this->__mysql.get()),
                              zpt::storage::mysqlx::mysql_stmt_end{} };
     expect(0 == mysql_stmt_prepare(_to_exec.get(), _statement.data(), _statement.length()),
@@ -398,7 +412,7 @@ auto zpt::storage::mysqlx::action_modify::set(std::string const& _attribute, zpt
 
 auto zpt::storage::mysqlx::action_modify::unset(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying << _attribute << zpt::undefined;
+    this->__underlying << _attribute << json_null;
     return this;
 }
 

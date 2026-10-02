@@ -52,7 +52,7 @@ auto test_json_map() -> void {
     _map[zpt::json{ "c", 10 }] = 3;
     _map[zpt::json{ "d" }] = 4;
     _map[zpt::json{ 2 }] = 5;
-    _map[zpt::json{ zpt::array, 1, 2, 3 }] = 6;
+    _map[zpt::json{ json_array, 1, 2, 3 }] = 6;
 
     for (auto& [_key, _value] : _map) {
         std::cout << "map[" << _key << "] = " << _value << std::endl << std::flush;
@@ -74,10 +74,9 @@ auto test_json_init() -> void {
     _obj2["date"]["begin"] = zpt::timestamp("2000-12-11T16:09:54");
     check(_obj1->stringify() == R"({"a":{"b":["hello","world",null,"!!!"],"c":1}})",
           "implicit nested JSON element initialization");
-    check(
-      _obj2->stringify() ==
-        R"({"a":{"b":["hello","world",null,"!!"]},"date":{"begin":"2000-12-11T16:09:54.000+00:00"}})",
-      "implicit nested JSON element initialization");
+    check(_obj2->stringify() ==
+            R"({"a":{"b":["hello","world",null,"!!"]},"date":{"begin":"2000-12-11T16:09:54.000"}})",
+          "implicit nested JSON element initialization");
 }
 
 auto test_primitives() -> void {
