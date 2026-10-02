@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <zapata/config.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/transport/transport.h>
 #include <zapata/uri/uri.h>
@@ -308,9 +309,11 @@ auto zpt::network::resolve_content_type(zpt::message _message) -> std::string {
                                                      : "*/*";
 }
 
-auto zpt::network::default_transport(zpt::json const& _config) -> std::string {
-    return _config("transport")("default")->ok() ? _config("transport")("default")->string()
-                                                 : "tcp";
+auto zpt::network::default_transport() -> std::string const& {
+    static std::string _transport = zpt::GLOBAL_CONFIG()("transport")("default")->ok()
+                                      ? zpt::GLOBAL_CONFIG()("transport")("default")->string()
+                                      : "tcp";
+    return _transport;
 }
 
 auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {

@@ -12,6 +12,7 @@ endif()
 add_library(zapata-net-transport SHARED)
 add_dependencies(zapata-net-transport
   zapata-base
+  zapata-common-config
   zapata-globals
   zapata-io-stream
   zapata-io-socket
@@ -29,6 +30,7 @@ target_sources(zapata-net-transport
 target_include_directories(zapata-net-transport
   PRIVATE
     zapata-base
+    zapata-common-config
     zapata-globals
     zapata-io-stream
     zapata-io-socket
@@ -37,11 +39,13 @@ target_include_directories(zapata-net-transport
     zapata-parser-uri
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
   INTERFACE
+    zapata-common-config
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-transport
   PUBLIC
     zapata-base
+    zapata-common-config
     zapata-globals
     zapata-io-stream
     zapata-io-socket

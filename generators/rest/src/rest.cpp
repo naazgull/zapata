@@ -1335,9 +1335,8 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
     auto _if_block =
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()")
-      .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix()")
-      .add<zpt::ast::cpp_instruction>("auto _transport = zpt::network::default_transport(_config)")
+      ->add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix()")
+      .add<zpt::ast::cpp_instruction>("auto _transport = zpt::network::default_transport()")
       .add<zpt::ast::cpp_instruction>(
         "auto _params = this->received()->parameters()->is_object() ? "
         "this->received()->parameters()->clone() : zpt::json::object()");
