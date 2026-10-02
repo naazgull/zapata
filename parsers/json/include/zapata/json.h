@@ -43,8 +43,8 @@
  * zpt::json arr = { json_array, 1, 2, 3 };
  *
  * // Access values
- * std::string name = obj["name"];
- * int age = obj["age"];
+ * std::string name = obj("name");
+ * int age = obj("age");
  *
  * // Parse JSON
  * zpt::json parsed;

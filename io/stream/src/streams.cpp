@@ -139,8 +139,27 @@ auto zpt::polling::unregister_delegate(delegate_fn_type _callback) -> zpt::polli
     return (*this);
 }
 
+auto zpt::polling::register_stream_state_listener(zpt::stream_state _type, state_fn_type _callback)
+  -> zpt::polling& {
+    this->__state_callbacks[_type].push_back(_callback);
+    return (*this);
+}
+
+auto zpt::polling::unregister_stream_state_listener(zpt::stream_state _type,
+                                                    state_fn_type _callback) -> zpt::polling& {
+    for (auto _it = this->__state_callbacks[_type].begin();
+         _it != this->__state_callbacks[_type].end();) {
+        if (_it->target<delegate_fn_type>() == _callback.target<delegate_fn_type>()) {
+            _it = this->__state_callbacks[_type].erase(_it);
+        }
+        else { ++_it; }
+    }
+    return (*this);
+}
+
 auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) { this->insert(_stream); }
+    this->callback(zpt::stream_state::CONNECTED, _stream);
     return (*this);
 }
 
@@ -193,6 +212,52 @@ auto zpt::polling::upgrade(zpt::stream _stream, std::string const& _transport) -
     return (*this);
 }
 
+auto zpt::polling::poll() -> zpt::polling& {
+    std::uint64_t _sd_watchdog_usec{ ::POLL_WAIT_TIMEOUT * 1000 };
+    auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
+    zpt::epoll_event_t _epoll_events[MAX_EVENT_PER_POLL];
+    do {
+        auto _n_alive = epoll_wait(this->__epoll_fd,
+                                   _epoll_events,
+                                   MAX_EVENT_PER_POLL,
+                                   std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
+        if (_n_alive < 0) { continue; }
+
+        if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
+
+        for (auto _k = 0; _k != _n_alive; ++_k) {
+            auto _stream =
+              static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr)->shared_from_this();
+            _epoll_events[_k].data.ptr = nullptr;
+
+            if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
+                ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
+                ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
+                ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
+                this->erase(_stream);
+            }
+            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
+            else {
+                expect(((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
+                         ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
+                         ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
+                         ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
+                         ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN),
+                       "unrecognized polling event");
+            }
+        }
+
+    } while (!this->__shutdown.load());
+    return (*this);
+}
+
+auto zpt::polling::shutdown() -> zpt::polling& {
+    this->__shutdown.store(true);
+    return (*this);
+}
+
+auto zpt::polling::is_in_shutdown() const -> bool { return this->__shutdown.load(); }
+
 auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -225,6 +290,7 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
             this->__polled_streams_by_uri.erase(_found_uri);
         }
     }
+    this->callback(zpt::stream_state::DISCONNECTED, _stream);
     _stream->shutdown();
     return (*this);
 }
@@ -278,51 +344,12 @@ auto zpt::polling::delegate(zpt::stream _stream, bool _already_muted) -> zpt::po
     return (*this);
 }
 
-auto zpt::polling::poll() -> zpt::polling& {
-    std::uint64_t _sd_watchdog_usec{ ::POLL_WAIT_TIMEOUT * 1000 };
-    auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
-    zpt::epoll_event_t _epoll_events[MAX_EVENT_PER_POLL];
-    do {
-        auto _n_alive = epoll_wait(this->__epoll_fd,
-                                   _epoll_events,
-                                   MAX_EVENT_PER_POLL,
-                                   std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
-        if (_n_alive < 0) { continue; }
-
-        if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
-
-        for (auto _k = 0; _k != _n_alive; ++_k) {
-            auto _stream =
-              static_cast<zpt::basic_stream*>(_epoll_events[_k].data.ptr)->shared_from_this();
-            _epoll_events[_k].data.ptr = nullptr;
-
-            if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
-                ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
-                ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
-                ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
-                this->erase(_stream);
-            }
-            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
-            else {
-                expect(((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
-                         ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
-                         ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
-                         ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
-                         ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN),
-                       "unrecognized polling event");
-            }
-        }
-
-    } while (!this->__shutdown.load());
+auto zpt::polling::callback(zpt::stream_state _type, zpt::stream const& _stream) -> zpt::polling& {
+    for (auto _callback : this->__state_callbacks[_type]) {
+        _callback(_stream->uuid(), _stream->uri());
+    }
     return (*this);
 }
-
-auto zpt::polling::shutdown() -> zpt::polling& {
-    this->__shutdown.store(true);
-    return (*this);
-}
-
-auto zpt::polling::is_in_shutdown() const -> bool { return this->__shutdown.load(); }
 
 auto zpt::STREAM_POLLING() -> zpt::polling::ptr {
     static zpt::polling::ptr _global = zpt::allocate_shared<zpt::polling>();

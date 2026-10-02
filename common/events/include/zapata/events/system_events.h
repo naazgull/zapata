@@ -31,6 +31,8 @@ enum system_event_type : long long {
     REGISTERED_REMOTE_SERVICE,   ///< Remote service registered.
     MINION_SHUTDOWN_RECEIVED,    ///< Worker process shutdown signal received.
     UNREGISTERED_REMOTE_SERVICE, ///< Remote service unregistered.
+    STREAM_OPENED,               ///< Stream connection opened.
+    STREAM_CLOSED,               ///< Stream connection closed.
     SHUTTING_DOWN,               ///< Application is shutting down.
     EXITING,                     ///< Application is exiting.
     END_EVENTS                   ///< Sentinel value.
