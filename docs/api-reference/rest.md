@@ -254,7 +254,7 @@ Returns the default URI for this service instance.
 
 ## Configuration
 
-### `zpt::startup::configuration::load`
+### `zpt::config::load`
 
 ```cpp
 auto load(zpt::json _parameters, zpt::json& _output) -> void;

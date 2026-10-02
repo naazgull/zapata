@@ -37,6 +37,7 @@
  */
 
 #include <sstream>
+#include <zapata/config.h>
 #include <zapata/connector/connector.h>
 #include <zapata/functional.h>
 
@@ -565,15 +566,18 @@ auto zpt::storage::quote_name_identity(std::string const& _to_quote) -> std::str
     return _to_quote;
 }
 
-auto zpt::storage::default_connector(zpt::json const& _config) -> std::string {
-    return _config("storage")("order")("find")(0)->string();
+auto zpt::storage::default_connector() -> std::string const& {
+    static std::string _connector = zpt::GLOBAL_CONFIG()("storage")("order")("find")(0)->string();
+    return _connector;
 }
 
-auto zpt::storage::default_database(zpt::json const& _config, std::string const& _connector)
-  -> std::string {
-    return _config("storage")(_connector.empty() ? _config("storage")("order")("find")(0)->string()
-                                                 : _connector)("database")
-      ->string();
+auto zpt::storage::default_database(std::string const& _connector) -> std::string const& {
+    if (_connector.empty()) {
+        static std::string _db =
+          zpt::GLOBAL_CONFIG()("storage")(zpt::storage::default_connector())("database")->string();
+        return _db;
+    }
+    else { return zpt::GLOBAL_CONFIG()("storage")(_connector)("database")->string(); }
 }
 
 auto zpt::register_connector(std::string const& _key,
