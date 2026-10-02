@@ -1392,11 +1392,9 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
 auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr _block,
                                                 zpt::json _def,
                                                 bool _with_collection) -> void {
-    _block //
-      ->add<zpt::ast::cpp_instruction>("auto const& _config = zpt::GLOBAL_CONFIG()");
     if (this->__schema("info")("database")->is_string()) {
         _block->add<zpt::ast::cpp_instruction>(
-          "auto _session = zpt::make_connection(_config)->session()");
+          "auto _session = zpt::make_connection(zpt::GLOBAL_CONFIG())->session()");
         if (_with_collection) {
             if (_def("*")("requestBody")("dbCollection")->is_string()) {
                 _block-> //
