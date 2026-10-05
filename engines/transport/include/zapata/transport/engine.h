@@ -594,6 +594,9 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
   : __resolver{ _resolver }
   , __to_send{ _send }
   , __context{ _context } {
+    if constexpr (std::is_same<T, zpt::events::discard>::value) {
+        this->__to_send->header("X-Reply", "discard");
+    }
     if (!this->__to_send->headers()("X-Conversation-ID")->ok()) {
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
