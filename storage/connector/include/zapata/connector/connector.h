@@ -653,8 +653,8 @@ auto quote_value_identity(zpt::json const& _to_quote) -> std::string;
  * @param _to_quote The value to quote.
  * @return The given unquoted value. */
 auto quote_name_identity(std::string const& _to_quote) -> std::string;
-auto default_connector(zpt::json const& _config) -> std::string;
-auto default_database(zpt::json const& _config, std::string const& _connector = "") -> std::string;
+auto default_connector() -> std::string const&;
+auto default_database(std::string const& _connector = "") -> std::string const&;
 } // namespace storage
 
 auto register_connector(std::string const& _key,

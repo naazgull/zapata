@@ -160,12 +160,16 @@ auto zpt::rest::resolver_t::clear() -> zpt::rest::resolver_t& {
     return (*this);
 }
 
-auto zpt::rest::default_prefix(zpt::json const& _config) -> std::string {
-    return _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
+auto zpt::rest::default_prefix() -> std::string const& {
+    static std::string _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->ok()
+                                   ? zpt::GLOBAL_CONFIG()("rest")("prefix")->string()
+                                   : "";
+    return _prefix;
 }
 
-auto zpt::rest::default_prefix_len(zpt::json const& _config) -> size_t {
-    return _config("rest")("prefix_path_len")->integer();
+auto zpt::rest::default_prefix_len() -> size_t {
+    static size_t _prefix_len = zpt::GLOBAL_CONFIG()("rest")("prefix_path_len")->integer();
+    return _prefix_len;
 }
 
 auto zpt::rest::add_minion(zpt::json const& _minion) -> void {

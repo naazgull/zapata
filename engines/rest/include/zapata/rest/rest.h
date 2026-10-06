@@ -189,8 +189,8 @@ class resolver_t : public zpt::events::resolver_t {
     /** @brief Configuration passed to the resolver at construction. */
     zpt::json __configuration;
 };
-auto default_prefix(zpt::json const& _config) -> std::string;
-auto default_prefix_len(zpt::json const& _config) -> size_t;
+auto default_prefix() -> std::string const&;
+auto default_prefix_len() -> size_t;
 /**
  * @brief Registers a remote minion's provider and its services with the REST resolver.
  * @param _minion JSON configuration for the minion (provider URL, services, etc.).

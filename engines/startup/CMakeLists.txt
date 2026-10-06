@@ -5,6 +5,7 @@ set(ENGINE_STARTUP_INCLUDE_DIR
 add_library(zapata-engine-startup SHARED)
 add_dependencies(zapata-engine-startup
     zapata-base
+    zapata-common-config
     zapata-events
     zapata-globals
     zapata-io-stream
@@ -16,15 +17,14 @@ add_dependencies(zapata-engine-startup
 target_sources(zapata-engine-startup
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/startup.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/configuration.cpp
   INTERFACE
-    ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup/configuration.h
     ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup/startup.h
     ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup.h
 )
 target_include_directories(zapata-engine-startup
   PRIVATE
     zapata-base
+    zapata-common-config
     zapata-events
     zapata-globals
     zapata-io-stream
@@ -34,11 +34,13 @@ target_include_directories(zapata-engine-startup
     zapata-parser-uri
     ${ENGINE_STARTUP_INCLUDE_DIR}
   INTERFACE
+    zapata-common-config
     ${ENGINE_STARTUP_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-startup
   PUBLIC
     zapata-base
+    zapata-common-config
     zapata-events
     zapata-globals
     zapata-io-stream

@@ -271,22 +271,20 @@ zpt::events::process::~process() {
         auto _transport = zpt::TRANSPORT_LAYER() //
                             .get(this->__stream->transport());
 
-        if (this->__to_send->status() != 100 &&
-            !_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
-            if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
-                 this->__received->performative() != zpt::Reply) ||
-                (this->__to_send != nullptr && this->__to_send->status() != 0)) {
+        if (this->__received->performative() != zpt::Reply && this->__to_send->status() > 100 &&
+            _transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+            !_transport->has_capability(zpt::transport_capability::PUB_SUB) &&
+            this->__received->headers()("X-Reply") != "discard") {
 
-                if (this->__received->acquire_reply()) {
-                    if (this->__to_send == nullptr) {
-                        this->__to_send = _transport->make_reply(this->__received);
-                    }
-                    if (this->__to_send->status() == 0) { this->__to_send->status(204); }
-
-                    this->__dispatcher->trigger<zpt::events::send>(
-                      this->__polling, this->__stream, this->__to_send);
-                    return;
+            if (this->__received->acquire_reply()) {
+                if (this->__to_send == nullptr) {
+                    this->__to_send = _transport->make_reply(this->__received);
                 }
+                if (this->__to_send->status() == 0) { this->__to_send->status(204); }
+
+                this->__dispatcher->trigger<zpt::events::send>(
+                  this->__polling, this->__stream, this->__to_send);
+                return;
             }
         }
         if (this->__received->finish_processor() == 0) { this->__polling->unmute(this->__stream); }

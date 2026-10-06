@@ -265,11 +265,6 @@ auto zpt::BOOT(zpt::json _config) -> zpt::startup::boot& {
     return _global;
 }
 
-auto zpt::GLOBAL_CONFIG() -> zpt::json& {
-    static zpt::json _global = zpt::json::object();
-    return _global;
-}
-
 auto zpt::IDENTITY() -> zpt::json const& {
     static zpt::json _self = zpt::GLOBAL_CONFIG()("identity");
     return _self;

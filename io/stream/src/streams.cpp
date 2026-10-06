@@ -345,6 +345,8 @@ auto zpt::polling::delegate(zpt::stream _stream, bool _already_muted) -> zpt::po
 }
 
 auto zpt::polling::callback(zpt::stream_state _type, zpt::stream const& _stream) -> zpt::polling& {
+    if (_stream->transport() == "self") { return (*this); }
+
     for (auto _callback : this->__state_callbacks[_type]) {
         _callback(_stream->uuid(), _stream->uri());
     }

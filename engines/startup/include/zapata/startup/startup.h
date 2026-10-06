@@ -42,7 +42,7 @@
 #include <zapata/events.h>
 #include <zapata/globals.h>
 #include <zapata/json.h>
-#include <zapata/startup/configuration.h>
+#include <zapata/config.h>
 
 namespace zpt {
 
@@ -253,11 +253,6 @@ auto get_default_uri() -> std::string;
  * @return Reference to the global boot manager.
  */
 auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
-/**
- * @brief Returns the global configuration.
- * @return Global configuration JSON object.
- */
-auto GLOBAL_CONFIG() -> zpt::json&;
 /**
  * @brief Returns the service identity.
  * @return Service identity JSON object.

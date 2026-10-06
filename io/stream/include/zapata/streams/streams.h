@@ -273,10 +273,6 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     std::any __metadata;
     /** @brief Whether this stream is currently muted (not monitored by polling). */
     std::atomic<bool> __muted{ true };
-
-    /** @brief Extracts the URI from the underlying iostream.
-     * @return void. */
-    auto extract_uri() -> void;
 };
 
 /** @brief Shared pointer type for streams. */
