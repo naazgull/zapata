@@ -64,7 +64,7 @@ auto zpt::http::basic_request::clone() const -> zpt::message {
 
 auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> zpt::basic_message const& {
     auto _uri = this->__underlying("uri");
-    _out << this->__underlying("performative")->string() << " " << zpt::uri::path::to_string(_uri)
+    _out << this->__underlying("performative")->string() << " " << _uri("raw_path")->string()
          << zpt::uri::params::to_string(_uri);
 
     _out << " HTTP/"
