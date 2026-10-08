@@ -484,8 +484,8 @@ static const yytype_int8 yytranslate[] = {
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] = { 0,   53,  53,  55,  57,  65,  64,  85,  87,  92,  91,  102,
-                                        101, 114, 113, 126, 128, 144, 146, 154, 153, 172, 171, 189,
-                                        188, 207, 209, 214, 213, 228, 227, 240, 251, 264, 266 };
+                                        101, 114, 113, 126, 128, 144, 146, 154, 153, 172, 171, 192,
+                                        191, 213, 215, 220, 219, 234, 233, 246, 257, 270, 272 };
 #endif
 
 /** Accessing symbol of state STATE.  */
@@ -1107,16 +1107,17 @@ yyreduce:
                     (**ctx) << "raw_path" << "";
                     (**ctx) << "is_relative" << true;
                 }
-                (**ctx)["raw_path"]->string().append("/.");
+                else { (**ctx)["raw_path"]->string().append("/"); }
+                (**ctx)["raw_path"]->string().append(".");
                 (**ctx)["path"] << ".";
             }
             else { (**ctx) << "."; }
         }
-#line 1269 "parsers/uri/src/URIParser.bison.cpp"
+#line 1272 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 23: /* $@7: %empty  */
-#line 189 "parsers/uri/src/URI.y"
+#line 192 "parsers/uri/src/URI.y"
         {
             if ((*ctx)->type() == zpt::JSObject) {
                 if (!(**ctx)("path")->ok()) {
@@ -1124,16 +1125,17 @@ yyreduce:
                     (**ctx) << "raw_path" << "";
                     (**ctx) << "is_relative" << true;
                 }
-                (**ctx)["raw_path"]->string().append("/..");
+                else { (**ctx)["raw_path"]->string().append("/"); }
+                (**ctx)["raw_path"]->string().append("..");
                 (**ctx)["path"] << "..";
             }
             else { (**ctx) << ".."; }
         }
-#line 1288 "parsers/uri/src/URIParser.bison.cpp"
+#line 1294 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 27: /* $@8: %empty  */
-#line 214 "parsers/uri/src/URI.y"
+#line 220 "parsers/uri/src/URI.y"
         {
             if ((*ctx)->type() == zpt::JSObject) {
                 if (!(**ctx)("params")->ok()) { (**ctx) << "params" << zpt::json::object(); }
@@ -1141,30 +1143,30 @@ yyreduce:
             }
             else { (**ctx) << ctx->matched(); }
         }
-#line 1304 "parsers/uri/src/URIParser.bison.cpp"
+#line 1310 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 29: /* $@9: %empty  */
-#line 228 "parsers/uri/src/URI.y"
+#line 234 "parsers/uri/src/URI.y"
         {
             if ((*ctx)->type() == zpt::JSObject) { (**ctx) << "__aux" << ctx->matched(); }
             else { (**ctx) << ctx->matched(); }
         }
-#line 1317 "parsers/uri/src/URIParser.bison.cpp"
+#line 1323 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 31: /* paramvalue: %empty  */
-#line 241 "parsers/uri/src/URI.y"
+#line 247 "parsers/uri/src/URI.y"
         {
             auto __name = static_cast<std::string>((**ctx)["__aux"]);
             if ((*ctx)->type() == zpt::JSObject) { (**ctx)["params"] << __name << json_null; }
             else { (**ctx) << ctx->matched(); }
         }
-#line 1331 "parsers/uri/src/URIParser.bison.cpp"
+#line 1337 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 32: /* paramvalue: STRING  */
-#line 252 "parsers/uri/src/URI.y"
+#line 258 "parsers/uri/src/URI.y"
         {
             auto __name = static_cast<std::string>((**ctx)["__aux"]);
             if ((*ctx)->type() == zpt::JSObject) {
@@ -1172,21 +1174,21 @@ yyreduce:
             }
             else { (**ctx) << zpt::url::r_decode(ctx->matched()); }
         }
-#line 1345 "parsers/uri/src/URIParser.bison.cpp"
+#line 1351 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
         case 34: /* anchor: CARDINAL STRING  */
-#line 267 "parsers/uri/src/URI.y"
+#line 273 "parsers/uri/src/URI.y"
         {
             if ((*ctx)->type() == zpt::JSObject) {
                 (**ctx) << "anchor" << zpt::url::r_decode(ctx->matched());
             }
             else { (**ctx) << zpt::url::r_decode(ctx->matched()); }
         }
-#line 1358 "parsers/uri/src/URIParser.bison.cpp"
+#line 1364 "parsers/uri/src/URIParser.bison.cpp"
         break;
 
-#line 1362 "parsers/uri/src/URIParser.bison.cpp"
+#line 1368 "parsers/uri/src/URIParser.bison.cpp"
 
         default: break;
     }
@@ -1351,7 +1353,7 @@ yyreturnlab:
     return yyresult;
 }
 
-#line 277 "parsers/uri/src/URI.y"
+#line 283 "parsers/uri/src/URI.y"
 
 int yylex(YYSTYPE*, zpt::URITokenizerLexer* ctx) { return ctx->lex(); }
 

@@ -25,7 +25,8 @@
 
 auto zpt::auth::oauth2::device_authorization::blocked() const -> bool { return false; }
 
-auto zpt::auth::oauth2::device_authorization::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+auto zpt::auth::oauth2::device_authorization::operator()(zpt::events::dispatcher::ptr)
+  -> zpt::events::state {
     auto _reply = zpt::OAUTH2_SERVER().device_authorization(this->received());
     auto _to_send = this->to_send();
 

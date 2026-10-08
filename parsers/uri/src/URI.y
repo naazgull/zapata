@@ -176,7 +176,10 @@ path :
                 (**ctx) << "raw_path" << "";
                 (**ctx) << "is_relative" << true;
             }
-            (**ctx)["raw_path"]->string().append("/.");
+            else {
+                (**ctx)["raw_path"]->string().append("/");
+            }
+            (**ctx)["raw_path"]->string().append(".");
             (**ctx)["path"] << ".";
         }
         else {
@@ -193,7 +196,10 @@ path :
                 (**ctx) << "raw_path" << "";
                 (**ctx) << "is_relative" << true;
             }
-            (**ctx)["raw_path"]->string().append("/..");
+            else {
+                (**ctx)["raw_path"]->string().append("/");
+            }
+            (**ctx)["raw_path"]->string().append("..");
             (**ctx)["path"] << "..";
         }
         else {
