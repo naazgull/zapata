@@ -1581,7 +1581,7 @@ auto zpt::gen::rest::unit::remove_hidden_fields(zpt::json _def) -> std::string {
 }
 
 auto zpt::gen::rest::unit::has_id(zpt::json _def) -> bool {
-    if (_def("resource")->string() == "store") { return true; }
+    if (_def("resource")->ok() && _def("resource")->string() == "store") { return true; }
     if (_def("*")("requestBody")("allOf")->ok()) {
         for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
             if (_object("properties")("_id")->ok()) { return true; }

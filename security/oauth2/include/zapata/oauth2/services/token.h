@@ -27,22 +27,16 @@
 namespace zpt {
 namespace auth {
 namespace oauth2 {
-/** @brief REST listener for the OAuth2 authorization endpoint. Dispatches to the OAuth2
-    server's authorize method based on the request performative.
- * @param _event Pipeline event containing the HTTP request and exchange context. */
-auto authorize_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-/** @brief REST listener for the OAuth2 token endpoint. Exchanges an authorization code for
-    access and refresh tokens.
- * @param _event Pipeline event containing the HTTP request and exchange context. */
-auto token_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-/** @brief REST listener for the OAuth2 refresh token endpoint. Exchanges a refresh token for
-    a new pair of access and refresh tokens.
- * @param _event Pipeline event containing the HTTP request and exchange context. */
-auto refresh_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-/** @brief REST listener for the OAuth2 token validation endpoint. Verifies that an access
-    token is valid and has not expired.
- * @param _event Pipeline event containing the HTTP request and exchange context. */
-auto validate_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+/** @brief REST handler for the OAuth2 token endpoint. Exchanges an authorization code for
+    access and refresh tokens and copies the resulting reply onto the outgoing message. */
+class token : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~token() = default;
+
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state;
+};
 } // namespace oauth2
 } // namespace auth
 } // namespace zpt
