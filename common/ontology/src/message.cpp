@@ -25,6 +25,18 @@
 #include <zapata/uri/uri.h>
 #include <zapata/uuid.h>
 
+auto zpt::basic_message::to_string() const -> std::string {
+    std::ostringstream _oss;
+    this->to_stream(_oss);
+    return _oss.str();
+}
+
+auto zpt::basic_message::from_string(std::string const& _in) -> basic_message& {
+    std::istringstream _iss;
+    _iss.str(_in);
+    return this->from_stream(_iss);
+}
+
 auto zpt::basic_message::acquire_reply() -> bool {
     return !this->__reply_acquired.exchange(true, std::memory_order_seq_cst);
 }
