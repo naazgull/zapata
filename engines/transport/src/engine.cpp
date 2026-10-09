@@ -53,15 +53,10 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
 
     if (_polling->is_in_shutdown()) { return nullptr; }
     if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        if (!_transport->has_capability(zpt::transport_capability::PUB_SUB) &&
-            !_transport->has_capability(zpt::transport_capability::PERSISTENT)) {
-            _polling->unmute(_stream);
-        }
         zlog(_e.what(), zpt::error);
         return nullptr;
     }
 
-    _stream->state(zpt::stream_state::ERRORING_OUT);
     auto _reply = _transport->make_reply(false);
     auto _body = ::get_error_body(_e);
     _reply //
@@ -78,7 +73,7 @@ zpt::events::receive::receive(zpt::transports::engine::ptr _engine,
   , __polling{ _polling }
   , __stream{ _stream } {}
 
-zpt::events::receive::~receive() {}
+zpt::events::receive::~receive() { this->__polling->unmute(this->__stream); }
 
 auto zpt::events::receive::initialize(zpt::event_initialization&) -> void {}
 
@@ -172,10 +167,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         if (_received != nullptr && !_received->empty() && !this->__polling->is_in_shutdown() &&
             !_dispatcher->is_in_shutdown()) {
 
-            if (this->check_upgrade(_received)) {
-                this->__polling->unmute(this->__stream);
-                return zpt::events::finish;
-            }
+            if (this->check_upgrade(_received)) { return zpt::events::finish; }
 
             auto _events =
               this->__engine->resolve(_received, [this, _dispatcher](zpt::event& _event) {
@@ -197,19 +189,15 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 else {
                     zlog("Couldn't find a callback for '" << _received->resource() << "'",
                          zpt::error);
-                    this->__polling->unmute(this->__stream);
                 }
             }
             else {
-                _received->set_processors(_events.size());
                 for (auto& _event : _events) { _dispatcher->trigger(std::move(_event)); }
             }
             return zpt::events::finish;
         }
-        this->__polling->unmute(this->__stream);
     }
     catch (zpt::InterruptedException const& _e) {
-        this->__polling->unmute(this->__stream);
     }
 #ifndef PROPAGATE_EXCEPTION
     catch (std::bad_alloc const& _e) {
@@ -249,10 +237,18 @@ auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events:
 }
 
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    try {
+        this->__polling->mute(this->__stream);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return zpt::events::retrigger;
+    }
+
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send->header("Content-Type", "application/json");
     _transport->send(this->__stream, this->__to_send);
+
     return zpt::events::finish;
 }
 
@@ -287,7 +283,6 @@ zpt::events::process::~process() {
                 return;
             }
         }
-        if (this->__received->finish_processor() == 0) { this->__polling->unmute(this->__stream); }
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::bad_alloc const& _e) {

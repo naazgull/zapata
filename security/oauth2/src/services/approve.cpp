@@ -20,12 +20,19 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
-
 #include <zapata/oauth2/oauth2.h>
 #include <zapata/oauth2/services/approve.h>
-#include <zapata/oauth2/services/authorize.h>
-#include <zapata/oauth2/services/device_authorization.h>
-#include <zapata/oauth2/services/refresh.h>
-#include <zapata/oauth2/services/token.h>
-#include <zapata/oauth2/services/validate.h>
+
+auto zpt::auth::oauth2::approve::blocked() const -> bool { return false; }
+
+auto zpt::auth::oauth2::approve::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
+    auto _reply = zpt::OAUTH2_SERVER().approve(this->received());
+    auto _to_send = this->to_send();
+
+    _to_send //
+      ->status(_reply->status())
+      .body() = _reply->body();
+    _to_send->headers() |= _reply->headers();
+
+    return zpt::events::finish;
+}

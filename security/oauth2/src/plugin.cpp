@@ -20,46 +20,33 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-#include <zapata/oauth2/listeners.h>
-#include <zapata/oauth2/oauth2.h>
+#include <zapata/config.h>
+#include <zapata/oauth2.h>
 #include <zapata/rest.h>
+#include <zapata/startup.h>
 
-std::atomic<bool> _shutdown{ false };
-
-/** @brief Plugin load entry point. Initializes the OAuth2 server with the configured token
-    provider and registers the four REST listeners for authorization, token, refresh, and
-    validation endpoints.
- * @param _plugin The plugin instance being loaded, providing configuration and REST resolver. */
-extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _rest = zpt::REST_RESOLVER();
-    auto _config = _plugin->config();
-    auto& _token_provider = zpt::OAUTH2_TOKEN_PROVIDER();
-    zpt::OAUTH2_SERVER(_token_provider, _config);
-
-    size_t _step = _plugin->config()["add_to_step"]->integer();
-
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["authorize_url"]->string(),
-                       zpt::auth::oauth2::authorize_listener);
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["token_url"]->string(),
-                       zpt::auth::oauth2::token_listener);
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["refresh_url"]->string(),
-                       zpt::auth::oauth2::refresh_listener);
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["validate_url"]->string(),
-                       zpt::auth::oauth2::validate_listener);
-
-    zlog("Registering listeners for oauth2.0", zpt::info);
+extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zlog("Registering handlers for oauth2.0", zpt::info);
+    auto const& _config = zpt::GLOBAL_CONFIG()("oauth2")("url");
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver //
+      ->add<zpt::auth::oauth2::authorize>(_config("authorize")->string())
+      .add<zpt::auth::oauth2::token>(_config("token")->string())
+      .add<zpt::auth::oauth2::refresh>(_config("refresh")->string())
+      .add<zpt::auth::oauth2::validate>(_config("validate")->string())
+      .add<zpt::auth::oauth2::device_authorization>(_config("device_authorization")->string())
+      .add<zpt::auth::oauth2::approve>(_config("approve")->string());
 }
 
-/**
- * @brief Plugin unload entry point. Releases the global OAuth2 server instance.
- * @param _plugin The plugin instance being unloaded.
- */
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Unregistering listeners for oauth2.0", zpt::info);
-    zpt::release_global<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
+    zlog("Unregistering handlers for oauth2.0", zpt::info);
+    auto const& _config = zpt::GLOBAL_CONFIG()("oauth2")("url");
+    auto _resolver = zpt::REST_RESOLVER();
+    _resolver //
+      ->remove<zpt::auth::oauth2::authorize>(_config("authorize")->string())
+      .remove<zpt::auth::oauth2::token>(_config("token")->string())
+      .remove<zpt::auth::oauth2::refresh>(_config("refresh")->string())
+      .remove<zpt::auth::oauth2::validate>(_config("validate")->string())
+      .remove<zpt::auth::oauth2::device_authorization>(_config("device_authorization")->string())
+      .remove<zpt::auth::oauth2::approve>(_config("approve")->string());
 }

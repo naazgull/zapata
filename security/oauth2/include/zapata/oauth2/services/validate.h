@@ -22,10 +22,21 @@
 
 #pragma once
 
-#include <zapata/oauth2/oauth2.h>
-#include <zapata/oauth2/services/approve.h>
-#include <zapata/oauth2/services/authorize.h>
-#include <zapata/oauth2/services/device_authorization.h>
-#include <zapata/oauth2/services/refresh.h>
-#include <zapata/oauth2/services/token.h>
-#include <zapata/oauth2/services/validate.h>
+#include <zapata/rest.h>
+
+namespace zpt {
+namespace auth {
+namespace oauth2 {
+/** @brief REST handler for the OAuth2 token validation endpoint. Verifies that an access token
+    is valid and not expired, and copies the resulting reply onto the outgoing message. */
+class validate : public zpt::events::process {
+  public:
+    using zpt::events::process::process;
+    ~validate() = default;
+
+    auto blocked() const -> bool;
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state;
+};
+} // namespace oauth2
+} // namespace auth
+} // namespace zpt

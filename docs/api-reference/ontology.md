@@ -114,8 +114,6 @@ public:
 
     // Reply tracking (final)
     virtual auto acquire_reply() -> bool final;
-    virtual auto set_processors(size_t _n_processors) -> basic_message& final;
-    virtual auto finish_processor() -> size_t final;
 
     // Typed copy
     template<typename T>

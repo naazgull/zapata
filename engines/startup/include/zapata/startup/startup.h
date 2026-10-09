@@ -39,10 +39,10 @@
 
 #include <typeinfo>
 #include <zapata/base.h>
+#include <zapata/config.h>
 #include <zapata/events.h>
 #include <zapata/globals.h>
 #include <zapata/json.h>
-#include <zapata/config.h>
 
 namespace zpt {
 
