@@ -107,7 +107,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
                   ? _config("resources")("limits")("max_heap_allocation")->integer()
                   : 0);
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
-    zpt::DISPATCHER(_consumers, 10000) //
+    zpt::DISPATCHER(_consumers, 16384) //
       ->start_consumers(_consumers);
     zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
 

@@ -183,9 +183,12 @@ class queue {
             size_t _count{ 0 };
             auto _lower = _in.__head->load();
             auto _upper = _in.__tail->load();
-            for (size_t _idx = _lower; _idx != _upper; ++_idx, ++_count) {
-                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", "))
-                     << *_in.__slots[_idx % _in.__capacity].value;
+            for (size_t _idx = _lower; _idx < _upper; ++_idx, ++_count) {
+                size_t _pos = _idx % _in.__capacity;
+                if (_in.__slots[_pos].value != nullptr) {
+                    _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", "))
+                         << *_in.__slots[_pos].value;
+                }
             }
         }
         catch (zpt::NoMoreElementsException const& e) {
@@ -232,6 +235,8 @@ zpt::lf::queue<T>::queue(size_t _max_queue_size)
   : __slots{ zpt::allocate_array<slot_t>(_max_queue_size) }
   , __capacity{ _max_queue_size }
   , __mask{ _max_queue_size - 1 } {
+    expect((this->__capacity & (this->__capacity - 1)) == 0,
+           std::format("queue capacity `{}` must be a power of two", _max_queue_size));
     // Initialise every slot: slot[i].sequence == i at start so that
     // the first producer (claiming index 0) sees sequence[0] == 0.
     for (size_t _i = 0; _i < _max_queue_size; ++_i) {

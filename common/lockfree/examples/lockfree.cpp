@@ -38,7 +38,7 @@
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
 
-constexpr int N_ELEMENTS_QUEUE = 100000;
+constexpr int N_ELEMENTS_QUEUE = 131072; // must be a power of two
 constexpr int MAX_THREADS_QUEUE = 6;
 
 #define QUEUE_USE_STRING
@@ -127,7 +127,7 @@ auto test_queue() -> int {
 }
 
 auto test_queue_func() -> void {
-    zpt::lf::queue<long> _q1{ 1000 };
+    zpt::lf::queue<long> _q1{ 1024 };
 
     _q1.push(1);
     _q1.push(2);

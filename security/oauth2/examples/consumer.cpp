@@ -48,6 +48,7 @@
 #include <zapata/json.h>
 #include <zapata/ontology.h>
 #include <zapata/rest.h>
+#include <zapata/runtime.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 #include <zapata/uri.h>
@@ -159,6 +160,7 @@ class oauth2_client : public zpt::events::process {
                     case 8: {
                         zlog("Device grant token:\n" << zpt::pretty{ _reply->body() }, zpt::info);
                         this->context(nullptr);
+                        zpt::runtime::shutdown();
                         return zpt::events::finish;
                     }
                     default: break;

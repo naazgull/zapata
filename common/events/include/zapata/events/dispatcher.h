@@ -107,7 +107,7 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      *                        cap).
      * @return Shared pointer to the dispatcher.
      */
-    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
+    dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 16384);
     /**
      * @brief Destructor. Stops consumers if running.
      *
