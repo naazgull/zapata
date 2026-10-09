@@ -1,0 +1,306 @@
+{
+    "module": "auth/oauth2_device_code",
+    "openapi": "3.0.3",
+    "description": "OAuth2 Device Code grant (RFC 8628).",
+    "info": {
+        "title": "OAuth2 Device Code API",
+        "description":
+          "Device Authorization Grant (RFC 8628): a client without a browser requests a device_code/user_code from /oauth2/device_authorization. The resource owner approves the code at /oauth2/approve (verification_uri). The client then polls /oauth2/token with grant_type=device_code until a token is issued.",
+        "namespace": "zpt",
+        "dbDriver": "mysqlx",
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "/1.0",
+            "description": "Base path for the versioned API.",
+            "variables": {
+                "base_path": {
+                    "default": "1.0",
+                    "description": "API version path segment (e.g. 1.0)."
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/oauth2/device_authorization": {
+            "description":
+              "Device authorization endpoint (RFC 8628). Handled by zpt::auth::oauth2::device_authorization. Issues a device_code and a user_code for offline approval.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::device_authorization",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_device_authorization",
+                "description":
+                  "Request a device authorization. Requires client_id; scope is optional. Returns the device_code, user_code, verification_uri, expiry and polling interval.",
+                "requestBody": {
+                    "description": "Device authorization request.",
+                    "$ref": "#/components/schemas/oauth2_device_authorization_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "Device authorization issued.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/oauth2_device_authorization"
+                                }
+                            }
+                        }
+                    },
+                    "412": { "description": "Missing required parameter (client_id)." }
+                }
+            }
+        },
+        "/oauth2/approve": {
+            "description":
+              "Device approval endpoint (RFC 8628). Handled by zpt::auth::oauth2::approve. The resource owner approves or denies the device authorization by its user_code.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::approve",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_device_approve",
+                "description":
+                  "Approve or deny a pending device authorization. Requires user_code. The optional approved field defaults to approve; the strings \"false\", \"deny\" or \"0\" deny the request.",
+                "requestBody": {
+                    "description": "Device approval request.",
+                    "$ref": "#/components/schemas/oauth2_device_approval_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "The authorization was resolved.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/oauth2_device_approval"
+                                }
+                            }
+                        }
+                    },
+                    "412": { "description": "Missing required parameter (user_code)." }
+                }
+            }
+        },
+        "/oauth2/token": {
+            "description":
+              "Token endpoint for grant_type=device_code (RFC 8628). Handled by zpt::auth::oauth2::token. The client polls this endpoint with the device_code until the authorization is approved.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::token",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_token_device_code",
+                "description":
+                  "Poll for a device grant token. Requires grant_type=device_code and device_code. Returns the token once approved; otherwise an RFC 8628 error (authorization_pending, access_denied, expired_token or invalid_grant).",
+                "requestBody": {
+                    "description": "Device code token request.",
+                    "$ref": "#/components/schemas/oauth2_device_code_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "The device authorization was approved; the token is returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_token" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description":
+                          "Device flow error: authorization_pending, access_denied, expired_token or invalid_grant.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_error" }
+                            }
+                        }
+                    },
+                    "412": { "description": "Missing required parameter (device_code)." }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "oauth2_device_authorization_request": {
+                "description": "Request body for initiating a device authorization.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "client_id": {
+                                "type": "string",
+                                "description": "The OAuth2 client identifier."
+                            },
+                            "scope": {
+                                "type": "string",
+                                "description": "Comma-separated list of requested scopes."
+                            }
+                        },
+                        "required": ["client_id"]
+                    }
+                ]
+            },
+            "oauth2_device_authorization": {
+                "description": "Device authorization response (RFC 8628).",
+                "type": "object",
+                "properties": {
+                    "device_code": {
+                        "type": "string",
+                        "description":
+                          "The device verification code used to poll the token endpoint."
+                    },
+                    "user_code": {
+                        "type": "string",
+                        "description":
+                          "Short code the resource owner enters at the verification_uri to approve the device."
+                    },
+                    "verification_uri": {
+                        "type": "string",
+                        "format": "uri",
+                        "description":
+                          "URI the resource owner visits to approve the device (the /oauth2/approve endpoint)."
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "description": "Lifetime of the device_code in seconds."
+                    },
+                    "interval": {
+                        "type": "integer",
+                        "description": "Minimum polling interval in seconds. Fixed at 5."
+                    }
+                },
+                "required": [
+                    "device_code",
+                    "user_code",
+                    "verification_uri",
+                    "expires_in",
+                    "interval"
+                ]
+            },
+            "oauth2_device_approval_request": {
+                "description": "Request body for approving or denying a device authorization.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "user_code": {
+                                "type": "string",
+                                "description": "The user_code identifying the pending device authorization."
+                            },
+                            "approved": {
+                                "type": "string",
+                                "description":
+                                  "Whether to approve. Defaults to approve; the strings \"false\", \"deny\" or \"0\" deny the request."
+                            }
+                        },
+                        "required": ["user_code"]
+                    }
+                ]
+            },
+            "oauth2_device_approval": {
+                "description": "Result of approving or denying a device authorization.",
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["approved", "denied"],
+                        "description":
+                          "Whether the device authorization was approved or denied."
+                    }
+                },
+                "required": ["status"]
+            },
+            "oauth2_device_code_request": {
+                "description": "Request body for polling the device grant token.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "grant_type": {
+                                "type": "string",
+                                "enum": ["device_code"],
+                                "description": "Grant type. Must be \"device_code\"."
+                            },
+                            "device_code": {
+                                "type": "string",
+                                "description": "The device_code returned by the device authorization endpoint."
+                            }
+                        },
+                        "required": ["grant_type", "device_code"]
+                    }
+                ]
+            },
+            "oauth2_token": {
+                "description": "An OAuth2 token document issued by the authorization server.",
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "description": "The issued access token."
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "The issued refresh token."
+                    },
+                    "expires": {
+                        "type": "date",
+                        "description":
+                          "Unix epoch timestamp after which the token is invalid."
+                    },
+                    "scope": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Granted OAuth2 scopes."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "The client the token was issued to."
+                    },
+                    "owner_id": {
+                        "type": "string",
+                        "description": "The resource owner the token belongs to."
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Roles associated with the token."
+                    },
+                    "permissions": {
+                        "type": "string",
+                        "description": "Permissions granted to the token."
+                    }
+                },
+                "required": ["access_token", "expires", "client_id"]
+            },
+            "oauth2_error": {
+                "description": "OAuth2 error response.",
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description":
+                          "Machine-readable error identifier. For the device flow: authorization_pending, access_denied, expired_token or invalid_grant."
+                    },
+                    "error_description": {
+                        "type": "string",
+                        "description": "Human-readable description of the error."
+                    }
+                },
+                "required": ["error"]
+            }
+        },
+        "parameters": {},
+        "headers": {},
+        "securitySchemes": {}
+    },
+    "security": [],
+    "tags": [
+        { "name": "oauth2", "description": "OAuth2 flows." },
+        { "name": "device_code", "description": "Device Authorization Grant (RFC 8628)." }
+    ]
+}

@@ -1,0 +1,301 @@
+{
+    "module": "auth/oauth2_authorization_code",
+    "openapi": "3.0.3",
+    "description": "OAuth2 Authorization Code grant, including PKCE (RFC 7636).",
+    "info": {
+        "title": "OAuth2 Authorization Code API",
+        "description":
+          "Authorization Code flow: the client sends the resource owner to /oauth2/authorize to obtain an authorization code, then exchanges that code for access and refresh tokens at /oauth2/token. PKCE (RFC 7636) is supported via code_challenge/code_verifier.",
+        "namespace": "zpt",
+        "dbDriver": "mysqlx",
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "/1.0",
+            "description": "Base path for the versioned API.",
+            "variables": {
+                "base_path": {
+                    "default": "1.0",
+                    "description": "API version path segment (e.g. 1.0)."
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/oauth2/authorize": {
+            "description":
+              "Authorization endpoint for response_type=code. Handled by zpt::auth::oauth2::authorize. If the resource owner is not authenticated, the client is redirected to the configured login URL; otherwise it is redirected to redirect_uri carrying the authorization code and state.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::authorize",
+                "no-override": ["blocked", "authorized"]
+            },
+            "get": {
+                "operationId": "oauth2_authorize_code",
+                "description":
+                  "Begin the authorization code flow (response_type=code). PKCE parameters are optional. Parameters are read from the query string (GET) or the body (POST).",
+                "parameters": [
+                    {
+                        "name": "response_type",
+                        "in": "query",
+                        "required": true,
+                        "description": "Response type. Must be \"code\".",
+                        "schema": { "type": "string", "enum": ["code"] }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true,
+                        "description": "The OAuth2 client identifier.",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "redirect_uri",
+                        "in": "query",
+                        "required": true,
+                        "description": "URI the client is redirected to with the authorization code.",
+                        "schema": { "type": "string", "format": "uri" }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated list of requested scopes.",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": false,
+                        "description": "Opaque value echoed back in the redirect to the client.",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "code_challenge",
+                        "in": "query",
+                        "required": false,
+                        "description": "PKCE (RFC 7636) code challenge.",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "code_challenge_method",
+                        "in": "query",
+                        "required": false,
+                        "description":
+                          "PKCE challenge method, \"S256\" or \"plain\". Defaults to S256.",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["S256", "plain"],
+                            "default": "S256"
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description":
+                          "See Other redirect (POST variant) to redirect_uri with code and state, or to the login page when the owner is unauthenticated.",
+                        "headers": {
+                            "Location": {
+                                "description":
+                                  "Target URI: redirect_uri with ?code=...&state=... appended, or the login URL with an encoded state blob.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "307": {
+                        "description":
+                          "Temporary redirect (GET variant) to redirect_uri with code and state, or to the login page.",
+                        "headers": {
+                            "Location": {
+                                "description": "Target URI for the redirect.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Unknown or missing response_type, or the client could not be resolved.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_error" }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Missing required parameter (client_id or redirect_uri)."
+                    }
+                }
+            }
+        },
+        "/oauth2/token": {
+            "description":
+              "Token endpoint for grant_type=authorization_code. Handled by zpt::auth::oauth2::token. Exchanges the authorization code for access and refresh tokens.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::token",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_token_authorization_code",
+                "description":
+                  "Exchange an authorization code for tokens. Requires client_id, client_secret and code. When the code was issued with a code_challenge, a code_verifier is required and validated (S256 or plain). If redirect_uri is supplied the tokens are returned via a redirect, otherwise in the JSON body.",
+                "requestBody": {
+                    "description": "Authorization code token request.",
+                    "$ref": "#/components/schemas/oauth2_token_authorization_code_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tokens issued.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_token" }
+                            }
+                        }
+                    },
+                    "303": {
+                        "description":
+                          "See Other redirect (POST variant) to redirect_uri with access_token, refresh_token and expires appended.",
+                        "headers": {
+                            "Location": {
+                                "description": "redirect_uri with the token query string appended.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "307": {
+                        "description":
+                          "Temporary redirect (GET variant) to redirect_uri with the token query string appended.",
+                        "headers": {
+                            "Location": {
+                                "description": "redirect_uri with the token query string appended.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid PKCE code_verifier for a protected code.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_error" }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Missing required parameter (client_id, client_secret or code)."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "oauth2_token_authorization_code_request": {
+                "description": "Request to exchange an authorization code for tokens.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "grant_type": {
+                                "type": "string",
+                                "enum": ["authorization_code"],
+                                "description":
+                                  "Grant type. Defaults to authorization_code when omitted."
+                            },
+                            "client_id": {
+                                "type": "string",
+                                "description": "The OAuth2 client identifier."
+                            },
+                            "client_secret": {
+                                "type": "string",
+                                "description": "The OAuth2 client secret."
+                            },
+                            "code": {
+                                "type": "string",
+                                "description":
+                                  "The authorization code obtained from /oauth2/authorize."
+                            },
+                            "redirect_uri": {
+                                "type": "string",
+                                "format": "uri",
+                                "description":
+                                  "If present, tokens are returned via a redirect instead of the body."
+                            },
+                            "code_verifier": {
+                                "type": "string",
+                                "description":
+                                  "PKCE (RFC 7636) code verifier. Required when the code was issued with a code_challenge."
+                            }
+                        },
+                        "required": ["client_id", "client_secret", "code"]
+                    }
+                ]
+            },
+            "oauth2_token": {
+                "description": "An OAuth2 token document issued by the authorization server.",
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "description": "The issued access token."
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "The issued refresh token."
+                    },
+                    "expires": {
+                        "type": "date",
+                        "description":
+                          "Unix epoch timestamp after which the token is invalid."
+                    },
+                    "scope": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Granted OAuth2 scopes."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "The client the token was issued to."
+                    },
+                    "owner_id": {
+                        "type": "string",
+                        "description": "The resource owner the token belongs to."
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Roles associated with the token."
+                    },
+                    "permissions": {
+                        "type": "string",
+                        "description": "Permissions granted to the token."
+                    }
+                },
+                "required": ["access_token", "expires", "client_id"]
+            },
+            "oauth2_error": {
+                "description": "OAuth2 error response.",
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description":
+                          "Machine-readable error identifier."
+                    },
+                    "error_description": {
+                        "type": "string",
+                        "description": "Human-readable description of the error."
+                    }
+                },
+                "required": ["error"]
+            }
+        },
+        "parameters": {},
+        "headers": {},
+        "securitySchemes": {}
+    },
+    "security": [],
+    "tags": [
+        { "name": "oauth2", "description": "OAuth2 flows." },
+        { "name": "authorization_code", "description": "Authorization Code grant." }
+    ]
+}

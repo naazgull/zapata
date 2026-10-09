@@ -1,0 +1,144 @@
+{
+    "module": "auth/oauth2_validate",
+    "openapi": "3.0.3",
+    "description": "OAuth2 access token validation / introspection.",
+    "info": {
+        "title": "OAuth2 Validate API",
+        "description":
+          "Token validation: the caller presents an access token to /oauth2/validate to confirm that it is valid and not expired. The token is read from the Authorization header first, then the request body, then the query parameters.",
+        "namespace": "zpt",
+        "dbDriver": "mysqlx",
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "/1.0",
+            "description": "Base path for the versioned API.",
+            "variables": {
+                "base_path": {
+                    "default": "1.0",
+                    "description": "API version path segment (e.g. 1.0)."
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/oauth2/validate": {
+            "description":
+              "Validation endpoint. Handled by zpt::auth::oauth2::validate. Checks that the presented access token is valid and has not expired, and returns the token data.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::validate",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_validate",
+                "description":
+                  "Validate an access token. The token may be supplied via the Authorization header, the body field access_token, or the access_token query parameter.",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": false,
+                        "description":
+                          "Bearer access token. Preferred location; used before the body or query parameter.",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "access_token",
+                        "in": "query",
+                        "required": false,
+                        "description": "The access token to validate (fallback location).",
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Optional body carrying the token.",
+                    "$ref": "#/components/schemas/oauth2_validate_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "The token is valid and not expired; its data is returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_token" }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The token is invalid or has expired."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "oauth2_validate_request": {
+                "description": "Optional request body for token validation.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "access_token": {
+                                "type": "string",
+                                "description": "The access token to validate."
+                            }
+                        },
+                        "required": []
+                    }
+                ]
+            },
+            "oauth2_token": {
+                "description": "An OAuth2 token document issued by the authorization server.",
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "description": "The access token that was validated."
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "The associated refresh token."
+                    },
+                    "expires": {
+                        "type": "date",
+                        "description":
+                          "Unix epoch timestamp after which the token is invalid."
+                    },
+                    "scope": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Granted OAuth2 scopes."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "The client the token was issued to."
+                    },
+                    "owner_id": {
+                        "type": "string",
+                        "description": "The resource owner the token belongs to."
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Roles associated with the token."
+                    },
+                    "permissions": {
+                        "type": "string",
+                        "description": "Permissions granted to the token."
+                    }
+                },
+                "required": ["access_token", "expires", "client_id"]
+            }
+        },
+        "parameters": {},
+        "headers": {},
+        "securitySchemes": {}
+    },
+    "security": [],
+    "tags": [
+        { "name": "oauth2", "description": "OAuth2 flows." },
+        { "name": "validate", "description": "Access token validation." }
+    ]
+}

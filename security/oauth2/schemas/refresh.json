@@ -1,0 +1,159 @@
+{
+    "module": "auth/oauth2_refresh",
+    "openapi": "3.0.3",
+    "description": "OAuth2 Refresh Token grant.",
+    "info": {
+        "title": "OAuth2 Refresh API",
+        "description":
+          "Refresh Token flow: the client submits a previously issued refresh_token to /oauth2/refresh to obtain a fresh pair of access and refresh tokens. The previous refresh token is revoked.",
+        "namespace": "zpt",
+        "dbDriver": "mysqlx",
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "/1.0",
+            "description": "Base path for the versioned API.",
+            "variables": {
+                "base_path": {
+                    "default": "1.0",
+                    "description": "API version path segment (e.g. 1.0)."
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/oauth2/refresh": {
+            "description":
+              "Refresh endpoint. Handled by zpt::auth::oauth2::refresh. Exchanges a refresh token for a new access/refresh token pair.",
+            "resource": "controller",
+            "zpt:extends": {
+                "super": "zpt::auth::oauth2::refresh",
+                "no-override": ["blocked", "authorized"]
+            },
+            "post": {
+                "operationId": "oauth2_refresh",
+                "description":
+                  "Refresh Token grant. Requires grant_type and refresh_token. If redirect_uri is supplied the new tokens are returned via a redirect, otherwise in the JSON body.",
+                "requestBody": {
+                    "description": "Refresh token request.",
+                    "$ref": "#/components/schemas/oauth2_refresh_request"
+                },
+                "responses": {
+                    "200": {
+                        "description": "New tokens issued (returned when no redirect_uri is supplied).",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/oauth2_token" }
+                            }
+                        }
+                    },
+                    "303": {
+                        "description":
+                          "See Other redirect (POST variant) to redirect_uri with access_token, refresh_token and expires appended.",
+                        "headers": {
+                            "Location": {
+                                "description": "redirect_uri with the token query string appended.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "307": {
+                        "description":
+                          "Temporary redirect (GET variant) to redirect_uri with the token query string appended.",
+                        "headers": {
+                            "Location": {
+                                "description": "redirect_uri with the token query string appended.",
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description":
+                          "Missing required parameter (grant_type or refresh_token)."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "oauth2_refresh_request": {
+                "description": "Request body for the Refresh Token grant.",
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "grant_type": {
+                                "type": "string",
+                                "enum": ["refresh_token"],
+                                "description": "Grant type. Must be \"refresh_token\"."
+                            },
+                            "refresh_token": {
+                                "type": "string",
+                                "description": "The previously issued refresh token."
+                            },
+                            "redirect_uri": {
+                                "type": "string",
+                                "format": "uri",
+                                "description":
+                                  "If present, the new tokens are returned via a redirect instead of the body."
+                            }
+                        },
+                        "required": ["grant_type", "refresh_token"]
+                    }
+                ]
+            },
+            "oauth2_token": {
+                "description": "An OAuth2 token document issued by the authorization server.",
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "description": "The newly issued access token."
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "The newly issued refresh token."
+                    },
+                    "expires": {
+                        "type": "date",
+                        "description":
+                          "Unix epoch timestamp after which the token is invalid."
+                    },
+                    "scope": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Granted OAuth2 scopes."
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "The client the token was issued to."
+                    },
+                    "owner_id": {
+                        "type": "string",
+                        "description": "The resource owner the token belongs to."
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Roles associated with the token."
+                    },
+                    "permissions": {
+                        "type": "string",
+                        "description": "Permissions granted to the token."
+                    }
+                },
+                "required": ["access_token", "expires", "client_id"]
+            }
+        },
+        "parameters": {},
+        "headers": {},
+        "securitySchemes": {}
+    },
+    "security": [],
+    "tags": [
+        { "name": "oauth2", "description": "OAuth2 flows." },
+        { "name": "refresh", "description": "Refresh Token grant." }
+    ]
+}
