@@ -110,6 +110,7 @@ target_sources(zapata-example-oauth2-consumer
 target_link_libraries(zapata-example-oauth2-consumer
   PRIVATE
     zapata-security-oauth2
+    zapata-runtime
 )
 
 set_target_properties(zapata-example-oauth2-consumer
