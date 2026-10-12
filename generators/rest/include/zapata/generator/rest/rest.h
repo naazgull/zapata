@@ -194,7 +194,15 @@ class unit {
      * @param _path OpenAPI path object. */
     auto generate_redirect(zpt::ast::basic_file::ptr _cpp_file, zpt::json _def, zpt::json _path)
       -> void;
-
+    auto generate_send_redirect_step(zpt::ast::basic_code_block::ptr _block,
+                                     zpt::json const& _def,
+                                     zpt::json const& _path,
+                                     size_t _step,
+                                     size_t _n_steps,
+                                     zpt::json const& _redirect) -> void;
+    auto generate_receive_redirect_step(zpt::ast::basic_code_block::ptr _block,
+                                        size_t _step,
+                                        size_t _n_steps) -> void;
     /** @brief Adds database configuration block to a code block AST.
      * @param _block Target code block to populate.
      * @param _def OpenAPI schema definition.

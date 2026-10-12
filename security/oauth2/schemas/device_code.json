@@ -5,7 +5,7 @@
     "info": {
         "title": "OAuth2 Device Code API",
         "description":
-          "Device Authorization Grant (RFC 8628): a client without a browser requests a device_code/user_code from /oauth2/device_authorization. The resource owner approves the code at /oauth2/approve (verification_uri). The client then polls /oauth2/token with grant_type=device_code until a token is issued.",
+          "Device Authorization Grant (RFC 8628). The client calls exactly two endpoints: /oauth2/device_authorization to obtain a device_code and user_code, and /oauth2/token (grant_type=device_code) to poll for the token. Approving the authorization is a resource-owner action performed by the human at the returned verification_uri; it is not a client API call.",
         "namespace": "zpt",
         "dbDriver": "mysqlx",
         "version": "1.0"
@@ -54,40 +54,9 @@
                 }
             }
         },
-        "/oauth2/approve": {
-            "description":
-              "Device approval endpoint (RFC 8628). Handled by zpt::auth::oauth2::approve. The resource owner approves or denies the device authorization by its user_code.",
-            "resource": "controller",
-            "zpt:extends": {
-                "super": "zpt::auth::oauth2::approve",
-                "no-override": ["blocked", "authorized"]
-            },
-            "post": {
-                "operationId": "oauth2_device_approve",
-                "description":
-                  "Approve or deny a pending device authorization. Requires user_code. The optional approved field defaults to approve; the strings \"false\", \"deny\" or \"0\" deny the request.",
-                "requestBody": {
-                    "description": "Device approval request.",
-                    "$ref": "#/components/schemas/oauth2_device_approval_request"
-                },
-                "responses": {
-                    "200": {
-                        "description": "The authorization was resolved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/oauth2_device_approval"
-                                }
-                            }
-                        }
-                    },
-                    "412": { "description": "Missing required parameter (user_code)." }
-                }
-            }
-        },
         "/oauth2/token": {
             "description":
-              "Token endpoint for grant_type=device_code (RFC 8628). Handled by zpt::auth::oauth2::token. The client polls this endpoint with the device_code until the authorization is approved.",
+              "Token endpoint for grant_type=device_code (RFC 8628). Handled by zpt::auth::oauth2::token. The client polls this endpoint with the device_code until the resource owner has approved the authorization at the verification_uri.",
             "resource": "controller",
             "zpt:extends": {
                 "super": "zpt::auth::oauth2::token",
@@ -96,14 +65,14 @@
             "post": {
                 "operationId": "oauth2_token_device_code",
                 "description":
-                  "Poll for a device grant token. Requires grant_type=device_code and device_code. Returns the token once approved; otherwise an RFC 8628 error (authorization_pending, access_denied, expired_token or invalid_grant).",
+                  "Poll for a device grant token. Requires grant_type=device_code and device_code. Returns the token once the resource owner has approved at the verification_uri; otherwise an RFC 8628 error (authorization_pending, access_denied, expired_token or invalid_grant).",
                 "requestBody": {
                     "description": "Device code token request.",
                     "$ref": "#/components/schemas/oauth2_device_code_request"
                 },
                 "responses": {
                     "200": {
-                        "description": "The device authorization was approved; the token is returned.",
+                        "description": "The authorization was approved; the token is returned.",
                         "content": {
                             "application/json": {
                                 "schema": { "$ref": "#/components/schemas/oauth2_token" }
@@ -152,22 +121,22 @@
                     "device_code": {
                         "type": "string",
                         "description":
-                          "The device verification code used to poll the token endpoint."
+                          "High-entropy secret the client polls the token endpoint with. Kept by the client, never shown to or typed by the user."
                     },
                     "user_code": {
                         "type": "string",
                         "description":
-                          "Short code the resource owner enters at the verification_uri to approve the device."
+                          "Short, human-readable code shown to the user, who enters it at the verification_uri to approve the authorization. Not sent by the client to the token endpoint."
                     },
                     "verification_uri": {
                         "type": "string",
                         "format": "uri",
                         "description":
-                          "URI the resource owner visits to approve the device (the /oauth2/approve endpoint)."
+                          "URI the resource owner visits to enter the user_code and approve the device."
                     },
                     "expires_in": {
                         "type": "integer",
-                        "description": "Lifetime of the device_code in seconds."
+                        "description": "Lifetime of the codes in seconds."
                     },
                     "interval": {
                         "type": "integer",
@@ -181,39 +150,6 @@
                     "expires_in",
                     "interval"
                 ]
-            },
-            "oauth2_device_approval_request": {
-                "description": "Request body for approving or denying a device authorization.",
-                "allOf": [
-                    {
-                        "type": "object",
-                        "properties": {
-                            "user_code": {
-                                "type": "string",
-                                "description": "The user_code identifying the pending device authorization."
-                            },
-                            "approved": {
-                                "type": "string",
-                                "description":
-                                  "Whether to approve. Defaults to approve; the strings \"false\", \"deny\" or \"0\" deny the request."
-                            }
-                        },
-                        "required": ["user_code"]
-                    }
-                ]
-            },
-            "oauth2_device_approval": {
-                "description": "Result of approving or denying a device authorization.",
-                "type": "object",
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["approved", "denied"],
-                        "description":
-                          "Whether the device authorization was approved or denied."
-                    }
-                },
-                "required": ["status"]
             },
             "oauth2_device_code_request": {
                 "description": "Request body for polling the device grant token.",

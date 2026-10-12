@@ -49,6 +49,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/atomic.cpp
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto.h
+    ${COMMON_BASE_INCLUDE_DIR}/zapata/chronometer.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoMoreElementsException.h

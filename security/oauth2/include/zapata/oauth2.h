@@ -23,7 +23,6 @@
 #pragma once
 
 #include <zapata/oauth2/oauth2.h>
-#include <zapata/oauth2/services/approve.h>
 #include <zapata/oauth2/services/authorize.h>
 #include <zapata/oauth2/services/device_authorization.h>
 #include <zapata/oauth2/services/refresh.h>
