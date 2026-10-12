@@ -102,11 +102,6 @@ class token_provider {
     virtual auto validate_roles_permissions(zpt::message _message,
                                             std::string _topic,
                                             zpt::json _permissions) -> bool = 0;
-    /** @brief Approve or deny a pending device authorization (RFC 8628 device grant). Resolves the
-        authorization by its device_code or user_code, flips its status to approved or denied, and
-        persists the change. @param _code The device_code or user_code identifying the device
-        authorization. @param _approved true to approve, false to deny. @return void. */
-    virtual auto approve(std::string const& _code, bool _approved) -> void = 0;
 };
 /**@}
  */
@@ -134,15 +129,6 @@ class server {
         @param _request The incoming request message.
         @return Reply message with a redirect URL or error body. */
     virtual auto authorize(zpt::message _request) -> zpt::message;
-    /** @brief Authorize a request by validating the access token against required roles.
-        Used for internal authorization checks.
-        @param _topic The topic being accessed.
-        @param _request The incoming request message.
-        @param _roles_needed The roles required to access the topic.
-        @return Reply message with the token's identity data if authorized, or an error. */
-    virtual auto authorize(std::string const& _topic,
-                           zpt::message _request,
-                           zpt::json _roles_needed) -> zpt::message;
     /** @brief Exchange an authorization code for access and refresh tokens.
         @param _request The incoming request message.
         @return Reply message with a redirect or the token data. */
@@ -162,10 +148,6 @@ class server {
         @return Reply message with the device_code, user_code, verification_uri, expiry and
         polling interval. */
     virtual auto device_authorization(zpt::message _request) -> zpt::message;
-    /** @brief Approve or deny a device authorization using its user_code.
-        @param _request The incoming request message (user_code, approved).
-        @return Reply message carrying the resulting status. */
-    virtual auto approve(zpt::message _request) -> zpt::message;
 
     /**@}
      */

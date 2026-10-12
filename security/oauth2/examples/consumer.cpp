@@ -48,6 +48,7 @@
 #include <zapata/json.h>
 #include <zapata/ontology.h>
 #include <zapata/rest.h>
+#include <zapata/runtime.h>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 #include <zapata/uri.h>
@@ -92,9 +93,10 @@ auto make_request(std::string const& _url, zpt::json const& _body) -> zpt::messa
  *   3 - client credentials grant returned a token -> validate it.
  *   4 - token validated -> refresh the code-flow token.
  *   5 - refresh returned a fresh token -> request a device authorization.
- *   6 - device authorization issued (device_code + user_code) -> approve it.
- *   7 - device authorization approved -> poll /token with the device_code.
- *   8 - /token returned the device-grant token -> done.
+ *   6 - device authorization issued (device_code + user_code) -> poll /token with the
+ *       device_code (the resource owner's approval at the verification URI is assumed to
+ *       have happened out-of-band).
+ *   7 - /token returned the device-grant token -> done.
  */
 class oauth2_client : public zpt::events::process {
   public:
@@ -146,19 +148,13 @@ class oauth2_client : public zpt::events::process {
                     }
                     case 6: {
                         this->__device_code = _reply->body()("device_code")->string();
-                        this->__user_code = _reply->body()("user_code")->string();
                         zlog("Device authorization:\n" << zpt::pretty{ _reply->body() }, zpt::info);
                         break;
                     }
                     case 7: {
-                        zlog("Device authorization approved:\n"
-                               << zpt::pretty{ _reply->body() },
-                             zpt::info);
-                        break;
-                    }
-                    case 8: {
                         zlog("Device grant token:\n" << zpt::pretty{ _reply->body() }, zpt::info);
                         this->context(nullptr);
+                        zpt::runtime::shutdown();
                         return zpt::events::finish;
                     }
                     default: break;
@@ -196,10 +192,6 @@ class oauth2_client : public zpt::events::process {
                         break;
                     }
                     case 7: {
-                        this->approve_device();
-                        break;
-                    }
-                    case 8: {
                         this->device_token();
                         break;
                     }
@@ -286,15 +278,6 @@ class oauth2_client : public zpt::events::process {
         return (*this);
     }
 
-    /** @brief Approve the pending device authorization. */
-    auto approve_device() -> oauth2_client& {
-        this->context(
-          zpt::make_call(zpt::REST_RESOLVER(),
-                         make_request(oauth2_url("approve"),
-                                      { "user_code", this->__user_code, "approved", "true" })));
-        return (*this);
-    }
-
     /** @brief Poll /token with the device code to retrieve the device grant token. */
     auto device_token() -> oauth2_client& {
         this->context(zpt::make_call(zpt::REST_RESOLVER(),
@@ -320,8 +303,6 @@ class oauth2_client : public zpt::events::process {
     std::string __token{ "" };
     /** @brief Device code from the device flow, used to poll /token. */
     std::string __device_code{ "" };
-    /** @brief User code from the device flow, used to approve the authorization. */
-    std::string __user_code{ "" };
 };
 
 /** @brief Kick off the OAuth2 flow walk once the OAuth2 server is reachable. */

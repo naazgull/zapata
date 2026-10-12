@@ -314,10 +314,27 @@ auto zpt::gen::rest::unit::generate_collection(zpt::json _def, zpt::json _path)
                 zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
         }
 
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+        auto _redirect = _def("*")("requestBody")("zpt:redirect");
+        if (_redirect->ok()) {
             _class //
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+
+            if (_redirect->is_array()) {
+                _class //
+                  ->add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__step{ 1 }", "size_t")
+                  .add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__params", "zpt::json");
+
+                for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+                    _class //
+                      ->add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                    std::format("send_step_{}", _step + 1),
+                                                    "zpt::events::state")
+                      .add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                   std::format("receive_step_{}", _step + 1),
+                                                   "zpt::events::state");
+                }
+            }
         }
         else if (_def("*")("requestBody")("zpt:view")->ok()) {
             _class //
@@ -477,10 +494,27 @@ auto zpt::gen::rest::unit::generate_document(zpt::json _def, zpt::json _path)
                 zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
         }
 
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+        auto _redirect = _def("*")("requestBody")("zpt:redirect");
+        if (_redirect->ok()) {
             _class //
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+
+            if (_redirect->is_array()) {
+                _class //
+                  ->add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__step{ 1 }", "size_t")
+                  .add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__params", "zpt::json");
+
+                for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+                    _class //
+                      ->add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                    std::format("send_step_{}", _step + 1),
+                                                    "zpt::events::state")
+                      .add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                   std::format("receive_step_{}", _step + 1),
+                                                   "zpt::events::state");
+                }
+            }
         }
         else if (_def("*")("requestBody")("zpt:view")->ok()) {
             _class //
@@ -655,6 +689,25 @@ auto zpt::gen::rest::unit::generate_controller(zpt::json _def, zpt::json _path)
         _class //
           ->add<zpt::ast::cpp_function>(zpt::ast::PUBLIC, "process_request", "zpt::events::state");
 
+        auto _redirect = _def("post")("requestBody")("zpt:redirect");
+        if (_redirect->ok()) {
+            if (_redirect->is_array()) {
+                _class //
+                  ->add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__step{ 1 }", "size_t")
+                  .add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__params", "zpt::json");
+
+                for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+                    _class //
+                      ->add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                    std::format("send_step_{}", _step + 1),
+                                                    "zpt::events::state")
+                      .add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                   std::format("receive_step_{}", _step + 1),
+                                                   "zpt::events::state");
+                }
+            }
+        }
+
         _namespace->add(_class);
 
         auto _h_operator = zpt::make_function<zpt::ast::cpp_function>(
@@ -755,10 +808,27 @@ auto zpt::gen::rest::unit::generate_store(zpt::json _def, zpt::json _path)
                 zpt::ast::PUBLIC, "authorized", "bool", zpt::ast::CONST | zpt::ast::OVERRIDE);
         }
 
-        if (_def("*")("requestBody")("zpt:redirect")->ok()) {
+        auto _redirect = _def("*")("requestBody")("zpt:redirect");
+        if (_redirect->ok()) {
             _class //
               ->add<zpt::ast::cpp_function>(
                 zpt::ast::PUBLIC, "process_request", "zpt::events::state");
+
+            if (_redirect->is_array()) {
+                _class //
+                  ->add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__step{ 1 }", "size_t")
+                  .add<zpt::ast::cpp_variable>(zpt::ast::PRIVATE, "__params", "zpt::json");
+
+                for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+                    _class //
+                      ->add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                    std::format("send_step_{}", _step + 1),
+                                                    "zpt::events::state")
+                      .add<zpt::ast::cpp_function>(zpt::ast::PRIVATE,
+                                                   std::format("receive_step_{}", _step + 1),
+                                                   "zpt::events::state");
+                }
+            }
         }
         else if (_def("*")("requestBody")("zpt:view")->ok()) {
             _class //
@@ -1323,39 +1393,113 @@ auto zpt::gen::rest::unit::generate_process_request(zpt::ast::basic_file::ptr _c
 auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file,
                                              zpt::json _def,
                                              zpt::json _path) -> void {
+
     auto _performative = _def("*")->ok() ? "*" : "post";
     auto _class_method_prefix =
       std::format("{}::{}::", this->__namespace, _def(_performative)("operationId")->string());
-
     auto _method = zpt::make_function<zpt::ast::cpp_function>(
       std::format("{}process_request", _class_method_prefix), "zpt::events::state");
+    _cpp_file->add(_method);
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
-    _method_body->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
-
     auto _if_block =
       zpt::make_code_block<zpt::ast::cpp_code_block>("if (this->context() == nullptr)");
-    _if_block //
-      ->add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix()")
-      .add<zpt::ast::cpp_instruction>("auto _transport = zpt::network::default_transport()")
-      .add<zpt::ast::cpp_instruction>(
-        "auto _params = this->received()->parameters()->is_object() ? "
-        "this->received()->parameters()->clone() : zpt::json::object()");
-    this->add_parameters_and_validation(_if_block, _def, _path);
+    auto _else_block =
+      zpt::make_code_block<zpt::ast::cpp_code_block>("else if (this->context()->is_replied())");
+
+    if (_def(_performative)("requestBody")("zpt:redirect")->is_array()) {
+        auto const& _redirect = _def(_performative)("requestBody")("zpt:redirect");
+        auto _send_switch_block =
+          zpt::make_code_block<zpt::ast::cpp_code_block>("switch(this->__step)");
+        for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+            auto _case_block =
+              zpt::make_code_block<zpt::ast::cpp_code_block>(std::format("case {}:", _step + 1));
+            _case_block->add<zpt::ast::cpp_instruction>(
+              std::format("return this->send_step_{}()", _step + 1));
+            _send_switch_block->add(_case_block);
+        }
+        _if_block->add(_send_switch_block);
+
+        auto _receive_switch_block =
+          zpt::make_code_block<zpt::ast::cpp_code_block>("switch(this->__step)");
+        for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+            auto _case_block =
+              zpt::make_code_block<zpt::ast::cpp_code_block>(std::format("case {}:", _step + 1));
+            _case_block->add<zpt::ast::cpp_instruction>(
+              std::format("return this->receive_step_{}()", _step + 1));
+            _receive_switch_block->add(_case_block);
+        }
+        _else_block->add(_receive_switch_block);
+
+        auto _performative = _def("*")->ok() ? "*" : "post";
+        auto _class_method_prefix =
+          std::format("{}::{}::", this->__namespace, _def(_performative)("operationId")->string());
+
+        for (size_t _step = 0; _step != _redirect->size(); ++_step) {
+            auto _send = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}send_step_{}", _class_method_prefix, _step + 1), "zpt::events::state");
+            auto _send_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            this->generate_send_redirect_step(
+              _send_body, _def, _path, _step, _redirect->size(), _redirect(_step));
+            _send->add(_send_body);
+            _cpp_file->add(_send);
+
+            auto _receive = zpt::make_function<zpt::ast::cpp_function>(
+              std::format("{}receive_step_{}", _class_method_prefix, _step + 1),
+              "zpt::events::state");
+            auto _receive_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
+            this->generate_receive_redirect_step(_receive_body, _step, _redirect->size());
+            _receive->add(_receive_body);
+            _cpp_file->add(_receive);
+        }
+    }
+    else {
+        auto const& _redirect = _def(_performative)("requestBody")("zpt:redirect");
+        this->generate_send_redirect_step(_if_block, _def, _path, 0, 1, _redirect);
+        this->generate_receive_redirect_step(_else_block, 0, 1);
+    }
+
+    _method_body //
+      ->add(_if_block)
+      .add(_else_block)
+      .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
+
+    _method->add(_method_body);
+}
+
+auto zpt::gen::rest::unit::generate_send_redirect_step(zpt::ast::basic_code_block::ptr _block,
+                                                       zpt::json const& _def,
+                                                       zpt::json const& _path,
+                                                       size_t _step,
+                                                       size_t _n_steps,
+                                                       zpt::json const& _redirect) -> void {
+    _block //
+      ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()")
+      .add<zpt::ast::cpp_instruction>("auto _prefix = zpt::rest::default_prefix()")
+      .add<zpt::ast::cpp_instruction>("auto _transport = zpt::network::default_transport()");
 
     auto _try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
+    if (_step == 0) {
+        _try_body //
+          ->add<zpt::ast::cpp_instruction>(
+            "auto _params = this->received()->parameters()->is_object() ? "
+            "this->received()->parameters()->clone() : zpt::json::object()");
+        this->add_parameters_and_validation(_try_body, _def, _path);
+        if (_n_steps > 1) {
+            _try_body //
+              ->add<zpt::ast::cpp_instruction>("this->__params = _params");
+        }
+    }
+
     _try_body //
       ->add<zpt::ast::cpp_instruction>("auto _performative = this->received()->performative()")
       .add<zpt::ast::cpp_instruction>(
-        std::format("auto _redirect_to{{ \"{}\" }}",
-                    _def(_performative)("requestBody")("zpt:redirect")->string()))
+        std::format("auto _redirect_to{{ \"{}\" }}", _redirect->string()))
       .add<zpt::ast::cpp_instruction>(
         "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
       .add<zpt::ast::cpp_instruction>(std::format(
         "_request //\n->performative(_performative).uri(std::format(\"{{}}{{}}{{}}\", _prefix, "
         "_redirect_to, zpt::uri::params::to_string(this->received()->uri(){})))",
-        _def(_performative)("requestBody")("zpt:redirect")->string().find("?") != std::string::npos
-          ? ", true"
-          : ""));
+        _redirect->string().find("?") != std::string::npos ? ", true" : ""));
     auto _performative_if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
       "if (_performative != zpt::Get && _performative != zpt::Delete)");
     _performative_if_block->add<zpt::ast::cpp_instruction>("_request->body() = _received");
@@ -1364,29 +1508,36 @@ auto zpt::gen::rest::unit::generate_redirect(zpt::ast::basic_file::ptr _cpp_file
       .add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
-    _if_block->add(_try_body);
+    _block->add(_try_body);
     auto _catch_body =
       zpt::make_code_block<zpt::ast::cpp_code_block>("catch(std::exception const& _e)");
     _catch_body //
       ->add<zpt::ast::cpp_instruction>(
-        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }");
-    _if_block->add(_catch_body);
-
-    auto _else_block =
-      zpt::make_code_block<zpt::ast::cpp_code_block>("else if (this->context()->is_replied())");
-    _else_block //
-      ->add<zpt::ast::cpp_instruction>("auto _forwarded = this->context()->reply()")
-      .add<zpt::ast::cpp_instruction>(
-        "this->to_send() //\n->status(_forwarded->status()).body() = _forwarded->body()")
-      .add<zpt::ast::cpp_instruction>("return zpt::events::finish");
-
-    _method_body //
-      ->add(_if_block)
-      .add(_else_block)
+        "this //\n->to_send()->status(500).body() = { \"message\", _e.what() }")
       .add<zpt::ast::cpp_instruction>("return zpt::events::abort");
+    _block->add(_catch_body);
+}
 
-    _method->add(_method_body);
-    _cpp_file->add(_method);
+auto zpt::gen::rest::unit::generate_receive_redirect_step(zpt::ast::basic_code_block::ptr _block,
+                                                          size_t _step,
+                                                          size_t _n_steps) -> void {
+    _block //
+      ->add<zpt::ast::cpp_instruction>("auto _forwarded = this->context()->reply()");
+
+    if (_step == _n_steps - 1) {
+        _block //
+          ->add<zpt::ast::cpp_instruction>("// PROCESS REPLY HERE")
+          .add<zpt::ast::cpp_instruction>(
+            "this->to_send() //\n->status(_forwarded->status()).body() = _forwarded->body()")
+          .add<zpt::ast::cpp_instruction>("return zpt::events::finish");
+    }
+    else {
+        _block //
+          ->add<zpt::ast::cpp_instruction>("// PROCESS REPLY HERE")
+          .add<zpt::ast::cpp_instruction>("this->context(nullptr)")
+          .add<zpt::ast::cpp_instruction>("++this->__step")
+          .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
+    }
 }
 
 auto zpt::gen::rest::unit::add_db_configuration(zpt::ast::basic_code_block::ptr _block,

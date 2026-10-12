@@ -12,7 +12,6 @@ target_sources(zapata-security-oauth2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/refresh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/validate.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/device_authorization.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/services/approve.cpp
   INTERFACE
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/oauth2.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/authorize.h
@@ -20,7 +19,6 @@ target_sources(zapata-security-oauth2
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/refresh.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/validate.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/device_authorization.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/approve.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2.h
 )
 target_include_directories(zapata-security-oauth2

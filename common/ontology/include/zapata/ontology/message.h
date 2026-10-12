@@ -134,6 +134,14 @@ class basic_message {
      * @param _in Input stream to deserialize from.
      * @return Reference to this message. */
     virtual auto from_stream(std::istream& _in) -> basic_message& = 0;
+    /** @brief Serializes message to string.
+     * @param _out Output string to serialise to.
+     * @return Serialised message. */
+    virtual auto to_string() const -> std::string final;
+    /** @brief Deserializes message from input string.
+     * @param _in Input string to deserialise from.
+     * @return Reference to this message. */
+    virtual auto from_string(std::string const& _in) -> basic_message& final;
     /** @brief Returns true if message is empty/uninitialized.
      * @return True if message has no content. */
     virtual auto empty() const -> bool = 0;

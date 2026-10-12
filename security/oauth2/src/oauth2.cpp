@@ -118,33 +118,6 @@ auto zpt::auth::oauth2::server::authorize(zpt::message _request) -> zpt::message
     expect_c(false, "\"response_type\" not valid", 400);
 }
 
-auto zpt::auth::oauth2::server::authorize(std::string const& _topic,
-                                          zpt::message _request,
-                                          zpt::json _roles_needed) -> zpt::message {
-    auto _access_token = zpt::auth::extract(_request);
-    auto _identity = this->__token_provider->get_data_from_token(_access_token);
-    expect_c(_identity("client_id")->is_string(), "associated token isn't a valid token", 401);
-    expect_c(_identity("permissions")->is_string(), "associated token isn't a valid token", 401);
-    expect_c(this->__token_provider->validate_roles_permissions(
-               _request, _topic, _identity("permissions")),
-             "token didn't provide the necessary permissions",
-             403);
-
-    auto _roles_found{ 0ULL };
-    auto _roles_granted = _identity("roles");
-    for (auto&& [_, __, _role_needed] : _roles_needed) {
-        for (auto&& [_, __, _role_granted] : _roles_granted) {
-            if (_role_needed == _role_granted) {
-                ++_roles_found;
-                break;
-            }
-        }
-    }
-    expect_c(
-      _roles_found == _roles_needed->size(), "token didn't provide the necessary roles", 401);
-    return make_reply(_request, 200, "", _identity);
-}
-
 auto zpt::auth::oauth2::server::token(zpt::message _request) -> zpt::message {
     auto _param = _request->performative() == zpt::Post ? _request->body() : _request->parameters();
 
@@ -459,27 +432,11 @@ auto zpt::auth::oauth2::server::device_authorization(zpt::message _request) -> z
                         "user_code",
                         _authorization("user_code"),
                         "verification_uri",
-                        oauth2_url("approve"),
+                        oauth2_url("device_verification_uri"),
                         "expires_in",
                         _expires_in,
                         "interval",
                         5 });
-}
-
-auto zpt::auth::oauth2::server::approve(zpt::message _request) -> zpt::message {
-    auto _param = _request->performative() == zpt::Post ? _request->body() : _request->parameters();
-
-    expect_c(_param("user_code")->ok(), "Required parameter 'user_code'", 412);
-    auto _user_code = _param("user_code")->string();
-
-    bool _approved = true;
-    if (_param("approved")->ok() && _param("approved")->is_string()) {
-        auto _value = static_cast<std::string>(_param("approved"));
-        _approved = !(_value == "false" || _value == "deny" || _value == "0");
-    }
-
-    this->__token_provider->approve(_user_code, _approved);
-    return make_reply(_request, 200, "", { "status", _approved ? "approved" : "denied" });
 }
 
 auto zpt::auth::oauth2::server::token_device(zpt::message _request) -> zpt::message {

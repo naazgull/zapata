@@ -103,9 +103,10 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
 
     /** @brief Generate the token's secret attributes and persist it. For a normal grant this means
         access/refresh tokens, an authorization code and a 90-day expiry, stored keyed by the
-        access token. For the device grant (grant_type "device") it instead mints a pending device
+        access token. For the device grant (grant_type "device") it instead mints an approved device
         authorization -- device_code, user_code, a pre-issued access/refresh token pair and a short
         expiry -- stored under all three of its codes so the existing getters resolve any of them.
+        This example assumes the resource owner has already approved it at the verification URI.
         In both cases the roles/permissions are attached. @param _data The grant context to complete
         in place. */
     auto generate_secrets(zpt::json& _data) -> void override {
@@ -124,7 +125,7 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
             _data["device_code"] = _device_code;
             _data["user_code"] = _user_code;
             _data["expires"] = (zpt::timestamp_t)(zpt::timestamp() + 5L * 60L * 1000L);
-            _data["status"] = "pending";
+            _data["status"] = "approved";
             std::lock_guard _lock{ _mutex };
             _tokens[static_cast<std::string>(_device_code)] = _data;
             _tokens[static_cast<std::string>(_user_code)] = _data;
@@ -195,22 +196,6 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
         auto _access_token = zpt::auth::extract(_message);
         return !_access_token.empty() && this->get_data_from_token(_access_token)->ok() &&
                _permissions->ok();
-    }
-
-    /** @brief Approve or deny a pending device authorization. Resolves it by its device_code or
-        user_code (both are store keys), flips the status and re-persists it under all three of its
-        codes. @throws zpt::failed_expectation If no such device authorization exists. */
-    auto approve(std::string const& _code, bool _approved) -> void override {
-        std::lock_guard _lock{ _mutex };
-        auto _it = _tokens.find(_code);
-        expect_c(_it != _tokens.end() && _it->second("device_code")->ok(),
-                 "no such device authorization",
-                 400);
-        auto _data = _it->second;
-        _data["status"] = _approved ? "approved" : "denied";
-        _tokens[static_cast<std::string>(_data("device_code"))] = _data;
-        _tokens[static_cast<std::string>(_data("user_code"))] = _data;
-        _tokens[static_cast<std::string>(_data("access_token"))] = _data;
     }
 
   private:
