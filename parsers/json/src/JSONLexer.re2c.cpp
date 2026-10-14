@@ -115,9 +115,7 @@ auto zpt::Re2cJSONLexer::lexInitial() -> int {
         }
     yy3:
 #line 62 "parsers/json/src/JSON.re"
-    {
-        return 0;
-    }
+        { return 0; }
 #line 120 "parsers/json/src/JSONLexer.re2c.cpp"
     yy4:
         ++this->__cursor;
@@ -158,15 +156,15 @@ auto zpt::Re2cJSONLexer::lexInitial() -> int {
         }
     yy7:
 #line 127 "parsers/json/src/JSON.re"
-    {
-        this->captureMatch();
-        this->leaveIfComplete();
-        if (this->matched().find(".") != std::string::npos ||
-            this->matched().find("e+") != std::string::npos) {
-            return DOUBLE;
+        {
+            this->captureMatch();
+            this->leaveIfComplete();
+            if (this->matched().find(".") != std::string::npos ||
+                this->matched().find("e+") != std::string::npos) {
+                return DOUBLE;
+            }
+            return INTEGER;
         }
-        return INTEGER;
-    }
 #line 169 "parsers/json/src/JSONLexer.re2c.cpp"
     yy8:
         ++this->__cursor;
@@ -303,9 +301,7 @@ auto zpt::Re2cJSONLexer::lexKwTrue() -> int {
         ++this->__cursor;
     yy22:
 #line 160 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 307 "parsers/json/src/JSONLexer.re2c.cpp"
     yy23:
         yych = *(this->__marker = ++this->__cursor);
@@ -351,9 +347,7 @@ auto zpt::Re2cJSONLexer::lexKwFalse() -> int {
         ++this->__cursor;
     yy29:
 #line 172 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 354 "parsers/json/src/JSONLexer.re2c.cpp"
     yy30:
         yych = *(this->__marker = ++this->__cursor);
@@ -405,9 +399,7 @@ auto zpt::Re2cJSONLexer::lexKwNull() -> int {
         ++this->__cursor;
     yy37:
 #line 184 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 407 "parsers/json/src/JSONLexer.re2c.cpp"
     yy38:
         yych = *(this->__marker = ++this->__cursor);
@@ -453,9 +445,7 @@ auto zpt::Re2cJSONLexer::lexKwUndefined() -> int {
         ++this->__cursor;
     yy44:
 #line 196 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 454 "parsers/json/src/JSONLexer.re2c.cpp"
     yy45:
         yych = *(this->__marker = ++this->__cursor);
@@ -531,9 +521,7 @@ auto zpt::Re2cJSONLexer::lexKwLambda() -> int {
         ++this->__cursor;
     yy56:
 #line 208 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 531 "parsers/json/src/JSONLexer.re2c.cpp"
     yy57:
         yych = *(this->__marker = ++this->__cursor);
@@ -884,9 +872,7 @@ auto zpt::Re2cJSONLexer::lexUnicode() -> int {
         }
     yy88:
 #line 418 "parsers/json/src/JSON.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 887 "parsers/json/src/JSONLexer.re2c.cpp"
     yy89:
         ++this->__cursor;

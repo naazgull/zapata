@@ -128,10 +128,10 @@ auto zpt::Re2cFunctionalLexer::lexInitial() -> int {
         }
     yy3:
 #line 79 "parsers/functional/src/Functional.re"
-    {
-        this->captureMatch();
-        return VARIABLE;
-    }
+        {
+            this->captureMatch();
+            return VARIABLE;
+        }
 #line 136 "parsers/functional/src/FunctionalLexer.re2c.cpp"
     yy4:
         ++this->__cursor;
@@ -212,11 +212,11 @@ auto zpt::Re2cFunctionalLexer::lexQuoted() -> int {
         }
     yy13:
 #line 115 "parsers/functional/src/Functional.re"
-    {
-        this->captureMatch();
-        this->more();
-        return 0;
-    }
+        {
+            this->captureMatch();
+            this->more();
+            return 0;
+        }
 #line 224 "parsers/functional/src/FunctionalLexer.re2c.cpp"
     yy14:
         ++this->__cursor;
@@ -260,11 +260,11 @@ auto zpt::Re2cFunctionalLexer::lexNumber() -> int {
         }
     yy17:
 #line 126 "parsers/functional/src/Functional.re"
-    {
-        this->captureMatch();
-        this->begin(re2c_functional_cond::INITIAL);
-        return NUMBER;
-    }
+        {
+            this->captureMatch();
+            this->begin(re2c_functional_cond::INITIAL);
+            return NUMBER;
+        }
 #line 273 "parsers/functional/src/FunctionalLexer.re2c.cpp"
     }
 #line 131 "parsers/functional/src/Functional.re"

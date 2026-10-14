@@ -24,7 +24,7 @@
 
 #include <zapata/oauth2/oauth2.h>
 #include <zapata/oauth2/services/authorize.h>
-#include <zapata/oauth2/services/device_authorization.h>
+#include <zapata/oauth2/services/authorize_device.h>
 #include <zapata/oauth2/services/refresh.h>
 #include <zapata/oauth2/services/token.h>
 #include <zapata/oauth2/services/validate.h>

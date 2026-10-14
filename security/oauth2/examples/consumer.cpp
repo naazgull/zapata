@@ -42,14 +42,17 @@
 
 #include <format>
 #include <string>
+#include <vector>
 #include <zapata/base.h>
 #include <zapata/config.h>
+#include <zapata/crypto/sha256.h>
 #include <zapata/events.h>
 #include <zapata/json.h>
 #include <zapata/ontology.h>
 #include <zapata/rest.h>
 #include <zapata/runtime.h>
 #include <zapata/startup.h>
+#include <zapata/text/convert.h>
 #include <zapata/transport.h>
 #include <zapata/uri.h>
 
@@ -73,6 +76,26 @@ auto make_request(std::string const& _url, zpt::json const& _body) -> zpt::messa
     return _msg;
 }
 
+/** @brief The PKCE code verifier for the single authorization-code walk. Its S256 challenge goes
+    in the /authorize request; this value is sent back at the /token exchange (RFC 7636). */
+std::string pkce_verifier;
+
+/** @brief Compute a PKCE S256 code challenge: the base64url-encoded (no padding) SHA-256 digest
+    of the verifier (RFC 7636). @param _verifier The PKCE code verifier. @return The S256 challenge.
+ */
+auto pkce_s256(std::string const& _verifier) -> std::string {
+    unsigned char _digest[zpt::crypto::SHA256::DIGEST_SIZE];
+    zpt::crypto::SHA256 _hash;
+    _hash.init();
+    _hash.update(reinterpret_cast<const unsigned char*>(_verifier.data()),
+                 static_cast<unsigned int>(_verifier.size()));
+    _hash.finalize(_digest);
+    std::vector<unsigned char> _bytes(_digest, _digest + zpt::crypto::SHA256::DIGEST_SIZE);
+    std::string _challenge;
+    zpt::base64::url_encode(_bytes, _challenge, false);
+    return _challenge;
+}
+
 } // namespace
 
 /**
@@ -86,8 +109,9 @@ auto make_request(std::string const& _url, zpt::json const& _body) -> zpt::messa
  * the next step is fired.
  *
  * Steps:
- *   0 - authorization code flow: /authorize replied with a redirect carrying
- *       the code -> exchange it at /token.
+ *   0 - authorization code flow with PKCE: /authorize (sent with an S256 code_challenge)
+ *       replied with a redirect carrying the code -> exchange it at /token, proving the
+ *       code_verifier.
  *   1 - /token returned the code-flow token -> start the password grant.
  *   2 - password grant returned a token -> start the client credentials grant.
  *   3 - client credentials grant returned a token -> validate it.
@@ -188,7 +212,7 @@ class oauth2_client : public zpt::events::process {
                         break;
                     }
                     case 6: {
-                        this->device_authorization();
+                        this->authorize_device();
                         break;
                     }
                     case 7: {
@@ -210,16 +234,21 @@ class oauth2_client : public zpt::events::process {
     }
 
   private:
-    /** @brief Exchange the authorization code for a token. */
+    /** @brief Exchange the authorization code for a token, proving possession of the PKCE code
+        verifier (RFC 7636). */
     auto exchange_code() -> oauth2_client& {
         this->context(zpt::make_call(zpt::REST_RESOLVER(),
                                      make_request(oauth2_url("token"),
-                                                  { "client_id",
+                                                  { "grant_type",
+                                                    "authorization_code",
+                                                    "client_id",
                                                     "client-1",
                                                     "client_secret",
                                                     "client-secret-1",
                                                     "code",
-                                                    this->__code })));
+                                                    this->__code,
+                                                    "code_verifier",
+                                                    pkce_verifier })));
         return (*this);
     }
 
@@ -255,9 +284,9 @@ class oauth2_client : public zpt::events::process {
 
     /** @brief Validate the client credentials access token. */
     auto validate_token() -> oauth2_client& {
-        this->context(
-          zpt::make_call(zpt::REST_RESOLVER(),
-                         make_request(oauth2_url("validate"), { "access_token", this->__token })));
+        auto _request = make_request(oauth2_url("validate"), json_null);
+        _request->header("Authorization", std::format("Bearer {}", this->__token));
+        this->context(zpt::make_call(zpt::REST_RESOLVER(), _request));
         return (*this);
     }
 
@@ -271,10 +300,11 @@ class oauth2_client : public zpt::events::process {
     }
 
     /** @brief Request a device authorization. */
-    auto device_authorization() -> oauth2_client& {
-        this->context(zpt::make_call(zpt::REST_RESOLVER(),
-                                     make_request(oauth2_url("device_authorization"),
-                                                  { "client_id", "client-1", "scope", "read" })));
+    auto authorize_device() -> oauth2_client& {
+        this->context(zpt::make_call(
+          zpt::REST_RESOLVER(),
+          make_request(oauth2_url("authorize_device"),
+                       { "grant_type", "device_code", "client_id", "client-1", "scope", "read" })));
         return (*this);
     }
 
@@ -315,6 +345,7 @@ class oauth2_client_boot : public zpt::system_event {
         auto _id = this->__received->body()("_id")->string();
         if (_id.find("authorize") != std::string::npos) {
             zlog("OAuth2 server discovered; starting flow walk", zpt::info);
+            pkce_verifier = zpt::generate::r_key(64);
             zpt::make_call<oauth2_client>(zpt::REST_RESOLVER(),
                                           make_request(oauth2_url("authorize"),
                                                        { "response_type",
@@ -324,7 +355,11 @@ class oauth2_client_boot : public zpt::system_event {
                                                          "redirect_uri",
                                                          "http://localhost:8080/callback",
                                                          "scope",
-                                                         "read" }));
+                                                         "read",
+                                                         "code_challenge",
+                                                         pkce_s256(pkce_verifier),
+                                                         "code_challenge_method",
+                                                         "S256" }));
             zpt::SYSTEM_EVENTS_RESOLVER() //
               ->remove<oauth2_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
         }

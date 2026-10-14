@@ -30,11 +30,6 @@
 
 namespace zpt {
 namespace auth {
-/** @brief Extract an access token from a request message. Checks the Authorization header
-    first, then the request body, then URL params. Returns an empty string if no token is
-    found. */
-auto extract(zpt::message _message) -> std::string;
-
 namespace oauth2 {
 /**
     @name Token Provider Interface
@@ -79,29 +74,16 @@ class token_provider {
         permissions, and stores it if that is the provider's logic. @param _data The grant context
         JSON to complete in place. @return void. */
     virtual auto generate_secrets(zpt::json& _data) -> void = 0;
-    /** @brief Exchange an authorization code for token data. @param _code The authorization
-        code received from the client. @param _id The client identifier. @param _secret The
-        client secret. @return JSON containing the access and refresh tokens. */
-    virtual auto exchange_code(std::string const& _code,
-                               std::string const& _id,
-                               std::string const& _secret) -> zpt::json = 0;
+    /** @brief Exchange an authorization code for token data. @param _context The token request
+        parameters (client_id, client_secret, code, ...). @return JSON containing the access
+        and refresh tokens. */
+    virtual auto exchange_code(zpt::json const& _context) -> zpt::json = 0;
     /** @brief Look up token data by access token string. @param _access_token The access token
         value. @return JSON containing the token data. */
     virtual auto get_data_from_token(std::string const& _access_token) -> zpt::json = 0;
     /** @brief Look up token data by refresh token string. @param _refresh_token The refresh
         token value. @return JSON containing the token data. */
     virtual auto get_data_from_refresh_token(std::string const& _refresh_token) -> zpt::json = 0;
-    /** @brief Retrieve roles and permissions associated with a token. Called during token
-        generation to enrich the token with authorization metadata. @param _token The token JSON.
-        @return JSON containing roles and permissions. */
-    virtual auto get_roles_permissions(zpt::json _token) -> zpt::json = 0;
-    /** @brief Validate that a token's roles/permissions satisfy the requirements for a given
-        topic. @param _message The request message. @param _topic The topic being accessed.
-        @param _permissions The permissions required. @return true if the token has sufficient
-        permissions. */
-    virtual auto validate_roles_permissions(zpt::message _message,
-                                            std::string _topic,
-                                            zpt::json _permissions) -> bool = 0;
 };
 /**@}
  */
@@ -129,6 +111,12 @@ class server {
         @param _request The incoming request message.
         @return Reply message with a redirect URL or error body. */
     virtual auto authorize(zpt::message _request) -> zpt::message;
+    /** @brief Request a device authorization (RFC 8628 device grant). Generates a device_code and
+        a user_code that the resource owner uses to approve the request offline.
+        @param _request The incoming request message (client_id, scope).
+        @return Reply message with the device_code, user_code, verification_uri, expiry and
+        polling interval. */
+    virtual auto authorize_device(zpt::message _request) -> zpt::message;
     /** @brief Exchange an authorization code for access and refresh tokens.
         @param _request The incoming request message.
         @return Reply message with a redirect or the token data. */
@@ -142,12 +130,6 @@ class server {
         @param _request The incoming request message.
         @return Reply message with the token data if valid, or an error. */
     virtual auto validate(zpt::message _request) -> zpt::message;
-    /** @brief Request a device authorization (RFC 8628 device grant). Generates a device_code and
-        a user_code that the resource owner uses to approve the request offline.
-        @param _request The incoming request message (client_id, scope).
-        @return Reply message with the device_code, user_code, verification_uri, expiry and
-        polling interval. */
-    virtual auto device_authorization(zpt::message _request) -> zpt::message;
 
     /**@}
      */
@@ -194,6 +176,11 @@ class server {
     auto generate_token(zpt::json _data) -> zpt::json;
 };
 } // namespace oauth2
+
+/** @brief Extract an access token from a request message. Checks the Authorization header
+    first, then the request body, then URL params. Returns an empty string if no token is
+    found. */
+auto extract_token(zpt::message _message) -> std::string;
 } // namespace auth
 
 /** @brief Global accessor for the OAuth2 server instance. Used by all handlers to dispatch

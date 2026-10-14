@@ -112,12 +112,12 @@ auto zpt::Re2cURILexer::lexInitial() -> int {
         }
     yy3:
 #line 81 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->begin(re2c_uri_cond::scheme);
-        this->d_part_is_placeholder = false;
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->begin(re2c_uri_cond::scheme);
+            this->d_part_is_placeholder = false;
+            return STRING;
+        }
 #line 122 "parsers/uri/src/URILexer.re2c.cpp"
     yy4:
         ++this->__cursor;
@@ -144,11 +144,11 @@ auto zpt::Re2cURILexer::lexInitial() -> int {
         }
     yy7:
 #line 98 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->begin(re2c_uri_cond::path);
-        return DOT;
-    }
+        {
+            this->captureMatch();
+            this->begin(re2c_uri_cond::path);
+            return DOT;
+        }
 #line 153 "parsers/uri/src/URILexer.re2c.cpp"
     yy8:
         ++this->__cursor;
@@ -217,11 +217,11 @@ auto zpt::Re2cURILexer::lexScheme() -> int {
         }
     yy15:
 #line 132 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->begin(re2c_uri_cond::path);
-        return DOT;
-    }
+        {
+            this->captureMatch();
+            this->begin(re2c_uri_cond::path);
+            return DOT;
+        }
 #line 227 "parsers/uri/src/URILexer.re2c.cpp"
     yy16:
         ++this->__cursor;
@@ -327,12 +327,12 @@ auto zpt::Re2cURILexer::lexServer() -> int {
         }
     yy26:
 #line 170 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->d_server_part.assign(this->matched());
-        this->d_part_is_placeholder = false;
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->d_server_part.assign(this->matched());
+            this->d_part_is_placeholder = false;
+            return STRING;
+        }
 #line 340 "parsers/uri/src/URILexer.re2c.cpp"
     yy27:
         ++this->__cursor;
@@ -410,15 +410,15 @@ auto zpt::Re2cURILexer::lexPath() -> int {
         }
     yy34:
 #line 225 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        std::string _m(this->matched());
-        _m.insert(0, this->d_path_helper);
-        this->d_path_helper.assign("");
-        this->setMatched(_m);
-        this->d_part_is_placeholder = false;
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            std::string _m(this->matched());
+            _m.insert(0, this->d_path_helper);
+            this->d_path_helper.assign("");
+            this->setMatched(_m);
+            this->d_part_is_placeholder = false;
+            return STRING;
+        }
 #line 427 "parsers/uri/src/URILexer.re2c.cpp"
     yy35:
         ++this->__cursor;
@@ -493,11 +493,11 @@ auto zpt::Re2cURILexer::lexParams() -> int {
         }
     yy42:
 #line 253 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->d_part_is_placeholder = false;
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->d_part_is_placeholder = false;
+            return STRING;
+        }
 #line 507 "parsers/uri/src/URILexer.re2c.cpp"
     yy43:
         ++this->__cursor;
@@ -556,11 +556,11 @@ auto zpt::Re2cURILexer::lexPlaceholder() -> int {
         }
     yy49:
 #line 264 "parsers/uri/src/URI.re"
-    {
-        this->captureMatch();
-        this->d_path_helper.append(this->matched());
-        return 0;
-    }
+        {
+            this->captureMatch();
+            this->d_path_helper.append(this->matched());
+            return 0;
+        }
 #line 571 "parsers/uri/src/URILexer.re2c.cpp"
     yy50:
         ++this->__cursor;
