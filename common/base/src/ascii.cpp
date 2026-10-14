@@ -46,14 +46,12 @@ auto zpt::ascii::encode(std::string& _out, bool) -> void {
 }
 
 auto zpt::generate::key(std::string& _out, size_t _size) -> void {
-    static std::string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-    timeval _tv = { 0, 0 };
-
-    for (size_t _idx = 0; _idx != _size; _idx++) {
-        gettimeofday(&_tv, nullptr);
-        srand(_tv.tv_usec);
-        _out.append(1, charset[rand() % charset.length()]);
-    }
+    static std::string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    std::random_device _rd;
+    std::mt19937 _gen(_rd());
+    std::uniform_int_distribution<int> _int_dist(0, _charset.length() - 1);
+    _gen.seed(std::chrono::steady_clock::now().time_since_epoch().count());
+    for (size_t _idx = 0; _idx != _size; _idx++) { _out.append(1, _charset[_int_dist(_gen)]); }
 }
 
 auto zpt::generate::r_key(size_t _size) -> std::string {
@@ -72,8 +70,8 @@ auto zpt::generate::pin(std::string& _out, size_t _size) -> void {
     static std::string _charset = "0123456789";
     std::random_device _rd;
     std::mt19937 _gen(_rd());
-    std::uniform_int_distribution<int> _int_dist(0, 9);
-
+    std::uniform_int_distribution<int> _int_dist(0, _charset.length() - 1);
+    _gen.seed(std::chrono::steady_clock::now().time_since_epoch().count());
     for (size_t _idx = 0; _idx != _size; _idx++) { _out.append(1, _charset[_int_dist(_gen)]); }
 }
 
@@ -91,17 +89,11 @@ auto zpt::generate::r_pin() -> std::string {
 
 auto zpt::generate::hash(std::string& _out) -> void {
     static std::string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-    std::string _randompass;
-    _randompass.resize(45);
-    timeval _tv;
-    gettimeofday(&_tv, nullptr);
-
-    srand(_tv.tv_usec);
-    for (int i = 0; i < 45; i++) {
-        if (i % 10 == 0) { srand(_tv.tv_usec * i); }
-        _randompass[i] = _charset[rand() % _charset.length()];
-    };
-    _out.append(_randompass);
+    std::random_device _rd;
+    std::mt19937 _gen(_rd());
+    std::uniform_int_distribution<int> _int_dist(0, _charset.length() - 1);
+    _gen.seed(std::chrono::steady_clock::now().time_since_epoch().count());
+    for (size_t _idx = 0; _idx != 45; _idx++) { _out.append(1, _charset[_int_dist(_gen)]); }
 }
 
 auto zpt::generate::r_hash() -> std::string {

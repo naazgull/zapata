@@ -20,24 +20,20 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <zapata/oauth2/oauth2.h>
+#include <zapata/oauth2/services/authorize_device.h>
 
-#include <zapata/rest.h>
+auto zpt::auth::oauth2::authorize_device::blocked() const -> bool { return false; }
 
-namespace zpt {
-namespace auth {
-namespace oauth2 {
-/** @brief REST handler for the OAuth2 device authorization endpoint (RFC 8628). Issues a
-    device_code and user_code for offline approval, and copies the resulting reply onto the
-    outgoing message. */
-class device_authorization : public zpt::events::process {
-  public:
-    using zpt::events::process::process;
-    ~device_authorization() = default;
+auto zpt::auth::oauth2::authorize_device::operator()(zpt::events::dispatcher::ptr)
+  -> zpt::events::state {
+    auto _reply = zpt::OAUTH2_SERVER().authorize_device(this->received());
+    auto _to_send = this->to_send();
 
-    auto blocked() const -> bool;
-    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state;
-};
-} // namespace oauth2
-} // namespace auth
-} // namespace zpt
+    _to_send //
+      ->status(_reply->status())
+      .body() = _reply->body();
+    _to_send->headers() |= _reply->headers();
+
+    return zpt::events::finish;
+}

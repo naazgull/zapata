@@ -107,9 +107,7 @@ auto zpt::Re2cHTTPLexer::lexInitial() -> int {
         ++this->__cursor;
     yy2:
 #line 163 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 112 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy3:
         ++this->__cursor;
@@ -632,9 +630,7 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         ++this->__cursor;
     yy80:
 #line 202 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 636 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy81:
         ++this->__cursor;
@@ -651,10 +647,10 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         }
     yy83:
 #line 190 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        return URL;
-    }
+        {
+            this->captureMatch();
+            return URL;
+        }
 #line 656 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy84:
         yych = *++this->__cursor;
@@ -785,10 +781,10 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         }
     yy103:
 #line 169 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        return PROTOCOL_VERSION;
-    }
+        {
+            this->captureMatch();
+            return PROTOCOL_VERSION;
+        }
 #line 790 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy104:
         yych = *++this->__cursor;
@@ -802,10 +798,10 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         }
     yy105:
 #line 173 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        return PROTOCOL_VERSION;
-    }
+        {
+            this->captureMatch();
+            return PROTOCOL_VERSION;
+        }
 #line 807 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy106:
         yych = *++this->__cursor;
@@ -819,10 +815,10 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         }
     yy107:
 #line 177 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        return PROTOCOL_VERSION;
-    }
+        {
+            this->captureMatch();
+            return PROTOCOL_VERSION;
+        }
 #line 824 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy108:
         yych = *++this->__cursor;
@@ -836,10 +832,10 @@ auto zpt::Re2cHTTPLexer::lexRequest() -> int {
         }
     yy109:
 #line 181 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        return PROTOCOL_VERSION;
-    }
+        {
+            this->captureMatch();
+            return PROTOCOL_VERSION;
+        }
 #line 841 "parsers/http/src/HTTPLexer.re2c.cpp"
     }
 #line 203 "parsers/http/src/HTTP.re"
@@ -873,25 +869,23 @@ auto zpt::Re2cHTTPLexer::lexReply() -> int {
         ++this->__cursor;
     yy112:
 #line 232 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 876 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy113:
         ++this->__cursor;
     yy114:
 #line 217 "parsers/http/src/HTTP.re"
-    {
-        // Seeds matched() with this one character, then arms more() so
-        // statustext's upcoming STRING rule appends to it instead of
-        // replacing it - order matters: captureMatch() must run before
-        // more(), since more() only affects how the *next* rule's match
-        // combines with what was just captured here.
-        this->captureMatch();
-        this->more();
-        this->begin(zpt::re2c_cond::statustext);
-        return 0;
-    }
+        {
+            // Seeds matched() with this one character, then arms more() so
+            // statustext's upcoming STRING rule appends to it instead of
+            // replacing it - order matters: captureMatch() must run before
+            // more(), since more() only affects how the *next* rule's match
+            // combines with what was just captured here.
+            this->captureMatch();
+            this->more();
+            this->begin(zpt::re2c_cond::statustext);
+            return 0;
+        }
 #line 892 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy115:
         yych = *++this->__cursor;
@@ -979,9 +973,7 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
         ++this->__cursor;
     yy124:
 #line 291 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 981 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy125:
         ++this->__cursor;
@@ -996,17 +988,19 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
         }
     yy126:
 #line 276 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        std::string _m(this->matched());
-        std::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
-        if (_m == std::string("content-length")) { this->begin(zpt::re2c_cond::contentlengthval); }
-        else if (_m == std::string("transfer-encoding")) {
-            this->begin(zpt::re2c_cond::transferencodingval);
+        {
+            this->captureMatch();
+            std::string _m(this->matched());
+            std::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
+            if (_m == std::string("content-length")) {
+                this->begin(zpt::re2c_cond::contentlengthval);
+            }
+            else if (_m == std::string("transfer-encoding")) {
+                this->begin(zpt::re2c_cond::transferencodingval);
+            }
+            else if (_m == std::string("trailer")) { this->begin(zpt::re2c_cond::trailerval); }
+            return STRING;
         }
-        else if (_m == std::string("trailer")) { this->begin(zpt::re2c_cond::trailerval); }
-        return STRING;
-    }
 #line 1010 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy127:
         yych = *++this->__cursor;
@@ -1031,14 +1025,14 @@ auto zpt::Re2cHTTPLexer::lexHeaders() -> int {
         }
     yy130:
 #line 268 "parsers/http/src/HTTP.re"
-    {
-        // A single line ending: headers continue (this is not the
-        // terminating blank line - the rule above already claimed that
-        // case via longest-match). Stay in `headers` and let the next
-        // STRING rule match the following header's name.
-        this->captureMatch();
-        return CR_LF;
-    }
+        {
+            // A single line ending: headers continue (this is not the
+            // terminating blank line - the rule above already claimed that
+            // case via longest-match). Stay in `headers` and let the next
+            // STRING rule match the following header's name.
+            this->captureMatch();
+            return CR_LF;
+        }
 #line 1042 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy131:
         yych = *++this->__cursor;
@@ -1108,11 +1102,11 @@ auto zpt::Re2cHTTPLexer::lexHeaderval() -> int {
         }
     yy137:
 #line 297 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        this->begin(zpt::re2c_cond::headers);
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->begin(zpt::re2c_cond::headers);
+            return STRING;
+        }
 #line 1121 "parsers/http/src/HTTPLexer.re2c.cpp"
     }
 #line 303 "parsers/http/src/HTTP.re"
@@ -1135,9 +1129,7 @@ auto zpt::Re2cHTTPLexer::lexStatustext() -> int {
         ++this->__cursor;
     yy140:
 #line 320 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 1145 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy141:
         ++this->__cursor;
@@ -1151,13 +1143,13 @@ auto zpt::Re2cHTTPLexer::lexStatustext() -> int {
         }
     yy142:
 #line 313 "parsers/http/src/HTTP.re"
-    {
-        // If reached directly from lexReply's one-character transition
-        // rule, captureMatch() here appends to the single character
-        // already captured there (more() was armed by that rule).
-        this->captureMatch();
-        return STRING;
-    }
+        {
+            // If reached directly from lexReply's one-character transition
+            // rule, captureMatch() here appends to the single character
+            // already captured there (more() was armed by that rule).
+            this->captureMatch();
+            return STRING;
+        }
 #line 1165 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy143:
         yych = *++this->__cursor;
@@ -1210,13 +1202,13 @@ auto zpt::Re2cHTTPLexer::lexContentLengthVal() -> int {
         }
     yy148:
 #line 330 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        std::string _s(this->matched());
-        zpt::fromstr(_s, &this->d_content_length);
-        this->begin(zpt::re2c_cond::headers);
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            std::string _s(this->matched());
+            zpt::fromstr(_s, &this->d_content_length);
+            this->begin(zpt::re2c_cond::headers);
+            return STRING;
+        }
 #line 1225 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy149:
         ++this->__cursor;
@@ -1262,12 +1254,13 @@ auto zpt::Re2cHTTPLexer::lexTransferEncodingVal() -> int {
         }
     yy153:
 #line 347 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        this->d_chunked_body = (this->matched().find(std::string("chunked")) != std::string::npos);
-        this->begin(zpt::re2c_cond::headers);
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->d_chunked_body =
+              (this->matched().find(std::string("chunked")) != std::string::npos);
+            this->begin(zpt::re2c_cond::headers);
+            return STRING;
+        }
 #line 1277 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy154:
         ++this->__cursor;
@@ -1313,12 +1306,12 @@ auto zpt::Re2cHTTPLexer::lexTrailerVal() -> int {
         }
     yy158:
 #line 363 "parsers/http/src/HTTP.re"
-    {
-        this->captureMatch();
-        this->d_chunked_trailer = this->matched();
-        this->begin(zpt::re2c_cond::headers);
-        return STRING;
-    }
+        {
+            this->captureMatch();
+            this->d_chunked_trailer = this->matched();
+            this->begin(zpt::re2c_cond::headers);
+            return STRING;
+        }
 #line 1329 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy159:
         ++this->__cursor;
@@ -1360,9 +1353,7 @@ auto zpt::Re2cHTTPLexer::lexChunkedBody() -> int {
         ++this->__cursor;
     yy162:
 #line 433 "parsers/http/src/HTTP.re"
-    {
-        return -1;
-    }
+        { return -1; }
 #line 1372 "parsers/http/src/HTTPLexer.re2c.cpp"
     yy163:
         yych = *(this->__marker = ++this->__cursor);

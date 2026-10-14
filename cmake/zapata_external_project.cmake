@@ -52,6 +52,7 @@ set(ZPT_MODULES
   zapata-parser-uri
   zapata-regex-graph
   zapata-runtime
+  zapata-security-oauth2
   zapata-storage-connector
   zapata-storage-mongodb
   zapata-storage-mysqlx

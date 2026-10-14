@@ -34,7 +34,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
       .add<zpt::auth::oauth2::token>(_config("token")->string())
       .add<zpt::auth::oauth2::refresh>(_config("refresh")->string())
       .add<zpt::auth::oauth2::validate>(_config("validate")->string())
-      .add<zpt::auth::oauth2::device_authorization>(_config("device_authorization")->string());
+      .add<zpt::auth::oauth2::authorize_device>(_config("authorize_device")->string());
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
@@ -46,5 +46,5 @@ extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
       .remove<zpt::auth::oauth2::token>(_config("token")->string())
       .remove<zpt::auth::oauth2::refresh>(_config("refresh")->string())
       .remove<zpt::auth::oauth2::validate>(_config("validate")->string())
-      .remove<zpt::auth::oauth2::device_authorization>(_config("device_authorization")->string());
+      .remove<zpt::auth::oauth2::authorize_device>(_config("authorize_device")->string());
 }

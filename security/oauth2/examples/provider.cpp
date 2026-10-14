@@ -79,10 +79,16 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
                         std::string const& _password,
                         std::string const& _client_id) -> zpt::json override {
         (void)_client_id;
-        expect_c(_owner == owner_username && _password == owner_password,
-                 "invalid owner credentials",
-                 401);
-        return { "id", owner_id, "username", owner_username };
+        if (_password.empty()) {
+            expect_c(_owner == owner_id, "invalid owner credentials", 401);
+            return { "id", owner_id, "username", owner_username };
+        }
+        else {
+            expect_c(_owner == owner_username && _password == owner_password,
+                     "invalid owner credentials",
+                     401);
+            return { "id", owner_id, "username", owner_username };
+        }
     }
 
     /** @brief Resolve the client from the request (authorization code flow).
@@ -97,7 +103,11 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
         grant). @throws zpt::failed_expectation If the credentials are unknown. */
     auto retrieve_client(std::string const& _client_id, std::string const& _client_secret)
       -> zpt::json override {
-        expect_c(_client_id == client_id && _client_secret == client_secret, "no such client", 401);
+        if (_client_secret.empty()) { expect_c(_client_id == client_id, "no such client", 401); }
+        else {
+            expect_c(
+              _client_id == client_id && _client_secret == client_secret, "no such client", 401);
+        }
         return { "id", client_id, "client_id", client_id, "name", "example-client" };
     }
 
@@ -111,30 +121,23 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
         in place. */
     auto generate_secrets(zpt::json& _data) -> void override {
         auto _access_token = zpt::generate::r_key(128);
-        _data["id"] = _access_token;
         _data["access_token"] = _access_token;
         _data["refresh_token"] = zpt::generate::r_key(64);
-        auto _roles_permissions = this->get_roles_permissions(_data);
-        _data["roles"] = _roles_permissions("roles");
-        _data["permissions"] = _roles_permissions("permissions");
+        long long _expires_in = 5LL * 60LL * 1000LL;
+        _data["valid_until"] = zpt::timestamp(zpt::now<long long>() + _expires_in);
+        _data["expires_in"] = _expires_in;
+        _data["client_id"] = client_id;
+        _data["owner_id"] = owner_id;
 
-        if (_data("grant_type")->ok() &&
-            static_cast<std::string>(_data("grant_type")) == "device") {
+        if (_data("grant_type")->ok() && _data("grant_type") == "device_code") {
             auto _device_code = zpt::generate::r_key(64);
             auto _user_code = zpt::generate::r_key(6);
             _data["device_code"] = _device_code;
             _data["user_code"] = _user_code;
-            _data["expires"] = (zpt::timestamp_t)(zpt::timestamp() + 5L * 60L * 1000L);
             _data["status"] = "approved";
-            std::lock_guard _lock{ _mutex };
-            _tokens[static_cast<std::string>(_device_code)] = _data;
-            _tokens[static_cast<std::string>(_user_code)] = _data;
-            _tokens[_access_token] = _data;
-            return;
         }
+        else { _data["code"] = zpt::generate::r_key(64); }
 
-        _data["code"] = zpt::generate::r_key(64);
-        _data["expires"] = (zpt::timestamp_t)(zpt::timestamp() + 90L * 24L * 3600L * 1000L);
         std::lock_guard _lock{ _mutex };
         _tokens[_access_token] = _data;
     }
@@ -142,12 +145,16 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
     /** @brief Exchange an authorization code for the stored token, after
         verifying the requesting client. @throws zpt::failed_expectation If the
         client is unknown or the code is not valid. */
-    auto exchange_code(std::string const& _code, std::string const& _id, std::string const& _secret)
-      -> zpt::json override {
-        expect_c(_id == client_id && _secret == client_secret, "no such client", 401);
+    auto exchange_code(zpt::json const& _context) -> zpt::json override {
+        expect_c(_context("client_id") == client_id && _context("client_secret") == client_secret,
+                 "no such client",
+                 401);
         std::lock_guard _lock{ _mutex };
         for (auto&& [_, _token] : _tokens) {
-            if (static_cast<std::string>(_token("code")) == _code) { return _token; }
+            if (_context("code")->ok() && _token("code") == _context("code")) { return _token; }
+            if (_context("device_code")->ok() && _token("device_code") == _context("device_code")) {
+                return _token;
+            }
         }
         expect_c(false, "invalid authorization code", 400);
         return zpt::json{};
@@ -171,31 +178,6 @@ class memory_token_provider : public zpt::auth::oauth2::token_provider {
             }
         }
         return zpt::json{};
-    }
-
-    /** @brief Roles and permissions to attach to a token. The resource owner
-        holds the elevated set; owner-less (client-issued) tokens hold the basic
-        set. */
-    auto get_roles_permissions(zpt::json _token) -> zpt::json override {
-        if (!static_cast<std::string>(_token("owner_id")).empty()) {
-            return { "roles",
-                     { json_array, "admin", "user" },
-                     "permissions",
-                     { json_array, "read", "write", "admin" } };
-        }
-        return { "roles", { json_array, "user" }, "permissions", { json_array, "read" } };
-    }
-
-    /** @brief Validate that the request's token carries permissions for the
-        topic. The constant owner holds every permission, so any token that
-        resolves is granted. */
-    auto validate_roles_permissions(zpt::message _message,
-                                    std::string _topic,
-                                    zpt::json _permissions) -> bool override {
-        (void)_topic;
-        auto _access_token = zpt::auth::extract(_message);
-        return !_access_token.empty() && this->get_data_from_token(_access_token)->ok() &&
-               _permissions->ok();
     }
 
   private:
