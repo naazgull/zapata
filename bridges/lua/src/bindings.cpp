@@ -1,4 +1,5 @@
 #include <zapata/lua/bindings.h>
+#include <zapata/net/transport/self.h>
 #include <zapata/rest.h>
 #include <zapata/runtime.h>
 #include <zapata/transport/engine.h>
@@ -6,6 +7,7 @@
 namespace {
 struct luaL_Reg _lib[] = { { "make_request", zpt::lua::bindings::make_request },
                            { "call", zpt::lua::bindings::send_request },
+                           { "wait_for_endpoint", zpt::lua::bindings::wait_for },
                            { "config", zpt::lua::bindings::get_config },
                            { "get_global", zpt::lua::bindings::get_global },
                            { "set_global", zpt::lua::bindings::set_global },
@@ -76,6 +78,40 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
         zpt::make_call(zpt::REST_RESOLVER(), _request);
         return 0;
     }
+}
+
+auto zpt::lua::bindings::wait_for(lua_State* _state) -> int {
+    auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
+    auto _catalog = zpt::CATALOG();
+    auto _args = _bridge.object_to_json(_state);
+    expect(_args->is_array() && _args->size() == 2, "`zpt.wait_for_endpoint` expects 2 parameters");
+    expect(_args(0)->is_string(), "1st parameter of `zpt.wait_for_endpoint` isn't a string");
+    expect(_args(1)->is_string(), "2nd parameter of `zpt.wait_for_endpoint` isn't a string");
+
+    static constexpr long long _timeout{ 20 };
+    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count();
+    auto _path =
+      std::format("/{}{}{}", _args(0)->string(), zpt::rest::default_prefix(), _args(1)->string());
+    while (_catalog->search(_path)->size() == 0) {
+        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
+                      std::chrono::steady_clock::now().time_since_epoch())
+                      .count();
+        if (_lap - _start > _timeout) {
+            _bridge.to_object(false, _state);
+            return 1;
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
+
+        if (zpt::runtime::is_in_shutdown()) {
+            _bridge.to_object(false, _state);
+            return 1;
+        }
+    }
+
+    _bridge.to_object(true, _state);
+    return 1;
 }
 
 auto zpt::lua::bindings::get_config(lua_State* _state) -> int {

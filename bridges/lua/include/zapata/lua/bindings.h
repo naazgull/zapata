@@ -21,6 +21,13 @@ auto make_request(lua_State* _state) -> int;
  */
 auto send_request(lua_State* _state) -> int;
 /**
+ * @brief Waits for the given endpoint to be registered in the catalogue.
+ * @param _state The Lua state.
+ * @return The number of results pushed onto the stack.
+ * @throws std::runtime_error if the request is malformed.
+ */
+auto wait_for(lua_State* _state) -> int;
+/**
  * @brief Pushes the global Zapata configuration as a JSON table onto the Lua stack.
  * @param _state The Lua state.
  * @return The number of results pushed onto the stack.
