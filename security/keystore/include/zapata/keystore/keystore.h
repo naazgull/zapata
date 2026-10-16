@@ -129,9 +129,8 @@ class storage_key_store : public key_store {
     explicit storage_key_store(std::string const& _passphrase);
     ~storage_key_store() override = default;
 
-    auto create(std::string const& _id,
-                std::string const& _value,
-                zpt::json _meta = json_null) -> void override;
+    auto create(std::string const& _id, std::string const& _value, zpt::json _meta = json_null)
+      -> void override;
     auto get(std::string const& _id) -> std::string override;
     auto rotate(std::string const& _id, std::string const& _value) -> void override;
     auto remove(std::string const& _id) -> std::size_t override;

@@ -118,6 +118,12 @@ class catalog {
      */
     auto search(K const& _pattern, std::string const& _provider = "") const -> zpt::json const;
     /**
+     * @brief Searches for entries matching a filter.
+     * @param _filter JSON object containing the filter to apply to the underlying database.
+     * @return JSON array of matching entries.
+     */
+    auto filter(zpt::json const& _filter) const -> zpt::json const;
+    /**
      * @brief Lists all entries for a provider (default: self).
      * @param _provider_id Provider ID to list entries for.
      * @return JSON array of all entries for the provider.
@@ -308,13 +314,27 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
                      ->execute()
                      ->fetch();
 
-    std::istringstream _iss;
     for (auto&& [_, __, _service] : _result) {
         if (_service("metadata")->ok()) {
-            M _metadata;
-            _iss.str(_service("metadata")->string());
-            _iss >> _metadata;
-            _service["metadata"] = _metadata;
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
+        }
+    }
+
+    return _result;
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::filter(zpt::json const& _filter) const -> zpt::json const {
+    auto _result = this
+                     ->__catalog //
+                     ->find(_filter)
+                     ->fields({ json_array, "_id", "provider_id", "hash", "metadata" })
+                     ->execute()
+                     ->fetch();
+
+    for (auto&& [_, __, _service] : _result) {
+        if (_service("metadata")->ok()) {
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
         }
     }
 
@@ -332,13 +352,9 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
         ->execute()
         ->fetch();
 
-    std::istringstream _iss;
     for (auto&& [_, __, _service] : _result) {
         if (_service("metadata")->ok()) {
-            M _metadata;
-            _iss.str(_service("metadata")->string());
-            _iss >> _metadata;
-            _service["metadata"] = _metadata;
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
         }
     }
 
