@@ -88,26 +88,14 @@ auto zpt::lua::bindings::wait_for(lua_State* _state) -> int {
     expect(_args(0)->is_string(), "1st parameter of `zpt.wait_for_endpoint` isn't a string");
     expect(_args(1)->is_string(), "2nd parameter of `zpt.wait_for_endpoint` isn't a string");
 
-    static constexpr long long _timeout{ 20 };
-    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now().time_since_epoch())
-                    .count();
     auto _path =
       std::format("/{}{}{}", _args(0)->string(), zpt::rest::default_prefix(), _args(1)->string());
-    while (_catalog->search(_path)->size() == 0) {
-        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
-                      std::chrono::steady_clock::now().time_since_epoch())
-                      .count();
-        if (_lap - _start > _timeout) {
-            _bridge.to_object(false, _state);
-            return 1;
-        }
-        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
-
-        if (zpt::runtime::is_in_shutdown()) {
-            _bridge.to_object(false, _state);
-            return 1;
-        }
+    try {
+        _catalog->wait_for_availability(_path);
+    }
+    catch (...) {
+        _bridge.to_object(false, _state);
+        return 1;
     }
 
     _bridge.to_object(true, _state);
