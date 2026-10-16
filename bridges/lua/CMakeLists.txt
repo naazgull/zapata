@@ -60,6 +60,7 @@ add_dependencies(zapata-bridge-lua-plugin
   zapata-engine-startup
   zapata-engine-rest
   zapata-events
+  zapata-net-self
   zapata-parser-json
   zapata-runtime
 )
@@ -80,6 +81,7 @@ target_include_directories(zapata-bridge-lua-plugin
     zapata-events
     zapata-globals
     zapata-lockfree
+    zapata-net-self
     zapata-parser-json
     zapata-runtime
     ${BRIDGE_LUA_INCLUDE_DIR}
@@ -98,6 +100,7 @@ target_link_libraries(zapata-bridge-lua-plugin
     zapata-events
     zapata-globals
     zapata-lockfree
+    zapata-net-self
     zapata-parser-json
     zapata-runtime
     zapata-storage-sqlite

@@ -61,7 +61,9 @@ auto zpt::ws_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     auto [_message, _op] = zpt::net::ws::read(_in);
     try {
         auto _content = zpt::json::parse_json_str(_message);
-        if (_content("body")->ok() && _content("uri")->ok()) { this->__underlying = _content; }
+        if (_content("performative")->ok() && _content("uri")->ok()) {
+            this->__underlying = _content;
+        }
         else { throw ::non_json_message{ _content }; }
     }
     catch (...) {

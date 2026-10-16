@@ -537,18 +537,17 @@ auto zpt::auth::oauth2::server::token_device(zpt::message _request) -> zpt::mess
     auto _token = this->__token_provider->exchange_code(_param);
 
     auto _status = _token("status")->string();
-    if (_status == "pending") {
-        return ::make_reply(_request, 400, "", { "error", "authorization_pending" });
-    }
-    if (_status == "denied") {
-        return ::make_reply(_request, 400, "", { "error", "access_denied" });
-    }
-    auto _expires = zpt::timestamp(_token("valid_until")->string());
-    if (_expires <= zpt::timestamp()) {
-        return ::make_reply(_request, 400, "", { "error", "expired_token" });
-    }
     if (_status != "approved") {
-        return ::make_reply(_request, 400, "", { "error", "invalid_grant" });
+        auto _expires = zpt::timestamp(_token("valid_until")->string());
+        auto _body = zpt::json::object();
+
+        if (_status == "pending") { _body << "error" << "authorization_pending"; }
+        else if (_status == "denied") { _body << "error" << "access_denied"; }
+        else if (_expires <= zpt::timestamp()) { _body << "error" << "expired_token"; }
+        else { _body << "error" << "invalid_grant"; }
+
+        _body << "device_code" << _param("device_code") << "interval" << 5;
+        return ::make_reply(_request, 400, "", _body);
     }
 
     return ::make_reply(_request,

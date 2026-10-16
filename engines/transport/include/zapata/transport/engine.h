@@ -25,6 +25,7 @@
 #include <zapata/startup.h>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/uri.h>
 #include <zapata/uuid.h>
 
 namespace {
@@ -667,7 +668,10 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
             try {
                 return this->send_externally();
             }
-            catch (...) {
+            catch (std::exception const& _e) {
+                zlog("Error caught while sending message to `"
+                       << zpt::uri::to_string(this->__to_send->uri()) << "`: " << _e.what(),
+                     zpt::error);
                 auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
                 _reply->status(503);
                 this->__context->reply(_reply);

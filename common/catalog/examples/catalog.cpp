@@ -6,6 +6,7 @@ auto factory(zpt::json _argv, std::uint16_t, zpt::context) -> zpt::json {
 }
 
 auto main(int, char**) -> int {
+    zpt::log_lvl = zpt::info;
     zpt::catalog<std::string, zpt::json> _catalog{ "catalog",
                                                    "2bd7e390-76a7-11f0-af32-681def5202cf" };
     _catalog.clear();
@@ -34,11 +35,15 @@ auto main(int, char**) -> int {
                  true);
 
     for (auto&& [_, _key, _record] : _catalog.search("/users/n@zgul.me/info")) {
-        zpt::json::parse_json_str(_record("metadata")->string())("callback")
+        _record("metadata")("callback")
           ->lambda()({ json_array, _key, _record }, zpt::context{ nullptr });
     }
     for (auto&& [_, _key, _record] : _catalog.search("/users/n@zgul.me")) {
-        zpt::json::parse_json_str(_record("metadata")->string())("callback")
+        _record("metadata")("callback")
+          ->lambda()({ json_array, _key, _record }, zpt::context{ nullptr });
+    }
+    for (auto&& [_, _key, _record] : _catalog.filter("_id like '%users%'")) {
+        _record("metadata")("callback")
           ->lambda()({ json_array, _key, _record }, zpt::context{ nullptr });
     }
     return 0;

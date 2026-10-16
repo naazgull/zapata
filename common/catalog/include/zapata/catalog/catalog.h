@@ -118,6 +118,12 @@ class catalog {
      */
     auto search(K const& _pattern, std::string const& _provider = "") const -> zpt::json const;
     /**
+     * @brief Searches for entries matching a filter.
+     * @param _filter JSON object containing the filter to apply to the underlying database.
+     * @return JSON array of matching entries.
+     */
+    auto filter(zpt::json const& _filter) const -> zpt::json const;
+    /**
      * @brief Lists all entries for a provider (default: self).
      * @param _provider_id Provider ID to list entries for.
      * @return JSON array of all entries for the provider.
@@ -143,6 +149,12 @@ class catalog {
      * @return JSON object with provider details, or null if not found.
      */
     auto get_provider(std::string const& _id) const -> zpt::json;
+    /**
+     * @brief Waits for the given key to be part of the catalogue.
+     * @param _key The key to wait for.
+     * @return Reference to this catalog.
+     */
+    auto wait_for_availability(K _key) const -> catalog const&;
 
   private:
     /** @brief This catalog's provider ID used for self-registered entries. */
@@ -308,13 +320,27 @@ auto zpt::catalog<K, M>::search(K const& _pattern, std::string const& _provider)
                      ->execute()
                      ->fetch();
 
-    std::istringstream _iss;
     for (auto&& [_, __, _service] : _result) {
         if (_service("metadata")->ok()) {
-            M _metadata;
-            _iss.str(_service("metadata")->string());
-            _iss >> _metadata;
-            _service["metadata"] = _metadata;
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
+        }
+    }
+
+    return _result;
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::filter(zpt::json const& _filter) const -> zpt::json const {
+    auto _result = this
+                     ->__catalog //
+                     ->find(_filter)
+                     ->fields({ json_array, "_id", "provider_id", "hash", "metadata" })
+                     ->execute()
+                     ->fetch();
+
+    for (auto&& [_, __, _service] : _result) {
+        if (_service("metadata")->ok()) {
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
         }
     }
 
@@ -332,13 +358,9 @@ auto zpt::catalog<K, M>::list(std::string const& _provider_id) const -> zpt::jso
         ->execute()
         ->fetch();
 
-    std::istringstream _iss;
     for (auto&& [_, __, _service] : _result) {
         if (_service("metadata")->ok()) {
-            M _metadata;
-            _iss.str(_service("metadata")->string());
-            _iss >> _metadata;
-            _service["metadata"] = _metadata;
+            _service["metadata"] = zpt::json::parse_json_str(_service("metadata")->string());
         }
     }
 
@@ -387,6 +409,24 @@ auto zpt::catalog<K, M>::get_provider(std::string const& _id) const -> zpt::json
     }
 
     return _providers;
+}
+
+template<typename K, typename M>
+auto zpt::catalog<K, M>::wait_for_availability(K _key) const -> catalog const& {
+    static constexpr long long _timeout{ 20 };
+
+    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count();
+    while (this->search(_key)->size() == 0) {
+        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
+                      std::chrono::steady_clock::now().time_since_epoch())
+                      .count();
+        expect(_lap - _start <= _timeout, "Timeout while waiting for endpoint availability");
+        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
+    }
+
+    return (*this);
 }
 
 template<typename K, typename M>

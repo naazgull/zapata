@@ -551,18 +551,21 @@ auto zpt::storage::sqlite::action_add::bind(zpt::json) -> zpt::storage::action::
 }
 
 auto zpt::storage::sqlite::action_add::execute() -> zpt::storage::result {
+    long long _changed{ 0 };
     try {
         for (auto _prepared : this->__prepared) {
             sqlite_expect(
               sqlite3_step(_prepared.get()),
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+            _changed += sqlite3_changes64(this->__underlying.get());
         }
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(-1);
         throw;
     }
-    zpt::json _result{ "state", this->get_state(), "generated", this->__generated_uuid };
+    zpt::json _result{ "state",   this->get_state(), "generated", this->__generated_uuid,
+                       "changes", _changed };
     return zpt::make_result<zpt::storage::sqlite::result>(_result);
 }
 
@@ -677,6 +680,7 @@ auto zpt::storage::sqlite::action_modify::bind(zpt::json _map) -> zpt::storage::
 }
 
 auto zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
+    long long _changed{ 0 };
     try {
         this->add_update();
         for (auto _prepared : this->__prepared) {
@@ -684,13 +688,14 @@ auto zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
             sqlite_expect(
               _result,
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+            _changed += sqlite3_changes64(this->__underlying.get());
         }
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(-1);
         throw;
     }
-    zpt::json _result{ "state", this->get_state() };
+    zpt::json _result{ "state", this->get_state(), "changes", _changed };
     return zpt::make_result<zpt::storage::sqlite::result>(_result);
 }
 
@@ -800,19 +805,21 @@ auto zpt::storage::sqlite::action_remove::bind(zpt::json _map) -> zpt::storage::
 }
 
 auto zpt::storage::sqlite::action_remove::execute() -> zpt::storage::result {
+    long long _changed{ 0 };
     try {
         this->add_delete();
         for (auto _prepared : this->__prepared) {
             sqlite_expect(
               sqlite3_step(_prepared.get()),
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+            _changed += sqlite3_changes64(this->__underlying.get());
         }
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(-1);
         throw;
     }
-    zpt::json _result{ "state", this->get_state() };
+    zpt::json _result{ "state", this->get_state(), "changes", _changed };
     return zpt::make_result<zpt::storage::sqlite::result>(_result);
 }
 
@@ -900,19 +907,21 @@ auto zpt::storage::sqlite::action_replace::bind(zpt::json) -> zpt::storage::acti
 }
 
 auto zpt::storage::sqlite::action_replace::execute() -> zpt::storage::result {
+    long long _changed{ 0 };
     try {
         this->add_replace();
         for (auto _prepared : this->__prepared) {
             sqlite_expect(
               sqlite3_step(_prepared.get()),
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+            _changed += sqlite3_changes64(this->__underlying.get());
         }
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(-1);
         throw;
     }
-    zpt::json _result{ "state", this->get_state() };
+    zpt::json _result{ "state", this->get_state(), "changes", _changed };
     return zpt::make_result<zpt::storage::sqlite::result>(_result);
 }
 
@@ -1039,7 +1048,7 @@ auto zpt::storage::sqlite::action_find::execute() -> zpt::storage::result {
         throw;
     }
     auto _found = zpt::json::array();
-    zpt::json _result{ "state", this->get_state(), "cursor", _found };
+    zpt::json _result{ "state", this->get_state(), "cursor", _found, "changes", 0 };
     return zpt::make_result<zpt::storage::sqlite::result>(_result, this->__prepared);
 }
 
@@ -1117,12 +1126,11 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
 }
 
 auto zpt::storage::sqlite::result::generated_id() -> zpt::json {
-    return this->__result["generated"];
+    return this->__result("generated");
 }
 
 auto zpt::storage::sqlite::result::count() const -> size_t {
-    if (this->__result("generated")->ok()) { return this->__result("generated")->size(); }
-    return 0;
+    return this->__result("changes")->integer();
 }
 
 auto zpt::storage::sqlite::result::status() const -> zpt::status {
