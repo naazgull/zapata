@@ -161,6 +161,11 @@ class queue {
      */
     auto size() const -> size_t;
     /**
+     * @brief Clears the queue's content.
+     * @return Reference to this queue.
+     */
+    auto clear() -> zpt::lf::queue<T>&;
+    /**
      * @brief Instructs all threads spinning in `push` or `pop` to exit.
      * @return Reference to this queue.
      */
@@ -335,6 +340,12 @@ auto zpt::lf::queue<T>::capacity() const -> size_t {
 template<typename T>
 auto zpt::lf::queue<T>::size() const -> size_t {
     return this->__size->load(std::memory_order_relaxed);
+}
+
+template<typename T>
+auto zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
+    for (size_t _idx = 0; _idx != this->__capacity; ++_idx) { this->__slots[_idx].value = nullptr; }
+    return (*this);
 }
 
 template<typename T>
