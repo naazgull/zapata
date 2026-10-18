@@ -32,3 +32,5 @@
 
 #include <zapata/keystore/crypto.h>
 #include <zapata/keystore/keystore.h>
+#include <zapata/keystore/keys_store.h>
+#include <zapata/keystore/key_document.h>

@@ -208,8 +208,13 @@ auto zpt::keystore::storage_key_store::create(std::string const& _id,
     this->upsert(this->encrypt_row(_id, _value, _meta, 1, now_millis()));
 }
 
-auto zpt::keystore::storage_key_store::get(std::string const& _id) -> std::string {
-    return this->decrypt_row(this->load_row(_id));
+auto zpt::keystore::storage_key_store::get(std::string const& _id) -> zpt::json {
+    auto _row = this->load_row(_id);
+    return { "_id",     _row("_id")->string(),
+             "secret",  this->decrypt_row(_row),
+             "meta",    this->parse_meta(_row),
+             "version", _row("version")->ok() ? _row("version")->integer() : 0,
+             "created", _row("created")->ok() ? _row("created")->integer() : 0 };
 }
 
 auto zpt::keystore::storage_key_store::rotate(std::string const& _id, std::string const& _value)
@@ -237,6 +242,7 @@ auto zpt::keystore::storage_key_store::list() -> zpt::json {
     for (std::size_t _i = 0; _i < _rows.size(); ++_i) {
         auto _row = _rows(_i);
         _out << zpt::json{ "_id",     _row("_id")->string(),
+                           "secret",  this->decrypt_row(_row),
                            "meta",    this->parse_meta(_row),
                            "version", _row("version")->ok() ? _row("version")->integer() : 0,
                            "created", _row("created")->ok() ? _row("created")->integer() : 0 };
