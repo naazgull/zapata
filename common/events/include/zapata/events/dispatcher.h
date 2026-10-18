@@ -142,6 +142,10 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
      */
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
+    /**
+     * @brief Check whether or not there are events to be trapped.
+     * @return True is the events queue is empry, false otherwise. */
+    auto empty() const -> bool;
     /** @brief Blocks until dispatcher is shut down.
      * @return Reference to this dispatcher. */
     auto trap() -> dispatcher&;
