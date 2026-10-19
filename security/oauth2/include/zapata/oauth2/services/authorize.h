@@ -34,8 +34,8 @@ class authorize : public zpt::events::process {
     using zpt::events::process::process;
     ~authorize() = default;
 
-    auto blocked() const -> bool;
-    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state;
+    auto blocked() const -> bool override;
+    auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override;
 };
 } // namespace oauth2
 } // namespace auth

@@ -1,0 +1,48 @@
+{
+    "module": "keystore",
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Agent management API",
+        "namespace": "zpt",
+        "version": "2.0"
+    },
+    "paths": {
+        "/keys": {
+            "resource": "store",
+            "*": {
+                "operationId": "keys_store",
+                "requestBody": {
+                    "$ref": "#/components/schemas/keys"
+                }
+            }
+        },
+        "/keys/{id}": {
+            "resource": "document",
+            "*": {
+                "operationId": "key_document",
+                "requestBody": {
+                    "$ref": "#/components/schemas/keys"
+                }
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true
+                }
+            ]
+        }
+    },
+    "components": {
+        "schemas": {
+            "keys": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {}
+                    }
+                ]
+            }
+        }
+    }
+}

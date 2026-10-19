@@ -141,6 +141,9 @@ auto zpt::runtime::run() -> void {
       ->trigger<zpt::system_event>(zpt::system_event_type::SHUTTING_DOWN);
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
+    while (!zpt::DISPATCHER()->empty()) {
+        std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
+    }
     zpt::DISPATCHER() //
       ->stop_consumers();
     zpt::events::dispatcher::join_threads();

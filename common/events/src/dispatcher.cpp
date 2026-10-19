@@ -54,12 +54,9 @@ auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& 
 }
 
 auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
-    while (this->__queue.size() != 0) {
-        std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
-    }
-
     if (this->__shutdown->exchange(true)) { return (*this); }
     this->__queue.shutdown();
+    this->__queue.clear();
 
     while (this->__running_consumers->load(std::memory_order_relaxed) != 0) {
         std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
@@ -74,6 +71,8 @@ auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
     this->__queue.push(std::move(_event));
     return (*this);
 }
+
+auto zpt::events::dispatcher::empty() const -> bool { return this->__queue.size() == 0; }
 
 auto zpt::events::dispatcher::trap() -> dispatcher& {
     auto _event = this->__queue.pop();

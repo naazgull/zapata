@@ -68,7 +68,7 @@ class key_store {
      * @throws zpt::ExpectationException If the key is missing, or the integrity
      *         check fails (wrong passphrase or tampering).
      */
-    virtual auto get(std::string const& _id) -> std::string = 0;
+    virtual auto get(std::string const& _id) -> zpt::json = 0;
 
     /**
      * @brief Replaces the value of an existing secret (rotation).
@@ -131,7 +131,7 @@ class storage_key_store : public key_store {
 
     auto create(std::string const& _id, std::string const& _value, zpt::json _meta = json_null)
       -> void override;
-    auto get(std::string const& _id) -> std::string override;
+    auto get(std::string const& _id) -> zpt::json override;
     auto rotate(std::string const& _id, std::string const& _value) -> void override;
     auto remove(std::string const& _id) -> std::size_t override;
     auto has(std::string const& _id) -> bool override;
