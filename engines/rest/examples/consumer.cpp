@@ -28,9 +28,9 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 
-class test_client_service : public zpt::events::process {
+class test_client_service : public zpt::events::process_call_reply {
   public:
-    using zpt::events::process::process;
+    using zpt::events::process_call_reply::process_call_reply;
     ~test_client_service() = default;
 
     auto blocked() const -> bool { return false; }

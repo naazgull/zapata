@@ -801,6 +801,10 @@ auto zpt::events::call<T>::publish_externally() -> zpt::events::state {
 template<ProcessOperation T>
 auto zpt::make_call(zpt::events::resolver _resolver, zpt::message _to_send)
   -> zpt::call_context::ptr {
+    static_assert(std::is_base_of<zpt::events::process_call_reply, T>::value ||
+                    std::is_same<zpt::events::discard, T>::value,
+                  "Call reply event handler must be derived from `zpt::event::process_call_reply` "
+                  "or be `zpt::events::discard`");
     auto _context = zpt::allocate_shared<zpt::call_context>();
     zpt::TRANSPORT_ENGINE() //
       ->dispatcher()

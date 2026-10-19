@@ -122,9 +122,9 @@ auto pkce_s256(std::string const& _verifier) -> std::string {
  *       have happened out-of-band).
  *   7 - /token returned the device-grant token -> done.
  */
-class oauth2_client : public zpt::events::process {
+class oauth2_client : public zpt::events::process_call_reply {
   public:
-    using zpt::events::process::process;
+    using zpt::events::process_call_reply::process_call_reply;
     ~oauth2_client() = default;
 
     auto blocked() const -> bool {

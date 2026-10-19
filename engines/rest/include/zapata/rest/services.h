@@ -116,9 +116,9 @@ class minion_state : public zpt::events::process {
  *
  * Handles requests for the list of registered service endpoints.
  */
-class services_list : public zpt::events::process {
+class services_list : public zpt::events::process_call_reply {
   public:
-    using zpt::events::process::process;
+    using zpt::events::process_call_reply::process_call_reply;
     /**
      * @brief Destructor.
      * @return void (destructors implicitly clean up the object).
