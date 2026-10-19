@@ -34,7 +34,7 @@ class rest_resolver_minion_shutdown : public zpt::system_event {
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         zpt::SYSTEM_EVENTS_RESOLVER()->remove<::rest_resolver_minion_shutdown>(
-          zpt::system_event_type::EXITING);
+          zpt::SYSTEM_EVENT_EXITING);
 
         auto _config = zpt::GLOBAL_CONFIG();
         if (_config("transport")("default")->ok() && _config("upnp")->ok()) {
@@ -71,8 +71,7 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
         zpt::rest::services::broadcast("/minions/boot", _config);
     }
 
-    zpt::SYSTEM_EVENTS_RESOLVER()->add<::rest_resolver_minion_shutdown>(
-      zpt::system_event_type::EXITING);
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<::rest_resolver_minion_shutdown>(zpt::SYSTEM_EVENT_EXITING);
 
     zlog("Added REST event resolver", zpt::info);
 }

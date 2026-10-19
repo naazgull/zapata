@@ -58,7 +58,7 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<plugin_testing_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->remove<plugin_testing_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
         if (_failed->size() != 0) {
             zlog("Failed tests: " << zpt::pretty{ _failed }, zpt::warning);
@@ -111,7 +111,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 
     zpt::SYSTEM_EVENTS_RESOLVER() //
-      ->add<plugin_testing_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+      ->add<plugin_testing_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
     zlog("Loaded testing plugin", zpt::info);
 }

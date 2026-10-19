@@ -46,7 +46,7 @@ class plugin_mqtt_execute_after_boot : public zpt::system_event {
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->remove<plugin_mqtt_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
         return zpt::events::finish;
     }
@@ -65,7 +65,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
         if (_config("subscribe")->is_bool() && _config("subscribe")->boolean()) {
             zpt::SYSTEM_EVENTS_RESOLVER() //
-              ->add<plugin_mqtt_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+              ->add<plugin_mqtt_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
         }
 
         _plugin.add_thread([=]() mutable -> void {

@@ -361,7 +361,7 @@ class oauth2_client_boot : public zpt::system_event {
                                                          "code_challenge_method",
                                                          "S256" }));
             zpt::SYSTEM_EVENTS_RESOLVER() //
-              ->remove<oauth2_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+              ->remove<oauth2_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
         }
         return zpt::events::finish;
     }
@@ -370,11 +370,11 @@ class oauth2_client_boot : public zpt::system_event {
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Loading OAuth2 example consumer", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER() //
-      ->add<oauth2_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+      ->add<oauth2_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading OAuth2 example consumer", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER() //
-      ->remove<oauth2_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+      ->remove<oauth2_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 }

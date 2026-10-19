@@ -83,7 +83,7 @@ class test_client_boot : public zpt::system_event {
             zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 
             zpt::SYSTEM_EVENTS_RESOLVER() //
-              ->remove<test_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+              ->remove<test_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
         }
         return zpt::events::finish;
     }
@@ -103,19 +103,17 @@ class test_client_stream_state : public zpt::system_event {
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Loading module 'test_plugin_client'", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_boot>(
-      zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
-    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_stream_state>(
-      zpt::system_event_type::STREAM_OPENED);
-    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_stream_state>(
-      zpt::system_event_type::STREAM_CLOSED);
+      zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_stream_state>(zpt::SYSTEM_EVENT_STREAM_OPENED);
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<test_client_stream_state>(zpt::SYSTEM_EVENT_STREAM_CLOSED);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading module 'test_plugin_client'", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER()->remove<test_client_boot>(
-      zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+      zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
     zpt::SYSTEM_EVENTS_RESOLVER()->remove<test_client_stream_state>(
-      zpt::system_event_type::STREAM_OPENED);
+      zpt::SYSTEM_EVENT_STREAM_OPENED);
     zpt::SYSTEM_EVENTS_RESOLVER()->remove<test_client_stream_state>(
-      zpt::system_event_type::STREAM_CLOSED);
+      zpt::SYSTEM_EVENT_STREAM_CLOSED);
 }

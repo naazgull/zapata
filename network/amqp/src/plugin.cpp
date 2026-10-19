@@ -56,7 +56,7 @@ class plugin_amqp_execute_after_boot : public zpt::system_event {
         auto const& _subscriptions = _config("amqp")("subscribe");
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->remove<plugin_amqp_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->remove<plugin_amqp_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
         if (_subscriptions->is_array()) {
             for (auto&& [_, __, _subscription] : _subscriptions) {
@@ -88,7 +88,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
              zpt::trace);
 
         zpt::SYSTEM_EVENTS_RESOLVER() //
-          ->add<plugin_amqp_execute_after_boot>(zpt::system_event_type::FINISHED_BOOT);
+          ->add<plugin_amqp_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
         _plugin.add_thread([=]() mutable -> void {
             zpt::this_thread::name("amqp@loop-misc");

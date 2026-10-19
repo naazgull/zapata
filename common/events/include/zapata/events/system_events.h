@@ -23,20 +23,22 @@ namespace zpt {
  * Enumerates the phases of the application lifecycle that can trigger
  * system events. Handlers can be registered for each event type.
  */
-enum system_event_type : long long {
-    BOOTING = 0,                 ///< Application is starting up.
-    FINISHED_BOOT,               ///< Boot sequence completed.
-    MINION_BOOT_RECEIVED,        ///< Worker process boot signal received.
-    MINION_HELLO_RECEIVED,       ///< Worker process hello handshake received.
-    REGISTERED_REMOTE_SERVICE,   ///< Remote service registered.
-    MINION_SHUTDOWN_RECEIVED,    ///< Worker process shutdown signal received.
-    UNREGISTERED_REMOTE_SERVICE, ///< Remote service unregistered.
-    STREAM_OPENED,               ///< Stream connection opened.
-    STREAM_CLOSED,               ///< Stream connection closed.
-    SHUTTING_DOWN,               ///< Application is shutting down.
-    EXITING,                     ///< Application is exiting.
-    END_EVENTS                   ///< Sentinel value.
-};
+using system_event_type = long long;
+constexpr long long SYSTEM_EVENT_BOOTING = 0;              ///< Application is starting up.
+constexpr long long SYSTEM_EVENT_FINISHED_BOOT = 1;        ///< Boot sequence completed.
+constexpr long long SYSTEM_EVENT_MINION_BOOT_RECEIVED = 2; ///< Worker process boot signal received.
+constexpr long long SYSTEM_EVENT_MINION_HELLO_RECEIVED =
+  3; ///< Worker process hello handshake received.
+constexpr long long SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE = 4; ///< Remote service registered.
+constexpr long long SYSTEM_EVENT_MINION_SHUTDOWN_RECEIVED =
+  5; ///< Worker process shutdown signal received.
+constexpr long long SYSTEM_EVENT_UNREGISTERED_REMOTE_SERVICE = 6; ///< Remote service unregistered.
+constexpr long long SYSTEM_EVENT_STREAM_OPENED = 7;               ///< Stream connection opened.
+constexpr long long SYSTEM_EVENT_STREAM_CLOSED = 8;               ///< Stream connection closed.
+constexpr long long SYSTEM_EVENT_SHUTTING_DOWN = 9;               ///< Application is shutting down.
+constexpr long long SYSTEM_EVENT_EXITING = 10;                    ///< Application is exiting.
+constexpr long long SYSTEM_EVENT_PLUGIN_START = 128;      ///< Start of built-in plugin events.
+constexpr long long SYSTEM_EVENT_APPLICATION_START = 512; ///< Start of application events.
 
 /**
  * @brief Operation for system lifecycle events.

@@ -47,15 +47,14 @@ class example_amqp_provider_boot : public zpt::system_event {
         }
 
         zpt::SYSTEM_EVENTS_RESOLVER()->remove<example_amqp_provider_boot>(
-          zpt::system_event_type::FINISHED_BOOT);
+          zpt::SYSTEM_EVENT_FINISHED_BOOT);
         return zpt::events::finish;
     }
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Loading module 'example_amqp_producer'", zpt::info);
-    zpt::SYSTEM_EVENTS_RESOLVER()->add<example_amqp_provider_boot>(
-      zpt::system_event_type::FINISHED_BOOT);
+    zpt::SYSTEM_EVENTS_RESOLVER()->add<example_amqp_provider_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
