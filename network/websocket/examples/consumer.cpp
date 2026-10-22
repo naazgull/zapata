@@ -55,10 +55,10 @@ class ws_test_client_boot : public zpt::system_event {
             }
 
             if (_context->is_replied()) {
-                expect(_context->reply()->body()("stream")->is_string(), "No stream identifier");
+                expect(_context->reply()->body()("stream")->is_object(), "No stream identifier");
                 auto _transport = zpt::TRANSPORT_LAYER().get("ws");
-                auto _stream =
-                  _polling->mute(zpt::uuid{ _context->reply()->body()("stream")->string() });
+                auto _stream = _polling->mute(
+                  zpt::uuid{ _context->reply()->body()("stream")("local_id")->string() });
 
                 _test_message = _transport->make_request();
                 _test_message //
