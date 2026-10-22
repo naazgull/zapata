@@ -36,7 +36,7 @@ class ws_test_client_boot : public zpt::system_event {
         if (this->__received->body()("_id")->ok() &&
             this->__received->body()("_id")->string().find("/ws/chat") != std::string::npos) {
             zpt::SYSTEM_EVENTS_RESOLVER() //
-              ->remove<ws_test_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+              ->remove<ws_test_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 
             auto _polling = zpt::STREAM_POLLING();
             auto _test_message = zpt::TRANSPORT_LAYER() //
@@ -55,10 +55,10 @@ class ws_test_client_boot : public zpt::system_event {
             }
 
             if (_context->is_replied()) {
-                expect(_context->reply()->body()("stream")->is_string(), "No stream identifier");
+                expect(_context->reply()->body()("stream")->is_object(), "No stream identifier");
                 auto _transport = zpt::TRANSPORT_LAYER().get("ws");
-                auto _stream =
-                  _polling->mute(zpt::uuid{ _context->reply()->body()("stream")->string() });
+                auto _stream = _polling->mute(
+                  zpt::uuid{ _context->reply()->body()("stream")("local_id")->string() });
 
                 _test_message = _transport->make_request();
                 _test_message //
@@ -83,7 +83,7 @@ class ws_test_client_boot : public zpt::system_event {
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zlog("Loading 'ws_test_consumer'", zpt::info);
     zpt::SYSTEM_EVENTS_RESOLVER() //
-      ->add<ws_test_client_boot>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE);
+      ->add<ws_test_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {

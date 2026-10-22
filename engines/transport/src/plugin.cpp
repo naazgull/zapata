@@ -33,8 +33,9 @@ class transport_engine_stop_threads : public zpt::system_event {
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
         zpt::SYSTEM_EVENTS_RESOLVER()->remove<::transport_engine_stop_threads>(
-          zpt::system_event_type::SHUTTING_DOWN);
+          zpt::SYSTEM_EVENT_SHUTTING_DOWN);
         zpt::TRANSPORT_ENGINE()->shutdown();
+        zlog("Stopped multi-transport engine", zpt::info);
         return zpt::events::finish;
     }
 };
@@ -53,12 +54,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
          zpt::info);
 
     zpt::SYSTEM_EVENTS_RESOLVER()->add<::transport_engine_stop_threads>(
-      zpt::system_event_type::SHUTTING_DOWN);
+      zpt::SYSTEM_EVENT_SHUTTING_DOWN);
 }
 
 /** @brief Plugin unload entry point: shuts down the transport engine.
  * @param _plugin Plugin instance.
  * @return void. */
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
-    zlog("Stopped multi-transport engine", zpt::info);
+    zlog("Unloaded multi-transport engine", zpt::info);
 }

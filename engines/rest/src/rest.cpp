@@ -182,7 +182,7 @@ auto zpt::rest::add_minion(zpt::json const& _minion) -> void {
                 _resolver->add(_service);
 
                 zpt::DISPATCHER() //
-                  ->trigger<zpt::system_event>(zpt::system_event_type::REGISTERED_REMOTE_SERVICE,
+                  ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE,
                                                _service);
             }
         }

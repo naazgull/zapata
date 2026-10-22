@@ -115,7 +115,8 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
 
         if (_received->performative() == zpt::Reply) {
             expect(_received->status() == 101, "Server didn't comply with the upgrade request");
-            _received->body() = { "stream", this->__stream->uuid().to_string() };
+            if (!_received->body()->ok()) { _received->body() = zpt::json::object(); }
+            _received->body()["stream"]["local_id"] = this->__stream->uuid().to_string();
 
             if (_value == "websocket") { _value = "ws"; }
             this->__polling->upgrade(this->__stream, _value);
@@ -128,7 +129,9 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
             _reply //
               ->status(101)
               .header("Upgrade", _value)
-              .header("Connection", "upgrade");
+              .header("Connection", "upgrade")
+              .header("Content-Type", "application/json")
+              .body() = { "stream", { "remote_id", this->__stream->uuid().to_string() } };
 
             if (_value == "websocket") {
                 _value = "ws";

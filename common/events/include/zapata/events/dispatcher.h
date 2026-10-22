@@ -274,6 +274,11 @@ class abstract_event {
      * @param _dispatcher Event dispatcher reference.
      * @return Processing state (finish, abort, retrigger). */
     virtual auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state = 0;
+
+    friend auto operator<<(std::ostream& _out, abstract_event const& _in) -> std::ostream& {
+        _out << _in.type();
+        return _out;
+    }
 };
 /**@}*/
 using event = zpt::allocator<zpt::abstract_event>::unique_pointer;

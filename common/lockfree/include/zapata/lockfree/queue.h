@@ -344,7 +344,7 @@ auto zpt::lf::queue<T>::size() const -> size_t {
 
 template<typename T>
 auto zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
-    for (size_t _idx = 0; _idx != this->__capacity; ++_idx) { this->__slots[_idx].value = nullptr; }
+    for (size_t _idx = 0; _idx != this->__capacity; ++_idx) { this->__slots[_idx].value.reset(); }
     return (*this);
 }
 

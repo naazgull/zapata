@@ -101,7 +101,7 @@ The transport engine uses events for request lifecycle:
 ```cpp
 // Subscribe to system events
 SYSTEM_EVENTS_RESOLVER()->add<my_boot_handler>(
-    zpt::system_event_type::FINISHED_BOOT);
+    zpt::SYSTEM_EVENT_FINISHED_BOOT);
 ```
 
 ## Publishing Events

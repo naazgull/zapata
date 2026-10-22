@@ -118,7 +118,7 @@ auto zpt::runtime::run() -> void {
     auto _config = zpt::GLOBAL_CONFIG();
 
     zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::BOOTING);
+      ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_BOOTING);
 
     zpt::STREAM_POLLING();
     zlog("Initialized stream polling", zpt::info);
@@ -132,15 +132,15 @@ auto zpt::runtime::run() -> void {
     zlog("All plugins loaded", zpt::notice);
 
     zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::FINISHED_BOOT);
+      ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
     zpt::STREAM_POLLING() //
       ->poll();
 
     zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::SHUTTING_DOWN);
+      ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_SHUTTING_DOWN);
     zpt::DISPATCHER() //
-      ->trigger<zpt::system_event>(zpt::system_event_type::EXITING);
+      ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_EXITING);
     while (!zpt::DISPATCHER()->empty()) {
         std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
     }
@@ -178,14 +178,14 @@ auto deallocate(int) -> void { zpt::STREAM_POLLING()->shutdown(); }
 auto on_stream_connect(zpt::uuid const& _stream_id, std::string const& _address) -> void {
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(
-        zpt::system_event_type::STREAM_OPENED,
+        zpt::SYSTEM_EVENT_STREAM_OPENED,
         zpt::json{ "state", "opened", "_id", _stream_id.to_string(), "address", _address });
 }
 
 auto on_stream_disconnect(zpt::uuid const& _stream_id, std::string const& _address) -> void {
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(
-        zpt::system_event_type::STREAM_CLOSED,
+        zpt::SYSTEM_EVENT_STREAM_CLOSED,
         zpt::json{ "state", "closed", "_id", _stream_id.to_string(), "address", _address });
 }
 } // namespace

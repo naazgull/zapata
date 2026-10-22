@@ -12,7 +12,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
     if (this->received()->performative() == zpt::Notify &&
         _peer_id != zpt::IDENTITY()("_id")->string()) {
         zpt::DISPATCHER() //
-          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_BOOT_RECEIVED,
+          ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_MINION_BOOT_RECEIVED,
                                        this->received()->headers());
 
 #ifndef PROPAGATE_EXCEPTION
@@ -56,7 +56,7 @@ auto zpt::rest::minion_shutdown::operator()(zpt::events::dispatcher::ptr _dispat
     if (this->received()->performative() == zpt::Notify &&
         _peer_id != zpt::IDENTITY()("_id")->string()) {
         zpt::DISPATCHER() //
-          ->trigger<zpt::system_event>(zpt::system_event_type::MINION_SHUTDOWN_RECEIVED,
+          ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_MINION_SHUTDOWN_RECEIVED,
                                        this->received()->headers());
 
         try {
@@ -78,7 +78,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
         auto _minion = this->received()->body();
         if (_minion->ok()) {
             zpt::DISPATCHER() //
-              ->trigger<zpt::system_event>(zpt::system_event_type::MINION_HELLO_RECEIVED, _minion);
+              ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_MINION_HELLO_RECEIVED, _minion);
 
             if (_minion("provider")->ok()) { zpt::rest::add_minion(_minion); }
             else { zlog("Malformed service list: " << _minion, zpt::error); }
