@@ -33,6 +33,7 @@
 #include <zapata/http.h>
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/websocket.h>
+#include <zapata/uri.h>
 
 using request_type = zpt::ws_message;
 using reply_type = zpt::ws_message;
@@ -63,6 +64,10 @@ auto zpt::ws_message::from_stream(std::istream& _in) -> zpt::basic_message& {
         auto _content = zpt::json::parse_json_str(_message);
         if (_content("performative")->ok() && _content("uri")->ok()) {
             this->__underlying = _content;
+            auto const& _uri = this->__underlying("uri");
+            if (_uri("raw_path")->ok() && !_uri("path")->ok()) {
+                this->__underlying["uri"] = zpt::uri::parse(_uri("raw_path")->string());
+            }
         }
         else { throw ::non_json_message{ _content }; }
     }
