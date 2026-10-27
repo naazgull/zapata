@@ -192,6 +192,22 @@ auto zpt::rest::add_minion(zpt::json const& _minion) -> void {
     }
 }
 
+auto zpt::rest::wait_for_availability(std::string const& _key) -> void {
+    static constexpr long long _timeout{ 10 };
+
+    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count();
+    auto _catalog = zpt::CATALOG();
+    while (_catalog->search(_key)->size() == 0 && !zpt::STREAM_POLLING()->is_in_shutdown()) {
+        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
+                      std::chrono::steady_clock::now().time_since_epoch())
+                      .count();
+        expect(_lap - _start <= _timeout, "Timeout while waiting for endpoint availability");
+        std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+    }
+}
+
 auto zpt::REST_RESOLVER(zpt::json _config) -> zpt::events::resolver {
     static zpt::events::resolver _global = zpt::allocate_shared<zpt::rest::resolver_t>(_config);
     return _global;

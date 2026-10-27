@@ -195,7 +195,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 }
                 else {
                     zlog("Couldn't find a callback for '" << _received->resource() << "'",
-                         zpt::error);
+                         zpt::alert);
                 }
             }
             else {

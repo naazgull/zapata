@@ -91,7 +91,7 @@ auto zpt::lua::bindings::wait_for(lua_State* _state) -> int {
     auto _path =
       std::format("/{}{}{}", _args(0)->string(), zpt::rest::default_prefix(), _args(1)->string());
     try {
-        _catalog->wait_for_availability(_path);
+        zpt::rest::wait_for_availability(_path);
     }
     catch (...) {
         _bridge.to_object(false, _state);

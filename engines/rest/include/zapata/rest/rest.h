@@ -197,6 +197,12 @@ auto default_prefix_len() -> size_t;
  * @return void (minion services registered with REST resolver).
  */
 auto add_minion(zpt::json const& _minion) -> void;
+/**
+ * @brief Waits for the given key to be part of the catalogue.
+ * @param _key The key to wait for.
+ * @return Reference to this catalog.
+ */
+auto wait_for_availability(std::string const& _key) -> void;
 } // namespace rest
 
 /**
