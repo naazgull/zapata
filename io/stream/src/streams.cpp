@@ -50,6 +50,10 @@ auto zpt::basic_stream::operator<<(ostream_manipulator _in) -> zpt::basic_stream
 
 auto zpt::basic_stream::operator*() -> std::iostream& { return *this->__underlying.get(); }
 
+auto zpt::basic_stream::good() const -> bool {
+    return this->__underlying == nullptr || this->__underlying->good();
+}
+
 zpt::basic_stream::operator int() { return this->__fd; }
 
 auto zpt::basic_stream::read_without_io(std::any&) -> basic_stream& {
@@ -205,6 +209,8 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _fd, &_new_event);
     return (*this);
 }
+
+auto zpt::polling::discard(zpt::stream _stream) -> zpt::polling& { return this->erase(_stream); }
 
 auto zpt::polling::upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling& {
     std::unique_lock _sentry{ this->__poll_lock };

@@ -19,7 +19,9 @@
 #pragma once
 
 #include <list>
+#include <zapata/base/sentry.h>
 #include <zapata/events.h>
+#include <zapata/exceptions/ClosedException.h>
 #include <zapata/exceptions/NoSuchElementException.h>
 #include <zapata/net/socket.h>
 #include <zapata/startup.h>
@@ -779,10 +781,12 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     auto _host = _uri("domain")->string();
     auto _port = _uri("port")->integer();
     zpt::stream _stream{ nullptr };
+    bool _pooled{ true };
     try {
         _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
     }
     catch (zpt::NoSuchElementException const& _e) {
+        _pooled = false;
         _stream =
           zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
         this
@@ -794,14 +798,32 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
         return zpt::events::retrigger;
     }
 
+    bool _reusable{ false };
+    zpt::sentry _discard_if_broken{ [&]() -> void {
+        if (_reusable) { return; }
+        try {
+            this->__polling->discard(_stream);
+        }
+        catch (std::exception const& _e) {
+            zlog("Error caught while discarding stream: " << _e.what(), zpt::error);
+        }
+    } };
+
     try {
         _transport->send(_stream, this->__to_send);
     }
     catch (zpt::failed_expectation const& _e) {
+        _reusable = true;
         this->__polling->unmute(_stream);
         return zpt::events::retrigger;
     }
 
+    if (!_stream->good()) {
+        if (_pooled) { return zpt::events::retrigger; }
+        throw zpt::ClosedException(std::format("Couldn't write message to `{}`", _stream->uri()));
+    }
+
+    _reusable = true;
     this->__polling->unmute(_stream);
     return zpt::events::finish;
 }
