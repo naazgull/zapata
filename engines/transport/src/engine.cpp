@@ -472,7 +472,42 @@ auto zpt::events::process_call_reply::operator()(zpt::events::dispatcher::ptr _d
     return zpt::events::finish;
 }
 
+auto zpt::transports::provider_health::failed(std::string const& _id) -> size_t {
+    std::unique_lock _sentry{ this->__lock };
+    auto _now = std::chrono::steady_clock::now();
+    auto& _record = this->__records[_id];
+    if (_record.__failures == 0 ||
+        _now - _record.__last >= provider_health::back_off(_record.__failures)) {
+        ++_record.__failures;
+        _record.__last = _now;
+    }
+    return _record.__failures;
+}
+
+auto zpt::transports::provider_health::clear(std::string const& _id) -> provider_health& {
+    std::unique_lock _sentry{ this->__lock };
+    this->__records.erase(_id);
+    return (*this);
+}
+
+auto zpt::transports::provider_health::is_suspect(std::string const& _id) const -> bool {
+    std::shared_lock _sentry{ this->__lock };
+    auto _found = this->__records.find(_id);
+    if (_found == this->__records.end()) { return false; }
+    return std::chrono::steady_clock::now() - _found->second.__last <
+           provider_health::back_off(_found->second.__failures);
+}
+
+auto zpt::transports::provider_health::back_off(size_t _failures) -> std::chrono::milliseconds {
+    return std::chrono::milliseconds{ provider_health::BACK_OFF_MS << (_failures - 1) };
+}
+
 auto zpt::TRANSPORT_ENGINE(zpt::json _config) -> zpt::transports::engine::ptr {
     static auto _global = std::make_shared<zpt::transports::engine>(_config);
+    return _global;
+}
+
+auto zpt::PROVIDER_HEALTH() -> zpt::transports::provider_health& {
+    static zpt::transports::provider_health _global;
     return _global;
 }

@@ -18,7 +18,11 @@
 
 #pragma once
 
+#include <chrono>
 #include <list>
+#include <set>
+#include <shared_mutex>
+#include <unordered_map>
 #include <zapata/base/sentry.h>
 #include <zapata/events.h>
 #include <zapata/exceptions/ClosedException.h>
@@ -113,6 +117,49 @@ class engine : public std::enable_shared_from_this<engine> {
     zpt::events::dispatcher::ptr __dispatcher{ nullptr };
     /** @brief Delegate function registered with the polling instance. */
     zpt::polling::delegate_fn_type __delegate_callback{ nullptr };
+};
+
+/**
+ * @brief Connection failure record of remote providers.
+ *
+ * A provider that fails to accept a connection becomes suspect and is skipped while resolving
+ * calls, during a back-off period that doubles with each consecutive failure. Once the
+ * back-off expires, the next call to the provider works as a check: a successful
+ * connection clears the record, while reaching `MAX_FAILURES` means the provider should
+ * be removed. Only one failure is counted per back-off period, so a burst of concurrent
+ * calls can't remove a provider that is just momentarily unreachable.
+ */
+class provider_health {
+  public:
+    static constexpr size_t MAX_FAILURES{ 3 };
+    static constexpr long long BACK_OFF_MS{ 5000 };
+
+    provider_health() = default;
+    ~provider_health() = default;
+
+    /** @brief Records a failed connection to a provider.
+     * @param _id Provider ID.
+     * @return Number of consecutive failures. */
+    auto failed(std::string const& _id) -> size_t;
+    /** @brief Clears the failure record of a provider.
+     * @param _id Provider ID.
+     * @return Reference to this object. */
+    auto clear(std::string const& _id) -> provider_health&;
+    /** @brief Checks whether a provider is within its back-off period.
+     * @param _id Provider ID.
+     * @return True if the provider should be skipped. */
+    auto is_suspect(std::string const& _id) const -> bool;
+
+  private:
+    struct record {
+        size_t __failures{ 0 };
+        std::chrono::steady_clock::time_point __last;
+    };
+
+    std::unordered_map<std::string, record> __records;
+    mutable std::shared_mutex __lock;
+
+    static auto back_off(size_t _failures) -> std::chrono::milliseconds;
 };
 } // namespace transports
 
@@ -536,7 +583,11 @@ class call {
     zpt::polling::ptr __polling{ nullptr };
     zpt::message __to_send{ nullptr };
     zpt::call_context::ptr __context{ nullptr };
+    std::string __provider_id;
+    std::set<std::string> __tried;
+    zpt::json __unresolved_uri;
     bool __resolved{ false };
+    bool __pending{ false };
 
     /** @brief Resolves the target URI to determine if the call is internal or external.
      * @return Bit flags: IS_SELF (1), IS_EXTERNAL (2), or HAS_PUB_SUB (3). */
@@ -544,6 +595,9 @@ class call {
     /** @brief Handles an internal call within the same node.
      * @return Event state. */
     auto call_internally() -> zpt::events::state;
+    /** @brief Marks the current provider as suspect and re-resolves the call to another one.
+     * @return Event state. */
+    auto fail_over() -> zpt::events::state;
     /** @brief Sends the message to an external node.
      * @return Event state. */
     auto send_externally() -> zpt::events::state;
@@ -585,6 +639,12 @@ class process_call_reply : public zpt::events::process {
  * @return Reference to the global transport engine.
  */
 auto TRANSPORT_ENGINE(zpt::json _config = json_null) -> zpt::transports::engine::ptr;
+
+/**
+ * @brief Returns the global provider connection failure record.
+ * @return Reference to the global provider health instance.
+ */
+auto PROVIDER_HEALTH() -> zpt::transports::provider_health&;
 
 template<ProcessOperation T = zpt::events::process_call_reply>
 auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::call_context::ptr;
@@ -660,8 +720,9 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
                << zpt::uri::to_string(this->__to_send->uri()) << "`: " << _e.what(),
              zpt::error);
         auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
-        _reply->status(404);
+        _reply->status(this->__tried.empty() ? 404 : 503);
         this->__context->reply(_reply);
+        if (this->__pending) { this->__resolver->remove(this->__to_send); }
         return zpt::events::abort;
     }
 #endif
@@ -687,6 +748,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
                 auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
                 _reply->status(503);
                 this->__context->reply(_reply);
+                if (this->__pending) { this->__resolver->remove(this->__to_send); }
                 return zpt::events::abort;
             }
 #endif
@@ -716,6 +778,7 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
 
     bool _is_self{ false };
     if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
+        this->__unresolved_uri = _uri->clone();
         auto _found = this->__resolver->search(
           std::format("/{}{}",
                       zpt::ontology::to_str(this->__to_send->performative()),
@@ -728,18 +791,32 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
         }
 
         if (!_is_self) {
-            auto _provider = this->__resolver->get_provider(_found(0)("provider_id")->string());
+            std::string _suspect;
+            for (auto&& [_, __, _service] : _found) {
+                auto _id = _service("provider_id")->string();
+                if (this->__tried.contains(_id)) { continue; }
+                if (!zpt::PROVIDER_HEALTH().is_suspect(_id)) {
+                    this->__provider_id = _id;
+                    break;
+                }
+                if (_suspect.empty()) { _suspect = _id; }
+            }
+            if (this->__provider_id.empty()) { this->__provider_id = _suspect; }
+            expect(!this->__provider_id.empty(),
+                   "Couldn't connect to any provider of '" << _uri("raw_path")->string());
+
+            auto _provider = this->__resolver->get_provider(this->__provider_id);
             expect(_provider->ok() && _provider->size() != 0,
                    "Couldn't find a provider of '" << _uri("path")->string());
             if (!_uri("scheme")->ok()) { _uri["scheme"] = _provider(0)("protocols")("default"); }
             auto _scheme =
               _upgraded_from_scheme.empty() ? _uri("scheme")->string() : _upgraded_from_scheme;
             expect(_provider(0)("protocols")("registered")(_scheme)("address")->ok(),
-                   "Provider " << _found(0)("provider_id") << " doesn't define an address for '"
+                   "Provider " << this->__provider_id << " doesn't define an address for '"
                                << _scheme << "' transport");
             expect(_provider(0)("protocols")("registered")(_scheme)("port")->ok(),
-                   "Provider " << _found(0)("provider_id") << " doesn't define a port for '"
-                               << _scheme << "' transport");
+                   "Provider " << this->__provider_id << " doesn't define a port for '" << _scheme
+                               << "' transport");
             _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
             _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
         }
@@ -752,6 +829,7 @@ template<ProcessOperation T>
 auto zpt::events::call<T>::call_internally() -> zpt::events::state {
     if (!this->__resolved) {
         this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+        this->__pending = true;
         this->__resolved = true;
     }
 
@@ -774,6 +852,7 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     if (!this->__resolved) {
         if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
             this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
+            this->__pending = true;
         }
         this->__resolved = true;
     }
@@ -787,8 +866,15 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     }
     catch (zpt::NoSuchElementException const& _e) {
         _pooled = false;
-        _stream =
-          zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
+        try {
+            _stream =
+              zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
+        }
+        catch (zpt::ClosedException const&) {
+            if (this->__provider_id.empty()) { throw; }
+            return this->fail_over();
+        }
+        if (!this->__provider_id.empty()) { zpt::PROVIDER_HEALTH().clear(this->__provider_id); }
         this
           ->__polling //
           ->listen_on(_stream)
@@ -826,6 +912,28 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     _reusable = true;
     this->__polling->unmute(_stream);
     return zpt::events::finish;
+}
+
+template<ProcessOperation T>
+auto zpt::events::call<T>::fail_over() -> zpt::events::state {
+    auto _failures = zpt::PROVIDER_HEALTH().failed(this->__provider_id);
+    if (_failures >= zpt::transports::provider_health::MAX_FAILURES) {
+        zlog("Provider " << this->__provider_id << " failed " << _failures
+                         << " consecutive connections, removing it",
+             zpt::warning);
+        zpt::PROVIDER_HEALTH().clear(this->__provider_id);
+        this->__resolver->unregister_provider(this->__provider_id);
+    }
+    else {
+        zlog("Couldn't connect to provider " << this->__provider_id << ", marking it as suspect",
+             zpt::notice);
+    }
+
+    this->__tried.insert(this->__provider_id);
+    this->__provider_id.clear();
+    this->__to_send->uri() = this->__unresolved_uri;
+    this->__resolved = false;
+    return zpt::events::retrigger;
 }
 
 template<ProcessOperation T>
