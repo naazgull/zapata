@@ -51,12 +51,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
-                zlog(_e.what(), zpt::error);
+                zlog(_e.what(), zpt::alert);
             }
             catch (zpt::ClosedException const& _e) {
             }
             catch (std::exception const& _e) {
-                zlog(_e.what(), zpt::error);
+                zlog(_e.what(), zpt::alert);
             }
             zlog("Stopped TCP+JSON transport on port " << _config("port"), zpt::info);
         });

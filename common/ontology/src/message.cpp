@@ -165,6 +165,10 @@ auto zpt::json_message::to_stream(std::ostream& _out) const -> zpt::basic_messag
 
 auto zpt::json_message::from_stream(std::istream& _in) -> zpt::basic_message& {
     _in >> std::noskipws >> this->__underlying;
+    auto const& _uri = this->__underlying("uri");
+    if (_uri("raw_path")->ok() && !_uri("path")->ok()) {
+        this->__underlying["uri"] = zpt::uri::parse(_uri("raw_path")->string());
+    }
     return (*this);
 }
 

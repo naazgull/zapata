@@ -647,15 +647,22 @@ auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::even
 template<ProcessOperation T>
 auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     unsigned int _which{ 0 };
+#ifndef PROPAGATE_EXCEPTION
     try {
+#endif
         _which = this->resolve_uri();
+#ifndef PROPAGATE_EXCEPTION
     }
-    catch (...) {
+    catch (std::exception const& _e) {
+        zlog("Error caught while sending message to `"
+               << zpt::uri::to_string(this->__to_send->uri()) << "`: " << _e.what(),
+             zpt::error);
         auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
         _reply->status(404);
         this->__context->reply(_reply);
         return zpt::events::abort;
     }
+#endif
 
     switch (_which) {
         case ::HAS_PUB_SUB: {
@@ -665,8 +672,11 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
             return this->call_internally();
         }
         default: {
+#ifndef PROPAGATE_EXCEPTION
             try {
+#endif
                 return this->send_externally();
+#ifndef PROPAGATE_EXCEPTION
             }
             catch (std::exception const& _e) {
                 zlog("Error caught while sending message to `"
@@ -677,6 +687,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
                 this->__context->reply(_reply);
                 return zpt::events::abort;
             }
+#endif
         }
     }
     return zpt::events::finish;
@@ -708,7 +719,7 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
                       zpt::ontology::to_str(this->__to_send->performative()),
                       _uri("raw_path")->string()));
         expect(_found->ok() && _found->size() != 0,
-               "Couldn't find a provider of '" << _uri("path")->string());
+               "Couldn't find a provider of '" << _uri("raw_path")->string());
 
         for (auto&& [_, __, _service] : _found) {
             if ((_is_self = (_service("provider_id") == zpt::IDENTITY()("_id")))) { break; }
@@ -721,6 +732,12 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
             if (!_uri("scheme")->ok()) { _uri["scheme"] = _provider(0)("protocols")("default"); }
             auto _scheme =
               _upgraded_from_scheme.empty() ? _uri("scheme")->string() : _upgraded_from_scheme;
+            expect(_provider(0)("protocols")("registered")(_scheme)("address")->ok(),
+                   "Provider " << _found(0)("provider_id") << " doesn't define an address for '"
+                               << _scheme << "' transport");
+            expect(_provider(0)("protocols")("registered")(_scheme)("port")->ok(),
+                   "Provider " << _found(0)("provider_id") << " doesn't define a port for '"
+                               << _scheme << "' transport");
             _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
             _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
         }

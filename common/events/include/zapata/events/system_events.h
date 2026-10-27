@@ -30,13 +30,15 @@ constexpr long long SYSTEM_EVENT_MINION_BOOT_RECEIVED = 2; ///< Worker process b
 constexpr long long SYSTEM_EVENT_MINION_HELLO_RECEIVED =
   3; ///< Worker process hello handshake received.
 constexpr long long SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE = 4; ///< Remote service registered.
+constexpr long long SYSTEM_EVENT_PROCESSED_REMOTE_SERVICE_LIST =
+  5; ///< Minion `hello` successfully processed.
 constexpr long long SYSTEM_EVENT_MINION_SHUTDOWN_RECEIVED =
-  5; ///< Worker process shutdown signal received.
-constexpr long long SYSTEM_EVENT_UNREGISTERED_REMOTE_SERVICE = 6; ///< Remote service unregistered.
-constexpr long long SYSTEM_EVENT_STREAM_OPENED = 7;               ///< Stream connection opened.
-constexpr long long SYSTEM_EVENT_STREAM_CLOSED = 8;               ///< Stream connection closed.
-constexpr long long SYSTEM_EVENT_SHUTTING_DOWN = 9;               ///< Application is shutting down.
-constexpr long long SYSTEM_EVENT_EXITING = 10;                    ///< Application is exiting.
+  6; ///< Worker process shutdown signal received.
+constexpr long long SYSTEM_EVENT_UNREGISTERED_REMOTE_SERVICE = 7; ///< Remote service unregistered.
+constexpr long long SYSTEM_EVENT_STREAM_OPENED = 8;               ///< Stream connection opened.
+constexpr long long SYSTEM_EVENT_STREAM_CLOSED = 9;               ///< Stream connection closed.
+constexpr long long SYSTEM_EVENT_SHUTTING_DOWN = 10;              ///< Application is shutting down.
+constexpr long long SYSTEM_EVENT_EXITING = 11;                    ///< Application is exiting.
 constexpr long long SYSTEM_EVENT_PLUGIN_START = 128;      ///< Start of built-in plugin events.
 constexpr long long SYSTEM_EVENT_APPLICATION_START = 512; ///< Start of application events.
 

@@ -38,6 +38,11 @@ class plugin_testing_execute_after_boot : public zpt::system_event {
     using zpt::system_event::system_event;
     ~plugin_testing_execute_after_boot() = default;
 
+    auto blocked() const -> bool override {
+        auto const& _blocked = zpt::GLOBAL_CONFIG()("testing")("blocked");
+        return _blocked->ok() && _blocked->boolean();
+    }
+
     auto operator()(zpt::events::dispatcher::ptr _dispatcher) -> zpt::events::state override {
         auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
         auto _config = zpt::GLOBAL_CONFIG();

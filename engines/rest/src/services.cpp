@@ -133,6 +133,8 @@ auto zpt::rest::services_list::operator()(zpt::events::dispatcher::ptr _dispatch
     auto _minion = this->received()->body();
     if (_minion("provider")->ok()) {
         zpt::rest::add_minion(_minion);
+        zpt::DISPATCHER() //
+          ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_PROCESSED_REMOTE_SERVICE_LIST, _minion);
         return zpt::events::finish;
     }
     zlog("Malformed service list: " << _minion, zpt::error);

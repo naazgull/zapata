@@ -117,6 +117,7 @@ zpt::polling::~polling() {
 }
 
 auto zpt::polling::close() -> zpt::polling& {
+    std::unique_lock _sentry{ this->__poll_lock };
     for (auto& [_, _stream] : this->__polled_streams) { _stream->shutdown(); }
     this->__polled_streams.clear();
     this->__polled_streams_by_uuid.clear();

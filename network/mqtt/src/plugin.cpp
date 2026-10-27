@@ -82,12 +82,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                     _stream->loop_misc();
                 }
                 catch (zpt::failed_expectation const& _e) {
-                    zlog(_e.what(), zpt::error);
+                    zlog(_e.what(), zpt::alert);
                 }
                 catch (zpt::ClosedException const& _e) {
                 }
                 catch (std::exception const& _e) {
-                    zlog(_e.what(), zpt::error);
+                    zlog(_e.what(), zpt::alert);
                 }
                 std::this_thread::sleep_for(std::chrono::seconds{ 1 });
             }

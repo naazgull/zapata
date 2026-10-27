@@ -123,7 +123,8 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
         std::string _port;
 
         if (this->__configuration(_scheme)->ok() &&
-            (this->__configuration(_scheme)("port")->ok() ||
+            (this->__configuration(_scheme)("bind")->ok() ||
+             this->__configuration(_scheme)("port")->ok() ||
              this->__configuration(_scheme)("path")->ok())) {
             if (!this->__configuration(_scheme)("bind")->ok() &&
                 !this->__configuration(_scheme)("path")->ok()) {
@@ -144,6 +145,12 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
             }
             else if (this->__configuration(_scheme)("path")->ok()) {
                 _port.assign(this->__configuration(_scheme)("path")->string());
+            }
+            else {
+                auto _protocol = _scheme == "upnp" ? "udp" : "tcp";
+                auto _port_i = zpt::net::get_available_port(_protocol, 9999);
+                _port.assign(std::format(":{}", _port_i));
+                this->__configuration[_scheme]["port"] = _port_i;
             }
 
             this->__configuration[_scheme]["address"] = _host;

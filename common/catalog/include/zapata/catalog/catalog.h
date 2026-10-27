@@ -149,12 +149,6 @@ class catalog {
      * @return JSON object with provider details, or null if not found.
      */
     auto get_provider(std::string const& _id) const -> zpt::json;
-    /**
-     * @brief Waits for the given key to be part of the catalogue.
-     * @param _key The key to wait for.
-     * @return Reference to this catalog.
-     */
-    auto wait_for_availability(K _key) const -> catalog const&;
 
   private:
     /** @brief This catalog's provider ID used for self-registered entries. */
@@ -409,24 +403,6 @@ auto zpt::catalog<K, M>::get_provider(std::string const& _id) const -> zpt::json
     }
 
     return _providers;
-}
-
-template<typename K, typename M>
-auto zpt::catalog<K, M>::wait_for_availability(K _key) const -> catalog const& {
-    static constexpr long long _timeout{ 20 };
-
-    auto _start = std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now().time_since_epoch())
-                    .count();
-    while (this->search(_key)->size() == 0) {
-        auto _lap = std::chrono::duration_cast<std::chrono::seconds>(
-                      std::chrono::steady_clock::now().time_since_epoch())
-                      .count();
-        expect(_lap - _start <= _timeout, "Timeout while waiting for endpoint availability");
-        std::this_thread::sleep_for(std::chrono::microseconds{ 100 });
-    }
-
-    return (*this);
 }
 
 template<typename K, typename M>

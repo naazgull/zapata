@@ -115,8 +115,13 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
 
         if (_received->performative() == zpt::Reply) {
             expect(_received->status() == 101, "Server didn't comply with the upgrade request");
-            if (!_received->body()->ok()) { _received->body() = zpt::json::object(); }
-            _received->body()["stream"]["local_id"] = this->__stream->uuid().to_string();
+            _received //
+              ->header("Content-Type", "application/json")
+              .body() = { "stream",
+                          { "local_id",
+                            this->__stream->uuid().to_string(),
+                            "remote_id",
+                            _received->headers()("X-Stream-Remote-ID") } };
 
             if (_value == "websocket") { _value = "ws"; }
             this->__polling->upgrade(this->__stream, _value);
@@ -130,8 +135,7 @@ auto zpt::events::receive::check_upgrade(zpt::message _received) -> bool {
               ->status(101)
               .header("Upgrade", _value)
               .header("Connection", "upgrade")
-              .header("Content-Type", "application/json")
-              .body() = { "stream", { "remote_id", this->__stream->uuid().to_string() } };
+              .header("X-Stream-Remote-ID", this->__stream->uuid().to_string());
 
             if (_value == "websocket") {
                 _value = "ws";
@@ -191,7 +195,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
                 }
                 else {
                     zlog("Couldn't find a callback for '" << _received->resource() << "'",
-                         zpt::error);
+                         zpt::alert);
                 }
             }
             else {

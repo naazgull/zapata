@@ -309,7 +309,7 @@ class polling : public std::enable_shared_from_this<polling> {
   public:
     using ptr = std::shared_ptr<polling>;
     using polled_streams_type = std::unordered_map<int, zpt::stream>;
-    using polled_streams_by_uuid_type = std::unordered_map<zpt::uuid, zpt::stream>;
+    using polled_streams_by_uuid_type = std::map<zpt::uuid, zpt::stream>;
     using polled_streams_by_uri_type = std::unordered_map<std::string, zpt::stream>;
     /** @brief Delegate function signature: returns true to keep stream, false to remove. */
     using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
