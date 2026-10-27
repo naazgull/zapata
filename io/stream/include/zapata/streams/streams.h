@@ -181,6 +181,11 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @return Reference to the underlying iostream.
      */
     auto operator*() -> std::iostream&;
+    /**
+     * @brief Checks whether the underlying iostream, if any, is still usable for I/O.
+     * @return False if a read or write over the underlying iostream has failed.
+     */
+    auto good() const -> bool;
 
     /**
      * @brief Returns the file descriptor.
@@ -379,6 +384,12 @@ class polling : public std::enable_shared_from_this<polling> {
      * @return Reference to this polling instance.
      */
     auto unmute(zpt::stream _stream) -> zpt::polling&;
+    /**
+     * @brief Stops monitoring a muted stream that can't be reused and closes it.
+     * @param _stream Stream to discard.
+     * @return Reference to this polling instance.
+     */
+    auto discard(zpt::stream _stream) -> zpt::polling&;
     /**
      * @brief Changes the underlying transport of a stream.
      * @param _stream Stream to upgrade.

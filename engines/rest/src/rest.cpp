@@ -143,11 +143,18 @@ auto zpt::rest::resolver_t::list(std::string const& _provider_id) const -> zpt::
 auto zpt::rest::resolver_t::register_provider(zpt::json const& _provider)
   -> zpt::rest::resolver_t& {
     this->__catalog->add_provider(_provider("_id")->string(), _provider);
+    zpt::PROVIDER_HEALTH().clear(_provider("_id")->string());
     return (*this);
 }
 
 auto zpt::rest::resolver_t::unregister_provider(std::string const& _id) -> zpt::rest::resolver_t& {
+    auto _services = this->__catalog->list(_id);
     this->__catalog->remove_provider(_id);
+
+    for (auto const& [_, __, _service] : _services) {
+        zpt::DISPATCHER() //
+          ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_UNREGISTERED_REMOTE_SERVICE, _service);
+    }
     return (*this);
 }
 

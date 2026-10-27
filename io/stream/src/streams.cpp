@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <assert.h>
 #include <errno.h>
 #include <malloc.h>
@@ -48,6 +49,10 @@ auto zpt::basic_stream::operator<<(ostream_manipulator _in) -> zpt::basic_stream
 }
 
 auto zpt::basic_stream::operator*() -> std::iostream& { return *this->__underlying.get(); }
+
+auto zpt::basic_stream::good() const -> bool {
+    return this->__underlying == nullptr || this->__underlying->good();
+}
 
 zpt::basic_stream::operator int() { return this->__fd; }
 
@@ -205,6 +210,8 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
+auto zpt::polling::discard(zpt::stream _stream) -> zpt::polling& { return this->erase(_stream); }
+
 auto zpt::polling::upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling& {
     std::unique_lock _sentry{ this->__poll_lock };
     this->__polled_streams_by_uri.erase(this->__polled_streams_by_uri.find(_stream->uri()));
@@ -281,6 +288,11 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     {
         std::unique_lock _sentry{ this->__poll_lock };
         auto _found_fd = this->__polled_streams.find(_fd);
+        if (_found_fd == this->__polled_streams.end() || _found_fd->second != _stream) {
+            _found_fd = std::find_if(this->__polled_streams.begin(),
+                                     this->__polled_streams.end(),
+                                     [&](auto const& _entry) { return _entry.second == _stream; });
+        }
         if (_found_fd != this->__polled_streams.end()) { this->__polled_streams.erase(_found_fd); }
         auto _found_uuid = this->__polled_streams_by_uuid.find(_stream->uuid());
         if (_found_uuid != this->__polled_streams_by_uuid.end()) {
