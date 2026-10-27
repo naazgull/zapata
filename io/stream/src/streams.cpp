@@ -20,6 +20,7 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <assert.h>
 #include <errno.h>
 #include <malloc.h>
@@ -281,6 +282,11 @@ auto zpt::polling::erase(zpt::stream _stream) -> zpt::polling& {
     {
         std::unique_lock _sentry{ this->__poll_lock };
         auto _found_fd = this->__polled_streams.find(_fd);
+        if (_found_fd == this->__polled_streams.end() || _found_fd->second != _stream) {
+            _found_fd = std::find_if(this->__polled_streams.begin(),
+                                     this->__polled_streams.end(),
+                                     [&](auto const& _entry) { return _entry.second == _stream; });
+        }
         if (_found_fd != this->__polled_streams.end()) { this->__polled_streams.erase(_found_fd); }
         auto _found_uuid = this->__polled_streams_by_uuid.find(_stream->uuid());
         if (_found_uuid != this->__polled_streams_by_uuid.end()) {
