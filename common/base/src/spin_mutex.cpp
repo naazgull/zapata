@@ -27,7 +27,10 @@ auto zpt::locks::spin_mutex::unlock_shared() -> zpt::locks::spin_mutex& {
 }
 
 auto zpt::locks::spin_mutex::unlock() -> zpt::locks::spin_mutex& {
-    this->__exclusive_access->store(false, std::memory_order_release);
+    if (--this->__exclusive_owner_entries == 0) {
+        this->__exclusive_owner = std::thread::id{};
+        this->__exclusive_access->store(false, std::memory_order_release);
+    }
     return (*this);
 }
 
@@ -51,7 +54,10 @@ auto zpt::locks::spin_mutex::spin_shared_lock() -> void {
 }
 
 auto zpt::locks::spin_mutex::spin_exclusive_lock() -> void {
-    if (this->__exclusive_owner == std::this_thread::get_id()) { return; }
+    if (this->__exclusive_owner == std::this_thread::get_id()) {
+        ++this->__exclusive_owner_entries;
+        return;
+    }
     while (this->__exclusive_access->exchange(true, std::memory_order_acquire)) {
         std::this_thread::yield();
     }
@@ -59,4 +65,5 @@ auto zpt::locks::spin_mutex::spin_exclusive_lock() -> void {
         std::this_thread::yield();
     }
     this->__exclusive_owner = std::this_thread::get_id();
+    ++this->__exclusive_owner_entries;
 }
