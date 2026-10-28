@@ -478,7 +478,7 @@ auto zpt::PROLOG_BRIDGE(std::string const& _cmd) -> zpt::prolog::bridge& {
     return _bridge;
 }
 
-auto zpt::PROLOG_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>& {
-    static zpt::safe_access<zpt::json, zpt::locks::spin_mutex> _global{ zpt::json::object() };
+auto zpt::PROLOG_GLOBALS() -> zpt::safe_access<zpt::json, std::shared_mutex>& {
+    static zpt::safe_access<zpt::json, std::shared_mutex> _global{ zpt::json::object() };
     return _global;
 }

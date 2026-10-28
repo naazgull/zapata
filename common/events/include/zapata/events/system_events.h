@@ -229,7 +229,7 @@ class resolver_t : public zpt::events::resolver_t {
     std::map<zpt::system_event_type, std::map<zpt::json, zpt::events::resolver_callback>>
       __callbacks;
     /** @brief Callback list mutex guard. */
-    mutable zpt::locks::spin_mutex __callbacks_mutex;
+    mutable std::shared_mutex __callbacks_mutex;
 };
 /** @brief Shared pointer type for system events resolver. */
 using resolver = std::shared_ptr<resolver_t>;

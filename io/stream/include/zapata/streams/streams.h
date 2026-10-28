@@ -42,7 +42,7 @@
 #include <systemd/sd-daemon.h>
 #include <zapata/allocator.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
-#include <zapata/locks/spin_mutex.h>
+#include <shared_mutex>
 #include <zapata/text/convert.h>
 #include <zapata/uuid.h>
 
@@ -407,7 +407,7 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Epoll file descriptor for I/O multiplexing. */
     int __epoll_fd{ -1 };
     /** @brief Mutex protecting the polled streams map. */
-    mutable zpt::locks::spin_mutex __poll_lock;
+    mutable std::shared_mutex __poll_lock;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
     polled_streams_type __polled_streams;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */

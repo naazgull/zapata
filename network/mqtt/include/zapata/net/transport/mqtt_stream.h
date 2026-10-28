@@ -109,7 +109,7 @@ class mqtt_stream : public basic_stream {
     /** @brief Mosquitto client handle managing the MQTT connection. */
     struct mosquitto* __mosq{ nullptr };
     /** @brief Mutex protecting access to the mosquitto client. */
-    zpt::locks::spin_mutex __mosq_mutex;
+    std::shared_mutex __mosq_mutex;
     /** @brief Configuration used to establish and manage the connection. */
     zpt::json __config;
     /** @brief Atomic flag indicating whether the connection is active. */

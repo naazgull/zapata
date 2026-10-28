@@ -375,7 +375,7 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
   public:
     using callback_type = std::function<void()>;
     using lambda_type = std::function<int()>;
-    using mutex_type = zpt::locks::spin_mutex;
+    using mutex_type = std::shared_mutex;
 
     bridge(std::string const& _cmd);
     ~bridge() throw();

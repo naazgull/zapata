@@ -35,6 +35,7 @@
 #pragma once
 
 #include <lua.hpp>
+#include <shared_mutex>
 #include <zapata/base/safe_access.h>
 #include <zapata/bridge.h>
 
@@ -180,5 +181,5 @@ auto LUA_BRIDGE() -> zpt::lua::bridge&;
  * @brief Retrieves the Lua bridge global variables.
  * @return Reference to the thread-local Lua bridge.
  */
-auto LUA_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>&;
+auto LUA_GLOBALS() -> zpt::safe_access<zpt::json, std::shared_mutex>&;
 } // namespace zpt

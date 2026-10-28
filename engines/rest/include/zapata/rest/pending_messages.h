@@ -31,7 +31,7 @@
 #pragma once
 
 #include <unordered_map>
-#include <zapata/locks/spin_mutex.h>
+#include <shared_mutex>
 #include <zapata/transport.h>
 #include <zapata/transport/engine.h>
 
@@ -86,7 +86,7 @@ class pending_messages {
                        std::tuple<zpt::call_context::ptr, zpt::events::resolver_callback>>
       __pending;
     /** @brief Mutex protecting the pending messages map. */
-    zpt::locks::spin_mutex __pending_mutex;
+    std::shared_mutex __pending_mutex;
 };
 } // namespace rest
 } // namespace zpt

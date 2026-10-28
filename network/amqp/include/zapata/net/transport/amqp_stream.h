@@ -143,7 +143,7 @@ class amqp_stream : public basic_stream {
     /** @brief Proton connection driver managing the AMQP connection state. */
     std::unique_ptr<pn_connection_driver_t> __driver{ nullptr };
     /** @brief Mutex protecting access to the connection driver. */
-    zpt::locks::spin_mutex __driver_mutex;
+    std::shared_mutex __driver_mutex;
     /** @brief Configuration used to establish and manage the connection. */
     zpt::json __config;
     /** @brief Atomic flag indicating whether the connection is active. */
