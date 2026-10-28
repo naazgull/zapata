@@ -959,7 +959,6 @@ auto zpt::basic_socketbuf<Char>::report_error() -> void {
     this->__sock = 0;
     this->__error_code = errno;
     this->__error_string = std::string(std::strerror(errno));
-    zlog(this->__error_string, zpt::error);
     throw zpt::ClosedException(this->__error_string);
 }
 

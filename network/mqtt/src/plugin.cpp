@@ -77,9 +77,12 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                  zpt::info);
 
             while (!zpt::runtime::is_in_shutdown()) {
+#ifndef PROPAGATE_EXCEPTION
                 try {
+#endif
                     if (!_stream->is_connected()) { _stream->connect(); }
                     _stream->loop_misc();
+#ifndef PROPAGATE_EXCEPTION
                 }
                 catch (zpt::failed_expectation const& _e) {
                     zlog(_e.what(), zpt::alert);
@@ -89,6 +92,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                 catch (std::exception const& _e) {
                     zlog(_e.what(), zpt::alert);
                 }
+#endif
                 std::this_thread::sleep_for(std::chrono::seconds{ 1 });
             }
             zlog("Stopped MQTT transport connected to " << _config("address")->string() << ":"

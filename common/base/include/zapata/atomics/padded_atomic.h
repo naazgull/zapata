@@ -68,7 +68,7 @@ namespace zpt {
  * @note This class is non-copyable but move-constructible.
  *
  * @see zpt::lf::queue
- * @see zpt::locks::spin_mutex
+ * @see std::shared_mutex
  */
 template<typename T>
 class padded_atomic {
