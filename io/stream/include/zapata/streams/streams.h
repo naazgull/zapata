@@ -53,16 +53,19 @@ namespace zpt {
  * @brief Stream processing states for polling.
  */
 enum stream_state {
-    CONNECTED = 0,
-    IDLE = 1,         ///< Stream is idle, not being processed
-    WAITING = 2,      ///< Stream is waiting for I/O
-    PROCESSING = 3,   ///< Stream is being processed by a delegate
-    ERRORING_OUT = 4, ///< Stream encountered an error
-    DISCONNECTED = 5
+    CONNECTED = 0,        ///< Stream has successfully connected to peer
+    IDLE = 1,             ///< Stream is idle, not being processed
+    WAITING = 2,          ///< Stream is waiting for I/O
+    PROCESSING = 3,       ///< Stream is being processed by a delegate
+    ERRORING_OUT = 4,     ///< Stream encountered an error
+    DISCONNECTED = 5,     ///< Stream has been disconnected
+    GRACEFULLY_CLOSE = 6, ///< Stream should be closed
+    END
 };
 
-inline const char* stream_state_names[] = { "CONNECTED",  "IDLE",         "WAITING",
-                                            "PROCESSING", "ERRORING_OUT", "DISCONNECTED" };
+inline const char* stream_state_names[] = { "CONNECTED",        "IDLE",         "WAITING",
+                                            "PROCESSING",       "ERRORING_OUT", "DISCONNECTED",
+                                            "GRACEFULLY_CLOSE", "END" };
 
 /** @brief Type alias for epoll event structure. */
 using epoll_event_t = struct epoll_event;
@@ -414,7 +417,7 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
     /** @brief List of stream state listener callbacks. */
-    std::array<std::vector<state_fn_type>, zpt::stream_state::DISCONNECTED + 1> __state_callbacks;
+    std::array<std::vector<state_fn_type>, zpt::stream_state::END> __state_callbacks;
     /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
