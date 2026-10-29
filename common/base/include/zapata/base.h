@@ -49,6 +49,7 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <shared_mutex>
 #include <thread>
 #include <utility>
 #include <zapata/atomics/padded_atomic.h>
@@ -59,7 +60,6 @@
 #include <zapata/crypto/sha256.h>
 #include <zapata/crypto/sha512.h>
 #include <zapata/file/manip.h>
-#include <shared_mutex>
 #include <zapata/log/log.h>
 #include <zapata/mail/manip.h>
 #include <zapata/mem/usage.h>

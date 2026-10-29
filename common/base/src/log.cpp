@@ -50,17 +50,17 @@ namespace {
  */
 auto level_sgr(zpt::LogLevel _l) -> const char* {
     switch (_l) {
-        case zpt::emergency: // fallthrough
-        case zpt::alert:     // fallthrough
+        case zpt::emergency:                     // fallthrough
+        case zpt::alert:                         // fallthrough
         case zpt::critical: return "\033[0;31m"; // red
-        case zpt::error: return "\033[0;35m"; // magenta
-        case zpt::warning: return "\033[0;33m"; // yellow
-        case zpt::notice:  return "\033[1;37m"; // bold white
-        case zpt::info:    return "\033[0;37m"; // white
-        case zpt::debug:   return "\033[0;34m"; // blue
-        case zpt::trace:   // fallthrough
-        case zpt::verbose: return "\033[0;90m"; // grey
-        default:           return "";
+        case zpt::error: return "\033[0;35m";    // magenta
+        case zpt::warning: return "\033[0;33m";  // yellow
+        case zpt::notice: return "\033[1;37m";   // bold white
+        case zpt::info: return "\033[0;37m";     // white
+        case zpt::debug: return "\033[0;34m";    // blue
+        case zpt::trace:                         // fallthrough
+        case zpt::verbose: return "\033[0;90m";  // grey
+        default: return "";
     }
 }
 

@@ -180,7 +180,8 @@ auto zpt::polling::mute(std::string const& _uri) -> zpt::stream {
 
 auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
     if (_stream->state() == zpt::stream_state::DISCONNECTED) { return (*this); }
-    if (!_stream->persistent() || _stream->state() == zpt::stream_state::ERRORING_OUT) {
+    if (!_stream->persistent() || _stream->state() == zpt::stream_state::ERRORING_OUT ||
+        _stream->state() == zpt::stream_state::GRACEFULLY_CLOSE) {
         this->erase(_stream);
         return (*this);
     }

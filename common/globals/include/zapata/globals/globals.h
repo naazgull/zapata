@@ -36,7 +36,6 @@
 #include <shared_mutex>
 #include <typeinfo>
 #include <zapata/base.h>
-#include <shared_mutex>
 
 namespace zpt {
 

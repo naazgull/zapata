@@ -34,8 +34,8 @@
 
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <shared_mutex>
+#include <vector>
 #include <zapata/log/log.h>
 
 namespace zpt {

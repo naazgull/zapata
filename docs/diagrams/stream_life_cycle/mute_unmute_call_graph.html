@@ -93,6 +93,10 @@
         <code>upnp</code> example call sites are left out. Solid&nbsp;=&nbsp;direct call, dashed&nbsp;=&nbsp;wiring/registration,
         dotted&nbsp;=&nbsp;asynchronous dispatcher hop — the engine re-dispatching an event back into a handler
         (the loop that runs around the bottom).</p>
+      <p class="note"><b>Graceful-close hook.</b> <code>unmute()</code> tears the stream down via
+        <code>erase()</code> not only when it is <code>!persistent</code> or <code>ERRORING_OUT</code>, but
+        also when its state is <code>GRACEFULLY_CLOSE</code> — a state the API client stores by direct
+        function call (<code>stream->state(...)</code>), not through the polling core (streams.cpp:183–185).</p>
     </section>
 
     <footer>
@@ -113,7 +117,7 @@
     plugins: { c: "#57d07a", bg: "#102518", name: "network plugins" },
     polling: { c: "#f0b03e", bg: "#221a0b", name: "zpt::polling core" },
     engine:  { c: "#b18cf3", bg: "#1a1230", name: "engine / dispatcher" },
-    sink:    { c: "#98a2b3", bg: "#1a2029", name: "sink (epoll / shutdown)" }
+    sink:    { c: "#98a2b3", bg: "#1a2029", name: "sink (epoll / close)" }
   };
   var KINDS = {
     call:       { stroke: "#8b95a5", dash: "",    arrow: "#a9b2c0", name: "call" },
@@ -126,7 +130,7 @@
     { id: "runtime_run",    label: "runtime::run()",            sub: ["engines/runtime/src/runtime.cpp"],        group: "runtime", col: "bootstrap", y: 337 },
     { id: "engine_ctor",    label: "engine::engine()",          sub: ["engines/transport/src/engine.cpp"],        group: "engine",  col: "bootstrap", y: 433 },
     { id: "call_internal",  label: "call<T>::call_internally()", sub: ["engine.h :752"],                          group: "call",    col: "callers",   y: 193 },
-    { id: "plugins_accept", label: "network/* accept",           sub: ["tcp:50 · local:49 · http:51", "upnp:40 · mqtt:242 · amqp:332"], group: "plugins", col: "callers", y: 289 },
+    { id: "plugins_accept", label: "network/* accept",           sub: ["tcp:50 · local:49 · http:51", "upnp:40 · mqtt:231 · amqp:324"], group: "plugins", col: "callers", y: 289 },
     { id: "call_external",  label: "call<T>::send_externally()", sub: ["engine.h :772"],                          group: "call",    col: "callers",   y: 385 },
     { id: "ev_send",        label: "events::send",              sub: ["engine.cpp · operator()"],                  group: "events", col: "callers", y: 481 },
     { id: "ev_receive",     label: "events::receive",           sub: ["engine.cpp · ~receive()"],                group: "events",  col: "callers",   y: 577 },
@@ -142,7 +146,7 @@
     { id: "h_trigger",      label: "delegate callback",         sub: ["trigger<receive> (engine)"], group: "engine",  col: "callees", y: 385 },
     { id: "h_callback",     label: "polling::callback()",       sub: ["CONNECTED / DISCONNECTED"], group: "polling", col: "callees", y: 481 },
     { id: "h_epoll",        label: "epoll_ctl()",               sub: ["EPOLL_CTL_ADD / DEL"],      group: "sink",    col: "callees", y: 577 },
-    { id: "h_shutdown",     label: "stream->shutdown()",        sub: ["basic_stream"],             group: "sink",    col: "callees", y: 673 }
+    { id: "h_close",        label: "stream->close()",           sub: ["basic_stream · streams.cpp:66–73"], group: "sink", col: "callees", y: 673 }
   ];
 
   var edges = [
@@ -164,14 +168,14 @@
     { from: "p_delegate", to: "h_trigger",  label: "delegates[]", kind: "call", route: "fwd" },
     { from: "p_erase",    to: "h_epoll",    label: "DEL",         kind: "call", route: "fwd" },
     { from: "p_erase",    to: "h_callback", label: "DISCONNECT",  kind: "call", route: "fwd" },
-    { from: "p_erase",    to: "h_shutdown", label: "shutdown",    kind: "call", route: "fwd" },
-    { from: "p_close",    to: "h_shutdown", label: "all",         kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "h_close",    label: "close",       kind: "call", route: "fwd" },
+    { from: "p_close",    to: "h_close",    label: "all",         kind: "call", route: "fwd" },
     { from: "p_poll",     to: "p_delegate", label: "EPOLLIN",            kind: "call", route: "left" },
     { from: "p_poll",     to: "p_erase",    label: "HUP·ERR·PRIO·RDHUP", kind: "call", route: "left" },
     { from: "p_unmute",   to: "p_delegate", label: "has_next",          kind: "call", route: "left" },
     { from: "p_delegate", to: "p_mute",     label: "mute",              kind: "call", route: "right" },
     { from: "p_delegate", to: "p_unmute",   label: "release",           kind: "call", route: "right" },
-    { from: "p_unmute",   to: "p_erase",    label: "!persistent / ERRORING_OUT", kind: "call", route: "right" },
+    { from: "p_unmute",   to: "p_erase",    label: "!persistent / ERRORING_OUT / GRACEFULLY_CLOSE", kind: "call", route: "right" },
     { from: "runtime_run", to: "p_poll",     label: "loop",     kind: "call",  route: "top" },
     { from: "runtime_run", to: "p_close",    label: "shutdown", kind: "call",  route: "bottom" },
     { from: "engine_ctor", to: "p_delegate", label: "register", kind: "wires", route: "gap", gapY: 433 },
