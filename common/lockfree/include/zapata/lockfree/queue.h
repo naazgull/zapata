@@ -258,6 +258,8 @@ template<typename T>
 auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
     zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
+        if (this->__shutdown->load()) { throw zpt::NoMoreElementsException("Shutting down"); }
+
         auto _head = this->__head->load(std::memory_order_relaxed);
 
         // Claim a slot by advancing head_ via CAS.  Only the winner
@@ -295,6 +297,7 @@ template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
     zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
+        if (this->__shutdown->load()) { throw zpt::NoMoreElementsException("Shutting down"); }
         if (this->__tail->load() == this->__head->load()) {
             throw zpt::NoMoreElementsException("No elements in the queue");
         }
@@ -344,7 +347,11 @@ auto zpt::lf::queue<T>::size() const -> size_t {
 
 template<typename T>
 auto zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
-    for (size_t _idx = 0; _idx != this->__capacity; ++_idx) { this->__slots[_idx].value.reset(); }
+    try {
+        for (;;) { this->pop(); }
+    }
+    catch (zpt::NoMoreElementsException const& _e) {
+    }
     return (*this);
 }
 
