@@ -73,13 +73,6 @@ class amqp_stream : public basic_stream {
      @throws ClosedException if the connection is not active.
      */
     auto close() -> amqp_stream& override;
-    /** @brief Shuts down the AMQP connection gracefully.
-
-     Sends close frames and releases resources without reconnecting.
-     @return Reference to this stream.
-     @throws ClosedException if the connection is not active.
-     */
-    auto shutdown() -> amqp_stream& override;
     /**
      * @brief Reads content from the internal buffer without I/O.
      * @param _out Reference to receive the deserialized content.
