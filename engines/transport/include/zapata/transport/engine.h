@@ -186,8 +186,9 @@ class receive {
       -> bool;
     /** @brief Checks whether or not a transport upgrade has been requested.
      * @param _received Incoming message.
+     * @param _dispatcher The dispatcher to send upgrade response through, if applicable.
      * @return True if upgrade requested. */
-    auto check_upgrade(zpt::message _received) -> bool;
+    auto check_upgrade(zpt::message _received, zpt::events::dispatcher::ptr _dispatcher) -> bool;
     /** @brief Reads a message from the stream and triggers processing events.
      * @param _dispatcher Event dispatcher.
      * @return Event state. */
@@ -197,6 +198,7 @@ class receive {
     zpt::transports::engine::ptr __engine;
     zpt::polling::ptr __polling{ nullptr };
     zpt::stream __stream{ nullptr };
+    std::list<zpt::event> __events;
 };
 
 /**
@@ -756,9 +758,13 @@ auto zpt::events::call<T>::call_internally() -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
     auto _stream = zpt::allocate_shared<zpt::event_stream>();
-    this->__polling->listen_on(_stream);
+    this
+      ->__polling //
+      ->listen_on(_stream)
+      .mute(_stream);
     _transport->send(_stream, this->__to_send);
 
+    this->__polling->unmute(_stream);
     return zpt::events::finish;
 }
 
