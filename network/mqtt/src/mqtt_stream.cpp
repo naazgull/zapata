@@ -43,19 +43,6 @@ auto zpt::mqtt_stream::operator<<(ostream_manipulator) -> zpt::mqtt_stream& { re
 auto zpt::mqtt_stream::close() -> zpt::mqtt_stream& {
     zlog("Closing connection to " << this->__uri, zpt::trace);
 
-    this->__underlying.reset(nullptr);
-    this->__fd = -1;
-    this->__transport = "";
-    this->__uri = "";
-    this->__state = zpt::stream_state::IDLE;
-
-    return (*this);
-}
-
-auto zpt::mqtt_stream::shutdown() -> zpt::mqtt_stream& {
-    // Destroy and clean up.
-    // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_destroy
-    // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_lib_cleanup
     std::unique_lock _guard{ this->__mosq_mutex };
     if (this->__mosq != nullptr) {
         mosquitto_destroy(this->__mosq);
@@ -64,8 +51,10 @@ auto zpt::mqtt_stream::shutdown() -> zpt::mqtt_stream& {
     }
 
     this->__connected->store(false);
-    ::shutdown(this->__fd, SHUT_RDWR);
-    ::close(this->__fd);
+    this->__underlying.reset(nullptr);
+    this->__fd = -1;
+    this->__state = zpt::stream_state::IDLE;
+
     return (*this);
 }
 

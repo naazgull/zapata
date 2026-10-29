@@ -143,6 +143,14 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
     /**
+     * @brief Creates an event.
+     * @tparam T Event operation type (must satisfy Operation concept).
+     * @param _args Arguments forwarded to T's constructor.
+     * @return The event.
+     */
+    template<typename T, typename... Args>
+    auto make(Args&&... _args) -> zpt::event;
+    /**
      * @brief Check whether or not there are events to be trapped.
      * @return True is the events queue is empry, false otherwise. */
     auto empty() const -> bool;
@@ -462,6 +470,13 @@ auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
     this->trigger(std::move(_event));
     return (*this);
+}
+
+template<typename T, typename... Args>
+auto zpt::events::dispatcher::make(Args&&... _args) -> zpt::event {
+    auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
+    if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
+    return _event;
 }
 
 template<zpt::events::Operation T>

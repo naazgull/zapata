@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark only" />
+<title>zpt::stream_state — state transition diagram</title>
+<style>
+  :root {
+    --page: #0b0e14; --panel: #11151d; --ink: #e6e9ef; --muted-ink: #9aa4b2; --faint: #6b7482;
+    --line: #262c37;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--page); color: var(--ink); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1120px; margin: 0 auto; padding: 40px 28px 64px; }
+
+  header h1 { font-size: 25px; font-weight: 750; letter-spacing: -0.01em; margin: 0 0 6px; }
+  header h1 code, .note code, footer code { font-family: var(--mono); font-size: 0.82em; background: #1a2029; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: #cdd3dc; }
+  header .sub { color: var(--muted-ink); font-size: 15px; max-width: 92ch; margin: 0 0 4px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.45); }
+
+  .cg-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 12.5px; color: var(--muted-ink); }
+  .lg-item { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+  .lg-item i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .lg-sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+  .ln { width: 26px; border-top: 2px solid; display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+  .cg-wrap { position: relative; }
+  .cg-wrap svg { width: 100%; height: auto; display: block; }
+
+  .colh { font-family: var(--mono); font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; fill: #6b7482; text-anchor: middle; }
+  .startdot { fill: #e6e9ef; stroke: #0b0e14; stroke-width: 1; }
+
+  .edge .line { fill: none; stroke-width: 1.7; transition: stroke-width .12s ease, opacity .12s ease; }
+  .edge .hit { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
+  .edge .lbl { font-family: var(--mono); font-size: 9.5px; font-weight: 600; fill: #9aa4b2; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; transition: opacity .12s ease; }
+  .edge.hl .line { stroke-width: 3; opacity: 1; }
+  .edge.hl .lbl { font-weight: 700; fill: #e6e9ef; opacity: 1; }
+  .edge.dim .line { opacity: .12; }
+  .edge.dim .lbl { opacity: .08; }
+
+  .node { cursor: pointer; transition: opacity .12s ease; }
+  .node .body { stroke-width: 1.6; transition: stroke-width .12s ease, filter .12s ease; }
+  .node.hl .body { stroke-width: 3; filter: drop-shadow(0 0 6px rgba(255,255,255,0.20)); }
+  .node.dim { opacity: .38; }
+  .nlabel { font-family: var(--sans); font-size: 12.5px; font-weight: 700; text-anchor: middle; letter-spacing: .01em; }
+  .nsub { font-family: var(--mono); font-size: 9px; fill: #8690a0; text-anchor: middle; }
+  .badge-dot { stroke: #0b0e14; stroke-width: 1; }
+
+  .tt { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; min-height: 54px; font-size: 12.5px; color: var(--muted-ink); }
+  .tt-empty { color: var(--faint); font-style: italic; font-size: 12.5px; }
+  .tt-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tt-title { font-weight: 700; font-size: 13.5px; font-family: var(--mono); color: var(--ink); }
+  .tt-file { color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+  .tt-mean { margin: 8px 0 2px; color: var(--muted-ink); max-width: 78ch; }
+  .tt-h { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin: 10px 0 5px; }
+  .tt ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px 18px; }
+  .tt li { font-family: var(--mono); font-size: 11.5px; color: var(--muted-ink); }
+  .tt li b { color: var(--ink); }
+  .tt li span { color: var(--faint); }
+
+  .note { margin: 14px 2px 0; font-size: 13px; color: var(--muted-ink); }
+  .note b { color: var(--ink); font-weight: 650; }
+  footer { margin-top: 22px; color: var(--faint); font-size: 12.5px; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1><code>zpt::stream_state</code> — state transition diagram</h1>
+      <p class="sub">
+        Every place a stream's <code>__state</code> actually changes. <b>Solid</b> = a real <code>__state</code>
+        assignment, <b>dashed green</b> = a listener event (no state is stored), <b>dashed rose</b> = a
+        downstream effect. Hover a state for where it is entered &amp; left; hover an edge for the
+        trigger and source. Examples are excluded.
+      </p>
+    </header>
+
+    <section class="panel">
+      <div class="cg-legend" id="legend"></div>
+    </section>
+
+    <section class="panel">
+      <div class="cg-wrap" id="wrap">
+        <svg id="st" role="img" aria-label="zpt::stream_state state transition diagram"></svg>
+        <div class="tt" id="tt"></div>
+      </div>
+      <p class="note"><b>Reachability.</b> <code>CONNECTED</code>
+        is never stored in <code>__state</code>; it only fires as a listener event from
+        <code>listen_on()</code>.</p>
+      <p class="note"><b>Erroring out.</b> <code>receive()</code> stores <code>ERRORING_OUT</code>
+        when a message can't be parsed (syntax error). <code>send()</code> may still finish a reply on
+        such a stream (back to <code>IDLE</code>), but <code>unmute()</code> treats
+        <code>ERRORING_OUT</code> as teardown and closes the stream via <code>erase()</code>.</p>
+      <p class="note"><b>Synchronous cycle.</b> The <code>IDLE ⇄ WAITING</code> /
+        <code>IDLE ⇄ PROCESSING</code> loop runs only for transports with the <code>SYNCHRONOUS</code>
+        capability; async transports leave <code>__state</code> untouched.</p>
+      <p class="note"><b>Persistent transports.</b> <code>amqp_stream::close()</code> and
+        <code>mqtt_stream::close()</code> reset the state back to <code>IDLE</code> (the self-loop on
+        <code>IDLE</code>) instead of <code>DISCONNECTED</code> like the base class.</p>
+    </section>
+
+    <footer>
+      Source of truth: <code>io/stream/src/streams.cpp</code> (<code>basic_stream</code> + <code>zpt::polling</code>),
+      <code>network/transport/src/transport.cpp</code> (<code>receive()</code>/<code>send()</code>,
+      <code>ERRORING_OUT</code> on syntax error),
+      <code>network/{amqp,mqtt}</code> (<code>close()</code> overrides), and
+      <code>io/stream/include/zapata/streams/streams.h</code> (the enum).
+    </footer>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  var GROUPS = {
+    idle:         { c: "#6ea8fe", bg: "#0f1f3a", name: "IDLE",         dashed: false },
+    waiting:      { c: "#f0b03e", bg: "#221a0b", name: "WAITING",      dashed: false },
+    processing:   { c: "#35d0bd", bg: "#0c211f", name: "PROCESSING",   dashed: false },
+    disconnected: { c: "#f4657f", bg: "#2a0f16", name: "DISCONNECTED", dashed: false },
+    erroring:     { c: "#fb923c", bg: "#241408", name: "ERRORING_OUT", dashed: false },
+    connected:    { c: "#57d07a", bg: "#102518", name: "CONNECTED",    dashed: true  }
+  };
+  var KINDS = {
+    assign:       { stroke: "#8b95a5", dash: "",    arrow: "#a9b2c0", name: "assignment" },
+    notification: { stroke: "#57d07a", dash: "6 4", arrow: "#57d07a", name: "listener event (no state)" },
+    effect:       { stroke: "#f4657f", dash: "6 4", arrow: "#f4657f", name: "downstream effect" }
+  };
+
+  // Node geometry: cx, cy (centers). hw/hh are half-width/half-height.
+  var nodes = [
+    { id: "idle",         label: "IDLE",         val: 1, def: 56, group: "idle",         assigned: true,  x: 500, y: 300,
+      sub: "default · hub", meaning: "Resting / default state. A stream is created here and returns here after each request/reply."
+      , src: "default: streams.h:270 · set by send()/receive() (transport.cpp)" },
+    { id: "waiting",      label: "WAITING",      val: 2, def: 57, group: "waiting",      assigned: true,  x: 500, y: 110,
+      sub: "awaiting reply", meaning: "A request was sent; the stream is waiting for the matching reply."
+      , src: "send() — transport.cpp:89" },
+    { id: "processing",   label: "PROCESSING",   val: 3, def: 58, group: "processing",   assigned: true,  x: 500, y: 490,
+      sub: "handling request", meaning: "An incoming request is being handled by a registered delegate."
+      , src: "receive() — transport.cpp:43" },
+    { id: "disconnected", label: "DISCONNECTED", val: 5, def: 60, group: "disconnected", assigned: true,  x: 175, y: 130,
+      sub: "terminal", meaning: "The stream has been torn down. Terminal for base streams (close()/shutdown()); also the end of erase() on an erroring or non-persistent stream."
+      , src: "close()/shutdown() — streams.cpp:74, 81 · erase() → shutdown() — streams.cpp:300" },
+    { id: "erroring",     label: "ERRORING_OUT", val: 4, def: 59, group: "erroring",     assigned: true,  x: 175, y: 490,
+      sub: "closes the stream", meaning: "Set by receive() when the incoming message can't be parsed (syntax error). send() may still finish a reply on it (back to IDLE), but any unmute() of a stream in this state tears it down via erase()."
+      , src: "receive() on syntax error — transport.cpp:62" },
+    { id: "connected",    label: "CONNECTED",    val: 0, def: 55, group: "connected",    assigned: false, x: 840, y: 110,
+      sub: "event only", meaning: "Never written to __state. It exists only as a listener event fired by listen_on()."
+      , src: "fired by listen_on() — streams.cpp:163" }
+  ];
+
+  // Transitions. p0..p3 are the cubic-bezier control points; lx/ly/anchor place the label.
+  var edges = [
+    { from: "start", to: "idle", kind: "assign", label: "default (ctor)", src: "__state{ IDLE } · streams.h:270",
+      p0: [500, 243], p1: [500, 252], p2: [500, 259], p3: [500, 266], lx: 512, ly: 245, anchor: "start" },
+
+    { from: "idle", to: "waiting", kind: "assign", label: "send() · request", src: "transport.cpp:89",
+      p0: [482, 266], p1: [482, 222], p2: [482, 188], p3: [482, 144], lx: 476, ly: 208, anchor: "end" },
+    { from: "waiting", to: "idle", kind: "assign", label: "recv() · reply", src: "transport.cpp:47",
+      p0: [518, 144], p1: [518, 188], p2: [518, 222], p3: [518, 266], lx: 524, ly: 224, anchor: "start" },
+
+    { from: "idle", to: "processing", kind: "assign", label: "recv() · request", src: "transport.cpp:43",
+      p0: [482, 334], p1: [482, 378], p2: [482, 412], p3: [482, 456], lx: 476, ly: 396, anchor: "end" },
+    { from: "processing", to: "idle", kind: "assign", label: "send() · reply", src: "transport.cpp:93",
+      p0: [518, 456], p1: [518, 412], p2: [518, 378], p3: [518, 334], lx: 524, ly: 412, anchor: "start" },
+
+    { from: "idle", to: "erroring", kind: "assign", label: "recv() · syntax error", src: "transport.cpp:62",
+      p0: [449, 334], p1: [350, 380], p2: [280, 430], p3: [254, 466], lx: 330, ly: 392, anchor: "middle" },
+    { from: "erroring", to: "idle", kind: "assign", label: "send() · reply", src: "transport.cpp:93",
+      p0: [260, 506], p1: [380, 530], p2: [440, 420], p3: [445, 338], lx: 356, ly: 490, anchor: "middle" },
+
+    { from: "idle", to: "connected", kind: "notification", label: "listen_on() fires", src: "streams.cpp:163",
+      p0: [556, 267], p1: [650, 246], p2: [702, 156], p3: [758, 122], lx: 676, ly: 196, anchor: "middle" },
+
+    { from: "idle", to: "disconnected", kind: "assign", label: "close()/shutdown() · any", src: "streams.cpp:74, 81",
+      p0: [453, 268], p1: [380, 246], p2: [320, 156], p3: [257, 128], lx: 350, ly: 192, anchor: "middle" },
+
+    { from: "erroring", to: "disconnected", kind: "effect", label: "unmute() → erase()", src: "streams.cpp:192 → 300",
+      p0: [175, 456], p1: [175, 378], p2: [175, 222], p3: [175, 164], lx: 190, ly: 300, anchor: "start" },
+
+    { from: "idle", to: "idle", kind: "assign", label: "close() · amqp/mqtt", src: "amqp_stream.cpp:66 · mqtt_stream.cpp:50",
+      p0: [418, 288], p1: [360, 278], p2: [360, 322], p3: [418, 312], lx: 384, ly: 300, anchor: "middle" }
+  ];
+
+  var W = 1010, H = 578;
+  var byId = {};
+  byId["start"] = { label: "⟨initial⟩" }; // pseudo node for the start marker
+  nodes.forEach(function (n) {
+    n.hw = 82; n.hh = 34;
+    byId[n.id] = n;
+  });
+
+  var NS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("st");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function pathD(e) {
+    return "M " + e.p0[0] + " " + e.p0[1] +
+           " C " + e.p1[0] + " " + e.p1[1] + " " + e.p2[0] + " " + e.p2[1] + " " + e.p3[0] + " " + e.p3[1];
+  }
+
+  var defs = el("defs", {}, svg);
+  Object.keys(KINDS).forEach(function (k) {
+    var m = el("marker", { id: "arr-" + k, viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto" }, defs);
+    el("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: KINDS[k].arrow }, m);
+  });
+
+  var tt = document.getElementById("tt");
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  var TT_PLACEHOLDER = '<span class="tt-empty">Hover a state to see where it is entered and left, or hover an edge for the trigger and source.</span>';
+  function showTip(html) { tt.innerHTML = html; }
+  function hideTip() { tt.innerHTML = TT_PLACEHOLDER; }
+
+  function nodeTip(n) {
+    var h = '<div class="tt-head"><span class="tt-title">' + esc(n.label) + '</span>'
+          + '<span class="tt-file">value ' + n.val + ' · enum @ streams.h:' + n.def + '</span></div>';
+    h += '<p class="tt-mean">' + esc(n.meaning) + '</p>';
+    h += '<div class="tt-h">set in</div><ul><li>' + esc(n.src) + '</li></ul>';
+    var inc = edges.filter(function (e) { return e.to === n.id; });
+    var out = edges.filter(function (e) { return e.from === n.id; });
+    if (inc.length) {
+      h += '<div class="tt-h">entered from</div><ul>' + inc.map(function (e) {
+        var f = byId[e.from].label; if (e.from === n.id) f += " <span>(self)</span>";
+        return "<li><b>" + esc(f) + "</b> <span>· " + esc(e.label) + " · " + esc(e.src) + "</span></li>";
+      }).join("") + "</ul>";
+    }
+    if (out.length) {
+      h += '<div class="tt-h">leaves to</div><ul>' + out.map(function (e) {
+        var t = byId[e.to].label; if (e.to === n.id) t += " <span>(self)</span>";
+        return "<li><b>" + esc(t) + "</b> <span>· " + esc(e.label) + " · " + esc(e.src) + "</span></li>";
+      }).join("") + "</ul>";
+    }
+    return h;
+  }
+  function edgeTip(e) {
+    var a = byId[e.from].label, b = byId[e.to].label;
+    return '<div class="tt-head"><span class="tt-title">' + esc(a) + " → " + esc(b) + "</span>" +
+           '<span class="tt-file">' + esc(KINDS[e.kind].name) + '</span></div>' +
+           '<div class="tt-h">trigger</div><ul><li>' + esc(e.label) + '</li></ul>' +
+           '<div class="tt-h">source</div><ul><li>' + esc(e.src) + '</li></ul>';
+  }
+  function clearHL() { svg.querySelectorAll(".hl, .dim").forEach(function (x) { x.classList.remove("hl"); x.classList.remove("dim"); }); }
+
+  // Region labels
+  var gCols = el("g", { id: "cols" }, svg);
+  [{ x: 175, t: "teardown" }, { x: 500, t: "synchronous request / reply cycle" },
+   { x: 840, t: "listener event · not stored" }].forEach(function (c) {
+    var t = el("text", { x: c.x, y: 44, "class": "colh" }, gCols);
+    t.textContent = c.t;
+  });
+
+  // Edges (under the nodes)
+  var gEdges = el("g", { id: "edges" }, svg);
+  edges.forEach(function (e) {
+    var g = el("g", { "class": "edge", "data-from": e.from, "data-to": e.to }, gEdges);
+    var d = pathD(e), k = KINDS[e.kind];
+    var line = el("path", { d: d, "class": "line" }, g);
+    line.setAttribute("stroke", k.stroke);
+    if (k.dash) line.setAttribute("stroke-dasharray", k.dash);
+    line.setAttribute("marker-end", "url(#arr-" + e.kind + ")");
+    el("path", { d: d, "class": "hit" }, g);
+    var lbl = el("text", { x: e.lx, y: e.ly, "class": "lbl", "text-anchor": e.anchor || "middle" }, g);
+    lbl.textContent = e.label;
+    e.g = g;
+    g.addEventListener("mouseenter", function () {
+      clearHL();
+      edges.forEach(function (o) { o.g.classList.add(o === e ? "hl" : "dim"); });
+      nodes.forEach(function (n) { n.g.classList.add((n.id === e.from || n.id === e.to) ? "hl" : "dim"); });
+      showTip(edgeTip(e));
+    });
+    g.addEventListener("mouseleave", function () { clearHL(); hideTip(); });
+  });
+
+  // Nodes
+  var gNodes = el("g", { id: "nodes" }, svg);
+  // start marker
+  el("circle", { cx: 500, cy: 238, r: 5, "class": "startdot" }, gNodes);
+
+  nodes.forEach(function (n) {
+    var g = el("g", { "class": "node", "data-id": n.id }, gNodes);
+    var gs = GROUPS[n.group];
+    var body = el("rect", { x: n.x - n.hw, y: n.y - n.hh, width: n.hw * 2, height: n.hh * 2, rx: 12, "class": "body" }, g);
+    body.setAttribute("fill", gs.bg); body.setAttribute("stroke", gs.c);
+    if (gs.dashed) body.setAttribute("stroke-dasharray", "5 3");
+    var nameY = n.y + (gs.dashed ? -4 : -8);
+    var l1 = el("text", { x: n.x, y: nameY, "class": "nlabel" }, g);
+    l1.textContent = n.label; l1.setAttribute("fill", gs.c);
+    var sub = el("text", { x: n.x, y: n.y + 14, "class": "nsub" }, g);
+    sub.textContent = n.sub;
+    if (gs.dashed) el("circle", { cx: n.x + n.hw - 13, cy: n.y - n.hh + 13, r: 4, "class": "badge-dot", fill: gs.c }, g);
+    n.g = g;
+    g.addEventListener("mouseenter", function () {
+      clearHL();
+      edges.forEach(function (o) { o.g.classList.add((o.from === n.id || o.to === n.id) ? "hl" : "dim"); });
+      nodes.forEach(function (m) {
+        var inc = (m.id === n.id) || edges.some(function (o) { return (o.from === n.id && o.to === m.id) || (o.to === n.id && o.from === m.id); });
+        m.g.classList.add(inc ? "hl" : "dim");
+      });
+      showTip(nodeTip(n));
+    });
+    g.addEventListener("mouseleave", function () { clearHL(); hideTip(); });
+  });
+
+  // Legend
+  var legend = document.getElementById("legend");
+  var lg = "";
+  Object.keys(GROUPS).forEach(function (k) {
+    var g = GROUPS[k];
+    var sw = g.dashed
+      ? ' style="background:transparent;border:2px dashed ' + g.c + '"'
+      : ' style="background:' + g.c + '"';
+    lg += '<span class="lg-item"><i' + sw + '></i>' + g.name + '</span>';
+  });
+  lg += '<span class="lg-sep"></span>';
+  lg += '<span class="lg-item"><span class="ln" style="border-color:' + KINDS.assign.stroke + '"></span>' + KINDS.assign.name + '</span>';
+  lg += '<span class="lg-item"><span class="ln" style="border-color:' + KINDS.notification.stroke + ';border-top-style:dashed"></span>' + KINDS.notification.name + '</span>';
+  lg += '<span class="lg-item"><span class="ln" style="border-color:' + KINDS.effect.stroke + ';border-top-style:dashed"></span>' + KINDS.effect.name + '</span>';
+  lg += '<span class="lg-sep"></span>';
+  lg += '<span class="lg-item"><i style="background:transparent;border:2px dashed #98a2b3"></i>dashed node = referenced, never stored in __state</span>';
+  legend.innerHTML = lg;
+
+  tt.innerHTML = TT_PLACEHOLDER;
+})();
+</script>
+</body>
+</html>

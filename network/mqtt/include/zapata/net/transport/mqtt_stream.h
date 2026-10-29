@@ -55,9 +55,6 @@ class mqtt_stream : public basic_stream {
     /** @brief Closes the stream and resets its internal state.
      * @return Reference to this stream. */
     auto close() -> mqtt_stream& override;
-    /** @brief Shuts down the connection and releases mosquitto resources.
-     * @return Reference to this stream. */
-    auto shutdown() -> mqtt_stream& override;
     /** @brief Reads content from the internal buffer without I/O.
      * @param _out Reference to receive the deserialized content.
      * @return Reference to this stream. */

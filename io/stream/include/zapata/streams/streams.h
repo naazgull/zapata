@@ -36,13 +36,14 @@
 #include <any>
 #include <array>
 #include <atomic>
+#include <ios>
 #include <iostream>
 #include <memory>
+#include <shared_mutex>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/allocator.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
-#include <shared_mutex>
 #include <zapata/text/convert.h>
 #include <zapata/uuid.h>
 
@@ -59,6 +60,9 @@ enum stream_state {
     ERRORING_OUT = 4, ///< Stream encountered an error
     DISCONNECTED = 5
 };
+
+inline const char* stream_state_names[] = { "CONNECTED",  "IDLE",         "WAITING",
+                                            "PROCESSING", "ERRORING_OUT", "DISCONNECTED" };
 
 /** @brief Type alias for epoll event structure. */
 using epoll_event_t = struct epoll_event;
@@ -207,11 +211,6 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @return Reference to this stream.
      */
     virtual auto close() -> basic_stream&;
-    /**
-     * @brief Shuts down the stream's connection.
-     * @return Reference to this stream.
-     */
-    virtual auto shutdown() -> basic_stream&;
     /**
      * @brief Upgrades the stream to a different transport.
      * @param _to_transport Target transport scheme.
@@ -409,8 +408,6 @@ class polling : public std::enable_shared_from_this<polling> {
     /** @brief Mutex protecting the polled streams map. */
     mutable std::shared_mutex __poll_lock;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    polled_streams_type __polled_streams;
-    /** @brief Map of file descriptors to stream pointers currently being monitored. */
     polled_streams_by_uuid_type __polled_streams_by_uuid;
     /** @brief Map of file descriptors to stream pointers currently being monitored. */
     polled_streams_by_uri_type __polled_streams_by_uri;
@@ -429,10 +426,6 @@ class polling : public std::enable_shared_from_this<polling> {
      * @param _stream Stream to remove.
      * @return Reference to this polling instance. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Retrieves the stream associated with the given file descriptor.
-     * @param _stream_fd File descriptor to look up.
-     * @return Stream associated with the file descriptor, or nullptr. */
-    auto get(int _stream_fd) const -> zpt::stream;
     /** @brief Retrieves the stream associated with the given identifier.
      * @param _stream_id UUID to look up.
      * @return Stream associated with the UUID, or nullptr. */
@@ -498,6 +491,7 @@ zpt::basic_stream::basic_stream(std::in_place_type_t<T>,
     zlog("Opening connection to " << this->__uri, zpt::trace);
     expect(!this->__underlying->fail() && !this->__underlying->bad(),
            "unable to open underlying `std::iostream` named '" << this->__uri << "'");
+    this->__underlying->exceptions(std::ios_base::badbit);
 }
 
 template<typename T>

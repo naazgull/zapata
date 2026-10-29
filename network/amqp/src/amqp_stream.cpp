@@ -59,16 +59,6 @@ auto zpt::amqp_stream::operator<<(ostream_manipulator) -> zpt::amqp_stream& { re
 auto zpt::amqp_stream::close() -> zpt::amqp_stream& {
     zlog("Closing connection to " << this->__uri, zpt::trace);
 
-    this->__underlying.reset(nullptr);
-    this->__fd = -1;
-    this->__transport = "";
-    this->__uri = "";
-    this->__state = zpt::stream_state::IDLE;
-
-    return (*this);
-}
-
-auto zpt::amqp_stream::shutdown() -> zpt::amqp_stream& {
     std::unique_lock _guard{ this->__driver_mutex };
     if (this->__driver != nullptr) {
         pn_connection_driver_close(this->__driver.get());
@@ -79,9 +69,11 @@ auto zpt::amqp_stream::shutdown() -> zpt::amqp_stream& {
     this->__connected->store(false);
     this->__sender = nullptr;
     this->__receiver = nullptr;
-    ::shutdown(this->__fd, SHUT_RDWR);
-    ::close(this->__fd);
+
+    this->__underlying.reset(nullptr);
     this->__fd = -1;
+    this->__state = zpt::stream_state::IDLE;
+
     return (*this);
 }
 
@@ -184,7 +176,7 @@ auto zpt::amqp_stream::connect() -> amqp_stream& {
         zlog("Connected to " << this->__uri, zpt::trace);
     }
     catch (...) {
-        if (this->__driver != nullptr) { this->shutdown(); }
+        if (this->__driver != nullptr) { this->close(); }
         throw;
     }
     return (*this);
