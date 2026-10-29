@@ -45,9 +45,9 @@ auto zpt::upnp::basic_request::to_stream(std::ostream& _out) const -> zpt::basic
     if (this->__underlying("body")->ok()) {
         if (this->__underlying("headers")("Content-Type")->stringify().find("application/json") !=
             std::string::npos) {
-            _body.assign(static_cast<std::string>(this->__underlying("body")));
+            _body.assign(this->__underlying("body")->stringify());
         }
-        else { _body.assign(this->__underlying("body")->string()); }
+        else { _body.assign(static_cast<std::string>(this->__underlying("body"))); }
     }
 
     for (auto&& [_, _name, _value] : this->__underlying("headers")) {
@@ -99,8 +99,8 @@ auto zpt::upnp::basic_reply::to_stream(std::ostream& _out) const -> zpt::basic_m
             _out << "Content-Length: " << _body.length() << CRLF << CRLF << _body;
         }
         else {
-            _out << "Content-Length: " << this->__underlying("body")->string().length() << CRLF
-                 << CRLF << this->__underlying("body")->string();
+            auto _body = static_cast<std::string>(this->__underlying("body"));
+            _out << "Content-Length: " << _body.length() << CRLF << CRLF << _body;
         }
     }
     else { _out << "Content-Length: 0" << CRLF << CRLF; }
