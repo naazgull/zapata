@@ -73,13 +73,6 @@ class amqp_stream : public basic_stream {
      @throws ClosedException if the connection is not active.
      */
     auto close() -> amqp_stream& override;
-    /** @brief Shuts down the AMQP connection gracefully.
-
-     Sends close frames and releases resources without reconnecting.
-     @return Reference to this stream.
-     @throws ClosedException if the connection is not active.
-     */
-    auto shutdown() -> amqp_stream& override;
     /**
      * @brief Reads content from the internal buffer without I/O.
      * @param _out Reference to receive the deserialized content.
@@ -143,7 +136,7 @@ class amqp_stream : public basic_stream {
     /** @brief Proton connection driver managing the AMQP connection state. */
     std::unique_ptr<pn_connection_driver_t> __driver{ nullptr };
     /** @brief Mutex protecting access to the connection driver. */
-    zpt::locks::spin_mutex __driver_mutex;
+    std::shared_mutex __driver_mutex;
     /** @brief Configuration used to establish and manage the connection. */
     zpt::json __config;
     /** @brief Atomic flag indicating whether the connection is active. */

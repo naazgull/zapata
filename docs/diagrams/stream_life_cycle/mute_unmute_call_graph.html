@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark only" />
+<title>zpt::stream — mute/unmute call graph</title>
+<style>
+  :root {
+    --page: #0b0e14; --panel: #11151d; --ink: #e6e9ef; --muted-ink: #9aa4b2; --faint: #6b7482;
+    --line: #262c37;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--page); color: var(--ink); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 28px 64px; }
+
+  header h1 { font-size: 25px; font-weight: 750; letter-spacing: -0.01em; margin: 0 0 6px; }
+  header h1 code, .note code, footer code { font-family: var(--mono); font-size: 0.82em; background: #1a2029; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: #cdd3dc; }
+  header .sub { color: var(--muted-ink); font-size: 15px; max-width: 86ch; margin: 0 0 4px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.45); }
+
+  .cg-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 12.5px; color: var(--muted-ink); }
+  .lg-item { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+  .lg-item i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .lg-sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+  .ln { width: 26px; border-top: 2px solid; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .ln-call { border-color: #8b95a5; }
+  .ln-wires { border-color: #b18cf3; border-top-style: dashed; }
+  .ln-disp { border-color: #f4657f; border-top-style: dotted; }
+
+  .cg-wrap { position: relative; }
+  .cg-wrap svg { width: 100%; height: auto; display: block; }
+
+  .colh { font-family: var(--mono); font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; fill: #6b7482; text-anchor: middle; }
+
+  .edge .line { fill: none; stroke-width: 1.7; transition: stroke-width .12s ease, opacity .12s ease; }
+  .edge .hit { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
+  .edge .lbl { font-family: var(--mono); font-size: 9.5px; font-weight: 600; fill: #9aa4b2; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; transition: opacity .12s ease; }
+  .edge.hl .line { stroke-width: 3; opacity: 1; }
+  .edge.hl .lbl { font-weight: 700; fill: #e6e9ef; opacity: 1; }
+  .edge.dim .line { opacity: .12; }
+  .edge.dim .lbl { opacity: .08; }
+
+  .node { cursor: pointer; transition: opacity .12s ease; }
+  .node .body { stroke-width: 1.5; transition: stroke-width .12s ease, filter .12s ease; }
+  .node.hl .body { stroke-width: 3; filter: drop-shadow(0 0 5px rgba(255,255,255,0.18)); }
+  .node.dim { opacity: .4; }
+  .nlabel { font-family: var(--sans); font-size: 11.5px; font-weight: 700; text-anchor: middle; }
+  .nsub { font-family: var(--mono); font-size: 9px; fill: #8690a0; text-anchor: middle; }
+
+  .tt { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; min-height: 48px; font-size: 12.5px; color: var(--muted-ink); }
+  .tt-empty { color: var(--faint); font-style: italic; font-size: 12.5px; }
+  .tt-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tt-title { font-weight: 700; font-size: 13.5px; font-family: var(--mono); color: var(--ink); }
+  .tt-file { color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+  .tt-h { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin: 10px 0 5px; }
+  .tt ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px 18px; }
+  .tt li { font-family: var(--mono); font-size: 11.5px; color: var(--muted-ink); }
+  .tt li b { color: var(--ink); }
+  .tt li span { color: var(--faint); }
+
+  .note { margin: 14px 2px 0; font-size: 13px; color: var(--muted-ink); }
+  .note b { color: var(--ink); font-weight: 650; }
+  footer { margin-top: 22px; color: var(--faint); font-size: 12.5px; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1><code>zpt::stream</code> — mute / unmute call graph</h1>
+      <p class="sub">
+        Who calls whom on the stream's <code>__muted</code> flag, read left&nbsp;→&nbsp;right.
+        Columns are the call flow: <b>bootstrap</b>, the <b>callers</b>, the <code>zpt::polling</code>
+        core, and the right-hand column that holds both the core's <code>zpt::stream_set</code>
+        backing store <b>and</b> its sinks. The <code>__muted</code> flag is now flipped only inside
+        <code>stream_set::acquire()</code>/<code>release()</code> (a CAS on the claim token), which the
+        polling core drives. Colours are the owning module. Hover any node to trace its calls;
+        hover any edge for the transition.
+      </p>
+    </header>
+
+    <section class="panel">
+      <div class="cg-legend" id="legend"></div>
+    </section>
+
+    <section class="panel">
+      <div class="cg-wrap" id="wrap">
+        <svg id="cg" role="img" aria-label="mute/unmute call graph"></svg>
+        <div class="tt" id="tt"></div>
+      </div>
+      <p class="note"><b>Examples excluded.</b> The <code>websocket</code> provider/consumer and
+        <code>upnp</code> example call sites are left out. Solid&nbsp;=&nbsp;direct call, dashed&nbsp;=&nbsp;wiring/registration,
+        dotted&nbsp;=&nbsp;asynchronous dispatcher hop — the engine re-dispatching an event back into a handler
+        (the loop that runs around the bottom).</p>
+      <p class="note"><b>Graceful-close hook.</b> <code>unmute()</code> tears the stream down via
+        <code>erase()</code> not only when it is <code>!persistent</code> or <code>ERRORING_OUT</code>, but
+        also when its state is <code>GRACEFULLY_CLOSE</code> — a state the API client stores by direct
+        function call (<code>stream->state(...)</code>), not through the polling core (streams.cpp:205–207).</p>
+      <p class="note"><b>The <code>stream_set</code> claim layer.</b> The polling core no longer keeps the
+        stream maps or the mute book-keeping itself — it delegates to a fixed-capacity, thread-safe
+        <code>zpt::stream_set</code>. <code>acquire()</code>/<code>release()</code> are a CAS on the per-slot
+        claim token (<code>__by_fd_id</code>) and are the only place the <code>__muted</code> flag flips;
+        the <code>__by_fd</code> slot array is written without the map mutex on purpose. Teardown closes the
+        streams from <code>stream_set::close()</code> (via <code>polling::close()</code>), <em>not</em> from
+        <code>erase()</code> — <code>erase()</code> only frees the slot and fires <code>DISCONNECTED</code>.</p>
+    </section>
+
+    <footer>
+      Source of truth: <code>io/stream/src/streams.cpp</code> (<code>zpt::polling</code>) and
+      <code>io/stream/src/stream_set.cpp</code> (<code>zpt::stream_set</code>),
+      <code>engines/transport/</code> (engine + <code>events</code> + <code>call&lt;T&gt;</code>),
+      <code>engines/runtime/src/runtime.cpp</code>, and the <code>network/*</code> plugins.
+    </footer>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  var GROUPS = {
+    runtime: { c: "#aeb6c2", bg: "#171d27", name: "runtime" },
+    call:    { c: "#6ea8fe", bg: "#0f1f3a", name: "call<T>" },
+    events:  { c: "#35d0bd", bg: "#0c211f", name: "events (receive/send)" },
+    plugins: { c: "#57d07a", bg: "#102518", name: "network plugins" },
+    polling: { c: "#f0b03e", bg: "#221a0b", name: "zpt::polling core" },
+    set:     { c: "#f5834e", bg: "#26180f", name: "zpt::stream_set (thread-safe)" },
+    engine:  { c: "#b18cf3", bg: "#1a1230", name: "engine / dispatcher" },
+    sink:    { c: "#98a2b3", bg: "#1a2029", name: "sink (epoll / close)" }
+  };
+  var KINDS = {
+    call:       { stroke: "#8b95a5", dash: "",    arrow: "#a9b2c0", name: "call" },
+    wires:      { stroke: "#b18cf3", dash: "7 4", arrow: "#b18cf3", name: "wiring" },
+    dispatcher: { stroke: "#f4657f", dash: "2 3", arrow: "#f4657f", name: "dispatcher" }
+  };
+
+  var COLX = { bootstrap: 140, callers: 420, core: 700, callees: 980 };
+  var nodes = [
+    { id: "runtime_run",    label: "runtime::run()",            sub: ["engines/runtime/src/runtime.cpp"],        group: "runtime", col: "bootstrap", y: 340 },
+    { id: "engine_ctor",    label: "engine::engine()",          sub: ["engines/transport/src/engine.cpp"],        group: "engine",  col: "bootstrap", y: 470 },
+    { id: "call_internal",  label: "call<T>::call_internally()",  sub: ["engine.h ·751–766"],                 group: "call",    col: "callers",   y: 180 },
+    { id: "plugins_accept", label: "network/* accept",           sub: ["tcp:50 · local:49 · http:51", "upnp:40 · mqtt:231 · amqp:324"], group: "plugins", col: "callers", y: 270 },
+    { id: "call_external",  label: "call<T>::send_externally()", sub: ["engine.h ·771–811"],                          group: "call",    col: "callers",   y: 360 },
+    { id: "ev_send",        label: "events::send",              sub: ["engine.cpp ·operator() ·266–278"],                  group: "events", col: "callers", y: 470 },
+    { id: "ev_receive",     label: "events::receive",           sub: ["engine.cpp ·~receive() ·78"],                group: "events",  col: "callers",   y: 560 },
+    { id: "p_poll",         label: "polling::poll()",             sub: ["streams.cpp ·231"],                  group: "polling", col: "core", y: 90 },
+    { id: "p_listen",       label: "polling::listen_on()",        sub: ["streams.cpp ·160"],                  group: "polling", col: "core", y: 162 },
+    { id: "p_insert",       label: "polling::insert()",           sub: ["streams.cpp ·277 (private)"],        group: "polling", col: "core", y: 234 },
+    { id: "p_mute",         label: "polling::mute(stream)",       sub: ["streams.cpp ·166"],                  group: "polling", col: "core", y: 306 },
+    { id: "p_mute_id",      label: "polling::mute(id|uri)",       sub: ["streams.cpp ·179 ·186"],             group: "polling", col: "core", y: 378 },
+    { id: "p_mute_idx",     label: "polling::mute(idx,uuid)",     sub: ["streams.cpp ·193"],                  group: "polling", col: "core", y: 450 },
+    { id: "p_delegate",     label: "polling::delegate()",         sub: ["streams.cpp ·300"],                  group: "polling", col: "core", y: 522 },
+    { id: "p_unmute",       label: "polling::unmute()",           sub: ["streams.cpp ·203"],                  group: "polling", col: "core", y: 594 },
+    { id: "p_erase",        label: "polling::erase()",            sub: ["streams.cpp ·291 (private)"],        group: "polling", col: "core", y: 666 },
+    { id: "p_close",        label: "polling::close()/~polling()", sub: ["streams.cpp ·122 ·117"],             group: "polling", col: "core", y: 738 },
+    { id: "ss_insert",      label: "stream_set::insert()",        sub: ["stream_set.cpp ·40"],                group: "set",     col: "callees", y: 200 },
+    { id: "ss_acquire",     label: "stream_set::acquire()",       sub: ["stream_set.cpp ·86 ·93"],            group: "set",     col: "callees", y: 268 },
+    { id: "ss_get",         label: "stream_set::get()",           sub: ["stream_set.cpp ·128 ·135"],          group: "set",     col: "callees", y: 336 },
+    { id: "h_callback",     label: "polling::callback()",         sub: ["streams.cpp ·285 ·295"],             group: "polling", col: "callees", y: 404 },
+    { id: "h_trigger",      label: "delegate callback",           sub: ["trigger<receive> (engine)"],          group: "engine",  col: "callees", y: 472 },
+    { id: "h_epoll",        label: "epoll_ctl()",                 sub: ["EPOLL_CTL_ADD / DEL"],               group: "sink",    col: "callees", y: 540 },
+    { id: "ss_release",     label: "stream_set::release()",       sub: ["stream_set.cpp ·113"],               group: "set",     col: "callees", y: 608 },
+    { id: "ss_erase",       label: "stream_set::erase()",         sub: ["stream_set.cpp ·59"],                group: "set",     col: "callees", y: 676 },
+    { id: "ss_close",       label: "stream_set::close()",         sub: ["stream_set.cpp ·142"],               group: "set",     col: "callees", y: 744 },
+    { id: "h_close",        label: "stream->close()",             sub: ["basic_stream ·streams.cpp ·70"],     group: "sink",    col: "callees", y: 812 }
+  ];
+
+  var edges = [
+    // callers -> core
+    { from: "call_internal",  to: "p_listen",   label: "self·listen",   kind: "call", route: "fwd" },
+    { from: "call_internal",  to: "p_mute",     label: "mute",          kind: "call", route: "fwd" },
+    { from: "call_internal",  to: "p_unmute",   label: "unmute",        kind: "call", route: "fwd" },
+    { from: "plugins_accept", to: "p_listen",   label: "accept",        kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_mute_id",  label: "mute(uri)",     kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_listen",   label: "fresh·listen",  kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_mute",     label: "fresh·mute",    kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_unmute",   label: "finish",        kind: "call", route: "fwd" },
+    { from: "ev_send",        to: "p_mute",     label: "pre-send",      kind: "call", route: "fwd" },
+    { from: "ev_send",        to: "p_unmute",   label: "post-send",     kind: "call", route: "fwd" },
+    { from: "ev_receive",     to: "p_unmute",   label: "RAII",          kind: "call", route: "fwd" },
+    // polling core (within-column)
+    { from: "p_listen",   to: "p_insert",     label: "insert",             kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_mute_idx",   label: "harvest",            kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_delegate",   label: "EPOLLIN",            kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_erase",      label: "HUP·ERR·PRIO·RDHUP", kind: "call", route: "right" },
+    { from: "p_mute_id",  to: "p_mute",       label: "resolve",            kind: "call", route: "left" },
+    { from: "p_unmute",   to: "p_delegate",   label: "has_next",           kind: "call", route: "left" },
+    { from: "p_unmute",   to: "p_erase",      label: "teardown",           kind: "call", route: "right" },
+    { from: "p_delegate", to: "p_unmute",     label: "no·delegate",        kind: "call", route: "right" },
+    // core -> stream_set + sinks
+    { from: "p_insert",   to: "ss_insert",  label: "insert",       kind: "call", route: "fwd" },
+    { from: "p_insert",   to: "h_epoll",    label: "ADD",          kind: "call", route: "fwd" },
+    { from: "p_insert",   to: "h_callback", label: "CONNECTED",    kind: "call", route: "fwd" },
+    { from: "p_mute",     to: "ss_acquire", label: "acquire",      kind: "call", route: "fwd" },
+    { from: "p_mute",     to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_mute_id",  to: "ss_get",     label: "get()",        kind: "call", route: "fwd" },
+    { from: "p_mute_idx", to: "ss_acquire", label: "acquire",      kind: "call", route: "fwd" },
+    { from: "p_mute_idx", to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_delegate", to: "h_trigger",  label: "delegates[]",  kind: "call", route: "fwd" },
+    { from: "p_unmute",   to: "ss_release", label: "release",      kind: "call", route: "fwd" },
+    { from: "p_unmute",   to: "h_epoll",    label: "ADD",          kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "ss_erase",   label: "erase",        kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "h_callback", label: "DISCONNECTED", kind: "call", route: "fwd" },
+    { from: "p_close",    to: "ss_close",   label: "close",        kind: "call", route: "fwd" },
+    { from: "ss_close",   to: "h_close",    label: "per-slot",     kind: "call", route: "right" },
+    // bootstrap
+    { from: "runtime_run", to: "p_poll",     label: "loop",     kind: "call",  route: "top" },
+    { from: "runtime_run", to: "p_close",    label: "shutdown", kind: "call",  route: "bottom" },
+    { from: "engine_ctor", to: "p_delegate", label: "register", kind: "wires", route: "gap", gapY: 600 },
+    // dispatcher (async)
+    { from: "h_trigger",  to: "ev_receive", label: "dispatch", kind: "dispatcher", route: "loop" },
+    { from: "ev_receive", to: "ev_send",    label: "reply",    kind: "dispatcher", route: "left" }
+  ];
+
+  var W = 1150, H = 880;
+  var byId = {};
+  nodes.forEach(function (n) {
+    n.hw = 104;
+    n.hh = n.sub.length > 1 ? 33 : 27;
+    n.x = COLX[n.col];
+    byId[n.id] = n;
+  });
+
+  var NS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("cg");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function bez(t, p0, p1, p2, p3) {
+    var u = 1 - t;
+    return {
+      x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
+      y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y
+    };
+  }
+  function edgePath(e) {
+    var a = byId[e.from], b = byId[e.to], r = e.route || "fwd", B = 52;
+    var p0, p1, p2, p3, lt = (e.lt == null ? 0.5 : e.lt);
+    if (r === "fwd") {
+      var mx = (a.x + a.hw + b.x - b.hw) / 2;
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: mx, y: a.y }; p2 = { x: mx, y: b.y }; p3 = { x: b.x - b.hw, y: b.y };
+    } else if (r === "left") {
+      var cx = a.x - a.hw - B;
+      p0 = { x: a.x - a.hw, y: a.y }; p1 = { x: cx, y: a.y }; p2 = { x: cx, y: b.y }; p3 = { x: b.x - b.hw, y: b.y };
+    } else if (r === "right") {
+      var cx2 = a.x + a.hw + B;
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: cx2, y: a.y }; p2 = { x: cx2, y: b.y }; p3 = { x: b.x + b.hw, y: b.y };
+    } else if (r === "top") {
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 60, y: 56 }; p2 = { x: b.x - b.hw - 60, y: 56 }; p3 = { x: b.x - b.hw, y: b.y };
+    } else if (r === "bottom") {
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 60, y: 790 }; p2 = { x: b.x - b.hw - 60, y: 790 }; p3 = { x: b.x - b.hw, y: b.y };
+    } else if (r === "gap") {
+      var gy = e.gapY || 430;
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 150, y: gy }; p2 = { x: b.x - b.hw - 150, y: gy }; p3 = { x: b.x - b.hw, y: b.y };
+    } else if (r === "loop") {
+      var d = "M " + (a.x + a.hw) + " " + a.y +
+              " C 1120 " + a.y + " 1120 860 1060 860 L 480 860 C " +
+              b.x + " 860 " + b.x + " 805 " + b.x + " " + (b.y + b.hh);
+      return { d: d, lx: 770, ly: 853 };
+    }
+    var P = bez(lt, p0, p1, p2, p3);
+    return { d: "M " + p0.x + " " + p0.y + " C " + p1.x + " " + p1.y + " " + p2.x + " " + p2.y + " " + p3.x + " " + p3.y, lx: P.x, ly: P.y };
+  }
+
+  var defs = el("defs", {}, svg);
+  ["call", "wires", "dispatcher"].forEach(function (k) {
+    var m = el("marker", { id: "arr-" + k, viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: KINDS[k].arrow }, m);
+  });
+
+  var wrap = document.getElementById("wrap");
+  var tt = document.getElementById("tt");
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  var TT_PLACEHOLDER = '<span class="tt-empty">Hover a node to trace its calls, or hover an edge for the transition.</span>';
+  function showTip(html) { tt.innerHTML = html; }
+  function hideTip() { tt.innerHTML = TT_PLACEHOLDER; }
+  function nodeTip(n) {
+    var h = '<div class="tt-head"><span class="tt-title">' + esc(n.label) + '</span><span class="tt-file">' + esc(n.sub.join(" · ")) + "</span></div>";
+    var out = edges.filter(function (e) { return e.from === n.id; });
+    var inc = edges.filter(function (e) { return e.to === n.id; });
+    if (out.length) { h += '<div class="tt-h">calls →</div><ul>' + out.map(function (e) { return "<li><b>" + esc(byId[e.to].label) + "</b> <span>· " + esc(e.label) + "</span></li>"; }).join("") + "</ul>"; }
+    if (inc.length) { h += '<div class="tt-h">← called by</div><ul>' + inc.map(function (e) { return "<li><b>" + esc(byId[e.from].label) + "</b> <span>· " + esc(e.label) + "</span></li>"; }).join("") + "</ul>"; }
+    return h;
+  }
+  function edgeTip(e) {
+    var a = byId[e.from], b = byId[e.to];
+    return '<div class="tt-head"><span class="tt-title">' + esc(a.label) + " → " + esc(b.label) + '</span><span class="tt-file">' + esc(e.label) + " · " + esc(KINDS[e.kind].name) + "</span></div>";
+  }
+  function clearHL() { svg.querySelectorAll(".hl, .dim").forEach(function (x) { x.classList.remove("hl"); x.classList.remove("dim"); }); }
+
+  var gCols = el("g", { id: "cols" }, svg);
+  [{ x: COLX.bootstrap, t: "bootstrap" }, { x: COLX.callers, t: "callers" }, { x: COLX.core, t: "polling core" }, { x: COLX.callees, t: "stream_set · sinks" }].forEach(function (c) {
+    var t = el("text", { x: c.x, y: 26, "class": "colh" }, gCols);
+    t.textContent = c.t;
+  });
+
+  var gEdges = el("g", { id: "edges" }, svg);
+  edges.forEach(function (e, i) {
+    var g = el("g", { "class": "edge", "data-i": i }, gEdges);
+    var geo = edgePath(e), k = KINDS[e.kind];
+    var line = el("path", { d: geo.d, "class": "line" }, g);
+    line.setAttribute("stroke", k.stroke);
+    if (k.dash) line.setAttribute("stroke-dasharray", k.dash);
+    line.setAttribute("marker-end", "url(#arr-" + e.kind + ")");
+    el("path", { d: geo.d, "class": "hit" }, g);
+    var lbl = el("text", { x: geo.lx.toFixed(1), y: (geo.ly - 3).toFixed(1), "class": "lbl", "text-anchor": "middle" }, g);
+    lbl.textContent = e.label;
+    e.g = g;
+    g.addEventListener("mouseenter", function () {
+      clearHL();
+      edges.forEach(function (o) { o.g.classList.add(o === e ? "hl" : "dim"); });
+      nodes.forEach(function (n) { n.g.classList.add((n.id === e.from || n.id === e.to) ? "hl" : "dim"); });
+      showTip(edgeTip(e));
+    });
+    g.addEventListener("mouseleave", function () { clearHL(); hideTip(); });
+  });
+
+  var gNodes = el("g", { id: "nodes" }, svg);
+  nodes.forEach(function (n) {
+    var g = el("g", { "class": "node", "data-id": n.id }, gNodes);
+    var gs = GROUPS[n.group];
+    var body = el("rect", { x: n.x - n.hw, y: n.y - n.hh, width: n.hw * 2, height: n.hh * 2, rx: 10, "class": "body" }, g);
+    body.setAttribute("fill", gs.bg); body.setAttribute("stroke", gs.c);
+    var two = n.sub.length > 1;
+    var labelY = n.y + (two ? -16 : -9);
+    var l1 = el("text", { x: n.x, y: labelY, "class": "nlabel" }, g);
+    l1.textContent = n.label; l1.setAttribute("fill", gs.c);
+    var subYs = two ? [n.y + 2, n.y + 17] : [n.y + 14];
+    n.sub.forEach(function (s, i) {
+      var ts = el("text", { x: n.x, y: subYs[i], "class": "nsub" }, g);
+      ts.textContent = s;
+    });
+    n.g = g;
+    g.addEventListener("mouseenter", function () {
+      clearHL();
+      edges.forEach(function (o) { o.g.classList.add((o.from === n.id || o.to === n.id) ? "hl" : "dim"); });
+      nodes.forEach(function (m) {
+        var inc = (m.id === n.id) || edges.some(function (o) { return (o.from === n.id && o.to === m.id) || (o.to === n.id && o.from === m.id); });
+        m.g.classList.add(inc ? "hl" : "dim");
+      });
+      showTip(nodeTip(n));
+    });
+    g.addEventListener("mouseleave", function () { clearHL(); hideTip(); });
+  });
+
+  var legend = document.getElementById("legend");
+  var lg = "";
+  Object.keys(GROUPS).forEach(function (k) {
+    lg += '<span class="lg-item"><i style="background:' + GROUPS[k].c + '"></i>' + GROUPS[k].name + "</span>";
+  });
+  lg += '<span class="lg-sep"></span>';
+  lg += '<span class="lg-item"><span class="ln ln-call"></span>call</span>';
+  lg += '<span class="lg-item"><span class="ln ln-wires"></span>wiring / register</span>';
+  lg += '<span class="lg-item"><span class="ln ln-disp"></span>dispatcher (async)</span>';
+  legend.innerHTML = lg;
+  tt.innerHTML = TT_PLACEHOLDER;
+})();
+</script>
+</body>
+</html>

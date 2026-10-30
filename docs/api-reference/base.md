@@ -256,26 +256,6 @@ size_t val = counter;
 counter->fetch_add(1);  // Access underlying std::atomic
 ```
 
-### zpt::locks::spin_mutex
-
-**Header:** `#include <zapata/locks/spin_mutex.h>`
-
-Spin-lock based reader-writer mutex.
-
-```cpp
-zpt::locks::spin_mutex mutex;
-
-// Exclusive lock
-mutex.lock();
-// ... modify data ...
-mutex.unlock();
-
-// Shared lock
-mutex.lock_shared();
-// ... read data ...
-mutex.unlock_shared();
-```
-
 ## Memory Pool
 
 **Header:** `#include <zapata/allocator/allocator.h>`

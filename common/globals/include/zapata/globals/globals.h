@@ -36,7 +36,6 @@
 #include <shared_mutex>
 #include <typeinfo>
 #include <zapata/base.h>
-#include <zapata/locks/spin_mutex.h>
 
 namespace zpt {
 

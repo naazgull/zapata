@@ -21,6 +21,7 @@
 */
 
 #include <zapata/config.h>
+#include <zapata/exceptions/ClosedException.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/transport/transport.h>
 #include <zapata/uri/uri.h>
@@ -32,29 +33,36 @@ auto zpt::basic_transport::upgraded_from() const -> std::string const& {
 
 auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     zpt::message _to_return;
-    if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
-        expect(_stream->state() == zpt::stream_state::IDLE ||
-                 _stream->state() == zpt::stream_state::WAITING,
-               "Stream not in a valid state for receiving");
+    try {
+        if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+            expect(_stream->state() == zpt::stream_state::IDLE ||
+                     _stream->state() == zpt::stream_state::WAITING,
+                   "Stream '" << _stream->uri() << "' not in a valid state for receiving `"
+                              << zpt::stream_state_names[_stream->state()] << "`");
 
-        if (_stream->state() == zpt::stream_state::IDLE) {
-            _stream->state(zpt::stream_state::PROCESSING);
-            _to_return = this->process_incoming_request(_stream);
+            if (_stream->state() == zpt::stream_state::IDLE) {
+                _stream->state(zpt::stream_state::PROCESSING);
+                _to_return = this->process_incoming_request(_stream);
+            }
+            else if (_stream->state() == zpt::stream_state::WAITING) {
+                _stream->state(zpt::stream_state::IDLE);
+                _to_return = this->process_incoming_reply(_stream);
+            }
         }
-        else if (_stream->state() == zpt::stream_state::WAITING) {
-            _stream->state(zpt::stream_state::IDLE);
-            _to_return = this->process_incoming_reply(_stream);
-        }
+        else { _to_return = this->process_incoming_request(_stream); }
+        zlog("Received message via '" << _stream->uri()
+                                      << "': " << zpt::ontology::to_str(_to_return->performative())
+                                      << " " << zpt::uri::to_string(_to_return->uri()) << " -> "
+                                      << (_to_return->performative() == zpt::Reply
+                                            ? std::to_string(_to_return->status()) + " "
+                                            : "")
+                                      << _to_return->body(),
+             zpt::trace);
     }
-    else { _to_return = this->process_incoming_request(_stream); }
-    zlog("Received message via '" << _stream->uri()
-                                  << "': " << zpt::ontology::to_str(_to_return->performative())
-                                  << " " << zpt::uri::to_string(_to_return->uri()) << " -> "
-                                  << (_to_return->performative() == zpt::Reply
-                                        ? std::to_string(_to_return->status()) + " "
-                                        : "")
-                                  << _to_return->body(),
-         zpt::trace);
+    catch (std::ios_base::failure const& _e) {
+        _stream->state(zpt::stream_state::ERRORING_OUT);
+        throw;
+    }
     return _to_return;
 }
 
@@ -63,18 +71,25 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
         expect(_stream->state() == zpt::stream_state::IDLE ||
                  _stream->state() == zpt::stream_state::PROCESSING ||
                  _stream->state() == zpt::stream_state::ERRORING_OUT,
-               "Stream not in a valid state for sending");
+               "Stream '" << _stream->uri() << "' not in a valid state for sending `"
+                          << zpt::stream_state_names[_stream->state()] << "`");
     }
-    zlog("Sending message via '" << _stream->uri()
-                                 << "': " << zpt::ontology::to_str(_to_send->performative()) << " "
-                                 << zpt::uri::to_string(_to_send->uri()) << " -> "
-                                 << (_to_send->performative() == zpt::Reply
-                                       ? std::to_string(_to_send->status()) + " "
-                                       : "")
-                                 << _to_send->body(),
-         zpt::trace);
 
-    _stream->write<zpt::message>(_to_send);
+    try {
+        _stream->write<zpt::message>(_to_send);
+        zlog("Sent message via '" << _stream->uri()
+                                  << "': " << zpt::ontology::to_str(_to_send->performative()) << " "
+                                  << zpt::uri::to_string(_to_send->uri()) << " -> "
+                                  << (_to_send->performative() == zpt::Reply
+                                        ? std::to_string(_to_send->status()) + " "
+                                        : "")
+                                  << _to_send->body(),
+             zpt::trace);
+    }
+    catch (std::ios_base::failure const& _e) {
+        _stream->state(zpt::stream_state::ERRORING_OUT);
+        return;
+    }
 
     if (this->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
         if (_stream->state() == zpt::stream_state::IDLE) {

@@ -41,7 +41,6 @@
 #include <vector>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/expect.h>
-#include <zapata/locks/spin_mutex.h>
 #include <zapata/text/convert.h>
 
 namespace zpt {
@@ -128,7 +127,7 @@ class pool {
 /** @brief Map of live allocations, keyed by address, value is demangled type name. */
 inline std::map<std::uint64_t, std::string> __allocated;
 /** @brief Mutex protecting @ref __allocated. */
-inline zpt::locks::spin_mutex __allocated_mutex;
+inline std::shared_mutex __allocated_mutex;
 
 /**
  * @brief Begins recording all pool allocations.

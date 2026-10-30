@@ -27,7 +27,8 @@ constexpr unsigned short FINAL_REPLY_RECEIVED{ 2 };
 zpt::event_stream::event_stream()
   : zpt::basic_stream{ "self" } {
     this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
-    this->__uri = std::format("self://fd@{}", this->__fd);
+    expect(this->__fd != -1, "Error while creating 'self' stream");
+    this->__uri = std::format("self://{}@localhost", this->__fd);
 }
 
 zpt::event_stream::~event_stream() {}

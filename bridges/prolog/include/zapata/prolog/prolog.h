@@ -30,6 +30,7 @@
 #pragma once
 
 #include <SWI-Prolog.h>
+#include <shared_mutex>
 #include <zapata/base/safe_access.h>
 #include <zapata/bridge.h>
 #include <zapata/prolog/helpers.h>
@@ -53,7 +54,7 @@ class bridge : public zpt::programming::bridge<zpt::prolog::bridge, zpt::prolog_
   public:
     using callback_type = std::function<void()>; ///< C++ callback for Prolog
     using lambda_type = std::function<int()>;    ///< Lambda as Prolog C function
-    using mutex_type = zpt::locks::spin_mutex;   ///< Mutex type for thread synchronization
+    using mutex_type = std::shared_mutex;        ///< Mutex type for thread synchronization
 
     /** @brief Constructs the bridge and initializes the Prolog engine.
      * @param _cmd Command-line arguments for the Prolog engine.
@@ -157,5 +158,5 @@ auto PROLOG_BRIDGE(std::string const& _cmd = "") -> zpt::prolog::bridge&;
  * @brief Retrieves the Prolog bridge globals.
  * @return Reference to the Prolog bridge globals.
  */
-auto PROLOG_GLOBALS() -> zpt::safe_access<zpt::json, zpt::locks::spin_mutex>&;
+auto PROLOG_GLOBALS() -> zpt::safe_access<zpt::json, std::shared_mutex>&;
 } // namespace zpt

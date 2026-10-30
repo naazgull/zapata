@@ -26,6 +26,7 @@
 #include <zapata/transport.h>
 
 auto main(int _argc, char* _argv[]) -> int {
+    zpt::log_lvl = 9;
     if (_argc > 3) {
         std::string _role{ _argv[1] };
         std::stringstream _iss;
@@ -43,15 +44,15 @@ auto main(int _argc, char* _argv[]) -> int {
                                                                zpt::NO_SSL,
                                                                IPPROTO_UDP);
 
-            zpt::polling::ptr _polling = zpt::allocate_shared<zpt::polling>();
+            zpt::polling::ptr _polling = zpt::allocate_shared<zpt::polling>(1024);
             _polling //
               ->register_delegate(
                 [&_transport](zpt::polling::ptr _poll, zpt::stream _stream) -> bool {
                     try {
                         _transport->receive(_stream);
                     }
-                    catch (...) {
-                        zlog("Nothing to receive", zpt::debug);
+                    catch (std::exception const& _e) {
+                        zlog("Nothing to receive: " << _e.what(), zpt::debug);
                     }
                     _poll->unmute(_stream);
                     return true;

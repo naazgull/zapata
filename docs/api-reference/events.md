@@ -128,13 +128,13 @@ using ptr = std::shared_ptr<dispatcher>;
 ### Constructor
 
 ```cpp
-dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 10000);
+dispatcher(std::string const& _name, long _max_consumers, size_t _max_queue_size = 16384);
 ```
 
 **Parameters:**
 - `_name` — Dispatcher name for logging.
 - `_max_consumers` — Maximum consumer threads.
-- `_max_queue_size` — Maximum queue size (resource management cap). Default: 10000.
+- `_max_queue_size` — Maximum queue size (resource management cap). Default: 16384.
 
 ### Methods
 
@@ -181,10 +181,12 @@ Enqueues an event for processing.
 #### `trap`
 
 ```cpp
-auto trap() -> dispatcher&;
+auto trap() -> bool;
 ```
 
-Blocks the calling thread until the dispatcher is shut down.
+Processes a single pending event, if any.
+
+**Returns:** `true` if an event was trapped, `false` otherwise.
 
 #### `is_in_shutdown`
 
@@ -247,7 +249,7 @@ Constructs the underlying Operation with forwarded arguments.
 ### `zpt::DISPATCHER`
 
 ```cpp
-auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
+auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 16384)
     -> zpt::events::dispatcher::ptr;
 ```
 

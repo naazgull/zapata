@@ -45,7 +45,7 @@ explicit queue(size_t _max_queue_size);
 Creates a bounded queue.
 
 **Parameters:**
-- `_max_queue_size` — Maximum number of elements the queue can hold simultaneously. **Must be a power of two.**
+- `_max_queue_size` — Maximum number of elements the queue can hold simultaneously. Rounded up to the next power of two (the internal ring buffer is always a power of two).
 
 **Note:** Copy and move constructors (and assignment operators) are deleted — the ring buffer and atomic state cannot be shared or transferred.
 
@@ -64,7 +64,7 @@ Copies the value into a new heap-allocated node and enqueues it.
 
 **Returns:** Reference to the queue for chaining.
 
-**Throws:** `zpt::NoSpaceAvailableException` if the queue is full.
+**Note:** Blocks (spins) until there is room in the queue or it is shut down; it does not throw.
 
 ---
 
@@ -81,7 +81,7 @@ Transfers ownership of an already-allocated node into the queue.
 
 **Returns:** Reference to the queue for chaining.
 
-**Throws:** `zpt::NoSpaceAvailableException` if the queue is full.
+**Note:** Blocks (spins) until there is room in the queue or it is shut down; it does not throw.
 
 ---
 
@@ -93,9 +93,7 @@ auto pop() -> ptr;
 
 Removes and returns the front element.
 
-**Returns:** `std::unique_ptr<T>` owning the dequeued element.
-
-**Throws:** `zpt::NoMoreElementsException` if the queue is empty.
+**Returns:** `std::unique_ptr<T>` owning the dequeued element, or `nullptr` if the queue is empty or has been shut down.
 
 ---
 
@@ -107,7 +105,7 @@ auto capacity() const -> size_t;
 
 Returns the maximum number of elements the queue can hold.
 
-**Returns:** Queue capacity (the value passed to the constructor).
+**Returns:** The effective capacity — the next power of two greater than or equal to the value passed to the constructor.
 
 ---
 
@@ -123,13 +121,25 @@ Returns the approximate current element count.
 
 ---
 
+#### `clear`
+
+```cpp
+auto clear() -> zpt::lf::queue<T>&;
+```
+
+Removes all elements currently in the queue.
+
+**Returns:** Reference to the queue for chaining.
+
+---
+
 #### `shutdown`
 
 ```cpp
 auto shutdown() -> zpt::lf::queue<T>&;
 ```
 
-Sets the internal shutdown flag, causing all threads spinning in `push()` or `pop()` to throw `NoMoreElementsException` and exit.
+Sets the internal shutdown flag, causing all threads spinning in `push()` or `pop()` to stop and return (`pop()` returns `nullptr`; `push()` returns the queue).
 
 **Returns:** Reference to the queue for chaining.
 
@@ -173,30 +183,25 @@ Streams a human-readable representation of the queue to `_out`.
 #include <zapata/lockfree.h>
 #include <thread>
 
-// Capacity of 1000 elements
+// Capacity of 1000 elements (rounded up to the next power of two internally)
 zpt::lf::queue<int> work_queue(1000);
 std::atomic<bool> done{ false };
 
 void producer() {
     for (int i = 0; i < 500; ++i) {
-        try {
-            work_queue.push(i);
-        } catch (zpt::NoSpaceAvailableException const&) {
-            // Queue is full — either back-pressure, retry with sleep, or log
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            --i;  // Retry this iteration
-        }
+        work_queue.push(i);  // Blocks (spins) while the queue is full
     }
     done = true;
 }
 
 void consumer() {
     while (!done.load() || work_queue.size() > 0) {
-        try {
-            auto item = work_queue.pop();
+        auto item = work_queue.pop();  // nullptr while the queue is empty
+        if (item != nullptr) {
             process(*item);
-        } catch (zpt::NoMoreElementsException const&) {
-            std::this_thread::yield();
+        }
+        else {
+            std::this_thread::yield();  // Nothing to consume yet
         }
     }
 }
@@ -212,9 +217,11 @@ auto buf = zpt::allocate_unique<std::vector<char>>(4096);
 fill_buffer(*buf);
 buffer_queue.push(std::move(buf));
 
-// Consumer: take ownership directly
+// Consumer: take ownership directly (nullptr if the queue is empty)
 auto received = buffer_queue.pop();
-process(*received);
+if (received != nullptr) {
+    process(*received);
+}
 ```
 
 ---
@@ -223,15 +230,15 @@ process(*received);
 
 1. **No thread registration** — Any thread may call `push()` or `pop()` without prior registration.
 
-2. **Bounded capacity** — `push()` throws `NoSpaceAvailableException` when the queue is full. Size the queue to the peak concurrent load to avoid exceptions.
+2. **Bounded capacity** — `push()` blocks (spins) when the queue is full until space frees or the queue is shut down; `pop()` returns `nullptr` when empty. Size the queue to the peak concurrent load to avoid producer stalls.
 
 3. **Approximate size** — `size()` is updated outside the CAS critical section and may be transiently stale; use it for monitoring, not synchronisation.
 
 4. **No iteration** — The queue does not provide iterators; elements must be consumed via `pop()`.
 
-5. **Shutdown** — Call `shutdown()` to wake threads blocked in `push()`/`pop()`. They will throw `NoMoreElementsException`.
+5. **Shutdown** — Call `shutdown()` to wake threads blocked in `push()`/`pop()`. `pop()` then returns `nullptr` and `push()` returns.
 
-6. **Power-of-two capacity** — The queue capacity must be a power of two. This is enforced at construction via the bitmask used for index wrapping (`index & mask`).
+6. **Power-of-two capacity** — The constructor rounds the requested size up to the next power of two. Index wrapping uses a bitmask (`index & mask`), which is why the internal capacity is a power of two.
 
 ---
 

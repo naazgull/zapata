@@ -32,15 +32,15 @@
  * the slot is ready.
  *
  * @par Thread Safety
- * - `push()`: Multiple threads can push concurrently; throws
- *   `NoSpaceAvailableException` when the queue is full.
- * - `pop()`: Multiple threads can pop concurrently; throws
- *   `NoMoreElementsException` when the queue is empty.
+ * - `push()`: Multiple threads can push concurrently.
+ * - `pop()`: Multiple threads can pop concurrently; returns nullptr
+ *    when the queue is empty.
  * - `size()`: Approximate count (may be transiently stale).
  */
 
 #pragma once
 
+#include <bit>
 #include <zapata/allocator.h>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/base/sentry.h>
@@ -71,17 +71,15 @@ namespace lf {
  * q.push("message 2");
  *
  * // Consumer thread
- * try {
- *     while (true) {
- *         auto msg = q.pop();
+ * while (true) {
+ *     auto msg = q.pop();
+ *     if (msg != nullptr) {
  *         process(*msg);
  *     }
- * } catch (zpt::NoMoreElementsException&) {
- *     // Queue is empty
+ *     else { // Queue is empty }
  * }
  * @endcode
  *
- * @note `push()` throws `NoSpaceAvailableException` when the queue is full.
  * @note `size()` may be transiently stale because the size counter is
  *       updated independently of the slot CAS.
  */
@@ -94,7 +92,7 @@ class queue {
     /**
      * @brief Constructs a bounded queue with the given fixed capacity.
      * @param _max_queue_size Maximum number of elements the queue can
-     *   hold simultaneously (must be a power of two).
+     *   hold simultaneously (rounded up to the next power of two).
      */
     explicit queue(size_t _max_queue_size);
     /**
@@ -133,23 +131,19 @@ class queue {
      * @brief Adds an element to the back of the queue.
      * @param _value Value to add (will be copied).
      * @return Reference to this queue.
-     * @throws zpt::NoSpaceAvailableException If queue is full.
      */
     auto push(T _value) -> zpt::lf::queue<T>&;
     /**
      * @brief Adds an element to the back of the queue, transferring ownership.
      * @param _value Unique pointer whose ownership is transferred to the queue.
      * @return Reference to this queue.
-     * @throws zpt::NoSpaceAvailableException If queue is full.
      */
     auto push(ptr&& _value) -> zpt::lf::queue<T>&;
     /**
      * @brief Removes and returns the front element.
-     * @return Unique pointer owning the dequeued element.
-     * @throws zpt::NoMoreElementsException If queue is empty.
+     * @return Unique pointer owning the dequeued element, or nullptr if the queue is empty.
      */
     auto pop() -> ptr;
-
     /**
      * @brief Returns the queue maximum number of elements.
      * @return Maximum capacity of the queue.
@@ -217,6 +211,8 @@ class queue {
         ptr value;
     };
 
+    /** @brief Maximum number of elements the queue can hold (power of two). */
+    size_t __capacity{ 0 };
     /** @brief Fixed-size ring buffer of slots allocated at construction. */
     zpt::allocator<slot_t>::array_pointer __slots{ nullptr };
     /** @brief Head index: producers claim the next slot via CAS on head_. */
@@ -227,8 +223,6 @@ class queue {
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
     /** @brief Stop all spinning and exit. */
     zpt::padded_atomic<bool> __shutdown{ false };
-    /** @brief Maximum number of elements the queue can hold (power of two). */
-    size_t __capacity{ 0 };
     /** @brief Bit mask for index wrapping: `__capacity - 1`. */
     size_t __mask{ 0 };
 };
@@ -237,14 +231,11 @@ class queue {
 
 template<typename T>
 zpt::lf::queue<T>::queue(size_t _max_queue_size)
-  : __slots{ zpt::allocate_array<slot_t>(_max_queue_size) }
-  , __capacity{ _max_queue_size }
-  , __mask{ _max_queue_size - 1 } {
-    expect((this->__capacity & (this->__capacity - 1)) == 0,
-           std::format("queue capacity `{}` must be a power of two", _max_queue_size));
-    // Initialise every slot: slot[i].sequence == i at start so that
-    // the first producer (claiming index 0) sees sequence[0] == 0.
-    for (size_t _i = 0; _i < _max_queue_size; ++_i) {
+  : __capacity{ std::bit_ceil(_max_queue_size) }
+  , __slots{ zpt::allocate_array<slot_t>(__capacity) }
+  , __mask{ __capacity - 1 } {
+    assert((this->__capacity & (this->__capacity - 1)) == 0);
+    for (size_t _i = 0; _i != this->__capacity; ++_i) {
         this->__slots[_i].sequence->store(_i, std::memory_order_relaxed);
     }
 }
@@ -258,6 +249,8 @@ template<typename T>
 auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
     zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
+        if (this->__shutdown->load()) { return (*this); }
+
         auto _head = this->__head->load(std::memory_order_relaxed);
 
         // Claim a slot by advancing head_ via CAS.  Only the winner
@@ -270,9 +263,7 @@ auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
             while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
                    _slot_idx) {
                 _timer.sleep_for(0.1f);
-                if (this->__shutdown->load()) {
-                    throw zpt::NoMoreElementsException("Shutting down");
-                }
+                if (this->__shutdown->load()) { return (*this); }
             }
             _timer.reset();
 
@@ -295,9 +286,8 @@ template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
     zpt::this_thread::timer<float> _timer{ 0.01f };
     for (;;) {
-        if (this->__tail->load() == this->__head->load()) {
-            throw zpt::NoMoreElementsException("No elements in the queue");
-        }
+        if (this->__shutdown->load()) { return nullptr; }
+        if (this->__tail->load() == this->__head->load()) { return nullptr; }
 
         auto _tail = this->__tail->load(std::memory_order_relaxed);
 
@@ -311,9 +301,7 @@ auto zpt::lf::queue<T>::pop() -> ptr {
             while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
                    (_slot_idx + this->__capacity)) {
                 _timer.sleep_for(0.1f);
-                if (this->__shutdown->load()) {
-                    throw zpt::NoMoreElementsException("Shutting down");
-                }
+                if (this->__shutdown->load()) { return nullptr; }
             }
             _timer.reset();
 
@@ -344,7 +332,7 @@ auto zpt::lf::queue<T>::size() const -> size_t {
 
 template<typename T>
 auto zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
-    for (size_t _idx = 0; _idx != this->__capacity; ++_idx) { this->__slots[_idx].value.reset(); }
+    while (this->pop() != nullptr);
     return (*this);
 }
 

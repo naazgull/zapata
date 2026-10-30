@@ -183,7 +183,7 @@ class resolver_t : public zpt::events::resolver_t {
     /** @brief Vector of registered REST callback handlers. */
     std::map<size_t, zpt::events::resolver_callback> __callbacks;
     /** @brief Callback list mutex guard. */
-    mutable zpt::locks::spin_mutex __callbacks_mutex;
+    mutable std::shared_mutex __callbacks_mutex;
     /** @brief Store for pending request/response callbacks. */
     mutable zpt::rest::pending_messages __pending_requests;
     /** @brief Configuration passed to the resolver at construction. */

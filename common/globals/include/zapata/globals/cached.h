@@ -27,7 +27,7 @@
  * Provides a value wrapper where writes are protected by a spin mutex and
  * reads use thread-local copies that are refreshed when the version changes.
  *
- * @see zpt::locks::spin_mutex
+ * @see std::shared_mutex
  * @see zpt::thread_local_variable
  */
 
@@ -115,7 +115,7 @@ class cached {
     /** @brief The shared value stored in the cache. */
     T __underlying;
     /** @brief Spin mutex protecting writes to `__underlying`. */
-    zpt::locks::spin_mutex __repository_lock{};
+    std::shared_mutex __repository_lock{};
     /** @brief Monotonically increasing version counter. Incremented on each commit. */
     zpt::padded_atomic<unsigned long long> __cache_version{ 0 };
 

@@ -36,15 +36,20 @@
 #include <any>
 #include <array>
 #include <atomic>
+#include <ios>
 #include <iostream>
 #include <memory>
+#include <shared_mutex>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/allocator.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
-#include <zapata/locks/spin_mutex.h>
+#include <zapata/lockfree/queue.h>
 #include <zapata/text/convert.h>
 #include <zapata/uuid.h>
+
+/** @brief Sentinel index denoting that a stream is not present in a stream set. */
+constexpr size_t stream_index_null = std::numeric_limits<size_t>::max();
 
 namespace zpt {
 
@@ -52,18 +57,38 @@ namespace zpt {
  * @brief Stream processing states for polling.
  */
 enum stream_state {
-    CONNECTED = 0,
-    IDLE = 1,         ///< Stream is idle, not being processed
-    WAITING = 2,      ///< Stream is waiting for I/O
-    PROCESSING = 3,   ///< Stream is being processed by a delegate
-    ERRORING_OUT = 4, ///< Stream encountered an error
-    DISCONNECTED = 5
+    CONNECTED = 0,        ///< Stream has successfully connected to peer
+    IDLE = 1,             ///< Stream is idle, not being processed
+    WAITING = 2,          ///< Stream is waiting for I/O
+    PROCESSING = 3,       ///< Stream is being processed by a delegate
+    ERRORING_OUT = 4,     ///< Stream encountered an error
+    DISCONNECTED = 5,     ///< Stream has been disconnected
+    GRACEFULLY_CLOSE = 6, ///< Stream should be closed
+    END
 };
+
+inline const char* stream_state_names[] = { "CONNECTED",        "IDLE",         "WAITING",
+                                            "PROCESSING",       "ERRORING_OUT", "DISCONNECTED",
+                                            "GRACEFULLY_CLOSE", "END" };
 
 /** @brief Type alias for epoll event structure. */
 using epoll_event_t = struct epoll_event;
+/**
+ * @brief Stable per-stream payload stored in `epoll_event::data.ptr`.
+ *
+ * Carries the stream's identity so that, at poll time, the stream can be
+ * looked up and claimed by (index, uuid) without dereferencing a raw
+ * pointer that may no longer be alive.
+ */
+struct epoll_event_data_t {
+    /** @brief 128-bit stream UUID. */
+    __uint128_t __uuid{ 0 };
+    /** @brief Index of the stream within its stream set. */
+    size_t __index{ 0 };
+};
 
 class polling;
+class stream_set;
 
 /**
  * @brief Abstract stream wrapper with file descriptor support.
@@ -89,6 +114,7 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
     friend class polling;
+    friend class stream_set;
 
     /**
      * @brief Constructs a stream with the given transport scheme.
@@ -208,11 +234,6 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      */
     virtual auto close() -> basic_stream&;
     /**
-     * @brief Shuts down the stream's connection.
-     * @return Reference to this stream.
-     */
-    virtual auto shutdown() -> basic_stream&;
-    /**
      * @brief Upgrades the stream to a different transport.
      * @param _to_transport Target transport scheme.
      * @return Reference to this stream.
@@ -222,12 +243,12 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @brief Returns the transport scheme.
      * @return Reference to transport scheme string.
      */
-    virtual auto transport() -> std::string&;
+    virtual auto transport() const -> std::string const&;
     /**
      * @brief Returns the URI string.
      * @return Reference to URI string.
      */
-    virtual auto uri() -> std::string&;
+    virtual auto uri() const -> std::string const&;
     /**
      * @brief Sets the stream processing state.
      * @param _state New processing state.
@@ -255,6 +276,14 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @return Reference to metadata value.
      */
     virtual auto metadata() const -> std::any const&;
+    /**
+     * @brief Returns the stable epoll event data block for this stream.
+     *
+     * The block (created on first call) holds this stream's UUID and set
+     * index and is the value stored in `epoll_event::data.ptr`.
+     * @return Pointer to the per-stream `epoll_event_data_t` block.
+     */
+    virtual auto event_data() -> void*;
 
   protected:
     /** @brief Underlying iostream wrapped by this stream. */
@@ -263,6 +292,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     int __fd{ -1 };
     /** @brief The stream's unique identifier */
     zpt::uuid __uuid;
+    /** @brief This stream's index within its stream set. */
+    size_t __index{ stream_index_null };
     /** @brief Current stream processing state. */
     std::atomic<zpt::stream_state> __state{ zpt::stream_state::IDLE };
     /** @brief Transport scheme (e.g., "tcp", "udp", "unix"). */
@@ -273,10 +304,104 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     std::any __metadata;
     /** @brief Whether this stream is currently muted (not monitored by polling). */
     std::atomic<bool> __muted{ true };
+    /** @brief Lazily-created stable epoll event data block (see event_data()). */
+    std::unique_ptr<zpt::epoll_event_data_t> __event_data{ nullptr };
 };
 
 /** @brief Shared pointer type for streams. */
 using stream = std::shared_ptr<zpt::basic_stream>;
+
+/**
+ * @brief Fixed-capacity, thread-safe container of polled streams.
+ *
+ * Each stream occupies a slot addressed by an integer drawn from a free-index
+ * pool. Every slot carries a lock-free claim token: the 128-bit UUID of the
+ * stream while it is released (present in the poll, ready to be taken), and
+ * zero while it is claimed (muted out of the poll) or the slot is free. Claiming
+ * and releasing are CAS operations on that token, so the slot arrays are accessed
+ * without a mutex; only the UUID and URI lookup maps are guarded by a shared
+ * mutex.
+ */
+class stream_set {
+  public:
+    /** @brief Array of streams, one per slot. */
+    using stream_array_type = std::unique_ptr<zpt::stream[]>;
+    /** @brief Per-slot lock-free claim token (stream UUID, or zero). */
+    using id_array_type = std::unique_ptr<std::atomic<__uint128_t>[]>;
+    /** @brief Map of stream UUID to stream. */
+    using by_uuid_type = std::map<zpt::uuid, zpt::stream>;
+    /** @brief Map of stream URI to stream. */
+    using by_uri_type = std::unordered_map<std::string, zpt::stream>;
+    /**
+     * @brief Constructs a stream set with a fixed number of slots.
+     * @param _capacity Maximum number of streams the set can hold.
+     * @return void (constructors implicitly initialize the object).
+     */
+    stream_set(size_t _capacity);
+    /**
+     * @brief Destructor. Closes all streams in the set.
+     * @return void (destructors implicitly clean up the object).
+     */
+    ~stream_set();
+
+    /** @brief Inserts a stream into the set and marks it ready (released).
+     * @param _stream Stream to insert.
+     * @return True if the stream was inserted, false otherwise. */
+    auto insert(zpt::stream _stream) -> bool;
+    /** @brief Removes a claimed stream from the set and frees its slot.
+     * @param _stream Stream to remove.
+     * @return True if the stream was removed, false otherwise. */
+    auto erase(zpt::stream _stream) -> bool;
+    /** @brief Changes the underlying transport of a stream.
+     * @param _stream Stream to upgrade.
+     * @param _transport New transport scheme.
+     * @return Reference to this instance. */
+    auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::stream_set&;
+    /** @brief Claims (mutes) a stream by its identity.
+     * @param _stream Stream to claim.
+     * @return True if the stream was claimed, false otherwise. */
+    auto acquire(zpt::stream _stream) -> bool;
+    /** @brief Claims (mutes) a stream by slot index and UUID.
+     * @param _index Slot index of the stream.
+     * @param _uuid 128-bit UUID of the stream.
+     * @return The claimed stream, or nullptr if it could not be claimed. */
+    auto acquire(size_t _index, __uint128_t _uuid) -> zpt::stream;
+    /** @brief Returns whether a stream is currently claimed (muted).
+     * @param _stream Stream to query.
+     * @return True if the stream is claimed, false otherwise. */
+    auto acquired(zpt::stream _stream) const -> bool;
+    /** @brief Releases a claimed stream, marking it ready (unmuted).
+     * @param _stream Stream to release.
+     * @return True if the stream was released, false otherwise. */
+    auto release(zpt::stream _stream) -> bool;
+    /** @brief Retrieves the stream associated with the given identifier.
+     * @param _stream_id UUID to look up.
+     * @return Stream associated with the UUID, or nullptr. */
+    auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
+    /** @brief Retrieves the stream associated with the given identifier.
+     * @param _uri URI string to look up.
+     * @return Stream associated with the URI, or nullptr. */
+    auto get(std::string const& _uri) const -> zpt::stream;
+    /** @brief Closes all streams in the set and clears it.
+     * @return Reference to this instance. */
+    auto close() -> zpt::stream_set&;
+
+  private:
+    /** @brief Total number of slots in the set. */
+    size_t __capacity{ 0 };
+    /** @brief Streams by slot index (nullptr for free slots). */
+    stream_array_type __by_fd;
+    /** @brief Per-slot lock-free claim token (stream UUID, or zero when claimed/free). */
+    id_array_type __by_fd_id;
+    /** @brief Pool of free slot indexes available for allocation. */
+    zpt::lf::queue<size_t> __available_indexes;
+    /** @brief Mutex protecting the UUID and URI lookup maps. */
+    mutable std::shared_mutex __by_mutex;
+    /** @brief Map of stream UUID to stream currently in the set. */
+    by_uuid_type __by_uuid;
+    /** @brief Map of stream URI to stream currently in the set. */
+    by_uri_type __by_uri;
+};
 
 /**
  * @brief Epoll-based I/O multiplexer for efficient stream handling.
@@ -308,9 +433,6 @@ using stream = std::shared_ptr<zpt::basic_stream>;
 class polling : public std::enable_shared_from_this<polling> {
   public:
     using ptr = std::shared_ptr<polling>;
-    using polled_streams_type = std::unordered_map<int, zpt::stream>;
-    using polled_streams_by_uuid_type = std::map<zpt::uuid, zpt::stream>;
-    using polled_streams_by_uri_type = std::unordered_map<std::string, zpt::stream>;
     /** @brief Delegate function signature: returns true to keep stream, false to remove. */
     using delegate_fn_type = std::function<bool(zpt::polling::ptr _poll, zpt::stream _stream)>;
     using state_fn_type = std::function<void(zpt::uuid const&, std::string const&)>;
@@ -319,9 +441,10 @@ class polling : public std::enable_shared_from_this<polling> {
 
     /**
      * @brief Constructs a polling instance with epoll.
+     * @param _max_streams Maximum number of polled streams.
      * @return void (constructors implicitly initialize the object).
      */
-    polling();
+    polling(size_t _max_streams);
     /**
      * @brief Destructor. Closes the polling instance.
      * @return void (destructors implicitly clean up the object).
@@ -374,6 +497,13 @@ class polling : public std::enable_shared_from_this<polling> {
      */
     auto mute(std::string const& _uri) -> zpt::stream;
     /**
+     * @brief Temporarily stops monitoring a stream by slot index and UUID.
+     * @param _idx Slot index of the stream.
+     * @param _uuid 128-bit UUID of the stream.
+     * @return Muted stream.
+     */
+    auto mute(size_t _idx, __uint128_t _uuid) -> zpt::stream;
+    /**
      * @brief Resumes monitoring a muted stream.
      * @param _stream Stream to unmute.
      * @return Reference to this polling instance.
@@ -386,7 +516,6 @@ class polling : public std::enable_shared_from_this<polling> {
      * @return Reference to this polling instance.
      */
     auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
-
     /**
      * @brief Waits for I/O events and dispatches to delegates.
      * @return Reference to this polling instance.
@@ -406,18 +535,12 @@ class polling : public std::enable_shared_from_this<polling> {
   private:
     /** @brief Epoll file descriptor for I/O multiplexing. */
     int __epoll_fd{ -1 };
-    /** @brief Mutex protecting the polled streams map. */
-    mutable zpt::locks::spin_mutex __poll_lock;
-    /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    polled_streams_type __polled_streams;
-    /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    polled_streams_by_uuid_type __polled_streams_by_uuid;
-    /** @brief Map of file descriptors to stream pointers currently being monitored. */
-    polled_streams_by_uri_type __polled_streams_by_uri;
+    /** @brief Set of streams being currently polled. */
+    zpt::stream_set __polled_streams;
     /** @brief List of delegate functions called when streams are ready. */
     std::vector<delegate_fn_type> __delegates;
     /** @brief List of stream state listener callbacks. */
-    std::array<std::vector<state_fn_type>, zpt::stream_state::DISCONNECTED + 1> __state_callbacks;
+    std::array<std::vector<state_fn_type>, zpt::stream_state::END> __state_callbacks;
     /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
@@ -429,31 +552,19 @@ class polling : public std::enable_shared_from_this<polling> {
      * @param _stream Stream to remove.
      * @return Reference to this polling instance. */
     auto erase(zpt::stream _stream) -> zpt::polling&;
-    /** @brief Retrieves the stream associated with the given file descriptor.
-     * @param _stream_fd File descriptor to look up.
-     * @return Stream associated with the file descriptor, or nullptr. */
-    auto get(int _stream_fd) const -> zpt::stream;
-    /** @brief Retrieves the stream associated with the given identifier.
-     * @param _stream_id UUID to look up.
-     * @return Stream associated with the UUID, or nullptr. */
-    auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
-    /** @brief Retrieves the stream associated with the given identifier.
-     * @param _uri URI string to look up.
-     * @return Stream associated with the URI, or nullptr. */
-    auto get(std::string const& _uri) const -> zpt::stream;
     /** @brief Dispatches a ready stream to all registered delegates.
      * @param _stream Stream that is ready for I/O.
-     * @param _already_muted Whether or not the stream is already muted.
      * @return Reference to this polling instance. */
-    auto delegate(zpt::stream _stream, bool _already_muted = false) -> zpt::polling&;
+    auto delegate(zpt::stream _stream) -> zpt::polling&;
     auto callback(zpt::stream_state _type, zpt::stream const& _stream) -> zpt::polling&;
 };
 
 /**
  * @brief Returns the global stream polling instance.
+ * @param _max_streams Maximum number of polled streams.
  * @return Shared pointer to the polling instance.
  */
-auto STREAM_POLLING() -> zpt::polling::ptr;
+auto STREAM_POLLING(size_t _max_streams = 0) -> zpt::polling::ptr;
 
 /**
  * @brief Creates a stream wrapping a specific iostream type.
@@ -498,6 +609,7 @@ zpt::basic_stream::basic_stream(std::in_place_type_t<T>,
     zlog("Opening connection to " << this->__uri, zpt::trace);
     expect(!this->__underlying->fail() && !this->__underlying->bad(),
            "unable to open underlying `std::iostream` named '" << this->__uri << "'");
+    this->__underlying->exceptions(std::ios_base::badbit);
 }
 
 template<typename T>

@@ -1,5 +1,7 @@
 #include <csignal>
+#include <limits>
 #include <signal.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <zapata/runtime.h>
 #include <zapata/startup.h>
@@ -87,6 +89,15 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
     _config["self"]["cmd"] = std::string{ const_cast<char const*>(_argv[0]) };
     _config["self"]["args"] = _parameters;
 
+    rlimit _rl{};
+    if (::getrlimit(RLIMIT_NOFILE, &_rl) != 0) {
+        zlog("Unable to retrieve the maximum number of file descriptors per-process, using 1024.",
+             zpt::warning);
+        _rl.rlim_cur = 1024UL;
+    }
+    if (_rl.rlim_cur == RLIM_INFINITY) { _rl.rlim_cur = std::numeric_limits<std::uint64_t>::max(); }
+    _config["resources"]["limits"]["file_descriptors"] = _rl.rlim_cur;
+
     if (_parameters("--print-config")->ok()) {
         std::cout << _config << std::endl << std::flush;
         return json_null;
@@ -107,7 +118,7 @@ auto zpt::runtime::initialize(int _argc, char** _argv, zpt::json const& _default
                   ? _config("resources")("limits")("max_heap_allocation")->integer()
                   : 0);
     zlog("Booting server PID " << zpt::log_pid, zpt::notice);
-    zpt::DISPATCHER(_consumers, 16384) //
+    zpt::DISPATCHER(_consumers) //
       ->start_consumers(_consumers);
     zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
 
@@ -120,7 +131,7 @@ auto zpt::runtime::run() -> void {
     zpt::DISPATCHER() //
       ->trigger<zpt::system_event>(zpt::SYSTEM_EVENT_BOOTING);
 
-    zpt::STREAM_POLLING();
+    zpt::STREAM_POLLING(static_cast<size_t>(_config("resources")("limits")("file_descriptors")));
     zlog("Initialized stream polling", zpt::info);
     zpt::STREAM_POLLING() //
       ->register_stream_state_listener(zpt::stream_state::CONNECTED, ::on_stream_connect)

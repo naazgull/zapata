@@ -84,14 +84,14 @@ enum state {
  * 2. Register event handlers or initialization data
  * 3. Call `start_consumers()` to begin processing
  * 4. Trigger events with `trigger<T>(args...)`
- * 5. Call `trap()` to block until shutdown, or `stop_consumers()` to stop
+ * 5. Call `stop_consumers()` to stop the consumer threads
  *
  * @par Example
  * @code
  * auto dispatcher = zpt::DISPATCHER(4);  // 4 consumers
  * dispatcher->start_consumers();
  * dispatcher->trigger<MyEvent>("some", "args");
- * dispatcher->trap();  // Block until shutdown
+ * dispatcher->trap();  // Process one pending event (returns false if the queue is empty)
  * @endcode
  */
 class dispatcher : public std::enable_shared_from_this<dispatcher> {
@@ -143,12 +143,20 @@ class dispatcher : public std::enable_shared_from_this<dispatcher> {
     template<typename T, typename... Args>
     auto trigger(Args&&... _args) -> dispatcher&;
     /**
+     * @brief Creates an event.
+     * @tparam T Event operation type (must satisfy Operation concept).
+     * @param _args Arguments forwarded to T's constructor.
+     * @return The event.
+     */
+    template<typename T, typename... Args>
+    auto make(Args&&... _args) -> zpt::event;
+    /**
      * @brief Check whether or not there are events to be trapped.
      * @return True is the events queue is empry, false otherwise. */
     auto empty() const -> bool;
-    /** @brief Blocks until dispatcher is shut down.
-     * @return Reference to this dispatcher. */
-    auto trap() -> dispatcher&;
+    /** @brief Processes a single pending event, if any.
+     * @return True if an event has been trapped, false otherwise. */
+    auto trap() -> bool;
     /** @brief Checks if shutdown has been initiated.
      * @return True if shutdown is in progress. */
     auto is_in_shutdown() -> bool;
@@ -375,7 +383,7 @@ auto make_event(Args&&... _args) -> zpt::event;
  * @param _max_queue_size Maximum size for event queue.
  * @return Shared pointer to the dispatcher.
  */
-auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 0)
+auto DISPATCHER(long int _consumers = 0, size_t _max_queue_size = 16384)
   -> zpt::events::dispatcher::ptr;
 
 /**
@@ -462,6 +470,13 @@ auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
     this->trigger(std::move(_event));
     return (*this);
+}
+
+template<typename T, typename... Args>
+auto zpt::events::dispatcher::make(Args&&... _args) -> zpt::event {
+    auto _event = zpt::make_event<T>(std::forward<Args>(_args)...);
+    if (this->__event_init != nullptr) { _event->initialize(*this->__event_init); }
+    return _event;
 }
 
 template<zpt::events::Operation T>
