@@ -50,9 +50,15 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                     auto _client = _server_sock->accept();
                     _polling->listen_on(std::move(_client));
                 }
+                catch (zpt::failed_expectation const& _e) {
+                    zlog(_e.description(), zpt::alert);
+                }
                 catch (zpt::ClosedException const& _e) {
                     expect(_plugin.is_shutdown_ongoing(),
                            "HTTP server socket closed but plugin not shutding down");
+                }
+                catch (std::exception const& _e) {
+                    zlog(_e.what(), zpt::alert);
                 }
             } while (!_plugin.is_shutdown_ongoing());
             zlog("Stopped HTTP transport on port " << _config("port"), zpt::info);
