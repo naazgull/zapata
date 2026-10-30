@@ -264,23 +264,32 @@ auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events:
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     try {
         this->__polling->mute(this->__stream);
-
-        auto _transport = zpt::TRANSPORT_LAYER() //
-                            .get(this->__stream->transport());
-
-        try {
-            _transport->send(this->__stream, this->__to_send);
-        }
-        catch (std::ios_base::failure const& _e) {
-            zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
-        }
-
-        this->__polling->unmute(this->__stream);
-        return zpt::events::finish;
     }
     catch (zpt::NoSuchElementException const& _e) {
+        return zpt::events::abort;
     }
-    return zpt::events::abort;
+    catch (zpt::failed_expectation const& _e) {
+        return zpt::events::retrigger;
+    }
+
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(this->__stream->transport());
+
+    try {
+        _transport->send(this->__stream, this->__to_send);
+    }
+    catch (std::ios_base::failure const& _e) {
+        zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
+    }
+
+    try {
+        this->__polling->unmute(this->__stream);
+    }
+    catch (zpt::NoSuchElementException const& _e) {
+        return zpt::events::abort;
+    }
+
+    return zpt::events::finish;
 }
 
 zpt::events::process::process(zpt::message _received)
@@ -301,7 +310,8 @@ zpt::events::process::~process() {
                             .get(this->__stream->transport());
 
         if (this->__received->performative() != zpt::Reply && this->__to_send->status() > 100 &&
-            _transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+            (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+             _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) &&
             !_transport->has_capability(zpt::transport_capability::PUB_SUB) &&
             this->__received->headers()("X-Reply") != "discard" &&
             this->__received->acquire_reply()) {

@@ -167,9 +167,8 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
     if (_stream->state() == zpt::stream_state::DISCONNECTED) {
         throw zpt::NoSuchElementException{ "No such stream" };
     }
-    if (!this->__polled_streams.acquire(_stream)) {
-        throw zpt::NoSuchElementException{ "No such stream" };
-    }
+    expect(this->__polled_streams.acquire(_stream),
+           "Unable to mute stream '" << _stream->uri() << "'");
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
@@ -212,7 +211,9 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
 
-    this->__polled_streams.release(_stream);
+    if (!this->__polled_streams.release(_stream)) {
+        expect(!_stream->__muted.load(), "Unable to unmute stream '" << _stream->uri() << "'");
+    }
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;

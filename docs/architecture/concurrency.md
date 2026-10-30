@@ -37,6 +37,8 @@ Network I/O uses Linux `epoll` for efficient multiplexing:
 
 The I/O layer uses non-blocking sockets with `EPOLLIN`/`EPOLLOUT` events, dispatching incoming data to protocol parsers which produce messages for the transport layer.
 
+A persistent, multiplexed stream (e.g. the `self` transport's shared `event_stream`) buffers many in-flight messages behind a single fd in a lock-free queue. The polling loop does not re-arm epoll for each buffered message: `zpt::polling::unmute()` re-delegates a persistent stream that still reports `has_next()` so the backlog is drained within the current cycle (see the [I/O reference](../api-reference/io.md)).
+
 ## Lock-Free Data Structures
 
 ### Lock-Free Queue

@@ -22,10 +22,11 @@
 
 /**
  * @file event_stream.h
- * @brief Event file descriptor-based stream for epoll integration.
+ * @brief Multiplexed eventfd stream for the polling infrastructure.
  *
- * Wraps a Linux eventfd as a basic_stream, enabling event notification
- * through the standard polling infrastructure.
+ * Wraps a single Linux eventfd as a basic_stream that buffers many messages in a lock-free
+ * queue, so one stream/fd can carry multiple in-flight exchanges. Event notification goes
+ * through the standard polling layer, which drains the queue via has_next().
  *
  * @see zpt::basic_stream
  */
@@ -39,11 +40,12 @@
 namespace zpt {
 
 /**
- * @brief Stream backed by a Linux eventfd for event signaling.
+ * @brief Multiplexed eventfd stream carrying a queue of in-flight messages.
  *
- * Provides a basic_stream interface over a Linux eventfd, allowing
- * event-driven wakeup of polling threads. Used internally by the
- * transport layer for signaling between threads.
+ * Wraps a single Linux eventfd as a basic_stream that buffers many logical messages in a
+ * lock-free queue behind one fd. Multiple in-flight request/reply exchanges share the same
+ * stream (and fd); the polling layer drains the queue via `has_next()` without re-arming
+ * epoll for each message. Used internally by the `self` transport for in-node signaling.
  */
 class event_stream : public basic_stream {
   public:
@@ -76,31 +78,35 @@ class event_stream : public basic_stream {
      */
     auto operator<<(ostream_manipulator _in) -> event_stream&;
     /**
-     * @brief Reads content from the internal buffer without I/O.
+     * @brief Pops the next queued message without I/O.
      * @param _out Output reference for the read value.
      * @return Reference to this event_stream.
      */
     auto read_without_io(std::any& _out) -> event_stream& override;
     /**
-     * @brief Writes content to the internal buffer without I/O.
+     * @brief Pushes a message onto the internal queue without I/O.
      * @param _in Value to write.
      * @return Reference to this event_stream.
      */
     auto write_without_io(std::any const& _in) -> event_stream& override;
     /**
-     * @brief Returns false once both the request write and the reply read have completed.
+     * @brief Returns true if there are buffered messages waiting to be read.
+     * @return True if there are buffered messages available.
+     */
+    auto has_next() const -> bool override;
+    /**
+     * @brief Always true: a multiplexed stream that stays in the polling set.
      *
-     * The stream counts `read_without_io()` calls via `__reads`. When `__reads` reaches
-     * `FINAL_REPLY_RECEIVED` (2), `persistent()` returns false so `unmute()` erases the
-     * stream from the polling set.
-     * @return False when stream is fully processed, true while still active.
+     * A single eventfd carries a queue of messages, so the stream is never torn down after
+     * one exchange. `polling::unmute()` keeps a persistent stream with buffered work
+     * (`has_next()`) in the processing loop by re-delegating it instead of re-arming
+     * epoll, and re-arms it only once the queue has drained.
+     * @return Always true.
      */
     auto persistent() -> bool override;
 
   private:
-    /** @brief Content stored during write_without_io, retrieved during read_without_io. */
-    std::any __content;
-    /** @brief Number of times `read_without_io()` has been called; stream is disposed at 2. */
-    unsigned short __reads{ 0 };
+    /** @brief Queue of in-flight messages: `write_without_io` pushes, `read_without_io` pops. */
+    zpt::lf::queue<std::any> __content;
 };
 } // namespace zpt

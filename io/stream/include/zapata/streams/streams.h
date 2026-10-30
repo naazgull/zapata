@@ -152,6 +152,7 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @tparam T Value type to read.
      * @param _out Output reference for the read value.
      * @return Reference to this stream.
+     * @throws zpt::SyntaxErrorException If the stream has no buffered message to read.
      */
     template<typename T>
     auto read(T& _out) -> basic_stream&;
@@ -480,6 +481,10 @@ class polling : public std::enable_shared_from_this<polling> {
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     /**
      * @brief Temporarily stops monitoring a stream.
+     *
+     * Claims the stream in the polled set and removes it from epoll. Throws
+     * `zpt::NoSuchElementException` if the stream is disconnected and `zpt::failed_expectation`
+     * if it is already claimed (busy); callers turn the latter into a `retrigger`.
      * @param _stream Stream to mute.
      * @return Reference to this polling instance.
      */
@@ -504,7 +509,13 @@ class polling : public std::enable_shared_from_this<polling> {
      */
     auto mute(size_t _idx, __uint128_t _uuid) -> zpt::stream;
     /**
-     * @brief Resumes monitoring a muted stream.
+     * @brief Releases a muted stream, draining any buffered work first.
+     *
+     * A `DISCONNECTED` stream is left alone. A non-persistent stream, or one in the
+     * `ERRORING_OUT` / `GRACEFULLY_CLOSE` state, is erased from the polled set. A
+     * persistent stream that still has buffered messages (`has_next()`) is not re-armed in
+     * epoll; it is re-delegated synchronously so the backlog is pumped out in the current
+     * cycle. Only once the buffer is drained is the stream released and put back in epoll.
      * @param _stream Stream to unmute.
      * @return Reference to this polling instance.
      */
@@ -618,7 +629,8 @@ auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
         if constexpr (std::is_copy_assignable<T>::value) {
             std::any _without_io;
             this->read_without_io(_without_io);
-            _out = std::any_cast<T>(_without_io);
+            if (_without_io.has_value()) { _out = std::any_cast<T>(_without_io); }
+            else { throw zpt::InterruptedException{ "Empty message" }; }
         }
         return (*this);
     }

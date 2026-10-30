@@ -184,7 +184,8 @@ Enqueues an event for processing.
 auto trap() -> bool;
 ```
 
-Processes a single pending event, if any.
+Processes a single pending event, if any. If the event returns `retrigger` (e.g. its target
+stream is busy), it is re-queued for another processing cycle.
 
 **Returns:** `true` if an event was trapped, `false` otherwise.
 
@@ -288,6 +289,11 @@ auto make_call(zpt::events::resolver _resolver, zpt::message _to_send) -> zpt::c
 ```
 
 Creates an outbound call event. `T` is the response handler type.
+
+The call resolves its target on the first attempt and registers the reply resolver once. When
+the target stream is busy (a multiplexed stream already claimed by another in-flight operation),
+the call returns `retrigger` and the dispatcher re-queues it, so the send is retried without
+re-registering the resolver.
 
 ---
 

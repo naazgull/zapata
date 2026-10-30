@@ -84,7 +84,7 @@ auto operator<<(T _in) -> basic_stream&;
 auto operator<<(ostream_manipulator _in) -> basic_stream&;
 ```
 
-For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively. `read_without_io` / `write_without_io` transfer data via internal storage without actual I/O. `has_next()` returns true if more messages are available.
+For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively. `read_without_io` / `write_without_io` transfer data via internal storage without actual I/O. `has_next()` returns true if more messages are available. `read()` throws `zpt::SyntaxErrorException` when the stream has no buffered message to read.
 
 ### Control Methods
 
@@ -219,11 +219,11 @@ auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling
 | Method | Description |
 |--------|-------------|
 | `listen_on` | Adds a stream to be monitored for I/O |
-| `mute(stream)` | Temporarily stops monitoring a stream |
+| `mute(stream)` | Claims and stops monitoring a stream; throws `failed_expectation` if already claimed (busy) |
 | `mute(uuid)` | Mutes a stream by UUID, returns the muted stream |
 | `mute(uri)` | Mutes a stream by URI, returns the muted stream |
 | `mute(idx, uuid)` | Mutes a stream by slot index and UUID (used by the poll loop), returns the muted stream |
-| `unmute` | Resumes monitoring a muted stream |
+| `unmute` | Releases a muted stream; a persistent stream with buffered work is re-delegated (drained) before re-arming epoll |
 | `upgrade` | Changes a stream's transport in-place |
 
 ### Delegate Registration
@@ -249,7 +249,10 @@ Waits for I/O events and dispatches to registered delegates.
 
 ## Class: `zpt::event_stream`
 
-Stream wrapper for `eventfd`-based signaling without I/O.
+Multiplexed stream backed by a single `eventfd`. Rather than one message, it buffers many
+logical messages in a lock-free queue behind one fd, so a single shared stream can carry
+multiple in-flight request/reply exchanges. The polling layer drains the queue through the
+`unmute` reentrance (see `zpt::polling::unmute`) without re-arming epoll for each message.
 
 ### Constructor
 
@@ -261,10 +264,14 @@ Creates an `eventfd` for inter-thread signaling.
 ### Methods
 
 ```cpp
-auto read_without_io(std::any& _out) -> event_stream& override;
-auto write_without_io(std::any const& _in) -> event_stream& override;
+auto read_without_io(std::any& _out) -> event_stream& override;     // pop the next queued message
+auto write_without_io(std::any const& _in) -> event_stream& override; // push a message onto the queue
+auto has_next() const -> bool override;                              // true while the queue is non-empty
+auto persistent() -> bool override;                                  // always true (multiplexed)
 ```
-Transfers data via internal storage without actual I/O operations.
+`read_without_io` / `write_without_io` push and pop the internal message queue without actual
+I/O. `has_next()` reports whether messages are buffered and `persistent()` is always `true`, so
+the stream stays in the polling set.
 
 ---
 

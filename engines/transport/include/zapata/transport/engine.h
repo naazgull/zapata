@@ -29,6 +29,7 @@
 #include <zapata/uuid.h>
 
 namespace {
+constexpr unsigned int UNRESOLVED = 0;
 constexpr unsigned int IS_SELF = 1;
 constexpr unsigned int IS_EXTERNAL = 2;
 constexpr unsigned int HAS_PUB_SUB = 3;
@@ -536,19 +537,32 @@ class call {
     zpt::polling::ptr __polling{ nullptr };
     zpt::message __to_send{ nullptr };
     zpt::call_context::ptr __context{ nullptr };
-    bool __resolved{ false };
+    unsigned int __resolved{ ::UNRESOLVED };
+    unsigned int __tries{ 0 };
 
-    /** @brief Resolves the target URI to determine if the call is internal or external.
-     * @return Bit flags: IS_SELF (1), IS_EXTERNAL (2), or HAS_PUB_SUB (3). */
-    auto resolve_uri() -> unsigned int;
-    /** @brief Handles an internal call within the same node.
-     * @return Event state. */
+    /** @brief Resolves the target URI and records the routing decision in `__resolved`.
+     * @return void. */
+    auto resolve_uri() -> void;
+    /** @brief Routes an internal call over the node's shared multiplexed `self` stream.
+     *
+     * Mutes the single `self` stream, enqueues the request on it, then unmutes. The reply
+     * resolver is registered only on the first attempt (`__tries == 0`). Returns
+     * `retrigger` when the stream is busy so the dispatcher re-queues the call.
+     * @return Event state: `finish` on success, `retrigger` when the stream is busy. */
     auto call_internally() -> zpt::events::state;
     /** @brief Sends the message to an external node.
-     * @return Event state. */
+     *
+     * Registers the reply resolver on the first attempt for transports that resolve
+     * replies (`SYNCHRONOUS` or `MULTIPLEXED`). Opens and mutes a new socket stream if the
+     * target is not already connected. Returns `retrigger` when the target stream is busy
+     * so the dispatcher re-queues the send.
+     * @return Event state: `finish` on success, `retrigger` when the stream is busy. */
     auto send_externally() -> zpt::events::state;
     /** @brief Publishes the message to pub/sub subscribers on an external node.
-     * @return Event state. */
+     *
+     * No reply is expected for a publish, so no resolver is registered; `__tries` is only
+     * bumped for symmetry with the other send paths.
+     * @return Event state: `finish`. */
     auto publish_externally() -> zpt::events::state;
 };
 
@@ -651,11 +665,10 @@ auto zpt::events::call<T>::catch_error(zpt::failed_expectation const&, zpt::even
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-    unsigned int _which{ 0 };
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
-        _which = this->resolve_uri();
+        this->resolve_uri();
 #ifndef PROPAGATE_EXCEPTION
     }
     catch (std::exception const& _e) {
@@ -672,7 +685,7 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 #ifndef PROPAGATE_EXCEPTION
     try {
 #endif
-        switch (_which) {
+        switch (this->__resolved) {
             case ::HAS_PUB_SUB: {
                 return this->publish_externally();
             }
@@ -699,8 +712,8 @@ auto zpt::events::call<T>::operator()(zpt::events::dispatcher::ptr) -> zpt::even
 }
 
 template<ProcessOperation T>
-auto zpt::events::call<T>::resolve_uri() -> unsigned int {
-    if (this->__resolved) { return ::IS_EXTERNAL; }
+auto zpt::events::call<T>::resolve_uri() -> void {
+    if (this->__resolved != ::UNRESOLVED) { return; }
 
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
@@ -710,7 +723,8 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
         auto _transport = zpt::TRANSPORT_LAYER().get(_uri("scheme")->string());
 
         if (_transport->has_capability(zpt::transport_capability::PUB_SUB)) {
-            return ::HAS_PUB_SUB;
+            this->__resolved = ::HAS_PUB_SUB;
+            return;
         }
         if (_transport->has_capability(zpt::transport_capability::UPGRADED)) {
             _upgraded_from_scheme = _transport->upgraded_from();
@@ -748,26 +762,39 @@ auto zpt::events::call<T>::resolve_uri() -> unsigned int {
         }
     }
 
-    return _is_self ? ::IS_SELF : ::IS_EXTERNAL;
+    this->__resolved = _is_self ? ::IS_SELF : ::IS_EXTERNAL;
 }
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::call_internally() -> zpt::events::state {
-    if (!this->__resolved) {
+    if (this->__tries == 0) {
         this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
-        this->__resolved = true;
+    }
+    ++this->__tries;
+
+    zpt::stream _stream{ nullptr };
+    try {
+        _stream = this->__polling->mute(zpt::GLOBAL_CONFIG()("self")("uri")->string());
+    }
+    catch (zpt::NoSuchElementException const& _e) {
+        zlog(_e.what(), zpt::error);
+        throw;
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return zpt::events::retrigger;
     }
 
-    auto _stream = zpt::allocate_shared<zpt::event_stream>();
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
-    this
-      ->__polling //
-      ->listen_on(_stream)
-      .mute(_stream);
-    _transport->send(_stream, this->__to_send);
-    this->__polling->unmute(_stream);
+    try {
+        _transport->send(_stream, this->__to_send);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->__polling->unmute(_stream);
+        return zpt::events::retrigger;
+    }
 
+    this->__polling->unmute(_stream);
     return zpt::events::finish;
 }
 
@@ -778,12 +805,13 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(_scheme);
 
-    if (!this->__resolved) {
-        if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+    if (this->__tries == 0) {
+        if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+            _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) {
             this->__resolver->add(this->__to_send, this->__context, zpt::events::make_callback<T>);
         }
-        this->__resolved = true;
     }
+    ++this->__tries;
 
     auto _host = _uri("domain")->string();
     auto _port = _uri("port")->integer();
@@ -817,7 +845,7 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
 
 template<ProcessOperation T>
 auto zpt::events::call<T>::publish_externally() -> zpt::events::state {
-    this->__resolved = true;
+    ++this->__tries;
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__to_send->uri()("scheme")->string());
     _transport->publish(this->__to_send);
