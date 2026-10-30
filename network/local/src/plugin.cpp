@@ -50,7 +50,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
-                zlog(_e.what(), zpt::alert);
+                zlog(_e.description(), zpt::alert);
             }
             catch (zpt::ClosedException const& _e) {
             }
