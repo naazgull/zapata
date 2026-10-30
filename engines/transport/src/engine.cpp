@@ -214,10 +214,15 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         }
     }
     catch (zpt::InterruptedException const& _e) {
+        zlog("Interrupted processing of '" << this->__stream->uri() << "': " << _e.what(),
+             zpt::error);
     }
     catch (zpt::SyntaxErrorException const& _e) {
+        zlog("Unparsable content received on '" << this->__stream->uri() << "': " << _e.what(),
+             zpt::warning);
     }
     catch (std::ios_base::failure const& _e) {
+        zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
     }
 #ifndef PROPAGATE_EXCEPTION
     catch (std::bad_alloc const& _e) {
@@ -267,6 +272,7 @@ auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events:
             _transport->send(this->__stream, this->__to_send);
         }
         catch (std::ios_base::failure const& _e) {
+            zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
         }
 
         this->__polling->unmute(this->__stream);

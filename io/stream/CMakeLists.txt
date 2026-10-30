@@ -12,11 +12,13 @@ endif()
 add_library(zapata-io-stream SHARED)
 add_dependencies(zapata-io-stream
   zapata-base
+  zapata-lockfree
 )
 target_sources(zapata-io-stream
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/streams.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/event_stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_set.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/streams.cpp
   INTERFACE
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams/streams.h
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams/event_stream.h
@@ -25,14 +27,18 @@ target_sources(zapata-io-stream
 target_include_directories(zapata-io-stream
   PRIVATE
     zapata-base
+    zapata-lockfree
     ${IO_STREAM_INCLUDE_DIR}
   INTERFACE
+    zapata-lockfree
     ${IO_STREAM_INCLUDE_DIR}
 )
 target_link_libraries(zapata-io-stream
   PRIVATE
     ${SYSTEMD_LIBRARIES}
     zapata-base
+  PUBLIC
+    zapata-lockfree
 )
 set_target_properties(zapata-io-stream
   PROPERTIES

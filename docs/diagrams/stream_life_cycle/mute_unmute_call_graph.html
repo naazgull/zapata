@@ -75,8 +75,11 @@
       <p class="sub">
         Who calls whom on the stream's <code>__muted</code> flag, read left&nbsp;→&nbsp;right.
         Columns are the call flow: <b>bootstrap</b>, the <b>callers</b>, the <code>zpt::polling</code>
-        core (the only code that flips the flag), and the core's <b>callees &amp; sinks</b>.
-        Colours are the owning module. Hover any node to trace its calls; hover any edge for the transition.
+        core, and the right-hand column that holds both the core's <code>zpt::stream_set</code>
+        backing store <b>and</b> its sinks. The <code>__muted</code> flag is now flipped only inside
+        <code>stream_set::acquire()</code>/<code>release()</code> (a CAS on the claim token), which the
+        polling core drives. Colours are the owning module. Hover any node to trace its calls;
+        hover any edge for the transition.
       </p>
     </header>
 
@@ -96,11 +99,19 @@
       <p class="note"><b>Graceful-close hook.</b> <code>unmute()</code> tears the stream down via
         <code>erase()</code> not only when it is <code>!persistent</code> or <code>ERRORING_OUT</code>, but
         also when its state is <code>GRACEFULLY_CLOSE</code> — a state the API client stores by direct
-        function call (<code>stream->state(...)</code>), not through the polling core (streams.cpp:183–185).</p>
+        function call (<code>stream->state(...)</code>), not through the polling core (streams.cpp:205–207).</p>
+      <p class="note"><b>The <code>stream_set</code> claim layer.</b> The polling core no longer keeps the
+        stream maps or the mute book-keeping itself — it delegates to a fixed-capacity, thread-safe
+        <code>zpt::stream_set</code>. <code>acquire()</code>/<code>release()</code> are a CAS on the per-slot
+        claim token (<code>__by_fd_id</code>) and are the only place the <code>__muted</code> flag flips;
+        the <code>__by_fd</code> slot array is written without the map mutex on purpose. Teardown closes the
+        streams from <code>stream_set::close()</code> (via <code>polling::close()</code>), <em>not</em> from
+        <code>erase()</code> — <code>erase()</code> only frees the slot and fires <code>DISCONNECTED</code>.</p>
     </section>
 
     <footer>
-      Source of truth: <code>io/stream/src/streams.cpp</code> (<code>zpt::polling</code>),
+      Source of truth: <code>io/stream/src/streams.cpp</code> (<code>zpt::polling</code>) and
+      <code>io/stream/src/stream_set.cpp</code> (<code>zpt::stream_set</code>),
       <code>engines/transport/</code> (engine + <code>events</code> + <code>call&lt;T&gt;</code>),
       <code>engines/runtime/src/runtime.cpp</code>, and the <code>network/*</code> plugins.
     </footer>
@@ -116,6 +127,7 @@
     events:  { c: "#35d0bd", bg: "#0c211f", name: "events (receive/send)" },
     plugins: { c: "#57d07a", bg: "#102518", name: "network plugins" },
     polling: { c: "#f0b03e", bg: "#221a0b", name: "zpt::polling core" },
+    set:     { c: "#f5834e", bg: "#26180f", name: "zpt::stream_set (thread-safe)" },
     engine:  { c: "#b18cf3", bg: "#1a1230", name: "engine / dispatcher" },
     sink:    { c: "#98a2b3", bg: "#1a2029", name: "sink (epoll / close)" }
   };
@@ -127,64 +139,84 @@
 
   var COLX = { bootstrap: 140, callers: 420, core: 700, callees: 980 };
   var nodes = [
-    { id: "runtime_run",    label: "runtime::run()",            sub: ["engines/runtime/src/runtime.cpp"],        group: "runtime", col: "bootstrap", y: 337 },
-    { id: "engine_ctor",    label: "engine::engine()",          sub: ["engines/transport/src/engine.cpp"],        group: "engine",  col: "bootstrap", y: 433 },
-    { id: "call_internal",  label: "call<T>::call_internally()", sub: ["engine.h :752"],                          group: "call",    col: "callers",   y: 193 },
-    { id: "plugins_accept", label: "network/* accept",           sub: ["tcp:50 · local:49 · http:51", "upnp:40 · mqtt:231 · amqp:324"], group: "plugins", col: "callers", y: 289 },
-    { id: "call_external",  label: "call<T>::send_externally()", sub: ["engine.h :772"],                          group: "call",    col: "callers",   y: 385 },
-    { id: "ev_send",        label: "events::send",              sub: ["engine.cpp · operator()"],                  group: "events", col: "callers", y: 481 },
-    { id: "ev_receive",     label: "events::receive",           sub: ["engine.cpp · ~receive()"],                group: "events",  col: "callers",   y: 577 },
-    { id: "p_poll",         label: "polling::poll()",           sub: ["streams.cpp"], group: "polling", col: "core", y: 97 },
-    { id: "p_listen",       label: "polling::listen_on()",      sub: ["streams.cpp"], group: "polling", col: "core", y: 193 },
-    { id: "p_mute",         label: "polling::mute()",           sub: ["streams.cpp"], group: "polling", col: "core", y: 289 },
-    { id: "p_delegate",     label: "polling::delegate()",       sub: ["streams.cpp"], group: "polling", col: "core", y: 385 },
-    { id: "p_unmute",       label: "polling::unmute()",         sub: ["streams.cpp"], group: "polling", col: "core", y: 481 },
-    { id: "p_erase",        label: "polling::erase()",          sub: ["streams.cpp"], group: "polling", col: "core", y: 577 },
-    { id: "p_close",        label: "polling::close()/~polling()", sub: ["streams.cpp"], group: "polling", col: "core", y: 673 },
-    { id: "h_insert",       label: "polling::insert()",         sub: ["streams.cpp"],              group: "polling", col: "callees", y: 193 },
-    { id: "h_get",          label: "polling::get(uuid|uri)",    sub: ["streams.cpp"],              group: "polling", col: "callees", y: 289 },
-    { id: "h_trigger",      label: "delegate callback",         sub: ["trigger<receive> (engine)"], group: "engine",  col: "callees", y: 385 },
-    { id: "h_callback",     label: "polling::callback()",       sub: ["CONNECTED / DISCONNECTED"], group: "polling", col: "callees", y: 481 },
-    { id: "h_epoll",        label: "epoll_ctl()",               sub: ["EPOLL_CTL_ADD / DEL"],      group: "sink",    col: "callees", y: 577 },
-    { id: "h_close",        label: "stream->close()",           sub: ["basic_stream · streams.cpp:66–73"], group: "sink", col: "callees", y: 673 }
+    { id: "runtime_run",    label: "runtime::run()",            sub: ["engines/runtime/src/runtime.cpp"],        group: "runtime", col: "bootstrap", y: 340 },
+    { id: "engine_ctor",    label: "engine::engine()",          sub: ["engines/transport/src/engine.cpp"],        group: "engine",  col: "bootstrap", y: 470 },
+    { id: "call_internal",  label: "call<T>::call_internally()",  sub: ["engine.h ·751–766"],                 group: "call",    col: "callers",   y: 180 },
+    { id: "plugins_accept", label: "network/* accept",           sub: ["tcp:50 · local:49 · http:51", "upnp:40 · mqtt:231 · amqp:324"], group: "plugins", col: "callers", y: 270 },
+    { id: "call_external",  label: "call<T>::send_externally()", sub: ["engine.h ·771–811"],                          group: "call",    col: "callers",   y: 360 },
+    { id: "ev_send",        label: "events::send",              sub: ["engine.cpp ·operator() ·266–278"],                  group: "events", col: "callers", y: 470 },
+    { id: "ev_receive",     label: "events::receive",           sub: ["engine.cpp ·~receive() ·78"],                group: "events",  col: "callers",   y: 560 },
+    { id: "p_poll",         label: "polling::poll()",             sub: ["streams.cpp ·231"],                  group: "polling", col: "core", y: 90 },
+    { id: "p_listen",       label: "polling::listen_on()",        sub: ["streams.cpp ·160"],                  group: "polling", col: "core", y: 162 },
+    { id: "p_insert",       label: "polling::insert()",           sub: ["streams.cpp ·277 (private)"],        group: "polling", col: "core", y: 234 },
+    { id: "p_mute",         label: "polling::mute(stream)",       sub: ["streams.cpp ·166"],                  group: "polling", col: "core", y: 306 },
+    { id: "p_mute_id",      label: "polling::mute(id|uri)",       sub: ["streams.cpp ·179 ·186"],             group: "polling", col: "core", y: 378 },
+    { id: "p_mute_idx",     label: "polling::mute(idx,uuid)",     sub: ["streams.cpp ·193"],                  group: "polling", col: "core", y: 450 },
+    { id: "p_delegate",     label: "polling::delegate()",         sub: ["streams.cpp ·300"],                  group: "polling", col: "core", y: 522 },
+    { id: "p_unmute",       label: "polling::unmute()",           sub: ["streams.cpp ·203"],                  group: "polling", col: "core", y: 594 },
+    { id: "p_erase",        label: "polling::erase()",            sub: ["streams.cpp ·291 (private)"],        group: "polling", col: "core", y: 666 },
+    { id: "p_close",        label: "polling::close()/~polling()", sub: ["streams.cpp ·122 ·117"],             group: "polling", col: "core", y: 738 },
+    { id: "ss_insert",      label: "stream_set::insert()",        sub: ["stream_set.cpp ·40"],                group: "set",     col: "callees", y: 200 },
+    { id: "ss_acquire",     label: "stream_set::acquire()",       sub: ["stream_set.cpp ·86 ·93"],            group: "set",     col: "callees", y: 268 },
+    { id: "ss_get",         label: "stream_set::get()",           sub: ["stream_set.cpp ·128 ·135"],          group: "set",     col: "callees", y: 336 },
+    { id: "h_callback",     label: "polling::callback()",         sub: ["streams.cpp ·285 ·295"],             group: "polling", col: "callees", y: 404 },
+    { id: "h_trigger",      label: "delegate callback",           sub: ["trigger<receive> (engine)"],          group: "engine",  col: "callees", y: 472 },
+    { id: "h_epoll",        label: "epoll_ctl()",                 sub: ["EPOLL_CTL_ADD / DEL"],               group: "sink",    col: "callees", y: 540 },
+    { id: "ss_release",     label: "stream_set::release()",       sub: ["stream_set.cpp ·113"],               group: "set",     col: "callees", y: 608 },
+    { id: "ss_erase",       label: "stream_set::erase()",         sub: ["stream_set.cpp ·59"],                group: "set",     col: "callees", y: 676 },
+    { id: "ss_close",       label: "stream_set::close()",         sub: ["stream_set.cpp ·142"],               group: "set",     col: "callees", y: 744 },
+    { id: "h_close",        label: "stream->close()",             sub: ["basic_stream ·streams.cpp ·70"],     group: "sink",    col: "callees", y: 812 }
   ];
 
   var edges = [
-    { from: "call_internal",  to: "p_listen",  label: "self",      kind: "call", route: "fwd" },
-    { from: "call_internal",  to: "p_mute",    label: "mute",      kind: "call", route: "fwd" },
-    { from: "call_internal",  to: "p_unmute",  label: "unmute",    kind: "call", route: "fwd" },
-    { from: "plugins_accept", to: "p_listen",  label: "accept",    kind: "call", route: "fwd" },
-    { from: "call_external",  to: "p_mute",    label: "mute(uri)", kind: "call", route: "fwd" },
-    { from: "call_external",  to: "p_listen",  label: "fresh",     kind: "call", route: "fwd" },
-    { from: "call_external",  to: "p_unmute",  label: "finish",    kind: "call", route: "fwd" },
-    { from: "ev_send",        to: "p_mute",    label: "pre-send",  kind: "call", route: "fwd" },
-    { from: "ev_send",        to: "p_unmute",  label: "post-send", kind: "call", route: "fwd" },
-    { from: "ev_receive",     to: "p_unmute",  label: "RAII",      kind: "call", route: "fwd" },
-    { from: "p_listen",   to: "h_insert",   label: "insert",      kind: "call", route: "fwd" },
-    { from: "p_listen",   to: "h_callback", label: "CONNECTED",   kind: "call", route: "fwd" },
-    { from: "p_mute",     to: "h_get",      label: "get()",       kind: "call", route: "fwd" },
-    { from: "p_mute",     to: "h_epoll",    label: "DEL",         kind: "call", route: "fwd" },
-    { from: "p_unmute",   to: "h_epoll",    label: "ADD",         kind: "call", route: "fwd" },
-    { from: "p_delegate", to: "h_trigger",  label: "delegates[]", kind: "call", route: "fwd" },
-    { from: "p_erase",    to: "h_epoll",    label: "DEL",         kind: "call", route: "fwd" },
-    { from: "p_erase",    to: "h_callback", label: "DISCONNECT",  kind: "call", route: "fwd" },
-    { from: "p_erase",    to: "h_close",    label: "close",       kind: "call", route: "fwd" },
-    { from: "p_close",    to: "h_close",    label: "all",         kind: "call", route: "fwd" },
-    { from: "p_poll",     to: "p_delegate", label: "EPOLLIN",            kind: "call", route: "left" },
-    { from: "p_poll",     to: "p_erase",    label: "HUP·ERR·PRIO·RDHUP", kind: "call", route: "left" },
-    { from: "p_unmute",   to: "p_delegate", label: "has_next",          kind: "call", route: "left" },
-    { from: "p_delegate", to: "p_mute",     label: "mute",              kind: "call", route: "right" },
-    { from: "p_delegate", to: "p_unmute",   label: "release",           kind: "call", route: "right" },
-    { from: "p_unmute",   to: "p_erase",    label: "!persistent / ERRORING_OUT / GRACEFULLY_CLOSE", kind: "call", route: "right" },
+    // callers -> core
+    { from: "call_internal",  to: "p_listen",   label: "self·listen",   kind: "call", route: "fwd" },
+    { from: "call_internal",  to: "p_mute",     label: "mute",          kind: "call", route: "fwd" },
+    { from: "call_internal",  to: "p_unmute",   label: "unmute",        kind: "call", route: "fwd" },
+    { from: "plugins_accept", to: "p_listen",   label: "accept",        kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_mute_id",  label: "mute(uri)",     kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_listen",   label: "fresh·listen",  kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_mute",     label: "fresh·mute",    kind: "call", route: "fwd" },
+    { from: "call_external",  to: "p_unmute",   label: "finish",        kind: "call", route: "fwd" },
+    { from: "ev_send",        to: "p_mute",     label: "pre-send",      kind: "call", route: "fwd" },
+    { from: "ev_send",        to: "p_unmute",   label: "post-send",     kind: "call", route: "fwd" },
+    { from: "ev_receive",     to: "p_unmute",   label: "RAII",          kind: "call", route: "fwd" },
+    // polling core (within-column)
+    { from: "p_listen",   to: "p_insert",     label: "insert",             kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_mute_idx",   label: "harvest",            kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_delegate",   label: "EPOLLIN",            kind: "call", route: "left" },
+    { from: "p_poll",     to: "p_erase",      label: "HUP·ERR·PRIO·RDHUP", kind: "call", route: "right" },
+    { from: "p_mute_id",  to: "p_mute",       label: "resolve",            kind: "call", route: "left" },
+    { from: "p_unmute",   to: "p_delegate",   label: "has_next",           kind: "call", route: "left" },
+    { from: "p_unmute",   to: "p_erase",      label: "teardown",           kind: "call", route: "right" },
+    { from: "p_delegate", to: "p_unmute",     label: "no·delegate",        kind: "call", route: "right" },
+    // core -> stream_set + sinks
+    { from: "p_insert",   to: "ss_insert",  label: "insert",       kind: "call", route: "fwd" },
+    { from: "p_insert",   to: "h_epoll",    label: "ADD",          kind: "call", route: "fwd" },
+    { from: "p_insert",   to: "h_callback", label: "CONNECTED",    kind: "call", route: "fwd" },
+    { from: "p_mute",     to: "ss_acquire", label: "acquire",      kind: "call", route: "fwd" },
+    { from: "p_mute",     to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_mute_id",  to: "ss_get",     label: "get()",        kind: "call", route: "fwd" },
+    { from: "p_mute_idx", to: "ss_acquire", label: "acquire",      kind: "call", route: "fwd" },
+    { from: "p_mute_idx", to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_delegate", to: "h_trigger",  label: "delegates[]",  kind: "call", route: "fwd" },
+    { from: "p_unmute",   to: "ss_release", label: "release",      kind: "call", route: "fwd" },
+    { from: "p_unmute",   to: "h_epoll",    label: "ADD",          kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "ss_erase",   label: "erase",        kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "h_epoll",    label: "DEL",          kind: "call", route: "fwd" },
+    { from: "p_erase",    to: "h_callback", label: "DISCONNECTED", kind: "call", route: "fwd" },
+    { from: "p_close",    to: "ss_close",   label: "close",        kind: "call", route: "fwd" },
+    { from: "ss_close",   to: "h_close",    label: "per-slot",     kind: "call", route: "right" },
+    // bootstrap
     { from: "runtime_run", to: "p_poll",     label: "loop",     kind: "call",  route: "top" },
     { from: "runtime_run", to: "p_close",    label: "shutdown", kind: "call",  route: "bottom" },
-    { from: "engine_ctor", to: "p_delegate", label: "register", kind: "wires", route: "gap", gapY: 433 },
-    { from: "h_trigger",  to: "ev_receive", label: "dispatch",  kind: "dispatcher", route: "loop" },
-    { from: "ev_receive", to: "ev_send",    label: "reply",     kind: "dispatcher", route: "left" },
-    { from: "h_insert",   to: "h_epoll",    label: "ADD",       kind: "call", route: "left", lt: 0.2 }
+    { from: "engine_ctor", to: "p_delegate", label: "register", kind: "wires", route: "gap", gapY: 600 },
+    // dispatcher (async)
+    { from: "h_trigger",  to: "ev_receive", label: "dispatch", kind: "dispatcher", route: "loop" },
+    { from: "ev_receive", to: "ev_send",    label: "reply",    kind: "dispatcher", route: "left" }
   ];
 
-  var W = 1150, H = 790;
+  var W = 1150, H = 880;
   var byId = {};
   nodes.forEach(function (n) {
     n.hw = 104;
@@ -224,15 +256,15 @@
     } else if (r === "top") {
       p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 60, y: 56 }; p2 = { x: b.x - b.hw - 60, y: 56 }; p3 = { x: b.x - b.hw, y: b.y };
     } else if (r === "bottom") {
-      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 60, y: 712 }; p2 = { x: b.x - b.hw - 60, y: 712 }; p3 = { x: b.x - b.hw, y: b.y };
+      p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 60, y: 790 }; p2 = { x: b.x - b.hw - 60, y: 790 }; p3 = { x: b.x - b.hw, y: b.y };
     } else if (r === "gap") {
       var gy = e.gapY || 430;
       p0 = { x: a.x + a.hw, y: a.y }; p1 = { x: a.x + a.hw + 150, y: gy }; p2 = { x: b.x - b.hw - 150, y: gy }; p3 = { x: b.x - b.hw, y: b.y };
     } else if (r === "loop") {
       var d = "M " + (a.x + a.hw) + " " + a.y +
-              " C 1120 " + a.y + " 1120 745 1060 745 L 480 745 C " +
-              b.x + " 745 " + b.x + " 660 " + b.x + " " + (b.y + b.hh);
-      return { d: d, lx: 770, ly: 738 };
+              " C 1120 " + a.y + " 1120 860 1060 860 L 480 860 C " +
+              b.x + " 860 " + b.x + " 805 " + b.x + " " + (b.y + b.hh);
+      return { d: d, lx: 770, ly: 853 };
     }
     var P = bez(lt, p0, p1, p2, p3);
     return { d: "M " + p0.x + " " + p0.y + " C " + p1.x + " " + p1.y + " " + p2.x + " " + p2.y + " " + p3.x + " " + p3.y, lx: P.x, ly: P.y };
@@ -265,7 +297,7 @@
   function clearHL() { svg.querySelectorAll(".hl, .dim").forEach(function (x) { x.classList.remove("hl"); x.classList.remove("dim"); }); }
 
   var gCols = el("g", { id: "cols" }, svg);
-  [{ x: COLX.bootstrap, t: "bootstrap" }, { x: COLX.callers, t: "callers" }, { x: COLX.core, t: "polling core" }, { x: COLX.callees, t: "callees & sinks" }].forEach(function (c) {
+  [{ x: COLX.bootstrap, t: "bootstrap" }, { x: COLX.callers, t: "callers" }, { x: COLX.core, t: "polling core" }, { x: COLX.callees, t: "stream_set · sinks" }].forEach(function (c) {
     var t = el("text", { x: c.x, y: 26, "class": "colh" }, gCols);
     t.textContent = c.t;
   });
