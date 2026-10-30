@@ -215,7 +215,7 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
     }
     catch (zpt::InterruptedException const& _e) {
         zlog("Interrupted processing of '" << this->__stream->uri() << "': " << _e.what(),
-             zpt::error);
+             zpt::warning);
     }
     catch (zpt::SyntaxErrorException const& _e) {
         zlog("Unparsable content received on '" << this->__stream->uri() << "': " << _e.what(),
@@ -345,7 +345,10 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send = _transport->make_reply(this->__received);
-    this->__to_send->status(0);
+    this
+      ->__to_send //
+      ->status(0)
+      .header("Content-Type", "application/json");
 }
 
 auto zpt::events::process::blocked() const -> bool {

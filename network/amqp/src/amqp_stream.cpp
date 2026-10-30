@@ -209,9 +209,11 @@ auto zpt::amqp_stream::publish(zpt::message _payload) -> zpt::amqp_stream& {
     std::unique_lock _guard{ this->__driver_mutex };
     if (!this->__connected->load()) { throw zpt::ClosedException("socket has been shutdown"); }
 
+    auto _content_type = _payload->headers()("Content-Type");
     auto* _msg = pn_message();
     pn_message_set_address(_msg, _topic.data());
-    pn_message_set_content_type(_msg, "application/json");
+    pn_message_set_content_type(
+      _msg, _content_type->ok() ? _content_type->string().data() : "text/plain");
     pn_data_put_string(pn_message_body(_msg),
                        pn_bytes_t{ _payload_str.length(), _payload_str.data() });
 

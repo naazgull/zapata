@@ -604,7 +604,10 @@ zpt::events::call<T>::call(zpt::events::resolver _resolver,
         this->__to_send->headers()["X-Conversation-ID"] = zpt::uuid{}.to_string();
     }
     if (!this->__to_send->headers()("Content-type")->ok()) {
-        this->__to_send->header("Content-Type", "application/json");
+        this
+          ->__to_send //
+          ->header("Accept", "application/json")
+          .header("Content-Type", "application/json");
     }
 }
 
