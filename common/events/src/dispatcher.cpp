@@ -75,12 +75,13 @@ auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
 
 auto zpt::events::dispatcher::empty() const -> bool { return this->__queue.size() == 0; }
 
-auto zpt::events::dispatcher::trap() -> dispatcher& {
+auto zpt::events::dispatcher::trap() -> bool {
     auto _event = this->__queue.pop();
+    if (_event == nullptr) { return false; }
     if (_event->blocked()) {
         this->trigger(std::move(_event));
         std::this_thread::yield();
-        return (*this);
+        return true;
     }
 #ifndef PROPAGATE_EXCEPTION
     try {
@@ -112,7 +113,7 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         }
     }
 #endif
-    return (*this);
+    return true;
 }
 
 auto zpt::events::dispatcher::is_in_shutdown() -> bool { return this->__shutdown->load(); }
@@ -129,12 +130,11 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::name(_name);
     zlog(_name << " starting", zpt::trace);
     do {
+#ifndef PROPAGATE_EXCEPTION
         try {
-            this->trap();
-            _timer.reset();
-        }
-        catch (zpt::NoMoreElementsException const& e) {
-            _timer.sleep_for(0.1f);
+#endif
+            if (this->trap()) { _timer.reset(); }
+            else { _timer.sleep_for(0.1f); }
         }
 #ifndef PROPAGATE_EXCEPTION
         catch (zpt::exception const& _e) {

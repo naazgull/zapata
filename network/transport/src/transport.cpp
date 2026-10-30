@@ -59,10 +59,6 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
                                       << _to_return->body(),
              zpt::trace);
     }
-    catch (zpt::SyntaxErrorException const& _e) {
-        _stream->state(zpt::stream_state::ERRORING_OUT);
-        throw;
-    }
     catch (std::ios_base::failure const& _e) {
         _stream->state(zpt::stream_state::ERRORING_OUT);
         throw;

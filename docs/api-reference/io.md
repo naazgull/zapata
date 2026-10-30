@@ -24,10 +24,13 @@ Stream processing states used with `zpt::polling`.
 
 | Value | Description |
 |-------|-------------|
+| `CONNECTED` | Stream has successfully connected to a peer |
 | `IDLE` | Stream is idle, not being processed |
 | `WAITING` | Stream is waiting for I/O readiness |
 | `PROCESSING` | Stream is being processed by a delegate |
 | `ERRORING_OUT` | Stream encountered an error |
+| `DISCONNECTED` | Stream has been disconnected |
+| `GRACEFULLY_CLOSE` | Stream should be closed |
 
 ---
 
@@ -87,9 +90,11 @@ For class types (except `std::string`), these methods call `_out->from_stream()`
 
 ```cpp
 virtual auto close() -> basic_stream&;
-virtual auto shutdown() -> basic_stream&;
 virtual auto upgrade(std::string const& _to_transport) -> basic_stream&;
+virtual auto event_data() -> void*;
 ```
+
+`event_data()` returns the stable per-stream block (holding this stream's UUID and set index) that is stored in `epoll_event::data.ptr`.
 
 ### Metadata Methods
 
@@ -122,6 +127,51 @@ Shared pointer to a stream, used throughout the framework.
 
 ---
 
+## Class: `zpt::stream_set`
+
+Fixed-capacity, thread-safe container of polled streams. Each stream occupies a slot addressed by an integer drawn from a free-index pool, and every slot carries a lock-free claim token: the stream's 128-bit UUID while it is released (present in the poll, ready to be taken), or zero while it is claimed (muted out of the poll) or the slot is free. Claiming and releasing are compare-and-swap operations on that token, so the per-slot arrays are accessed without a mutex; only the UUID and URI lookup maps are guarded by a shared mutex.
+
+`zpt::polling` holds one `stream_set` (`__polled_streams`) of the streams it is currently monitoring.
+
+### Constructor
+
+```cpp
+stream_set(size_t _capacity);
+```
+Creates a set with `_capacity` slots.
+
+### Methods
+
+```cpp
+auto insert(zpt::stream _stream) -> bool;
+auto erase(zpt::stream _stream) -> bool;
+auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::stream_set&;
+auto acquire(zpt::stream _stream) -> bool;
+auto acquire(size_t _index, __uint128_t _uuid) -> zpt::stream;
+auto acquired(zpt::stream _stream) const -> bool;
+auto release(zpt::stream _stream) -> bool;
+auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
+auto get(std::string const& _uri) const -> zpt::stream;
+auto close() -> zpt::stream_set&;
+```
+
+| Method | Description |
+|--------|-------------|
+| `insert` | Inserts a stream and marks it ready (released); returns `false` if the set is full |
+| `erase` | Removes a claimed stream and frees its slot |
+| `upgrade` | Changes the underlying transport of a stream (updates the URI index) |
+| `acquire(stream)` | Claims (mutes) a stream by its identity; returns `false` if it cannot be claimed |
+| `acquire(index, uuid)` | Claims a stream by slot index and UUID; returns the stream, or `nullptr` |
+| `acquired` | Returns `true` if the stream is currently claimed (muted) |
+| `release` | Releases a claimed stream, marking it ready (unmuted) |
+| `get(uuid)` | Looks up a stream by UUID, or `nullptr` |
+| `get(uri)` | Looks up a stream by URI, or `nullptr` |
+| `close` | Closes all streams in the set and clears it |
+
+**Claim model:** `acquire` swaps the token from the stream's UUID to zero; `release` performs the reverse (zero to UUID). `insert` calls `release`, so an inserted stream starts out ready. A free or claimed slot reads zero.
+
+---
+
 ## Class: `zpt::polling`
 
 Epoll-based I/O multiplexer for efficient stream handling.
@@ -142,9 +192,9 @@ constexpr static int MAX_EVENT_PER_POLL{ 100 };
 ### Constructor
 
 ```cpp
-polling();
+polling(size_t _max_streams);
 ```
-Creates an epoll instance.
+Creates an epoll instance with capacity for up to `_max_streams` polled streams (backed by a `zpt::stream_set`).
 
 ### Lifecycle Methods
 
@@ -161,6 +211,7 @@ auto listen_on(zpt::stream _stream) -> zpt::polling&;
 auto mute(zpt::stream _stream) -> zpt::polling&;
 auto mute(zpt::uuid const& _id) -> zpt::stream;
 auto mute(std::string const& _uri) -> zpt::stream;
+auto mute(size_t _idx, __uint128_t _uuid) -> zpt::stream;
 auto unmute(zpt::stream _stream) -> zpt::polling&;
 auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
 ```
@@ -171,6 +222,7 @@ auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling
 | `mute(stream)` | Temporarily stops monitoring a stream |
 | `mute(uuid)` | Mutes a stream by UUID, returns the muted stream |
 | `mute(uri)` | Mutes a stream by URI, returns the muted stream |
+| `mute(idx, uuid)` | Mutes a stream by slot index and UUID (used by the poll loop), returns the muted stream |
 | `unmute` | Resumes monitoring a muted stream |
 | `upgrade` | Changes a stream's transport in-place |
 
@@ -221,9 +273,12 @@ Transfers data via internal storage without actual I/O operations.
 ### `zpt::STREAM_POLLING`
 
 ```cpp
-auto STREAM_POLLING() -> zpt::polling::ptr;
+auto STREAM_POLLING(size_t _max_streams = 0) -> zpt::polling::ptr;
 ```
 Returns the global stream polling instance.
+
+**Parameters:**
+- `_max_streams` — Maximum number of polled streams the set can hold (default 0).
 
 ### `zpt::make_stream`
 

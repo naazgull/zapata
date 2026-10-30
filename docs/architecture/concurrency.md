@@ -43,29 +43,25 @@ The I/O layer uses non-blocking sockets with `EPOLLIN`/`EPOLLOUT` events, dispat
 
 `zpt::lf::queue<T>` provides a bounded, multi-producer, multi-consumer FIFO queue using Dmitry Vyukov's MPMC algorithm:
 
-- **Enqueue** (`push`): Atomically claims a slot via the tail counter; throws `zpt::NoSpaceAvailableException` when the buffer is full.
-- **Dequeue** (`pop`): Atomically claims a slot via the head counter; throws `zpt::NoMoreElementsException` when empty.
+- **Enqueue** (`push`): Atomically claims a slot via the tail counter; blocks (spins) when the buffer is full until space frees or the queue is shut down.
+- **Dequeue** (`pop`): Atomically claims a slot via the head counter; returns `nullptr` when empty.
 - **Memory**: A flat array of slots (each containing a value and a sequence token) is allocated once at construction — no per-element allocation at runtime.
 - **Sequence tokens**: Each slot has a monotonically increasing sequence number that ensures producers and consumers don't overwrite each other, avoiding ABA issues without hazard pointers.
-- **Capacity**: Must be a power of two (enforced via bitmask indexing).
+- **Capacity**: Rounded up to the next power of two (enforced via bitmask indexing).
 - **No thread limit**: Any number of threads may push or pop concurrently without registration or cleanup.
 
 ```cpp
-// Size the queue to the expected peak depth (must be power of two)
+// Size the queue to the expected peak depth (rounded up to the next power of two)
 zpt::lf::queue<zpt::message> channel(4096);
 
-// Producer
-try {
-    channel.push(make_message());
-}
-catch (zpt::NoSpaceAvailableException&) { /* queue full */ }
+// Producer — blocks (spins) while the queue is full
+channel.push(make_message());
 
-// Consumer
-try {
-    auto msg = channel.pop();   // returns T by value
-    handle(msg);
+// Consumer — nullptr while the queue is empty
+auto msg = channel.pop();
+if (msg != nullptr) {
+    handle(*msg);
 }
-catch (zpt::NoMoreElementsException&) { /* queue empty */ }
 ```
 
 Used for inter-thread message passing between I/O and worker threads.

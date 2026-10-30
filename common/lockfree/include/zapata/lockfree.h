@@ -25,10 +25,10 @@
  * queue.push(std::move(item));
  *
  * // Consumer thread
- * try {
- *     auto value = queue.pop();
+ * auto value = queue.pop();
+ * if (value != nullptr) {
  *     process(*value);
- * } catch (zpt::NoMoreElementsException&) {
+ * } else {
  *     // Queue is empty
  * }
  * @endcode

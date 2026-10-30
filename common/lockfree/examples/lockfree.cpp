@@ -95,14 +95,11 @@ auto test_queue() -> int {
               else {
                   try {
                       for (int _k = 0; _k != N_ELEMENTS_QUEUE;) {
-                          try {
-                              _queue.pop();
+                          if (_queue.pop() != nullptr) {
                               ++_k;
                               ++_poped;
                           }
-                          catch (zpt::NoMoreElementsException const& e) {
-                              std::this_thread::yield();
-                          }
+                          else { std::this_thread::yield(); }
                       }
                   }
                   catch (zpt::failed_expectation const& _e) {
@@ -147,10 +144,10 @@ auto test_queue_func() -> void {
 
     std::cout << std::endl << "> " << _q1 << std::endl << std::flush;
 
-    try {
-        while (true) { std::cout << *_q1.pop() << std::endl; }
-    }
-    catch (...) {
+    while (true) {
+        auto _element = _q1.pop();
+        if (_element != nullptr) { std::cout << *_element << std::endl; }
+        else { break; }
     }
 
     std::cout << std::endl << "> " << _q1 << std::endl << std::flush;
