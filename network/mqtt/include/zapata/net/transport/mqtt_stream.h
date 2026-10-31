@@ -68,7 +68,7 @@ class mqtt_stream : public basic_stream {
     auto has_next() const -> bool override;
     /** @brief Returns whether the stream maintains a persistent connection.
      * @return True if the stream is persistent. */
-    auto persistent() -> bool override;
+    auto persistent() const -> bool override;
     /** @brief Establishes a connection to the MQTT broker using configuration.
 
      Initializes mosquitto library, configures TLS if enabled, registers

@@ -26,7 +26,7 @@
 #include <zapata/net/transport/tcp.h>
 
 auto zpt::net::transport::tcp::has_capability(std::uint64_t _capability) const -> bool {
-    static constexpr std::uint64_t _capabilities = zpt::transport_capability::SYNCHRONOUS;
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::MULTIPLEXED;
     return (_capabilities & _capability) == _capability;
 }
 

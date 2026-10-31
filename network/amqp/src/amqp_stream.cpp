@@ -99,7 +99,7 @@ auto zpt::amqp_stream::write_without_io(std::any const& _in) -> zpt::amqp_stream
 
 auto zpt::amqp_stream::has_next() const -> bool { return this->__buffer.size() != 0; }
 
-auto zpt::amqp_stream::persistent() -> bool { return true; }
+auto zpt::amqp_stream::persistent() const -> bool { return true; }
 
 auto zpt::amqp_stream::connect() -> amqp_stream& {
     auto& _host = this->__config("address")->string();

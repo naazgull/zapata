@@ -69,7 +69,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         }
 
         _plugin.add_thread([=]() mutable -> void {
-            zpt::this_thread::name("mqtt@loop-misc");
+            zpt::this_thread::name("listener@mqtt");
             auto _stream = zpt::MQTT_STREAM(_config);
 
             zlog("Started MQTT transport connected to " << _config("address")->string() << ":"

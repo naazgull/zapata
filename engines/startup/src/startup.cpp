@@ -273,3 +273,8 @@ auto zpt::IDENTITY() -> zpt::json const& {
     static zpt::json _self = zpt::GLOBAL_CONFIG()("identity");
     return _self;
 }
+
+auto zpt::IDENTITY_STREAM_DATA() -> zpt::epoll_event_data_t& {
+    static zpt::epoll_event_data_t _global;
+    return _global;
+}

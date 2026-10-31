@@ -94,7 +94,7 @@ class amqp_stream : public basic_stream {
      * @brief Returns whether the stream maintains a persistent connection.
      * @return True if the stream is persistent.
      */
-    auto persistent() -> bool override;
+    auto persistent() const -> bool override;
     /** @brief Establishes a connection to the AMQP broker using configuration.
 
      Resolves the address, opens a TCP socket, initializes the proton connection

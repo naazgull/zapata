@@ -57,6 +57,7 @@ Each transport declares its capabilities using bitmask flags:
 | Persistent | `zpt::PERSISTENT` (2) | Maintains persistent connections |
 | Pub/Sub | `zpt::PUB_SUB` (4) | Follows publish/subscribe flow |
 | Upgraded | `zpt::UPGRADED` (8) | Transport upgraded from another transport |
+| Multiplexed | `zpt::MULTIPLEXED` (16) | Transport allows for multiplexing |
 
 ## Available Transports
 
@@ -64,10 +65,10 @@ Each transport declares its capabilities using bitmask flags:
 |-----------|--------|-------------|-------------|
 | HTTP | `<zapata/http.h>` | SYNCHRONOUS | HTTP/1.1 with SSL/TLS |
 | WebSocket | `<zapata/websocket.h>` | PERSISTENT, UPGRADED | RFC 6455 WebSockets |
-| TCP | `<zapata/tcp.h>` | SYNCHRONOUS | Raw TCP sockets |
+| TCP | `<zapata/tcp.h>` | MULTIPLEXED | Raw TCP with JSON framing |
 | Local (Unix) | `<zapata/local.h>` | SYNCHRONOUS | Unix domain sockets |
 | Pipe | `<zapata/pipe.h>` | SYNCHRONOUS | Named pipes (FIFO) |
-| Self | `<zapata/self.h>` | SYNCHRONOUS | In-process callbacks |
+| Self | `<zapata/self.h>` | MULTIPLEXED | In-process message passing via a shared multiplexed stream |
 | UPnP | `<zapata/upnp.h>` | SYNCHRONOUS | UPnP/SSDP discovery |
 | MQTT | `<zapata/mqtt.h>` | PUB_SUB | MQTT broker integration |
 | AMQP | `<zapata/amqp.h>` | PUB_SUB | AMQP message queue |

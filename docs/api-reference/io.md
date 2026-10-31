@@ -84,7 +84,7 @@ auto operator<<(T _in) -> basic_stream&;
 auto operator<<(ostream_manipulator _in) -> basic_stream&;
 ```
 
-For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively. `read_without_io` / `write_without_io` transfer data via internal storage without actual I/O. `has_next()` returns true if more messages are available.
+For class types (except `std::string`), these methods call `_out->from_stream()` and `_in->to_stream()` respectively. `read_without_io` / `write_without_io` transfer data via internal storage without actual I/O. `has_next()` returns true if more messages are available. `read()` throws `zpt::InterruptedException` when the stream has no buffered message to read.
 
 ### Control Methods
 
@@ -103,7 +103,7 @@ virtual auto transport() -> std::string&;
 virtual auto uri() -> std::string&;
 virtual auto state(stream_state _state) -> basic_stream&;
 virtual auto state() -> stream_state;
-virtual auto persistent() -> bool;
+virtual auto persistent() const -> bool;
 virtual auto metadata(std::any _metadata) -> basic_stream&;
 virtual auto metadata() const -> std::any const&;
 virtual auto uuid() const -> zpt::uuid const& final;
@@ -127,6 +127,19 @@ Shared pointer to a stream, used throughout the framework.
 
 ---
 
+## Type: `zpt::epoll_event_data_t`
+
+The stable per-stream block stored in `epoll_event::data.ptr`. It pairs the stream's 128-bit UUID with its `stream_set` slot index so a fired epoll event can be resolved back to a stream — and claimed — without a separate lookup. Created lazily once by `basic_stream::event_data()` and shared for the stream's life.
+
+```cpp
+struct epoll_event_data_t {
+    __uint128_t __uuid;   ///< The stream's UUID
+    size_t __index;       ///< The stream's slot index in `zpt::stream_set`
+};
+```
+
+---
+
 ## Class: `zpt::stream_set`
 
 Fixed-capacity, thread-safe container of polled streams. Each stream occupies a slot addressed by an integer drawn from a free-index pool, and every slot carries a lock-free claim token: the stream's 128-bit UUID while it is released (present in the poll, ready to be taken), or zero while it is claimed (muted out of the poll) or the slot is free. Claiming and releasing are compare-and-swap operations on that token, so the per-slot arrays are accessed without a mutex; only the UUID and URI lookup maps are guarded by a shared mutex.
@@ -147,7 +160,7 @@ auto insert(zpt::stream _stream) -> bool;
 auto erase(zpt::stream _stream) -> bool;
 auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::stream_set&;
 auto acquire(zpt::stream _stream) -> bool;
-auto acquire(size_t _index, __uint128_t _uuid) -> zpt::stream;
+auto acquire(zpt::epoll_event_data_t const& _data) -> zpt::stream;
 auto acquired(zpt::stream _stream) const -> bool;
 auto release(zpt::stream _stream) -> bool;
 auto get(zpt::uuid const& _stream_id) const -> zpt::stream;
@@ -161,7 +174,7 @@ auto close() -> zpt::stream_set&;
 | `erase` | Removes a claimed stream and frees its slot |
 | `upgrade` | Changes the underlying transport of a stream (updates the URI index) |
 | `acquire(stream)` | Claims (mutes) a stream by its identity; returns `false` if it cannot be claimed |
-| `acquire(index, uuid)` | Claims a stream by slot index and UUID; returns the stream, or `nullptr` |
+| `acquire(epoll_event_data)` | Claims a stream by its epoll event data (slot index + UUID); returns the stream, or `nullptr` |
 | `acquired` | Returns `true` if the stream is currently claimed (muted) |
 | `release` | Releases a claimed stream, marking it ready (unmuted) |
 | `get(uuid)` | Looks up a stream by UUID, or `nullptr` |
@@ -211,7 +224,7 @@ auto listen_on(zpt::stream _stream) -> zpt::polling&;
 auto mute(zpt::stream _stream) -> zpt::polling&;
 auto mute(zpt::uuid const& _id) -> zpt::stream;
 auto mute(std::string const& _uri) -> zpt::stream;
-auto mute(size_t _idx, __uint128_t _uuid) -> zpt::stream;
+auto mute(zpt::epoll_event_data_t const& _data) -> zpt::stream;
 auto unmute(zpt::stream _stream) -> zpt::polling&;
 auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
 ```
@@ -219,11 +232,11 @@ auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling
 | Method | Description |
 |--------|-------------|
 | `listen_on` | Adds a stream to be monitored for I/O |
-| `mute(stream)` | Temporarily stops monitoring a stream |
+| `mute(stream)` | Claims and stops monitoring a stream; throws `failed_expectation` if already claimed (busy) |
 | `mute(uuid)` | Mutes a stream by UUID, returns the muted stream |
 | `mute(uri)` | Mutes a stream by URI, returns the muted stream |
-| `mute(idx, uuid)` | Mutes a stream by slot index and UUID (used by the poll loop), returns the muted stream |
-| `unmute` | Resumes monitoring a muted stream |
+| `mute(epoll_event_data)` | Mutes a stream by its epoll event data (used by the poll loop), returns the muted stream |
+| `unmute` | Releases a muted stream; a stream whose `has_next()` is still true is re-delegated (drained) before re-arming epoll |
 | `upgrade` | Changes a stream's transport in-place |
 
 ### Delegate Registration
@@ -249,22 +262,34 @@ Waits for I/O events and dispatches to registered delegates.
 
 ## Class: `zpt::event_stream`
 
-Stream wrapper for `eventfd`-based signaling without I/O.
+Multiplexed stream backed by a single `eventfd`. Rather than one message, it buffers many
+logical messages in a bounded lock-free queue behind one fd, so a single shared stream can
+carry multiple in-flight request/reply exchanges. Each `write_without_io` enqueues a message
+and increments the `eventfd` semaphore; the polling loop then delivers **one message per ready
+event** (each `read_without_io` consumes one semaphore unit and pops one message). Because
+`has_next()` returns `false`, `unmute` re-arms epoll instead of re-delegating, so a full
+backlog drains over successive poll cycles driven by the semaphore counter (see
+`zpt::polling::unmute`).
 
 ### Constructor
 
 ```cpp
-event_stream();
+event_stream(size_t _message_queue_size);
 ```
-Creates an `eventfd` for inter-thread signaling.
+Creates the `eventfd` (semaphore mode) and a bounded lock-free message queue of `_message_queue_size` entries.
 
 ### Methods
 
 ```cpp
-auto read_without_io(std::any& _out) -> event_stream& override;
-auto write_without_io(std::any const& _in) -> event_stream& override;
+auto read_without_io(std::any& _out) -> event_stream& override;     // pop the next queued message
+auto write_without_io(std::any const& _in) -> event_stream& override; // push a message onto the queue
+auto has_next() const -> bool override;                              // always false; the eventfd counter drives delivery
+auto persistent() const -> bool override;                                  // always true (multiplexed)
 ```
-Transfers data via internal storage without actual I/O operations.
+`read_without_io` / `write_without_io` pop and push the lock-free message queue and step the
+`eventfd` semaphore (one unit per message). `has_next()` always returns `false` (delivery is
+driven by the `eventfd` counter, one message per ready event); `persistent()` is always `true`,
+so the stream stays in the polling set.
 
 ---
 
@@ -637,7 +662,7 @@ std::string msg;
 #include <zapata/streams.h>
 
 auto poll = zpt::STREAM_POLLING();
-auto signal = zpt::allocate_shared<zpt::event_stream>();
+auto signal = zpt::allocate_shared<zpt::event_stream>(1024);
 
 poll->register_delegate([](zpt::polling::ptr p, zpt::stream s) {
     std::any data;

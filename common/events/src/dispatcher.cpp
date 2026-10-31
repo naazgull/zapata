@@ -135,8 +135,8 @@ auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
 #endif
             if (this->trap()) { _timer.reset(); }
             else { _timer.sleep_for(0.1f); }
-        }
 #ifndef PROPAGATE_EXCEPTION
+        }
         catch (zpt::exception const& _e) {
             zlog(_e, zpt::error);
         }
