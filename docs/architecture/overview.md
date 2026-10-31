@@ -105,7 +105,7 @@ Each protocol implements the transport interface:
 | TCP | `zapata-net-tcp` | Raw TCP sockets |
 | Local | `zapata-net-local` | Unix domain sockets |
 | Pipe | `zapata-net-pipe` | Named pipes |
-| Self | `zapata-net-self` | In-process callbacks |
+| Self | `zapata-net-self` | In-process message passing |
 
 ### Storage Layer
 

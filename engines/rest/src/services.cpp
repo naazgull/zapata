@@ -30,6 +30,7 @@ auto zpt::rest::minion_boot::operator()(zpt::events::dispatcher::ptr _dispatcher
                                _peer_scheme,
                                _peer("domain")->string(),
                                _peer("port")->integer()))
+              .header("Content-Type", "application/json")
               .body() = { "provider",
                           zpt::IDENTITY(),
                           "services",
@@ -90,6 +91,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
         this //
           ->to_send()
           ->status(200)
+          .header("Content-Type", "application/json")
           .body() = { "provider", zpt::IDENTITY(), "services", zpt::REST_RESOLVER()->list() };
         return zpt::events::finish;
     }
@@ -97,6 +99,7 @@ auto zpt::rest::minion_hello::operator()(zpt::events::dispatcher::ptr _dispatche
     this //
       ->to_send()
       ->status(405)
+      .header("Content-Type", "application/json")
       .body() = { "message", "Only POST or GET allowed to use with `/services`" };
     return zpt::events::abort;
 }
@@ -110,6 +113,7 @@ auto zpt::rest::minion_state::operator()(zpt::events::dispatcher::ptr _dispatche
         this //
           ->to_send()
           ->status(200)
+          .header("Content-Type", "application/json")
           .body() = { "memory",
                       zpt::json::parse_json_str(zpt::MEM_POOL().to_string()),
                       "dispatchers",
@@ -120,6 +124,7 @@ auto zpt::rest::minion_state::operator()(zpt::events::dispatcher::ptr _dispatche
     this //
       ->to_send()
       ->status(405)
+      .header("Content-Type", "application/json")
       .body() = { "message", "Only GET allowed to use with `/services`" };
     return zpt::events::abort;
 }
@@ -151,6 +156,7 @@ auto zpt::rest::services::broadcast(std::string const& _path, zpt::json const& _
     _message //
       ->performative(zpt::Notify)
       .uri(std::format("upnp://{}:{}{}", _upnp_host, _upnp_port, _path))
+      .header("Content-Type", "application/json")
       .header("X-My-Location", zpt::get_default_uri())
       .header("X-My-ID", zpt::IDENTITY()("_id"));
 

@@ -43,6 +43,7 @@
 #include <zapata/events.h>
 #include <zapata/globals.h>
 #include <zapata/json.h>
+#include <zapata/streams.h>
 
 namespace zpt {
 
@@ -258,4 +259,5 @@ auto BOOT(zpt::json _config = nullptr) -> zpt::startup::boot&;
  * @return Service identity JSON object.
  */
 auto IDENTITY() -> zpt::json const&;
+auto IDENTITY_STREAM_DATA() -> zpt::epoll_event_data_t&;
 } // namespace zpt

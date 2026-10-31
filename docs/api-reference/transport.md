@@ -36,6 +36,7 @@ Capability flags for transport features.
 | `PERSISTENT` (2) | Maintains persistent connections |
 | `PUB_SUB` (4) | Transport follows pub/sub flow |
 | `UPGRADED` (8) | Transport is upgraded from another transport |
+| `MULTIPLEXED` (16) | Transport allows for multiplexing |
 
 ---
 
@@ -342,9 +343,9 @@ Standard HTTP/1.1 request-response protocol.
 **Header:** `<zapata/net/transport/tcp.h>`
 **Class:** `zpt::net::transport::tcp`
 **URI schemes:** `tcp`
-**Capabilities:** SYNCHRONOUS
+**Capabilities:** MULTIPLEXED
 
-Raw TCP with JSON message framing.
+Raw TCP with JSON message framing, over a persistent (multiplexed) stream.
 
 **Server socket:** `zpt::TCP_SERVER_SOCKET(port)`
 
@@ -510,9 +511,11 @@ Inter-process communication via named pipes.
 **Header:** `<zapata/net/transport/self.h>`
 **Class:** `zpt::net::transport::self`
 **URI schemes:** `self`
-**Capabilities:** SYNCHRONOUS
+**Capabilities:** MULTIPLEXED
 
-In-process message passing without serialization.
+In-process message passing without serialization. A single shared `event_stream` carries all
+in-node traffic in a lock-free queue behind one `eventfd`; the polling loop delivers one queued
+message per ready event, driven by the `eventfd` semaphore counter (see the I/O reference).
 
 ### UPnP Transport
 

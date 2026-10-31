@@ -152,6 +152,7 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @tparam T Value type to read.
      * @param _out Output reference for the read value.
      * @return Reference to this stream.
+     * @throws zpt::InterruptedException If the stream has no buffered message to read.
      */
     template<typename T>
     auto read(T& _out) -> basic_stream&;
@@ -259,12 +260,12 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @brief Returns the current stream processing state.
      * @return Current stream state.
      */
-    virtual auto state() -> stream_state;
+    virtual auto state() const -> stream_state;
     /**
      * @brief Returns whether the stream should remain in the polling set.
      * @return True if stream should persist.
      */
-    virtual auto persistent() -> bool;
+    virtual auto persistent() const -> bool;
     /**
      * @brief Sets arbitrary metadata on this stream.
      * @param _metadata Metadata to attach.
@@ -302,8 +303,6 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     std::string __uri{ "" };
     /** @brief Arbitrary metadata attached to this stream. */
     std::any __metadata;
-    /** @brief Whether this stream is currently muted (not monitored by polling). */
-    std::atomic<bool> __muted{ true };
     /** @brief Lazily-created stable epoll event data block (see event_data()). */
     std::unique_ptr<zpt::epoll_event_data_t> __event_data{ nullptr };
 };
@@ -362,10 +361,9 @@ class stream_set {
      * @return True if the stream was claimed, false otherwise. */
     auto acquire(zpt::stream _stream) -> bool;
     /** @brief Claims (mutes) a stream by slot index and UUID.
-     * @param _index Slot index of the stream.
-     * @param _uuid 128-bit UUID of the stream.
+     * @param _data The event data holding the slot index and the 128-bit UUID of the stream.
      * @return The claimed stream, or nullptr if it could not be claimed. */
-    auto acquire(size_t _index, __uint128_t _uuid) -> zpt::stream;
+    auto acquire(zpt::epoll_event_data_t const& _data) -> zpt::stream;
     /** @brief Returns whether a stream is currently claimed (muted).
      * @param _stream Stream to query.
      * @return True if the stream is claimed, false otherwise. */
@@ -401,6 +399,12 @@ class stream_set {
     by_uuid_type __by_uuid;
     /** @brief Map of stream URI to stream currently in the set. */
     by_uri_type __by_uri;
+
+    /** @brief Claims (mutes) a stream by slot index and UUID.
+     * @param _index Slot index of the stream.
+     * @param _uuid 128-bit UUID of the stream.
+     * @return The claimed stream, or nullptr if it could not be claimed. */
+    auto acquire(size_t _index, __uint128_t _uuid) -> zpt::stream;
 };
 
 /**
@@ -480,6 +484,10 @@ class polling : public std::enable_shared_from_this<polling> {
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     /**
      * @brief Temporarily stops monitoring a stream.
+     *
+     * Claims the stream in the polled set and removes it from epoll. Throws
+     * `zpt::NoSuchElementException` if the stream is disconnected and `zpt::failed_expectation`
+     * if it is already claimed (busy); callers turn the latter into a `retrigger`.
      * @param _stream Stream to mute.
      * @return Reference to this polling instance.
      */
@@ -498,13 +506,19 @@ class polling : public std::enable_shared_from_this<polling> {
     auto mute(std::string const& _uri) -> zpt::stream;
     /**
      * @brief Temporarily stops monitoring a stream by slot index and UUID.
-     * @param _idx Slot index of the stream.
-     * @param _uuid 128-bit UUID of the stream.
+     * @param _data The event data holding the slot index and the 128-bit UUID of the stream.
      * @return Muted stream.
      */
-    auto mute(size_t _idx, __uint128_t _uuid) -> zpt::stream;
+    auto mute(zpt::epoll_event_data_t const& _data) -> zpt::stream;
     /**
-     * @brief Resumes monitoring a muted stream.
+     * @brief Releases a muted stream, draining any buffered work first.
+     *
+     * A `DISCONNECTED` stream is left alone. A non-persistent stream, or one in the
+     * `ERRORING_OUT` / `GRACEFULLY_CLOSE` state, is erased from the polled set. Otherwise the
+     * stream is released and re-armed in epoll. A stream whose `has_next()` is still true is
+     * instead re-delegated synchronously so its backlog is pumped out in the current cycle;
+     * for the `self` transport's `event_stream`, `has_next()` is always `false`, so its backlog
+     * drains one message per ready event via the still-pending `eventfd` counter.
      * @param _stream Stream to unmute.
      * @return Reference to this polling instance.
      */
@@ -516,6 +530,12 @@ class polling : public std::enable_shared_from_this<polling> {
      * @return Reference to this polling instance.
      */
     auto upgrade(zpt::stream _stream, std::string const& _transport) -> zpt::polling&;
+    /**
+     * @brief Returns true if the stream is alive.
+     * @param _stream_uuid The UUID of the stream to check.
+     * @return True if the stream is alive, false otherwise.
+     */
+    auto is_alive(zpt::uuid _stream_uuid) const -> bool;
     /**
      * @brief Waits for I/O events and dispatches to delegates.
      * @return Reference to this polling instance.
@@ -541,9 +561,11 @@ class polling : public std::enable_shared_from_this<polling> {
     std::vector<delegate_fn_type> __delegates;
     /** @brief List of stream state listener callbacks. */
     std::array<std::vector<state_fn_type>, zpt::stream_state::END> __state_callbacks;
+    std::vector<zpt::epoll_event_t> __pending_events;
     /** @brief Flag indicating that shutdown has been initiated. */
     std::atomic<bool> __shutdown{ false };
 
+    auto process_event(zpt::epoll_event_t& _event) -> bool;
     /** @brief Registers a stream with epoll (called by listen_on).
      * @param _stream Stream to register.
      * @return Reference to this polling instance. */
@@ -618,7 +640,8 @@ auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
         if constexpr (std::is_copy_assignable<T>::value) {
             std::any _without_io;
             this->read_without_io(_without_io);
-            _out = std::any_cast<T>(_without_io);
+            if (_without_io.has_value()) { _out = std::any_cast<T>(_without_io); }
+            else { throw zpt::InterruptedException{ "Empty message" }; }
         }
         return (*this);
     }

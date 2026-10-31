@@ -22,10 +22,9 @@
 
 #include <zapata/streams/event_stream.h>
 
-constexpr unsigned short FINAL_REPLY_RECEIVED{ 2 };
-
-zpt::event_stream::event_stream()
-  : zpt::basic_stream{ "self" } {
+zpt::event_stream::event_stream(size_t _message_queue_size)
+  : zpt::basic_stream{ "self" }
+  , __content{ _message_queue_size } {
     this->__fd = eventfd(0, EFD_SEMAPHORE | EFD_NONBLOCK);
     expect(this->__fd != -1, "Error while creating 'self' stream");
     this->__uri = std::format("self://{}@localhost", this->__fd);
@@ -38,17 +37,20 @@ auto zpt::event_stream::operator=(int) -> zpt::event_stream& { return (*this); }
 auto zpt::event_stream::operator<<(ostream_manipulator) -> zpt::event_stream& { return (*this); }
 
 auto zpt::event_stream::read_without_io(std::any& _out) -> zpt::event_stream& {
-    _out = this->__content;
+    auto _message = this->__content.pop();
+    if (_message != nullptr) { _out = *_message; }
+
     std::uint64_t _val;
     eventfd_read(this->__fd, &_val);
-    ++this->__reads;
     return (*this);
 }
 
 auto zpt::event_stream::write_without_io(std::any const& _in) -> zpt::event_stream& {
-    this->__content = _in;
+    this->__content.push(_in);
     eventfd_write(this->__fd, 1);
     return (*this);
 }
 
-auto zpt::event_stream::persistent() -> bool { return this->__reads != FINAL_REPLY_RECEIVED; }
+auto zpt::event_stream::has_next() const -> bool { return false; }
+
+auto zpt::event_stream::persistent() const -> bool { return true; }

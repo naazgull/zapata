@@ -77,7 +77,7 @@
         assignment, <b>dashed green</b> = a listener event (no state is stored), <b>dashed rose</b> = a
         downstream effect, <b>dashed violet</b> = an API-client function call. Hover a state for where it
         is entered &amp; left; hover an edge for the trigger and source. <code>END</code> in the enum is
-        only a sizing sentinel for the listener-callback array (streams.h:543) — not a state. Examples
+        only a sizing sentinel for the listener-callback array (streams.h:556) — not a state. Examples
         are excluded.
       </p>
     </header>
@@ -102,7 +102,7 @@
         only by an API-client function call — <code>stream->state(zpt::stream_state::GRACEFULLY_CLOSE)</code>,
         the same way the client invokes any function. The polling core supplies the teardown hook: the
         next <code>unmute()</code> of such a stream frees its slot via <code>erase()</code> instead of
-        re-adding it to epoll (streams.cpp:205–207). As written today the SYNCHRONOUS guards
+        re-adding it to epoll (streams.cpp:203–205). As written today the SYNCHRONOUS guards
         (transport.cpp:38–41, 70–74) do not list <code>GRACEFULLY_CLOSE</code>, so a
         <code>receive()</code>/<code>send()</code> initiated while the stream is in this state trips the
         expect.</p>
@@ -148,7 +148,7 @@
   var nodes = [
     { id: "idle",         label: "IDLE",         val: 1, def: 61, group: "idle",         assigned: true,  x: 500, y: 300,
       sub: "default · hub", meaning: "Resting / default state. A stream is created here and returns here after each request/reply."
-      , src: "default: streams.h:298 · set by send()/receive() (transport.cpp)" },
+      , src: "default: streams.h:299 · set by send()/receive() (transport.cpp)" },
     { id: "waiting",      label: "WAITING",      val: 2, def: 62, group: "waiting",      assigned: true,  x: 500, y: 110,
       sub: "awaiting reply", meaning: "A request was sent; the stream is waiting for the matching reply."
       , src: "send() — transport.cpp:96" },
@@ -156,16 +156,16 @@
       sub: "handling request", meaning: "An incoming request is being handled by a registered delegate."
       , src: "receive() — transport.cpp:44" },
     { id: "disconnected", label: "DISCONNECTED", val: 5, def: 65, group: "disconnected", assigned: true,  x: 175, y: 130,
-      sub: "terminal", meaning: "The stream has been torn down. __state is set to DISCONNECTED by the idempotent close() (streams.cpp:70), reached from ~basic_stream (streams.cpp:38) and, for streams still in the set at shutdown, from stream_set::close() (stream_set.cpp:142) via polling::close(). Note polling::erase() only frees the slot and fires the DISCONNECTED listener event — it does not set the state."
-      , src: "close() — streams.cpp:70 · polling::close() — streams.cpp:122 → stream_set::close() — stream_set.cpp:142 · ~basic_stream — streams.cpp:38" },
+      sub: "terminal", meaning: "The stream has been torn down. __state is set to DISCONNECTED by the idempotent close() (streams.cpp:70), reached from ~basic_stream (streams.cpp:38) and, for streams still in the set at shutdown, from stream_set::close() (stream_set.cpp:126) via polling::close(). Note polling::erase() only frees the slot and fires the DISCONNECTED listener event — it does not set the state."
+      , src: "close() — streams.cpp:70 · polling::close() — streams.cpp:122 → stream_set::close() — stream_set.cpp:126 · ~basic_stream — streams.cpp:38" },
     { id: "erroring",     label: "ERRORING_OUT", val: 4, def: 64, group: "erroring",     assigned: true,  x: 175, y: 490,
       sub: "closes the stream", meaning: "Set by receive() when the incoming message can't be parsed (syntax error) or the read fails. send() may still finish a reply on it (back to IDLE), but any unmute() of a stream in this state frees its slot via erase()."
       , src: "receive() — transport.cpp:63 · send() — transport.cpp:90" },
     { id: "connected",    label: "CONNECTED",    val: 0, def: 60, group: "connected",    assigned: false, x: 840, y: 110,
       sub: "event only", meaning: "Never written to __state. It exists only as a listener event fired by insert() from listen_on()."
-      , src: "fired by insert() from listen_on() — streams.cpp:285" },
+      , src: "fired by insert() from listen_on() — streams.cpp:294" },
     { id: "graceful",     label: "GRACEFULLY_CLOSE", val: 6, def: 66, group: "graceful", assigned: true, x: 840, y: 300,
-      sub: "client-requested close", meaning: "A stored state the API client sets by direct function call — stream->state(GRACEFULLY_CLOSE) — to ask that the stream be closed. Entered the same way the client invokes any function, not by the polling core. The core's hook: the next unmute() of such a stream frees its slot via erase() instead of re-adding it to epoll (streams.cpp:205–207)."
+      sub: "client-requested close", meaning: "A stored state the API client sets by direct function call — stream->state(GRACEFULLY_CLOSE) — to ask that the stream be closed. Entered the same way the client invokes any function, not by the polling core. The core's hook: the next unmute() of such a stream frees its slot via erase() instead of re-adding it to epoll (streams.cpp:203–205)."
       , src: "API client function call — stream->state(zpt::stream_state::GRACEFULLY_CLOSE)" },
     { id: "api",          label: "API client",   group: "api",          assigned: false, x: 840, y: 490,
       file: "actor — not a stream state", sub: "application code", meaning: "An actor, not a state: the application / API client. It stores GRACEFULLY_CLOSE the same way it would invoke any function on the stream object — a plain setter call."
@@ -174,7 +174,7 @@
 
   // Transitions. p0..p3 are the cubic-bezier control points; lx/ly/anchor place the label.
   var edges = [
-    { from: "start", to: "idle", kind: "assign", label: "default (ctor)", src: "__state{ IDLE } · streams.h:298",
+    { from: "start", to: "idle", kind: "assign", label: "default (ctor)", src: "__state{ IDLE } · streams.h:299",
       p0: [500, 243], p1: [500, 252], p2: [500, 259], p3: [500, 266], lx: 512, ly: 245, anchor: "start" },
 
     { from: "idle", to: "waiting", kind: "assign", label: "send() · request", src: "transport.cpp:96",
@@ -192,13 +192,13 @@
     { from: "erroring", to: "idle", kind: "assign", label: "send() · reply", src: "transport.cpp:100",
       p0: [260, 506], p1: [380, 530], p2: [440, 420], p3: [445, 338], lx: 356, ly: 490, anchor: "middle" },
 
-    { from: "idle", to: "connected", kind: "notification", label: "listen_on() fires", src: "streams.cpp:285",
+    { from: "idle", to: "connected", kind: "notification", label: "listen_on() fires", src: "streams.cpp:294",
       p0: [556, 267], p1: [650, 246], p2: [702, 156], p3: [758, 122], lx: 676, ly: 196, anchor: "middle" },
 
     { from: "idle", to: "disconnected", kind: "assign", label: "close() · any", src: "streams.cpp:70",
       p0: [453, 268], p1: [380, 246], p2: [300, 180], p3: [261, 156], lx: 348, ly: 216, anchor: "middle" },
 
-    { from: "erroring", to: "disconnected", kind: "effect", label: "unmute() → erase()", src: "unmute() streams.cpp:203 → erase() :291 (frees slot + DISCONNECTED event) · close() :70",
+    { from: "erroring", to: "disconnected", kind: "effect", label: "unmute() → erase()", src: "unmute() streams.cpp:201 → erase() :308 (frees slot + DISCONNECTED event) · close() :70",
       p0: [175, 456], p1: [175, 378], p2: [175, 222], p3: [175, 164], lx: 190, ly: 300, anchor: "start" },
 
     { from: "idle", to: "idle", kind: "assign", label: "close() · amqp/mqtt", src: "amqp_stream.cpp:75 · mqtt_stream.cpp:56",
@@ -209,7 +209,7 @@
       p0: [840, 456], p1: [840, 418], p2: [840, 378], p3: [840, 338], lx: 852, ly: 396, anchor: "start" },
 
     { from: "graceful", to: "disconnected", kind: "effect", label: "unmute() → erase()",
-      src: "unmute() streams.cpp:203 → erase() :291 (teardown: !persistent / ERRORING_OUT / GRACEFULLY_CLOSE) · close() :70",
+      src: "unmute() streams.cpp:201 → erase() :308 (teardown: !persistent / ERRORING_OUT / GRACEFULLY_CLOSE) · close() :70",
       p0: [758, 282], p1: [560, 180], p2: [380, 150], p3: [259, 138], lx: 613, ly: 212, anchor: "middle" }
   ];
 

@@ -27,18 +27,29 @@
 #include <zapata/uuid.h>
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
+    zlog("Loaded SELF transport", zpt::info);
+    auto const& _config = zpt::GLOBAL_CONFIG();
+
     zpt::TRANSPORT_LAYER() //
       .add("self", zpt::make_transport<zpt::net::transport::self>());
 
-    auto _identity = zpt::GLOBAL_CONFIG()("identity");
+    auto _identity = _config("identity");
     expect(_identity->type() == zpt::JSObject, "Configuration 'identity' must be defined");
-
     std::string _id = _identity("id")->ok() ? _identity("id")->string() : zpt::uuid{}.to_string();
     _identity["_id"] = _id;
     _identity["name"] = _identity("name")->ok() ? _identity("name")->string() : _id;
     _identity->object()->pop("id");
 
     zpt::CATALOG(_identity("name")->string(), _identity("_id")->string());
+
+    auto _stream = zpt::allocate_shared<zpt::event_stream>(
+      static_cast<size_t>(_config("resources")("limits")("file_descriptors")) * 2);
+    zpt::STREAM_POLLING() //
+      ->listen_on(_stream);
+    zpt::IDENTITY_STREAM_DATA() = *static_cast<zpt::epoll_event_data_t*>(_stream->event_data());
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin&) { zpt::TRANSPORT_LAYER().remove("self"); }
+extern "C" auto _zpt_unload_(zpt::plugin&) {
+    zpt::TRANSPORT_LAYER().remove("self");
+    zlog("Unloading SELF transport", zpt::info);
+}

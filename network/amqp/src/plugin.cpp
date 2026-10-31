@@ -91,7 +91,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
           ->add<plugin_amqp_execute_after_boot>(zpt::SYSTEM_EVENT_FINISHED_BOOT);
 
         _plugin.add_thread([=]() mutable -> void {
-            zpt::this_thread::name("amqp@loop-misc");
+            zpt::this_thread::name("listener@amqp");
             auto _stream = zpt::AMQP_STREAM(_config);
 
             zlog("Started AMQP transport connected to " << _config("address")->string() << ":"

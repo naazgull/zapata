@@ -57,7 +57,8 @@ enum transport_capability {
     SYNCHRONOUS = 1, ///< Transport supports request-response pattern
     PERSISTENT = 2,  ///< Transport maintains persistent connections
     PUB_SUB = 4,     ///< Transport follows pub/sub flow
-    UPGRADED = 8     ///< Transport is upgraded from another transport
+    UPGRADED = 8,    ///< Transport is upgraded from another transport
+    MULTIPLEXED = 16 ///< Transport allows for multiplexing
 };
 
 /**

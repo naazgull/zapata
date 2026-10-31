@@ -214,8 +214,6 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
         }
     }
     catch (zpt::InterruptedException const& _e) {
-        zlog("Interrupted processing of '" << this->__stream->uri() << "': " << _e.what(),
-             zpt::error);
     }
     catch (zpt::SyntaxErrorException const& _e) {
         zlog("Unparsable content received on '" << this->__stream->uri() << "': " << _e.what(),
@@ -264,23 +262,32 @@ auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events:
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
     try {
         this->__polling->mute(this->__stream);
-
-        auto _transport = zpt::TRANSPORT_LAYER() //
-                            .get(this->__stream->transport());
-
-        try {
-            _transport->send(this->__stream, this->__to_send);
-        }
-        catch (std::ios_base::failure const& _e) {
-            zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
-        }
-
-        this->__polling->unmute(this->__stream);
-        return zpt::events::finish;
     }
     catch (zpt::NoSuchElementException const& _e) {
+        return zpt::events::abort;
     }
-    return zpt::events::abort;
+    catch (zpt::failed_expectation const& _e) {
+        if (this->__polling->is_alive(this->__stream->uuid())) { return zpt::events::retrigger; }
+        return zpt::events::abort;
+    }
+
+    auto _transport = zpt::TRANSPORT_LAYER() //
+                        .get(this->__stream->transport());
+    try {
+        _transport->send(this->__stream, this->__to_send);
+    }
+    catch (std::ios_base::failure const& _e) {
+        zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
+    }
+
+    try {
+        this->__polling->unmute(this->__stream);
+    }
+    catch (zpt::NoSuchElementException const& _e) {
+        return zpt::events::abort;
+    }
+
+    return zpt::events::finish;
 }
 
 zpt::events::process::process(zpt::message _received)
@@ -301,7 +308,8 @@ zpt::events::process::~process() {
                             .get(this->__stream->transport());
 
         if (this->__received->performative() != zpt::Reply && this->__to_send->status() > 100 &&
-            _transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+            (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+             _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) &&
             !_transport->has_capability(zpt::transport_capability::PUB_SUB) &&
             this->__received->headers()("X-Reply") != "discard" &&
             this->__received->acquire_reply()) {
@@ -345,7 +353,10 @@ auto zpt::events::process::initialize(zpt::event_initialization& _init) -> void 
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get(this->__stream->transport());
     this->__to_send = _transport->make_reply(this->__received);
-    this->__to_send->status(0);
+    this
+      ->__to_send //
+      ->status(0)
+      .header("Content-Type", "application/json");
 }
 
 auto zpt::events::process::blocked() const -> bool {

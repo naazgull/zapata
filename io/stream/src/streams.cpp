@@ -91,9 +91,9 @@ auto zpt::basic_stream::state(zpt::stream_state _rhs) -> basic_stream& {
     return (*this);
 }
 
-auto zpt::basic_stream::state() -> zpt::stream_state { return this->__state; }
+auto zpt::basic_stream::state() const -> zpt::stream_state { return this->__state; }
 
-auto zpt::basic_stream::persistent() -> bool { return true; }
+auto zpt::basic_stream::persistent() const -> bool { return true; }
 
 auto zpt::basic_stream::metadata(std::any _metadata) -> basic_stream& {
     this->__metadata = _metadata;
@@ -167,9 +167,8 @@ auto zpt::polling::mute(zpt::stream _stream) -> zpt::polling& {
     if (_stream->state() == zpt::stream_state::DISCONNECTED) {
         throw zpt::NoSuchElementException{ "No such stream" };
     }
-    if (!this->__polled_streams.acquire(_stream)) {
-        throw zpt::NoSuchElementException{ "No such stream" };
-    }
+    expect(this->__polled_streams.acquire(_stream),
+           "Unable to mute stream '" << _stream->uri() << "'");
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
@@ -190,13 +189,12 @@ auto zpt::polling::mute(std::string const& _uri) -> zpt::stream {
     return _stream;
 }
 
-auto zpt::polling::mute(size_t _idx, __uint128_t _uuid) -> zpt::stream {
-    auto _stream = this->__polled_streams.acquire(_idx, _uuid);
-    if (_stream == nullptr) { throw zpt::NoSuchElementException{ "No such stream" }; }
+auto zpt::polling::mute(zpt::epoll_event_data_t const& _data) -> zpt::stream {
+    auto _stream = this->__polled_streams.acquire(_data);
+    expect(_stream != nullptr, "Unable to mute stream '" << zpt::uuid{ _data.__uuid } << "'");
 
     auto _fd = static_cast<int>(*_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
-
     return _stream;
 }
 
@@ -212,7 +210,7 @@ auto zpt::polling::unmute(zpt::stream _stream) -> zpt::polling& {
         return (*this);
     }
 
-    this->__polled_streams.release(_stream);
+    if (!this->__polled_streams.release(_stream)) { return (*this); }
 
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -228,6 +226,10 @@ auto zpt::polling::upgrade(zpt::stream _stream, std::string const& _transport) -
     return (*this);
 }
 
+auto zpt::polling::is_alive(zpt::uuid _stream_uuid) const -> bool {
+    return this->__polled_streams.get(_stream_uuid) != nullptr;
+}
+
 auto zpt::polling::poll() -> zpt::polling& {
     std::uint64_t _sd_watchdog_usec{ ::POLL_WAIT_TIMEOUT * 1000 };
     auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
@@ -239,30 +241,21 @@ auto zpt::polling::poll() -> zpt::polling& {
                                    std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
         if (_n_alive < 0) { continue; }
 
-        if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
-
         for (auto _k = 0; _k != _n_alive; ++_k) {
-            auto _data = static_cast<zpt::epoll_event_data_t*>(_epoll_events[_k].data.ptr);
-            auto _stream = this->mute(_data->__index, _data->__uuid);
-            if (_stream == nullptr) { continue; }
-
-            if (((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
-                ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
-                ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
-                ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
-                this->erase(_stream);
-            }
-            else if ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
-            else {
-                expect(((_epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
-                         ((_epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
-                         ((_epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
-                         ((_epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
-                         ((_epoll_events[_k].events & EPOLLIN) == EPOLLIN),
-                       "unrecognized polling event");
+            auto& _event = _epoll_events[_k];
+            if (!this->process_event(_event) && (_event.events & EPOLLIN) == EPOLLIN) {
+                this->__pending_events.push_back(_event);
             }
         }
+        for (auto _it = this->__pending_events.begin(); _it != this->__pending_events.end();) {
+            auto& _event = *_it;
+            if (this->process_event(_event) || (_event.events & EPOLLIN) == 0) {
+                _it = this->__pending_events.erase(_it);
+            }
+            else { ++_it; }
+        }
 
+        if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
     } while (!this->__shutdown.load());
     return (*this);
 }
@@ -273,6 +266,32 @@ auto zpt::polling::shutdown() -> zpt::polling& {
 }
 
 auto zpt::polling::is_in_shutdown() const -> bool { return this->__shutdown.load(); }
+
+auto zpt::polling::process_event(zpt::epoll_event_t& _event) -> bool {
+    auto _data = static_cast<zpt::epoll_event_data_t*>(_event.data.ptr);
+    zpt::stream _stream{ nullptr };
+    try {
+        _stream = this->mute(*_data);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return false;
+    }
+
+    if (((_event.events & EPOLLPRI) == EPOLLPRI) || ((_event.events & EPOLLHUP) == EPOLLHUP) ||
+        ((_event.events & EPOLLERR) == EPOLLERR) || ((_event.events & EPOLLRDHUP) == EPOLLRDHUP)) {
+        this->erase(_stream);
+    }
+    else if ((_event.events & EPOLLIN) == EPOLLIN) { this->delegate(_stream); }
+    else {
+        expect(
+          ((_event.events & EPOLLPRI) == EPOLLPRI) || ((_event.events & EPOLLHUP) == EPOLLHUP) ||
+            ((_event.events & EPOLLERR) == EPOLLERR) ||
+            ((_event.events & EPOLLRDHUP) == EPOLLRDHUP) || ((_event.events & EPOLLIN) == EPOLLIN),
+          "unrecognized polling event");
+    }
+
+    return true;
+}
 
 auto zpt::polling::insert(zpt::stream _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(*_stream);

@@ -85,25 +85,11 @@ auto zpt::stream_set::upgrade(zpt::stream _stream, std::string const& _transport
 
 auto zpt::stream_set::acquire(zpt::stream _stream) -> bool {
     if (_stream->__index == stream_index_null) { return false; }
-
-    __uint128_t _uuid = static_cast<__uint128_t>(_stream->uuid());
-    return this->acquire(_stream->__index, _uuid) != nullptr;
+    return this->acquire(_stream->__index, static_cast<__uint128_t>(_stream->uuid())) != nullptr;
 }
 
-auto zpt::stream_set::acquire(size_t _index, __uint128_t _uuid) -> zpt::stream {
-    if (_index == stream_index_null || _uuid == 0) { return nullptr; }
-
-    if (this->__by_fd_id[_index].compare_exchange_strong(_uuid, 0, std::memory_order_acq_rel)) {
-        if (static_cast<__uint128_t>(this->__by_fd[_index]->uuid()) == _uuid) {
-            auto _stream = this->__by_fd[_index];
-            expect(!_stream->__muted.exchange(true),
-                   "Stream '" << _stream->uri() << "' is already muted");
-            return _stream;
-        }
-        else { return nullptr; }
-    }
-
-    return nullptr;
+auto zpt::stream_set::acquire(zpt::epoll_event_data_t const& _data) -> zpt::stream {
+    return this->acquire(_data.__index, _data.__uuid);
 }
 
 auto zpt::stream_set::acquired(zpt::stream _stream) const -> bool {
@@ -117,8 +103,6 @@ auto zpt::stream_set::release(zpt::stream _stream) -> bool {
     __uint128_t _empty{ 0 };
     if (this->__by_fd_id[_stream->__index].compare_exchange_strong(
           _empty, _uuid, std::memory_order_release)) {
-        expect(_stream->__muted.exchange(false),
-               "Stream '" << _stream->uri() << "' is already unmuted");
         return true;
     }
 
@@ -150,4 +134,18 @@ auto zpt::stream_set::close() -> zpt::stream_set& {
     this->__by_uuid.clear();
     this->__by_uri.clear();
     return (*this);
+}
+
+auto zpt::stream_set::acquire(size_t _index, __uint128_t _uuid) -> zpt::stream {
+    if (_index == stream_index_null || _uuid == 0) { return nullptr; }
+
+    if (this->__by_fd_id[_index].compare_exchange_strong(_uuid, 0, std::memory_order_acq_rel)) {
+        if (static_cast<__uint128_t>(this->__by_fd[_index]->uuid()) == _uuid) {
+            auto _stream = this->__by_fd[_index];
+            return _stream;
+        }
+        else { return nullptr; }
+    }
+
+    return nullptr;
 }
