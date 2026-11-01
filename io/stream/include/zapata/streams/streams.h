@@ -489,9 +489,9 @@ class polling : public std::enable_shared_from_this<polling> {
      * `zpt::NoSuchElementException` if the stream is disconnected and `zpt::failed_expectation`
      * if it is already claimed (busy); callers turn the latter into a `retrigger`.
      * @param _stream Stream to mute.
-     * @return Reference to this polling instance.
+     * @return True if the stream has been muted, false otherwise.
      */
-    auto mute(zpt::stream _stream) -> zpt::polling&;
+    auto mute(zpt::stream _stream) -> bool;
     /**
      * @brief Temporarily stops monitoring a stream by UUID.
      * @param _id UUID of the stream to mute.
@@ -520,9 +520,9 @@ class polling : public std::enable_shared_from_this<polling> {
      * for the `self` transport's `event_stream`, `has_next()` is always `false`, so its backlog
      * drains one message per ready event via the still-pending `eventfd` counter.
      * @param _stream Stream to unmute.
-     * @return Reference to this polling instance.
+     * @return True if the stream has been unmuted, false otherwise.
      */
-    auto unmute(zpt::stream _stream) -> zpt::polling&;
+    auto unmute(zpt::stream _stream) -> bool;
     /**
      * @brief Changes the underlying transport of a stream.
      * @param _stream Stream to upgrade.

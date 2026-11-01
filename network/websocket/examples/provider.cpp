@@ -68,15 +68,17 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             if (___stream_id != _null_id) {
                 try {
                     auto _stream = _polling->mute(___stream_id);
-                    auto _message = _transport->make_request();
-                    _message //
-                      ->performative(zpt::Post)
-                      .uri("/ws/chat")
-                      .body() = { "echo", std::format("Message for {}", ___stream_id.to_string()) };
-
-                    _transport->send(_stream, _message);
-                    _polling->unmute(_stream);
-                    _null_id = ___stream_id;
+                    if (_stream != nullptr) {
+                        auto _message = _transport->make_request();
+                        _message //
+                          ->performative(zpt::Post)
+                          .uri("/ws/chat")
+                          .body() = { "echo",
+                                      std::format("Message for {}", ___stream_id.to_string()) };
+                        _transport->send(_stream, _message);
+                        _polling->unmute(_stream);
+                        _null_id = ___stream_id;
+                    }
                 }
                 catch (...) {
                 }

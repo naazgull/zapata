@@ -59,14 +59,15 @@ class ws_test_client_boot : public zpt::system_event {
                 auto _transport = zpt::TRANSPORT_LAYER().get("ws");
                 auto _stream = _polling->mute(
                   zpt::uuid{ _context->reply()->body()("stream")("local_id")->string() });
-
-                _test_message = _transport->make_request();
-                _test_message //
-                  ->performative(zpt::Post)
-                  .uri("/ws/chat")
-                  .body() = { "message", "Hello there" };
-                _transport->send(_stream, _test_message);
-                _polling->unmute(_stream);
+                if (_stream != nullptr) {
+                    _test_message = _transport->make_request();
+                    _test_message //
+                      ->performative(zpt::Post)
+                      .uri("/ws/chat")
+                      .body() = { "message", "Hello there" };
+                    _transport->send(_stream, _test_message);
+                    _polling->unmute(_stream);
+                }
 
                 _test_message = _transport->make_request();
                 _test_message //
