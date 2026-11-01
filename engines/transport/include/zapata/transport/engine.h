@@ -772,14 +772,8 @@ auto zpt::events::call<T>::call_internally() -> zpt::events::state {
     }
     ++this->__tries;
 
-    zpt::stream _stream{ nullptr };
-    try {
-        _stream = this->__polling->mute(zpt::IDENTITY_STREAM_DATA());
-    }
-    catch (zpt::failed_expectation const& _e) {
-        // zlog(_e.what(), zpt::debug);
-        return zpt::events::retrigger;
-    }
+    auto _stream = this->__polling->mute(zpt::IDENTITY_STREAM_DATA());
+    if (_stream == nullptr) { return zpt::events::retrigger; }
 
     auto _transport = zpt::TRANSPORT_LAYER() //
                         .get("self");
@@ -815,6 +809,7 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     zpt::stream _stream{ nullptr };
     try {
         _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
+        if (_stream == nullptr) { return zpt::events::retrigger; }
     }
     catch (zpt::NoSuchElementException const& _e) {
         _stream =
@@ -823,9 +818,6 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
           ->__polling //
           ->listen_on(_stream)
           .mute(_stream);
-    }
-    catch (zpt::failed_expectation const& _e) {
-        return zpt::events::retrigger;
     }
 
     try {
