@@ -25,11 +25,12 @@
  * @brief Bounded lock-free FIFO queue implementation.
  *
  * Provides a thread-safe, bounded MPMC queue based on Dmitry Vyukov's
- * algorithm.  Every slot carries a `sequence` token that acts as an
- * ownership gate — a CAS on the shared head_/tail_ counter is the
- * **ownership transfer** (it prevents two threads from operating on the
- * same slot), and the sequence check is a guard that tells us whether
- * the slot is ready.
+ * algorithm. Every slot carries a position-tagged `sequence` token. A
+ * thread reads the token for its own position first and only attempts the
+ * CAS on the shared head_/tail_ counter when the token confirms the slot
+ * is ready, so claiming a slot and verifying its readiness form a single
+ * atomic handshake — a thread never owns a slot that is not ready, and a
+ * consumer can never claim a position the producer has not published.
  *
  * @par Thread Safety
  * - `push()`: Multiple threads can push concurrently.
@@ -53,11 +54,13 @@ namespace lf {
  * @brief Bounded MPMC lock-free FIFO queue (Vyukov algorithm).
  *
  * Backed by a fixed-capacity ring buffer allocated at construction time.
- * Each slot carries a `sequence` token; producers and consumers share
- * two counters (`head_` and `tail_`).  A thread claims a slot index via
- * a CAS on one of those counters — only the CAS winner gets to read or
- * write the slot.  The sequence token is then advanced to hand the slot
- * to the other side.
+ * Each slot carries a position-tagged `sequence` token; producers and
+ * consumers share two counters (`head_` for enqueue, `tail_` for dequeue).
+ * A thread checks the token for its position and only claims the slot via
+ * a CAS on the matching counter when the token says the slot is ready; it
+ * then advances the token to hand the slot to the other side. Because the
+ * readiness check and the claim are tied to the same absolute position,
+ * `tail_` can never advance past `head_`.
  *
  * @tparam T Value type stored in the queue (must be trivially copyable).
  *
@@ -140,8 +143,9 @@ class queue {
      */
     auto push(ptr&& _value) -> zpt::lf::queue<T>&;
     /**
-     * @brief Removes and returns the front element.
-     * @return Unique pointer owning the dequeued element, or nullptr if the queue is empty.
+     * @brief Removes and returns the front element (non-blocking).
+     * @return Unique pointer owning the dequeued element, or nullptr if the
+     *   queue is empty or has been shut down.
      */
     auto pop() -> ptr;
     /**
@@ -201,10 +205,14 @@ class queue {
     /**
      * @brief One cache-line-aligned slot in the ring buffer.
      *
-     * The `sequence` field is the ownership token.  Valid values are:
-     *   - `slot_index`        → slot is free (producers may write)
-     *   - `slot_index + C`    → slot is full (consumers may read)
-     *   where C is the queue capacity.
+     * The `sequence` field is a position-tagged ownership token (Vyukov).
+     * For an absolute position `pos` mapping to this slot:
+     *   - `pos`         → slot is free; a producer may claim it to enqueue at `pos`
+     *   - `pos + 1`     → slot is full; a consumer may claim it to dequeue at `pos`
+     *   - `pos + C`     → slot was freed by that dequeue, ready for the next
+     *                     lap's enqueue at `pos + C` (C = queue capacity)
+     * The token grows with the absolute position, so it distinguishes laps and
+     * a thread only ever claims a slot whose token matches its own position.
      */
     struct alignas(64) slot_t {
         zpt::padded_atomic<std::uint64_t> sequence{ 0 };
@@ -248,75 +256,68 @@ auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
 template<typename T>
 auto zpt::lf::queue<T>::push(ptr&& _value) -> zpt::lf::queue<T>& {
     zpt::this_thread::timer<float> _timer{ 0.01f };
+    std::uint64_t _pos = this->__head->load(std::memory_order_relaxed);
     for (;;) {
-        if (this->__shutdown->load()) { return (*this); }
+        if (this->__shutdown->load(std::memory_order_relaxed)) { return (*this); }
 
-        auto _head = this->__head->load(std::memory_order_relaxed);
+        auto& _cell = this->__slots[_pos & this->__mask];
+        auto _seq = _cell.sequence->load(std::memory_order_acquire);
+        auto _dif = static_cast<std::int64_t>(_seq) - static_cast<std::int64_t>(_pos);
 
-        // Claim a slot by advancing head_ via CAS.  Only the winner
-        // gets ownership of this slot index.
-        auto _new_head = _head + 1;
-        if (this->__head->compare_exchange_strong(_head, _new_head, std::memory_order_relaxed)) {
-            size_t _slot_idx = _head & this->__mask;
-
-            // Spin-wait until the slot is free (sequence == slot_index).
-            while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
-                   _slot_idx) {
-                _timer.sleep_for(0.1f);
-                if (this->__shutdown->load()) { return (*this); }
+        if (_dif == 0) {
+            // Slot is free for this position: claim it by advancing head_.
+            // The readiness check and the claim share `_pos`, so we never own
+            // a slot we have not verified.
+            if (this->__head->compare_exchange_weak(_pos, _pos + 1, std::memory_order_relaxed)) {
+                _cell.value = std::move(_value);
+                _cell.sequence->store(_pos + 1, std::memory_order_release);
+                this->__size->fetch_add(1, std::memory_order_relaxed);
+                return (*this);
             }
-            _timer.reset();
-
-            // Write the value and release the slot to consumers.
-            this->__slots[_slot_idx].value = std::move(_value);
-            this->__slots[_slot_idx].sequence->store(_slot_idx + this->__capacity,
-                                                     std::memory_order_release);
-
-            // Update the approximate size counter.
-            this->__size->fetch_add(1);
-            return (*this);
+            // CAS failed: _pos was reloaded; re-evaluate against the new position.
         }
-
-        // CAS failed — another producer claimed this slot first.
-        // _head was updated by CAS; loop and retry.
+        else if (_dif < 0) {
+            // Queue full: the slot still holds an item from the previous lap.
+            // Back off until a consumer frees it (or shutdown breaks us out).
+            _timer.sleep_for(0.1f);
+        }
+        else {
+            // Slot already advanced by another producer: our _pos is stale.
+            _pos = this->__head->load(std::memory_order_relaxed);
+        }
     }
 }
 
 template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
-    zpt::this_thread::timer<float> _timer{ 0.01f };
+    std::uint64_t _pos = this->__tail->load(std::memory_order_relaxed);
     for (;;) {
-        if (this->__shutdown->load()) { return nullptr; }
-        if (this->__tail->load() == this->__head->load()) { return nullptr; }
+        if (this->__shutdown->load(std::memory_order_relaxed)) { return nullptr; }
 
-        auto _tail = this->__tail->load(std::memory_order_relaxed);
+        auto& _cell = this->__slots[_pos & this->__mask];
+        auto _seq = _cell.sequence->load(std::memory_order_acquire);
+        auto _dif = static_cast<std::int64_t>(_seq) - static_cast<std::int64_t>(_pos + 1);
 
-        // Claim a slot by advancing tail_ via CAS.  Only the winner
-        // gets ownership of this slot index.
-        auto _new_tail = _tail + 1;
-        if (this->__tail->compare_exchange_strong(_tail, _new_tail, std::memory_order_relaxed)) {
-            size_t _slot_idx = _tail & this->__mask;
-
-            // Spin-wait until the slot is full (sequence == slot_index + capacity).
-            while (this->__slots[_slot_idx].sequence->load(std::memory_order_acquire) !=
-                   (_slot_idx + this->__capacity)) {
-                _timer.sleep_for(0.1f);
-                if (this->__shutdown->load()) { return nullptr; }
+        if (_dif == 0) {
+            // Slot is full for this position: claim it by advancing tail_.
+            // Readiness is verified for `_pos` before the CAS.
+            if (this->__tail->compare_exchange_weak(_pos, _pos + 1, std::memory_order_relaxed)) {
+                ptr _to_return;
+                _cell.value.swap(_to_return);
+                _cell.sequence->store(_pos + this->__mask + 1, std::memory_order_release);
+                this->__size->fetch_sub(1, std::memory_order_relaxed);
+                return _to_return;
             }
-            _timer.reset();
-
-            // Read the value and release the slot to producers.
-            ptr _to_return;
-            this->__slots[_slot_idx].value.swap(_to_return);
-            this->__slots[_slot_idx].sequence->store(_slot_idx, std::memory_order_release);
-
-            // Update the approximate size counter.
-            this->__size->fetch_sub(1);
-            return _to_return;
+            // CAS failed: _pos was reloaded; re-evaluate against the new position.
         }
-
-        // CAS failed — another consumer claimed this slot first.
-        // _tail was updated by CAS; loop and retry.
+        else if (_dif < 0) {
+            // Queue empty: nothing published at this position.
+            return nullptr;
+        }
+        else {
+            // Slot already advanced by another consumer: our _pos is stale.
+            _pos = this->__tail->load(std::memory_order_relaxed);
+        }
     }
 }
 
