@@ -1,0 +1,75 @@
+set(COMMON_OS_INCLUDE_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_library(zapata-common-os SHARED)
+add_dependencies(zapata-common-os
+  zapata-base
+  zapata-parser-json
+)
+target_sources(zapata-common-os
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ps.cpp
+  INTERFACE
+    ${COMMON_OS_INCLUDE_DIR}/zapata/os/ps.h
+    ${COMMON_OS_INCLUDE_DIR}/zapata/os.h
+)
+target_include_directories(zapata-common-os
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+    ${COMMON_OS_INCLUDE_DIR}
+  INTERFACE
+    ${COMMON_OS_INCLUDE_DIR}
+)
+target_link_libraries(zapata-common-os
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+)
+set_target_properties(zapata-common-os
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-common-os.so
+)
+
+include(GNUInstallDirs)
+install(TARGETS zapata-common-os
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY ${COMMON_OS_INCLUDE_DIR}/zapata
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+add_executable(zapata_example_common_os)
+add_dependencies(zapata_example_common_os
+  zapata-base
+  zapata-parser-json
+  zapata-common-os
+)
+target_sources(zapata_example_common_os
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/os.cpp
+)
+target_include_directories(zapata_example_common_os
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+    ${COMMON_OS_INCLUDE_DIR}
+)
+target_link_libraries(zapata_example_common_os
+  PRIVATE
+    zapata-base
+    zapata-parser-json
+    zapata-common-os
+)
+set_target_properties(zapata_example_common_os
+  PROPERTIES
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
+)
