@@ -1128,10 +1128,6 @@ auto zpt::basic_socketstream<Char>::is_open() -> bool {
 
 template<typename Char>
 auto zpt::basic_socketstream<Char>::ready() -> bool {
-    // fd_set sockset;
-    // FD_ZERO(&sockset);
-    // FD_SET(this->__buf.get_socket(), &sockset);
-    // return select(this->__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
     pollfd _p{ this->__buf.get_socket(), POLLIN, 0 };
     return ::poll(&_p, 1, -1) == 1 && (_p.revents & POLLIN);
 }

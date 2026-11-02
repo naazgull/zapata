@@ -39,9 +39,10 @@ The `action` class provides a fluent interface for building queries:
 ```cpp
 auto users = db->collection("users");
 
-// SELECT * FROM users WHERE age > 21 ORDER BY name LIMIT 10
+// SELECT name, email FROM users WHERE age > 21 ORDER BY name LIMIT 10
 auto results = users
     ->find({ "age", { "$gt", 21 } })
+    ->fields({ "name", "email" })
     ->sort("name")
     ->limit(10)
     ->execute();
@@ -49,8 +50,44 @@ auto results = users
 // Iterate results
 for (auto&& [_, __, row] : results->fetch()) {
     auto name = std::string(row("name"));
-    auto age = int(row("age"));
 }
+```
+
+## Pagination
+
+Pagination is driven by `filter_find` / `filter_remove`, which accept JSON params
+objects containing these special keys:
+
+| Key | Type | Effect |
+|-----|------|--------|
+| `page_size` | int | Maximum rows to return (`->limit(n)`) |
+| `page_start_index` | int | Rows to skip, 0-based (`->offset(n)`) |
+| `order_by` | string | Comma-separated sort spec; `-` prefix for descending (e.g. `"-created_at,name"`) |
+
+All other keys in the params object are treated as `col = value` WHERE conditions.
+
+```cpp
+// Server-side: extract params from the HTTP request
+auto _params = this->received()->parameters()->is_object()
+    ? this->received()->parameters()->clone()
+    : zpt::json::object();
+
+// filter_find applies page_size, page_start_index, and order_by automatically
+auto _result = zpt::storage::filter_find(_collection, _params) //
+    ->fields({ "name", "email", "created_at" }) //
+    ->execute()->fetch();
+
+this->to_send()->status(200).body() =
+    { "items", _result, "size", _collection->count() };
+
+// Echo page_size and page_start_index back so the client can track its position
+zpt::storage::reply_find(this->to_send()->body(), _params);
+```
+
+The response body will include the page metadata alongside the items:
+
+```json
+{ "items": [ ... ], "size": 142, "page_size": 20, "page_start_index": 40 }
 ```
 
 ## CRUD Operations

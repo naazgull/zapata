@@ -25,12 +25,16 @@ class list_handler : public zpt::events::process {
         auto _conn = zpt::make_connection<zpt::storage::sqlite::connection>(db_config);
         auto _session = _conn->session();
         auto _db = _session->database("zapata");
-        auto results = _db->collection("items")->find({})->execute();
-        zpt::json items_list = { json_array };
-        for (auto&& [_, __, doc] : results->fetch()) {
-            items_list << doc;
-        }
-        this->to_send()->status(200)->body() = items_list;
+        auto _collection = _db->collection("items");
+        auto _params = this->received()->parameters()->is_object()
+            ? this->received()->parameters()->clone()
+            : zpt::json::object();
+        auto _result = zpt::storage::filter_find(_collection, _params) //
+            ->fields({ "name", "price" }) //
+            ->execute()->fetch();
+        this->to_send()->status(200).body() =
+            { "items", _result, "size", _collection->count() };
+        zpt::storage::reply_find(this->to_send()->body(), _params);
         return zpt::events::finish;
     }
 };
@@ -241,6 +245,9 @@ zpt --config ../config.json
 ```bash
 # List all items
 curl http://localhost:8080/api/items
+
+# Paginated list: 10 items per page, starting at offset 20
+curl "http://localhost:8080/api/items?page_size=10&page_start_index=20&order_by=-price"
 
 # Read one item
 curl http://localhost:8080/api/items/1

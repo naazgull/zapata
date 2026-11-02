@@ -227,11 +227,69 @@ auto make_result(Args&... _args) -> zpt::storage::result;
 
 ## Helper Functions
 
+These helper functions bridge the gap between JSON query parameters (e.g. from an HTTP
+request) and the fluent `action` API. They are used by generated REST handlers and can be
+called directly in custom handlers.
+
+### `zpt::storage::filter_find`
+
 ```cpp
 auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
-auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+```
+
+Builds a `find` action from a JSON params object. Regular keys in `_params` become
+`col = value` conditions (AND-joined). Special keys are consumed by the function and are
+not included in the WHERE clause:
+
+| Key | Type | Effect |
+|-----|------|--------|
+| `page_size` | int | `->limit(n)` — maximum rows to return |
+| `page_start_index` | int | `->offset(n)` — rows to skip (0-based) |
+| `order_by` | string | Comma-separated sort spec: `"name"` or `"-created_at"` (`-` prefix = descending) |
+| `fields` | — | Skipped from WHERE clause; field selection is applied via `action::fields()` after the call |
+
+**Example** — REST handler with pagination and field projection:
+
+```cpp
+auto _params = this->received()->parameters()->is_object()
+    ? this->received()->parameters()->clone()
+    : zpt::json::object();
+
+auto _result = zpt::storage::filter_find(_collection, _params) //
+    ->fields({ "name", "email", "created_at" }) //
+    ->execute()->fetch();
+
+this->to_send()->status(200).body() =
+    { "items", _result, "size", _collection->count() };
+zpt::storage::reply_find(this->to_send()->body(), _params);
+```
+
+### `zpt::storage::filter_remove`
+
+```cpp
 auto filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 ```
+
+Builds a `remove` action. Accepts the same special keys as `filter_find`
+(`page_size`, `page_start_index`, `order_by`).
+
+### `zpt::storage::filter_modify`
+
+```cpp
+auto filter_modify(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+```
+
+Builds a `modify` action. Accepts regular criteria keys only; pagination keys are not applied.
+
+### `zpt::storage::reply_find`
+
+```cpp
+auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+```
+
+Echoes pagination state back into the response body. Appends `page_size` and
+`page_start_index` to `_reply` when they are present in `_params`. Call this after
+setting the response body so the client can track its position in the result set.
 
 ---
 
@@ -931,10 +989,24 @@ size_t page = 2;
 size_t page_size = 20;
 
 auto results = users->find({})
+    ->fields({ "name", "email", "created_at" })
     ->sort("created_at", false)  // Newest first
     ->offset((page - 1) * page_size)
     ->limit(page_size)
     ->execute();
+```
+
+When handling pagination from an HTTP query string, use `filter_find` to extract
+`page_size`, `page_start_index`, and `order_by` from the params object, then chain
+`->fields()` on the returned action:
+
+```cpp
+auto _params = this->received()->parameters();
+auto _result = zpt::storage::filter_find(_collection, _params) //
+    ->fields({ "name", "email" }) //
+    ->execute()->fetch();
+this->to_send()->status(200).body() = { "items", _result };
+zpt::storage::reply_find(this->to_send()->body(), _params);
 ```
 
 ### Batch Insert
