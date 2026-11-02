@@ -73,7 +73,7 @@ class ws_test_client_boot : public zpt::system_event {
                 _test_message = _transport->make_request();
                 _test_message //
                   ->performative(zpt::Post)
-                  .uri("ws:/ws/chat")
+                  .uri(std::format("ws+uuid://{}/ws/chat", _stream_id("local_id")->string()))
                   .body() = { "message", "Hello there again" };
                 _context = zpt::make_call(zpt::REST_RESOLVER(), _test_message);
 

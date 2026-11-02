@@ -732,7 +732,11 @@ auto zpt::events::call<T>::resolve_uri() -> void {
     }
 
     bool _is_self{ false };
-    if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
+    auto const& _options = _uri("scheme_options");
+    if (_options->is_array() && _options->size() != 0 && _options(0) == "uuid") {
+        _uri["is_stream"] = true;
+    }
+    else if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
         auto _found = this->__resolver->search(
           std::format("/{}{}",
                       zpt::ontology::to_str(this->__to_send->performative()),
@@ -804,20 +808,34 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
     }
     ++this->__tries;
 
-    auto _host = _uri("domain")->string();
-    auto _port = _uri("port")->integer();
     zpt::stream _stream{ nullptr };
-    try {
-        _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
-        if (_stream == nullptr) { return zpt::events::retrigger; }
+    if (_uri("is_stream") == true) {
+        try {
+            _stream = this->__polling->mute(zpt::uuid{ _uri("domain")->string() });
+            if (_stream == nullptr) { return zpt::events::retrigger; }
+        }
+        catch (zpt::NoSuchElementException const& _e) {
+            auto _reply = zpt::make_message<zpt::json_message>(this->__to_send, true);
+            _reply->status(503);
+            this->__context->reply(_reply);
+            return zpt::events::abort;
+        }
     }
-    catch (zpt::NoSuchElementException const& _e) {
-        _stream =
-          zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
-        this
-          ->__polling //
-          ->listen_on(_stream)
-          .mute(_stream);
+    else {
+        auto _host = _uri("domain")->string();
+        auto _port = _uri("port")->integer();
+        try {
+            _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
+            if (_stream == nullptr) { return zpt::events::retrigger; }
+        }
+        catch (zpt::NoSuchElementException const& _e) {
+            _stream =
+              zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
+            this
+              ->__polling //
+              ->listen_on(_stream)
+              .mute(_stream);
+        }
     }
 
     try {
