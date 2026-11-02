@@ -55,15 +55,16 @@ class ws_test_client_boot : public zpt::system_event {
             }
 
             if (_context->is_replied()) {
-                expect(_context->reply()->body()("stream")->is_object(), "No stream identifier");
+                auto _stream_id = _context->reply()->body()("stream");
+                expect(_stream_id->is_object(), "No stream identifier");
                 auto _transport = zpt::TRANSPORT_LAYER().get("ws");
-                auto _stream = _polling->mute(
-                  zpt::uuid{ _context->reply()->body()("stream")("local_id")->string() });
+                auto _stream = _polling->mute(zpt::uuid{ _stream_id("local_id")->string() });
                 if (_stream != nullptr) {
                     _test_message = _transport->make_request();
                     _test_message //
                       ->performative(zpt::Post)
                       .uri("/ws/chat")
+                      .header("X-Reply", "discard")
                       .body() = { "message", "Hello there" };
                     _transport->send(_stream, _test_message);
                     _polling->unmute(_stream);
@@ -74,7 +75,16 @@ class ws_test_client_boot : public zpt::system_event {
                   ->performative(zpt::Post)
                   .uri("ws:/ws/chat")
                   .body() = { "message", "Hello there again" };
-                zpt::make_call(zpt::REST_RESOLVER(), _test_message);
+                _context = zpt::make_call(zpt::REST_RESOLVER(), _test_message);
+
+                while (!_polling->is_in_shutdown() && !_context->is_replied()) {
+                    std::this_thread::yield();
+                }
+
+                auto _reply = _context->reply()->body();
+                expect(_reply("recipient") == _stream_id("remote_id"),
+                       "Stream remote ID doesn't match");
+                zlog(_reply("echo"), zpt::info);
             }
         }
         return zpt::events::finish;

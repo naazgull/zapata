@@ -50,6 +50,9 @@
 #include <sys/types.h>
 #include <zapata/json.h>
 
+#define uid_null static_cast<uid_t>(-1)
+#define gid_null static_cast<gid_t>(-1)
+
 namespace zpt {
 
 /**
@@ -69,6 +72,6 @@ namespace zpt {
  *         The array is empty when no process matches.
  * @throws std::filesystem::filesystem_error If `/proc` cannot be opened for iteration.
  */
-auto ps(uid_t _uid = static_cast<uid_t>(-1), gid_t _gid = static_cast<gid_t>(-1)) -> zpt::json;
+auto ps(uid_t _uid = uid_null, gid_t _gid = gid_null) -> zpt::json;
 
 } // namespace zpt

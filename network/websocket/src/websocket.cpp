@@ -167,8 +167,9 @@ auto zpt::net::transport::websocket::upgraded_from() const -> std::string const&
 }
 
 auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) const -> bool {
-    static constexpr std::uint64_t _capabilities =
-      zpt::transport_capability::PERSISTENT | zpt::transport_capability::UPGRADED;
+    static constexpr std::uint64_t _capabilities = zpt::transport_capability::MULTIPLEXED |
+                                                   zpt::transport_capability::PERSISTENT |
+                                                   zpt::transport_capability::UPGRADED;
     return (_capabilities & _capability) == _capability;
 }
 
