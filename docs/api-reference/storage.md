@@ -248,9 +248,63 @@ not included in the WHERE clause:
 | `order_by` | string | Comma-separated sort spec: `"name"` or `"-created_at"` (`-` prefix = descending) |
 | `fields` | — | Skipped from WHERE clause; field selection is applied via `action::fields()` after the call |
 
-**Example** — REST handler with pagination and field projection:
+#### Per-Column Functional Filters
+
+A column value that is a string of the form `{. expr .}` is parsed as a functional expression
+rather than treated as a plain equality. The substring between the opening `{.` and the
+closing `.}` is parsed by `zpt::functional::parse`; the column name is automatically
+prepended as the first argument to the function.
+
+**Grammar:**
+
+```
+expression : token [ "(" [ argument ("," argument)* ] ")" ]
+argument   : expression | STRING | NUMBER
+token      : IDENTIFIER
+STRING     : '"' [^"']* '"'
+NUMBER     : [0-9]+ ["." [0-9]+]?
+```
+
+Nested calls are supported to arbitrary depth: `gt(between(age, 21, 30))`.
+
+**Examples:**
+
+| Params key | Value | Generated SQL |
+|------------|-------|---------------|
+| `age` | `{.gt(21).}` | `(age > 21)` |
+| `age` | `{.between(21, 30).}` | `(age > 21 and age < 30)` |
+| `name` | `{.like("%john%", "i").}` | `(lower(name) like lower('%john%'))` |
+| `status` | `{.in("active", "pending").}` | `(status in ('active', 'pending'))` |
+| `deleted` | `{.is(null).}` | `(deleted is null)` |
+| `status` | `{.not(in("active", "pending")).}` | `(not(status in ('active', 'pending')))` |
+
+**Available functions:**
+
+| Function | Arguments (after column) | Generated SQL |
+|----------|--------------------------|---------------|
+| `lower` | `value` | `(lower(col) = value)` |
+| `upper` | `value` | `(upper(col) = value)` |
+| `boolean` | `value` | `(col = cast(value as boolean))` |
+| `date` | `value` | `(col = cast(value as datetime(3)))` |
+| `integer` | `value` | `(col = cast(value as integer))` |
+| `float` / `double` | `value` | `(col = cast(value as double))` |
+| `string` | `value` | `(col = cast(value as char))` |
+| `ne` | `value` | `(col <> value)` |
+| `gt` | `value` | `(col > value)` |
+| `gte` | `value` | `(col >= value)` |
+| `lt` | `value` | `(col < value)` |
+| `lte` | `value` | `(col <= value)` |
+| `between` | `low, high` | `(col > low and col < high)` |
+| `like` | `pattern` | `(col like pattern)` |
+| `like` | `pattern, "i"` | `(lower(col) like lower(pattern))` |
+| `in` | `v1, v2, …` | `(col in (v1, v2, …))` |
+| `is` | `value` | `(col is value)` |
+| `not` | `nested_func(…)` | `(not(nested_func(col, …)))` |
+
+**Example** — REST handler with pagination, field projection, and a functional filter:
 
 ```cpp
+// Query: GET /api/users?age={.gte(21).}&page_size=20&page_start_index=0&order_by=-created_at
 auto _params = this->received()->parameters()->is_object()
     ? this->received()->parameters()->clone()
     : zpt::json::object();
