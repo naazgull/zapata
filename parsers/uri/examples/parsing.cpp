@@ -114,7 +114,8 @@ int main() {
     // Placeholder in query param
     check_roundtrip("http://localhost:8080/users?name={.lower(u).}", "placeholder in query param");
 
-    check_roundtrip("ws+uuid://576d4abf-a552-493d-9eef-a963793459de/users?name={.lower(u).}", "placeholder in query param");
+    check_roundtrip("ws+uuid://576d4abf-a552-493d-9eef-a963793459de/users?name={.lower(u).}",
+                    "placeholder in query param");
 
     std::cout << "all tests passed" << std::endl;
     return 0;

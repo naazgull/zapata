@@ -1495,17 +1495,28 @@ auto zpt::gen::rest::unit::generate_send_redirect_step(zpt::ast::basic_code_bloc
       .add<zpt::ast::cpp_instruction>(
         std::format("auto _redirect_to{{ \"{}\" }}", _redirect->string()))
       .add<zpt::ast::cpp_instruction>(
-        "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()")
-      .add<zpt::ast::cpp_instruction>(std::format(
-        "_request //\n->performative(_performative).uri(std::format(\"{{}}{{}}{{}}\", _prefix, "
-        "_redirect_to, zpt::uri::params::to_string(this->received()->uri(){})))",
-        _redirect->string().find("?") != std::string::npos ? ", true" : ""));
-    auto _performative_if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
-      "if (_performative != zpt::Get && _performative != zpt::Delete)");
-    _performative_if_block->add<zpt::ast::cpp_instruction>("_request->body() = _received");
+        "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()");
+    if (_def("resource")->string() == "collection" || _def("resource")->string() == "document" ||
+        _def("resource")->string() == "store") {
+        _try_body->add<zpt::ast::cpp_instruction>(std::format(
+          "_request //\n->performative(_performative).uri(std::format(\"{{}}{{}}{{}}\", _prefix, "
+          "_redirect_to, zpt::uri::params::to_string(this->received()->uri(){})))",
+          _redirect->string().find("?") != std::string::npos ? ", true" : ""));
+        auto _performative_if_block = zpt::make_code_block<zpt::ast::cpp_code_block>(
+          "if (_performative != zpt::Get && _performative != zpt::Delete)");
+        _performative_if_block->add<zpt::ast::cpp_instruction>("_request->body() = _received");
+        _try_body->add(_performative_if_block);
+    }
+    else {
+        _try_body->add<zpt::ast::cpp_instruction>(std::format(
+          "_request //\n->performative(_performative).uri(std::format(\"{{}}{{}}{{}}\", _prefix, "
+          "_redirect_to, zpt::uri::params::to_string(this->received()->uri(){}))).body() = "
+          "_received",
+          _redirect->string().find("?") != std::string::npos ? ", true" : ""));
+    }
+
     _try_body //
-      ->add(_performative_if_block)
-      .add<zpt::ast::cpp_instruction>(
+      ->add<zpt::ast::cpp_instruction>(
         "this->context(zpt::make_call(zpt::REST_RESOLVER(), _request))")
       .add<zpt::ast::cpp_instruction>("return zpt::events::retrigger");
     _block->add(_try_body);
