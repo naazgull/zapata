@@ -20,8 +20,6 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/os/ps.h>
-
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -31,6 +29,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <zapata/os/ps.h>
 
 namespace {
 
@@ -53,10 +52,9 @@ auto parse_ids(std::string const& _in) -> std::vector<long long> {
 
 /** @brief True when `_name` is a `/proc` numeric entry, i.e. a process id. */
 auto is_pid(std::string const& _name) -> bool {
-    return !_name.empty() &&
-           std::all_of(_name.begin(),
-                       _name.end(),
-                       [](char _c) { return std::isdigit(static_cast<unsigned char>(_c)) != 0; });
+    return !_name.empty() && std::all_of(_name.begin(), _name.end(), [](char _c) {
+        return std::isdigit(static_cast<unsigned char>(_c)) != 0;
+    });
 }
 
 /** @brief Reads `/proc/<pid>/cmdline`, joining the NUL-separated argv with spaces. */
@@ -127,11 +125,9 @@ auto append_process(zpt::json& _processes,
     if (_uid != static_cast<uid_t>(-1) && _real_uid != _uid) { return; }
     if (_gid != static_cast<gid_t>(-1) && _real_gid != _gid) { return; }
 
-    _processes << zpt::json{ "pid",     _pid,        "ppid",   _ppid,
-                             "name",    _name,       "state",  _state,
-                             "uid",     _uids[0],    "euid",   _uids[1],
-                             "gid",     _gids[0],    "egid",   _gids[1],
-                             "cmdline", read_cmdline(_dir) };
+    _processes << zpt::json{ "pid",   _pid,     "ppid", _ppid,    "name",    _name,
+                             "state", _state,   "uid",  _uids[0], "euid",    _uids[1],
+                             "gid",   _gids[0], "egid", _gids[1], "cmdline", read_cmdline(_dir) };
 }
 
 } // namespace

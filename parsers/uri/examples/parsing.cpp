@@ -38,6 +38,7 @@ auto check_roundtrip(std::string const& _input, std::string const& _label) -> vo
     auto _parsed = zpt::uri::parse(_input);
     auto _repr = zpt::uri::to_string(_parsed);
     auto _reparsed = zpt::uri::parse(_repr);
+    std::cout << " - " << _input << " -> " << _parsed << std::endl;
     check(zpt::uri::to_string(_reparsed) == _repr, "roundtrip: " + _label);
 }
 
@@ -112,6 +113,9 @@ int main() {
 
     // Placeholder in query param
     check_roundtrip("http://localhost:8080/users?name={.lower(u).}", "placeholder in query param");
+
+    check_roundtrip("ws+uuid://576d4abf-a552-493d-9eef-a963793459de/users?name={.lower(u).}",
+                    "placeholder in query param");
 
     std::cout << "all tests passed" << std::endl;
     return 0;

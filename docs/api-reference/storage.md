@@ -227,11 +227,123 @@ auto make_result(Args&... _args) -> zpt::storage::result;
 
 ## Helper Functions
 
+These helper functions bridge the gap between JSON query parameters (e.g. from an HTTP
+request) and the fluent `action` API. They are used by generated REST handlers and can be
+called directly in custom handlers.
+
+### `zpt::storage::filter_find`
+
 ```cpp
 auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
-auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+```
+
+Builds a `find` action from a JSON params object. Regular keys in `_params` become
+`col = value` conditions (AND-joined). Special keys are consumed by the function and are
+not included in the WHERE clause:
+
+| Key | Type | Effect |
+|-----|------|--------|
+| `page_size` | int | `->limit(n)` — maximum rows to return |
+| `page_start_index` | int | `->offset(n)` — rows to skip (0-based) |
+| `order_by` | string | Comma-separated sort spec: `"name"` or `"-created_at"` (`-` prefix = descending) |
+| `fields` | — | Skipped from WHERE clause; field selection is applied via `action::fields()` after the call |
+
+#### Per-Column Functional Filters
+
+A column value that is a string of the form `{. expr .}` is parsed as a functional expression
+rather than treated as a plain equality. The substring between the opening `{.` and the
+closing `.}` is parsed by `zpt::functional::parse`; the column name is automatically
+prepended as the first argument to the function.
+
+**Grammar:**
+
+```
+expression : token [ "(" [ argument ("," argument)* ] ")" ]
+argument   : expression | STRING | NUMBER
+token      : IDENTIFIER
+STRING     : '"' [^"']* '"'
+NUMBER     : [0-9]+ ["." [0-9]+]?
+```
+
+Nested calls are supported to arbitrary depth: `gt(between(age, 21, 30))`.
+
+**Examples:**
+
+| Params key | Value | Generated SQL |
+|------------|-------|---------------|
+| `age` | `{.gt(21).}` | `(age > 21)` |
+| `age` | `{.between(21, 30).}` | `(age > 21 and age < 30)` |
+| `name` | `{.like("%john%", "i").}` | `(lower(name) like lower('%john%'))` |
+| `status` | `{.in("active", "pending").}` | `(status in ('active', 'pending'))` |
+| `deleted` | `{.is(null).}` | `(deleted is null)` |
+| `status` | `{.not(in("active", "pending")).}` | `(not(status in ('active', 'pending')))` |
+
+**Available functions:**
+
+| Function | Arguments (after column) | Generated SQL |
+|----------|--------------------------|---------------|
+| `lower` | `value` | `(lower(col) = value)` |
+| `upper` | `value` | `(upper(col) = value)` |
+| `boolean` | `value` | `(col = cast(value as boolean))` |
+| `date` | `value` | `(col = cast(value as datetime(3)))` |
+| `integer` | `value` | `(col = cast(value as integer))` |
+| `float` / `double` | `value` | `(col = cast(value as double))` |
+| `string` | `value` | `(col = cast(value as char))` |
+| `ne` | `value` | `(col <> value)` |
+| `gt` | `value` | `(col > value)` |
+| `gte` | `value` | `(col >= value)` |
+| `lt` | `value` | `(col < value)` |
+| `lte` | `value` | `(col <= value)` |
+| `between` | `low, high` | `(col > low and col < high)` |
+| `like` | `pattern` | `(col like pattern)` |
+| `like` | `pattern, "i"` | `(lower(col) like lower(pattern))` |
+| `in` | `v1, v2, …` | `(col in (v1, v2, …))` |
+| `is` | `value` | `(col is value)` |
+| `not` | `nested_func(…)` | `(not(nested_func(col, …)))` |
+
+**Example** — REST handler with pagination, field projection, and a functional filter:
+
+```cpp
+// Query: GET /api/users?age={.gte(21).}&page_size=20&page_start_index=0&order_by=-created_at
+auto _params = this->received()->parameters()->is_object()
+    ? this->received()->parameters()->clone()
+    : zpt::json::object();
+
+auto _result = zpt::storage::filter_find(_collection, _params) //
+    ->fields({ "name", "email", "created_at" }) //
+    ->execute()->fetch();
+
+this->to_send()->status(200).body() =
+    { "items", _result, "size", _collection->count() };
+zpt::storage::reply_find(this->to_send()->body(), _params);
+```
+
+### `zpt::storage::filter_remove`
+
+```cpp
 auto filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 ```
+
+Builds a `remove` action. Accepts the same special keys as `filter_find`
+(`page_size`, `page_start_index`, `order_by`).
+
+### `zpt::storage::filter_modify`
+
+```cpp
+auto filter_modify(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+```
+
+Builds a `modify` action. Accepts regular criteria keys only; pagination keys are not applied.
+
+### `zpt::storage::reply_find`
+
+```cpp
+auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+```
+
+Echoes pagination state back into the response body. Appends `page_size` and
+`page_start_index` to `_reply` when they are present in `_params`. Call this after
+setting the response body so the client can track its position in the result set.
 
 ---
 
@@ -931,10 +1043,24 @@ size_t page = 2;
 size_t page_size = 20;
 
 auto results = users->find({})
+    ->fields({ "name", "email", "created_at" })
     ->sort("created_at", false)  // Newest first
     ->offset((page - 1) * page_size)
     ->limit(page_size)
     ->execute();
+```
+
+When handling pagination from an HTTP query string, use `filter_find` to extract
+`page_size`, `page_start_index`, and `order_by` from the params object, then chain
+`->fields()` on the returned action:
+
+```cpp
+auto _params = this->received()->parameters();
+auto _result = zpt::storage::filter_find(_collection, _params) //
+    ->fields({ "name", "email" }) //
+    ->execute()->fetch();
+this->to_send()->status(200).body() = { "items", _result };
+zpt::storage::reply_find(this->to_send()->body(), _params);
 ```
 
 ### Batch Insert
