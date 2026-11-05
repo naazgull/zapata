@@ -184,9 +184,9 @@ class queue {
         _out << "queue(" << std::hex << &_in << "):" << std::dec << "\n  #items ->\n     [ ";
         try {
             size_t _count{ 0 };
-            auto _lower = _in.__head->load();
-            auto _upper = _in.__tail->load();
-            for (size_t _idx = _lower; _idx < _upper; ++_idx, ++_count) {
+            auto _upper = _in.__head->load();
+            auto _lower = _in.__tail->load();
+            for (size_t _idx = _lower; _idx != _upper; ++_idx, ++_count) {
                 size_t _pos = _idx % _in.__capacity;
                 if (_in.__slots[_pos].value != nullptr) {
                     _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", "))
@@ -231,6 +231,8 @@ class queue {
     zpt::padded_atomic<std::uint64_t> __size{ 0 };
     /** @brief Stop all spinning and exit. */
     zpt::padded_atomic<bool> __shutdown{ false };
+    /** @brief Flags that the `pop` is being invoked by `clear`. */
+    bool __clear{ false };
     /** @brief Bit mask for index wrapping: `__capacity - 1`. */
     size_t __mask{ 0 };
 };
@@ -292,7 +294,7 @@ template<typename T>
 auto zpt::lf::queue<T>::pop() -> ptr {
     std::uint64_t _pos = this->__tail->load(std::memory_order_relaxed);
     for (;;) {
-        if (this->__shutdown->load(std::memory_order_relaxed)) { return nullptr; }
+        if (this->__shutdown->load(std::memory_order_relaxed) && !this->__clear) { return nullptr; }
 
         auto& _cell = this->__slots[_pos & this->__mask];
         auto _seq = _cell.sequence->load(std::memory_order_acquire);
@@ -333,7 +335,9 @@ auto zpt::lf::queue<T>::size() const -> size_t {
 
 template<typename T>
 auto zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
+    this->__clear = true;
     while (this->pop() != nullptr);
+    this->__clear = false;
     return (*this);
 }
 
