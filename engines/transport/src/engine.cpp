@@ -52,7 +52,8 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
                         .get(_stream->transport());
 
     if (_polling->is_in_shutdown()) { return nullptr; }
-    if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+    if (!_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+        !_transport->has_capability(zpt::transport_capability::MULTIPLEXED)) {
         zlog(_e.what(), zpt::error);
         return nullptr;
     }
@@ -198,7 +199,8 @@ auto zpt::events::receive::operator()(zpt::events::dispatcher::ptr _dispatcher)
               });
 
             if (this->__events.size() == 0) {
-                if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) &&
+                if ((_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+                     _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) &&
                     _received->performative() != zpt::Reply) {
                     auto _to_send = _transport->make_reply(_received);
                     _to_send->status(404);

@@ -80,7 +80,8 @@ static auto send_request(term_t _request_pl /*+*/, term_t _reply_pl /*-*/) -> fo
 
     if (_request_js("body")->ok()) { _request->body() = _request_js("body"); }
 
-    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+        _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) {
         static constexpr long long _timeout{ 20 };
         auto _start = std::chrono::duration_cast<std::chrono::seconds>(
                         std::chrono::steady_clock::now().time_since_epoch())
