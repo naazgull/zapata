@@ -45,7 +45,8 @@ auto zpt::lua::bindings::send_request(lua_State* _state) -> int {
 
     if (_args("body")->ok()) { _request->body() = _args("body"); }
 
-    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS)) {
+    if (_transport->has_capability(zpt::transport_capability::SYNCHRONOUS) ||
+        _transport->has_capability(zpt::transport_capability::MULTIPLEXED)) {
         auto _context = zpt::make_call(zpt::REST_RESOLVER(), _request);
         static constexpr long long _timeout{ 20 };
         auto _start = std::chrono::duration_cast<std::chrono::seconds>(
