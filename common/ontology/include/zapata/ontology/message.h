@@ -57,6 +57,9 @@ namespace zpt {
  */
 class basic_message {
   public:
+    /** @brief Converts this message to zpt::json.
+     * @return A zpt::json instance with the representation of the message. */
+    virtual operator zpt::json() = 0;
     /** @brief Retrieves a clone of this message.
      * @return Shared pointer to cloned message. */
     virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
@@ -254,6 +257,9 @@ class json_message : public basic_message {
      */
     virtual ~json_message() = default;
 
+    /** @brief Converts this message to zpt::json.
+     * @return A zpt::json instance with the representation of the message. */
+    virtual operator zpt::json() override;
     /**
      * @brief Retrieves a clone of this message.
      * @return Cloned message.

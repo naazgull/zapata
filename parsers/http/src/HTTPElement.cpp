@@ -26,6 +26,8 @@
 #include <zapata/uri/uri.h>
 #include <zapata/uuid.h>
 
+zpt::http::basic_message::operator zpt::json() { return this->__underlying->clone(); }
+
 auto zpt::http::basic_message::performative() const -> zpt::performative {
     return zpt::ontology::from_str(this->__underlying("performative")->string());
 }
