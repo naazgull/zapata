@@ -27,6 +27,7 @@
 #include <string>
 #include <unistd.h>
 #include <zapata/json/json.h>
+#include <zapata/net/manip.h>
 #include <zapata/uri/URIParser.h>
 #include <zapata/uri/uri.h>
 
@@ -156,6 +157,15 @@ auto zpt::uri::address::to_string(zpt::json const& _uri) -> std::string {
     }
     else { _oss << zpt::join(_uri, ":") << std::flush; }
     return _oss.str();
+}
+
+auto zpt::uri::address::resolve(std::string const& _address) -> zpt::json {
+    auto _resolved = zpt::net::resolve_address(_address);
+    zpt::json _result{ "ipv4", zpt::json::array(), "ipv6", zpt::json::array() };
+    for (auto&& [_type, _ips] : _resolved) {
+        for (auto& _ip : _ips) { _result[_type] << _ip; }
+    }
+    return _result;
 }
 
 auto zpt::uri::params::to_string(zpt::json const& _uri, bool _not_first) -> std::string {

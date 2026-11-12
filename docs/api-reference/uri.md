@@ -284,6 +284,20 @@ std::string addr = zpt::uri::address::to_string(uri);
 // "example.com:8080"
 ```
 
+#### `resolve`
+
+Resolves a domain name (or IP literal) to IP addresses via `zpt::net::resolve_address`, returning a JSON object with `"ipv4"` and `"ipv6"` arrays (both keys are always present, empty when the family has no results).
+
+```cpp
+auto resolve(std::string const& _address) -> zpt::json;
+```
+
+**Example:**
+```cpp
+zpt::json addrs = zpt::uri::address::resolve("example.com");
+// {"ipv4": ["93.184.216.34", ...], "ipv6": [...] }
+```
+
 ---
 
 ## Namespace: `zpt::uri::params`

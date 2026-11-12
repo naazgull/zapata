@@ -105,6 +105,35 @@ auto zpt::net::get_available_port(std::string const& _protocol, std::uint32_t _s
     return _result;
 }
 
+auto zpt::net::resolve_address(std::string const& _domain) -> zpt::addresses_t {
+    addrinfo _hints{};
+    _hints.ai_family = AF_UNSPEC; // IPv4 and IPv6
+    _hints.ai_socktype = SOCK_STREAM;
+
+    addrinfo* _results = nullptr;
+    int _err = getaddrinfo(_domain.c_str(), nullptr, &_hints, &_results);
+    expect(_err == 0, "getaddrinfo error: " << gai_strerror(_err));
+
+    zpt::addresses_t _return;
+    for (addrinfo* _r = _results; _r != nullptr; _r = _r->ai_next) {
+        if (_r->ai_family == AF_INET) {
+            char _ip[INET_ADDRSTRLEN] = { 0 };
+            auto* _addr = reinterpret_cast<sockaddr_in*>(_r->ai_addr);
+            inet_ntop(AF_INET, &_addr->sin_addr, _ip, sizeof(_ip));
+            _return["ipv4"].push_back(std::string{ const_cast<char const*>(_ip) });
+        }
+        else if (_r->ai_family == AF_INET6) {
+            char _ip[INET6_ADDRSTRLEN] = { 0 };
+            auto* _addr = reinterpret_cast<sockaddr_in6*>(_r->ai_addr);
+            inet_ntop(AF_INET6, &_addr->sin6_addr, _ip, sizeof(_ip));
+            _return["ipv6"].push_back(std::string{ const_cast<char const*>(_ip) });
+        }
+    }
+
+    freeaddrinfo(_results);
+    return _return;
+}
+
 namespace {
 auto split(std::string const& _to_split, std::string const& _separator)
   -> std::vector<std::string> {

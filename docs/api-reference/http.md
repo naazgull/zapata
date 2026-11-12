@@ -258,15 +258,6 @@ auto retrieve(zpt::message _to_send) -> zpt::message;
 ```
 Sends an HTTP request message and returns the reply. Opens a TCP socket, writes the request, and reads the response. Supports both HTTP and HTTPS based on the message URI scheme.
 
-### `zpt::http::resolve`
-
-**Header:** `<zapata/http/retrieve.h>`
-
-```cpp
-auto resolve(std::string const& _domain) -> zpt::json;
-```
-Performs a DNS lookup and returns IPv4 and IPv6 addresses found. Returns a JSON object with `"ipv4"` and `"ipv6"` arrays.
-
 ---
 
 ## User-Defined Literals
