@@ -72,7 +72,7 @@ Send an HTTP request and receive the response:
 ```cpp
 #include <zapata/http/retrieve.h>
 
-auto request = zpt::allocate_message<zpt::http::basic_request>();
+auto request = zpt::make_message<zpt::http::basic_request>();
 request->performative(zpt::Get).uri("https://api.example.com/data");
 
 auto reply = zpt::http::retrieve(request);

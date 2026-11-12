@@ -372,7 +372,7 @@ class json_message : public basic_message {
 };
 
 /**
- * @brief Creates a message using standard allocator.
+ * @brief Creates a message of the given type.
  * @tparam T Message type (e.g., json_message, http::basic_request).
  * @tparam Args Constructor argument types.
  * @param _args Arguments forwarded to T's constructor.
@@ -380,17 +380,6 @@ class json_message : public basic_message {
  */
 template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
-
-/**
- * @brief Creates a message using the memory pool allocator.
- * @tparam T Message type.
- * @tparam Args Constructor argument types.
- * @param _args Arguments forwarded to T's constructor.
- * @return Shared pointer to the message.
- */
-template<typename T, typename... Args>
-auto allocate_message(Args... _args) -> zpt::message;
-
 /**
  * @brief Casts a message to a specific derived type.
  * @tparam T Target message type.
@@ -425,10 +414,5 @@ auto zpt::basic_message::copy() const -> std::shared_ptr<basic_message> {
 
 template<typename T, typename... Args>
 auto zpt::make_message(Args... _args) -> zpt::message {
-    return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
-}
-
-template<typename T, typename... Args>
-auto zpt::allocate_message(Args... _args) -> zpt::message {
     return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
 }

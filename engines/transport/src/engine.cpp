@@ -58,7 +58,7 @@ auto report_error(T const& _e, zpt::stream _stream, zpt::polling::ptr _polling) 
         return nullptr;
     }
 
-    auto _reply = _transport->make_reply(false);
+    auto _reply = _transport->make_reply();
     auto _body = ::get_error_body(_e);
     _reply //
       ->status(_body("error")->integer())

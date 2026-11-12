@@ -59,9 +59,7 @@ class test_redirect : public zpt::events::process {
             auto _config = zpt::GLOBAL_CONFIG();
             auto _prefix =
               _config("rest")("prefix")->ok() ? _config("rest")("prefix")->string() : "";
-            auto _test_message = zpt::TRANSPORT_LAYER() //
-                                   .get("tcp")
-                                   ->make_request();
+            auto _test_message = zpt::make_request("tcp");
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
@@ -101,18 +99,14 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
       ->add<test_plugin_collection>(std::format("{}/test_plugin", _prefix))
       .add<test_redirect>(std::format("{}/test_redirect", _prefix));
 
-    auto _test_message = zpt::TRANSPORT_LAYER() //
-                           .get("tcp")
-                           ->make_request();
+    auto _test_message = zpt::make_request("tcp");
     _test_message //
       ->performative(zpt::Post)
       .uri(std::format("{}/test_plugin", _prefix))
       .body() = { "from", "self", "date", zpt::json::date(), "id", zpt::uuid{}.to_string() };
     zpt::make_call<test_client_service>(zpt::REST_RESOLVER(), _test_message);
 
-    _test_message = zpt::TRANSPORT_LAYER() //
-                      .get("tcp")
-                      ->make_request();
+    _test_message = zpt::make_request("tcp");
     _test_message //
       ->performative(zpt::Post)
       .uri(std::format("{}/test_redirect", _prefix))

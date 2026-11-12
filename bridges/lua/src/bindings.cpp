@@ -22,9 +22,7 @@ auto zpt::lua::bindings::make_request(lua_State* _state) -> int {
     auto& _bridge = zpt::LUA_BRIDGE().thread_instance();
     auto _args = _bridge.object_to_json(_state);
     expect(_args->is_string(), "1st parameter of `zpt.make_request` isn't a string");
-    auto _request = zpt::TRANSPORT_LAYER() //
-                      .get(_args->string())
-                      ->make_request();
+    auto _request = zpt::make_request(_args->string());
     _bridge.to_object({ "protocol", _args, "headers", _request->headers(), "uri", _request->uri() },
                       _state);
     return 1;

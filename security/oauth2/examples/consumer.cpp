@@ -68,7 +68,7 @@ auto oauth2_url(std::string const& _key) -> std::string {
 
 /** @brief Build a POST request to _url with a JSON body. */
 auto make_request(std::string const& _url, zpt::json const& _body) -> zpt::message {
-    auto _msg = zpt::TRANSPORT_LAYER().get("http")->make_request();
+    auto _msg = zpt::make_request("http");
     _msg //
       ->performative(zpt::Post)
       .uri(_url)

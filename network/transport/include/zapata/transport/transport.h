@@ -103,9 +103,8 @@ class basic_transport {
      * @return Shared pointer to the new request message. */
     virtual auto make_request() const -> zpt::message = 0;
     /** @brief Creates a new reply message for this transport.
-     * @param _with_allocator If true, uses the memory pool allocator.
      * @return Shared pointer to the new reply message. */
-    virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
+    virtual auto make_reply() const -> zpt::message = 0;
     /** @brief Creates a reply message in response to a request.
      * @param _request The request message to reply to.
      * @return Shared pointer to the new reply message. */
@@ -294,7 +293,6 @@ auto default_transport() -> std::string const&;
  * @return Reference to the global network layer.
  */
 auto TRANSPORT_LAYER(zpt::json _config = nullptr) -> zpt::network::layer&;
-
 /**
  * @brief Creates a transport instance using the memory pool allocator.
  * @tparam T Transport type to create.
@@ -304,6 +302,19 @@ auto TRANSPORT_LAYER(zpt::json _config = nullptr) -> zpt::network::layer&;
  */
 template<typename T, typename... Args>
 auto make_transport(Args... _args) -> zpt::transport;
+/**
+ * @brief Creates a request message for the given protocol.
+ * @param _transport The identifier of the transport to use.
+ * @return Shared pointer to the message.
+ */
+auto make_request(std::string const& _transport) -> zpt::message;
+/**
+ * @brief Creates a reply message for the given protocol.
+ * @param _transport The identifier of the transport to use.
+ * @param _request Optionally, the request the reply is for, to initialise.
+ * @return Shared pointer to the message.
+ */
+auto make_reply(std::string const& _transport, zpt::message _request = nullptr) -> zpt::message;
 } // namespace zpt
 
 template<typename T>

@@ -41,9 +41,7 @@ class test_client_service : public zpt::events::process_call_reply {
         if (__count == 0) {
             ++__count;
             auto _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->string();
-            auto _test_message = zpt::TRANSPORT_LAYER() //
-                                   .get("tcp")
-                                   ->make_request();
+            auto _test_message = zpt::make_request("tcp");
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
@@ -70,9 +68,7 @@ class test_client_boot : public zpt::system_event {
             this->__received->body()("_id")->string().find("/test_plugin") != std::string::npos) {
 
             auto _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->string();
-            auto _test_message = zpt::TRANSPORT_LAYER() //
-                                   .get("tcp")
-                                   ->make_request();
+            auto _test_message = zpt::make_request("tcp");
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))

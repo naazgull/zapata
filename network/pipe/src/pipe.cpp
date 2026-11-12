@@ -37,13 +37,12 @@ auto zpt::net::transport::pipe_stream::has_capability(std::uint64_t _capability)
 }
 
 auto zpt::net::transport::pipe_stream::make_request() const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::json_message>();
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
-auto zpt::net::transport::pipe_stream::make_reply(bool _with_allocator) const -> zpt::message {
-    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::json_message>()
-                                      : zpt::make_message<zpt::json_message>();
+auto zpt::net::transport::pipe_stream::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
@@ -55,7 +54,7 @@ auto zpt::net::transport::pipe_stream::make_reply(zpt::message _request) const -
 auto zpt::net::transport::pipe_stream::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "pipe", "Stream underlying transport isn't 'pipe'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
+    auto _message = zpt::make_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }
@@ -63,7 +62,7 @@ auto zpt::net::transport::pipe_stream::process_incoming_request(zpt::stream _str
 auto zpt::net::transport::pipe_stream::process_incoming_reply(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "pipe", "Stream underlying transport isn't 'pipe'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
+    auto _message = zpt::make_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }

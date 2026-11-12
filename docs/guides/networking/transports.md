@@ -31,7 +31,7 @@ public:
     virtual auto make_request() const -> zpt::message = 0;
 
     // Create a reply message
-    virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
+    virtual auto make_reply() const -> zpt::message = 0;
     virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
 
     // Parse incoming messages from a stream

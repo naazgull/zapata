@@ -34,9 +34,7 @@ static auto make_request(term_t _protocol_pl /*+*/, term_t _request_pl /*-*/) ->
     auto _protocol = zpt::prolog::to_json(_protocol_pl);
     expect(_protocol->is_string(), "`zpt_make_request`'s first parameter must be a string/atom");
 
-    auto _request_js = zpt::TRANSPORT_LAYER() //
-                         .get(_protocol->string())
-                         ->make_request();
+    auto _request_js = zpt::make_request(_protocol->string());
     auto _request = zpt::prolog::to_object(
       { "protocol", _protocol, "headers", _request_js->headers(), "uri", _request_js->uri() });
 

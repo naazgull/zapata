@@ -39,13 +39,12 @@ auto zpt::net::transport::amqp::has_capability(std::uint64_t _capability) const 
 }
 
 auto zpt::net::transport::amqp::make_request() const -> zpt::message {
-    auto _to_return = zpt::allocate_message<zpt::json_message>();
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
-auto zpt::net::transport::amqp::make_reply(bool _with_allocator) const -> zpt::message {
-    auto _to_return = _with_allocator ? zpt::allocate_message<zpt::json_message>()
-                                      : zpt::make_message<zpt::json_message>();
+auto zpt::net::transport::amqp::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
@@ -57,7 +56,7 @@ auto zpt::net::transport::amqp::make_reply(zpt::message _request) const -> zpt::
 auto zpt::net::transport::amqp::process_incoming_request(zpt::stream _stream) const
   -> zpt::message {
     expect(_stream->transport() == "amqp", "Stream underlying transport isn't 'amqp'");
-    auto _message = zpt::allocate_message<zpt::json_message>();
+    auto _message = zpt::make_message<zpt::json_message>();
     (*_stream) >> std::noskipws >> _message;
     return _message;
 }

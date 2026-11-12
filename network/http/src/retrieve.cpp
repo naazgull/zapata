@@ -19,7 +19,7 @@ auto zpt::http::retrieve(zpt::message _to_send) -> zpt::message {
     _stream //
       ->write<zpt::message>(_to_send);
 
-    auto _reply = zpt::allocate_message<zpt::http::basic_reply>();
+    auto _reply = zpt::make_message<zpt::http::basic_reply>();
     (*_stream) >> std::noskipws >> _reply;
 
     return _reply;
