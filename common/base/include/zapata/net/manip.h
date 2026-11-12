@@ -38,6 +38,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string>
+#include <vector>
 
 namespace zpt {
 using addresses_t = std::map<std::string, std::vector<std::string>>;
@@ -73,5 +74,14 @@ auto get_available_port(std::string const& _protocol, std::uint32_t _start_from 
  * @return A map with "ipv4" and "ipv6" vectors of IP address strings.
  */
 auto resolve_address(std::string const& _address) -> zpt::addresses_t;
+/** @brief Tests whether a TCP connection can be established to the given address and port.
+ * Resolves the address (IPv4 and IPv6) and attempts a connect to each resolved address until one
+ * succeeds or all fail.
+ * @param _address The domain name or IP address to probe.
+ * @param _port The TCP port to probe.
+ * @param _timeout The connection timeout in seconds (default 1).
+ * @return True if a connection was established within the timeout, false otherwise.
+ */
+auto ping(std::string const& _address, std::uint16_t _port, std::uint32_t _timeout = 1) -> bool;
 } // namespace net
 } // namespace zpt
