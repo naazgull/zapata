@@ -196,6 +196,7 @@ zpt::catalog<K, M>::catalog(std::string const& _catalog_name, std::string const&
     _database->sql("CREATE TABLE IF NOT EXISTS provider ("
                    "    _id TEXT PRIMARY KEY,"
                    "    name TEXT NOT NULL,"
+                   "    type INTEGER DEFAULT 0,"
                    "    protocols TEXT NOT NULL"
                    ")");
 

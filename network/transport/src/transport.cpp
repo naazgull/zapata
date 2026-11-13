@@ -342,3 +342,13 @@ auto zpt::TRANSPORT_LAYER(zpt::json _config) -> zpt::network::layer& {
     static zpt::network::layer _global{ _config };
     return _global;
 }
+
+auto zpt::make_request(std::string const& _transport) -> zpt::message {
+    return zpt::TRANSPORT_LAYER().get(_transport)->make_request();
+}
+
+auto zpt::make_reply(std::string const& _transport, zpt::message _request) -> zpt::message {
+    if (_request == nullptr) { return zpt::TRANSPORT_LAYER().get(_transport)->make_reply(); }
+
+    return zpt::TRANSPORT_LAYER().get(_transport)->make_reply(_request);
+}

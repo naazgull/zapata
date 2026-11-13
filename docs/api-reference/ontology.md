@@ -167,7 +167,7 @@ auto make_message(Args... _args) -> zpt::message;
 
 // Create message using memory pool allocator
 template<typename T, typename... Args>
-auto allocate_message(Args... _args) -> zpt::message;
+auto make_message(Args... _args) -> zpt::message;
 
 // Cast message to specific type
 template<typename T>

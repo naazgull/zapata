@@ -68,9 +68,8 @@ class mqtt : public zpt::basic_transport {
      * @return Shared pointer to the new request message. */
     auto make_request() const -> zpt::message override;
     /** @brief Creates a new reply message, optionally using the allocator.
-     * @param _with_allocator If true, uses the memory pool allocator.
      * @return Shared pointer to the new reply message. */
-    auto make_reply(bool _with_allocator = true) const -> zpt::message override;
+    auto make_reply() const -> zpt::message override;
     /** @brief Creates a reply message derived from the given request.
      * @param _request The request message to reply to.
      * @return Shared pointer to the new reply message. */

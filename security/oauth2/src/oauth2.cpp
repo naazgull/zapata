@@ -590,7 +590,7 @@ auto zpt::OAUTH2_SERVER(zpt::auth::oauth2::token_provider::ptr _token_provider)
 namespace {
 auto make_reply(zpt::message _request, zpt::status _status, std::string _location, zpt::json _body)
   -> zpt::message {
-    auto _reply = zpt::TRANSPORT_LAYER().get("http")->make_reply(_request);
+    auto _reply = zpt::make_reply("http", _request);
     _reply //
       ->status(_status)
       .body() = _body;

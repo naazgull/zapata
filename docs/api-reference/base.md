@@ -279,6 +279,8 @@ auto& global = zpt::MEM_POOL(1024 * 1024);
 ```cpp
 std::string ip = zpt::net::getip("eth0");  // Get IP of interface
 std::string any = zpt::net::getip();       // First non-loopback IP
+auto addrs = zpt::net::resolve_address("example.com");  // zpt::addresses_t: {"ipv4": [...], "ipv6": [...]} (a family key is absent when it has no results)
+bool up = zpt::net::ping("example.com", 443);  // TCP connect probe (1s timeout)
 ```
 
 ## File Utilities

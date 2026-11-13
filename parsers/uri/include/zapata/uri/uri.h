@@ -89,6 +89,12 @@ namespace address {
  * @return Address string (e.g., "example.com:8080").
  */
 auto to_string(zpt::json const& _uri) -> std::string;
+/** @brief Resolves a domain name to IP addresses. Performs a DNS lookup and returns IPv4 and IPv6
+ * addresses found.
+ * @param _address The domain name to resolve.
+ * @return A map with "ipv4" and "ipv6" vectors of IP address strings.
+ */
+auto resolve(std::string const& _address) -> zpt::json;
 } // namespace address
 
 /**

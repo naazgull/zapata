@@ -104,6 +104,8 @@ zpt::json_message::json_message(zpt::message _request, bool)
       << "uri" << _request->uri();
 }
 
+zpt::json_message::operator zpt::json() { return this->__underlying->clone(); }
+
 auto zpt::json_message::clone() const -> zpt::message {
     auto _other = std::make_shared<zpt::json_message>();
     _other->__underlying = this->__underlying->clone();

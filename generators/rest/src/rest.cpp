@@ -1494,8 +1494,7 @@ auto zpt::gen::rest::unit::generate_send_redirect_step(zpt::ast::basic_code_bloc
       ->add<zpt::ast::cpp_instruction>("auto _performative = this->received()->performative()")
       .add<zpt::ast::cpp_instruction>(
         std::format("auto _redirect_to{{ \"{}\" }}", _redirect->string()))
-      .add<zpt::ast::cpp_instruction>(
-        "auto _request = zpt::TRANSPORT_LAYER() //\n.get(_transport)->make_request()");
+      .add<zpt::ast::cpp_instruction>("auto _request = zpt::make_request(_transport)");
     if (_def("resource")->string() == "collection" || _def("resource")->string() == "document" ||
         _def("resource")->string() == "store") {
         _try_body->add<zpt::ast::cpp_instruction>(std::format(

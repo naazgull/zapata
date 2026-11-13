@@ -26,7 +26,7 @@ class transport : public zpt::basic_transport {
     }
 
     // Create a new reply message
-    auto make_reply(bool _with_allocator = true) const -> zpt::message override {
+    auto make_reply() const -> zpt::message override {
         return zpt::make_message<zpt::json_message>();
     }
 

@@ -57,7 +57,7 @@ virtual auto make_request() const -> zpt::message = 0;
 Creates a new request message for this transport.
 
 ```cpp
-virtual auto make_reply(bool _with_allocator = true) const -> zpt::message = 0;
+virtual auto make_reply() const -> zpt::message = 0;
 virtual auto make_reply(zpt::message _request) const -> zpt::message = 0;
 ```
 Creates a reply message, optionally based on a request.

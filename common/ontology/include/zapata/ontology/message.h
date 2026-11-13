@@ -57,6 +57,9 @@ namespace zpt {
  */
 class basic_message {
   public:
+    /** @brief Converts this message to zpt::json.
+     * @return A zpt::json instance with the representation of the message. */
+    virtual operator zpt::json() = 0;
     /** @brief Retrieves a clone of this message.
      * @return Shared pointer to cloned message. */
     virtual auto clone() const -> std::shared_ptr<basic_message> = 0;
@@ -254,6 +257,9 @@ class json_message : public basic_message {
      */
     virtual ~json_message() = default;
 
+    /** @brief Converts this message to zpt::json.
+     * @return A zpt::json instance with the representation of the message. */
+    virtual operator zpt::json() override;
     /**
      * @brief Retrieves a clone of this message.
      * @return Cloned message.
@@ -366,7 +372,7 @@ class json_message : public basic_message {
 };
 
 /**
- * @brief Creates a message using standard allocator.
+ * @brief Creates a message of the given type.
  * @tparam T Message type (e.g., json_message, http::basic_request).
  * @tparam Args Constructor argument types.
  * @param _args Arguments forwarded to T's constructor.
@@ -374,17 +380,6 @@ class json_message : public basic_message {
  */
 template<typename T, typename... Args>
 auto make_message(Args... _args) -> zpt::message;
-
-/**
- * @brief Creates a message using the memory pool allocator.
- * @tparam T Message type.
- * @tparam Args Constructor argument types.
- * @param _args Arguments forwarded to T's constructor.
- * @return Shared pointer to the message.
- */
-template<typename T, typename... Args>
-auto allocate_message(Args... _args) -> zpt::message;
-
 /**
  * @brief Casts a message to a specific derived type.
  * @tparam T Target message type.
@@ -419,10 +414,5 @@ auto zpt::basic_message::copy() const -> std::shared_ptr<basic_message> {
 
 template<typename T, typename... Args>
 auto zpt::make_message(Args... _args) -> zpt::message {
-    return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
-}
-
-template<typename T, typename... Args>
-auto zpt::allocate_message(Args... _args) -> zpt::message {
     return zpt::allocate_shared<T>(std::forward<Args>(_args)...);
 }

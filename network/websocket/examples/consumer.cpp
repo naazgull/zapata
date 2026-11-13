@@ -39,9 +39,7 @@ class ws_test_client_boot : public zpt::system_event {
               ->remove<ws_test_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 
             auto _polling = zpt::STREAM_POLLING();
-            auto _test_message = zpt::TRANSPORT_LAYER() //
-                                   .get("http")
-                                   ->make_request();
+            auto _test_message = zpt::make_request("http");
             _test_message //
               ->performative(zpt::Get)
               .uri("/ws/chat")

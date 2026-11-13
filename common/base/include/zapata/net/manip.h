@@ -33,13 +33,17 @@
 #include <cstdint>
 #include <cstring>
 #include <ifaddrs.h>
+#include <map>
 #include <memory>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <string>
+#include <vector>
 
 namespace zpt {
-namespace net {
+using addresses_t = std::map<std::string, std::vector<std::string>>;
 
+namespace net {
 /**
  * @brief Returns the IP address of a network interface.
  * @param _if Interface name (e.g., "eth0", "wlan0"). If empty, returns
@@ -64,5 +68,20 @@ auto getip(std::string const& _if = "") -> std::string;
  */
 auto get_available_port(std::string const& _protocol, std::uint32_t _start_from = 1024)
   -> std::uint32_t;
+/** @brief Resolves a domain name to IP addresses. Performs a DNS lookup and returns IPv4 and IPv6
+ * addresses found.
+ * @param _address The domain name to resolve.
+ * @return A map with "ipv4" and "ipv6" vectors of IP address strings.
+ */
+auto resolve_address(std::string const& _address) -> zpt::addresses_t;
+/** @brief Tests whether a TCP connection can be established to the given address and port.
+ * Resolves the address (IPv4 and IPv6) and attempts a connect to each resolved address until one
+ * succeeds or all fail.
+ * @param _address The domain name or IP address to probe.
+ * @param _port The TCP port to probe.
+ * @param _timeout The connection timeout in seconds (default 1).
+ * @return True if a connection was established within the timeout, false otherwise.
+ */
+auto ping(std::string const& _address, std::uint16_t _port, std::uint32_t _timeout = 1) -> bool;
 } // namespace net
 } // namespace zpt

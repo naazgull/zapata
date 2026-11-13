@@ -1,7 +1,13 @@
+#include <fcntl.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <cerrno>
 #include <format>
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <string>
 #include <vector>
 #include <zapata/base/expect.h>
 #include <zapata/net/manip.h>
@@ -103,6 +109,74 @@ auto zpt::net::get_available_port(std::string const& _protocol, std::uint32_t _s
     _ifs.close();
     expect(_result != 0, "no available ports to assign");
     return _result;
+}
+
+auto zpt::net::resolve_address(std::string const& _domain) -> zpt::addresses_t {
+    addrinfo _hints{};
+    _hints.ai_family = AF_UNSPEC; // IPv4 and IPv6
+    _hints.ai_socktype = SOCK_STREAM;
+
+    addrinfo* _results = nullptr;
+    int _err = getaddrinfo(_domain.c_str(), nullptr, &_hints, &_results);
+    expect(_err == 0, "getaddrinfo error: " << gai_strerror(_err));
+
+    zpt::addresses_t _return;
+    for (addrinfo* _r = _results; _r != nullptr; _r = _r->ai_next) {
+        if (_r->ai_family == AF_INET) {
+            char _ip[INET_ADDRSTRLEN] = { 0 };
+            auto* _addr = reinterpret_cast<sockaddr_in*>(_r->ai_addr);
+            inet_ntop(AF_INET, &_addr->sin_addr, _ip, sizeof(_ip));
+            _return["ipv4"].push_back(std::string{ const_cast<char const*>(_ip) });
+        }
+        else if (_r->ai_family == AF_INET6) {
+            char _ip[INET6_ADDRSTRLEN] = { 0 };
+            auto* _addr = reinterpret_cast<sockaddr_in6*>(_r->ai_addr);
+            inet_ntop(AF_INET6, &_addr->sin6_addr, _ip, sizeof(_ip));
+            _return["ipv6"].push_back(std::string{ const_cast<char const*>(_ip) });
+        }
+    }
+
+    freeaddrinfo(_results);
+    return _return;
+}
+
+auto zpt::net::ping(std::string const& _address, std::uint16_t _port, std::uint32_t _timeout)
+  -> bool {
+    addrinfo _hints{};
+    _hints.ai_family = AF_UNSPEC; // IPv4 and IPv6
+    _hints.ai_socktype = SOCK_STREAM;
+
+    addrinfo* _results = nullptr;
+    int _err = getaddrinfo(_address.c_str(), std::to_string(_port).c_str(), &_hints, &_results);
+    expect(_err == 0, "getaddrinfo error: " << gai_strerror(_err));
+
+    bool _reachable = false;
+    for (addrinfo* _result = _results; _result != nullptr && !_reachable;
+         _result = _result->ai_next) {
+        int _fd = socket(_result->ai_family, _result->ai_socktype, _result->ai_protocol);
+        if (_fd < 0) { continue; }
+
+        fcntl(_fd, F_SETFL, O_NONBLOCK);
+        _err = connect(_fd, _result->ai_addr, _result->ai_addrlen);
+        if (_err == 0) {
+            _reachable = true;
+        }
+        else if (_err == -1 && (errno == EINPROGRESS || errno == EAGAIN)) {
+            pollfd _poll{ _fd, POLLOUT, 0 };
+            if (poll(&_poll, 1, static_cast<int>(_timeout * 1000)) == 1 &&
+                (_poll.revents & POLLOUT)) {
+                int _socket_error{ 0 };
+                socklen_t _length = sizeof(_socket_error);
+                getsockopt(_fd, SOL_SOCKET, SO_ERROR, &_socket_error, &_length);
+                _reachable = _socket_error == 0;
+            }
+        }
+
+        close(_fd);
+    }
+
+    freeaddrinfo(_results);
+    return _reachable;
 }
 
 namespace {

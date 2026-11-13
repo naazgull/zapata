@@ -53,7 +53,7 @@ auto remaining(std::istringstream& _iss) -> std::string {
 auto test_simple_get() -> void {
     std::istringstream _iss;
     _iss.str("GET /foo/bar?x=1 HTTP/1.1\r\nHost: example.com\r\n\r\nTRAILING");
-    auto _req = zpt::allocate_message<zpt::http::basic_request>();
+    auto _req = zpt::make_message<zpt::http::basic_request>();
     _iss >> std::noskipws >> _req;
 
     check(_req->performative() == zpt::Get, "simple_get: performative is GET");
@@ -73,7 +73,7 @@ auto test_post_with_body() -> void {
          << _body << "NEXTMSG";
     std::istringstream _iss;
     _iss.str(_oss.str());
-    auto _req = zpt::allocate_message<zpt::http::basic_request>();
+    auto _req = zpt::make_message<zpt::http::basic_request>();
     _iss >> std::noskipws >> _req;
 
     check(_req->performative() == zpt::Post, "post_with_body: performative is POST");
@@ -100,7 +100,7 @@ auto test_chunked_body_with_trailer() -> void {
          << "AFTER";
     std::istringstream _iss;
     _iss.str(_oss.str());
-    auto _req = zpt::allocate_message<zpt::http::basic_request>();
+    auto _req = zpt::make_message<zpt::http::basic_request>();
     _iss >> std::noskipws >> _req;
 
     check(static_cast<std::string>(_req->body()) == "Wikipedia",
@@ -115,7 +115,7 @@ auto test_no_body_reply_at_stream_eof() -> void {
     std::istringstream _iss;
     _iss.str(
       "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: upgrade\r\n\r\n");
-    auto _rep = zpt::allocate_message<zpt::http::basic_reply>();
+    auto _rep = zpt::make_message<zpt::http::basic_reply>();
     _iss >> std::noskipws >> _rep;
 
     check(static_cast<int>(_rep->status()) == 101, "no_body_reply: status is 101");
@@ -137,7 +137,7 @@ auto test_chunked_reply() -> void {
          << "AFTER";
     std::istringstream _iss;
     _iss.str(_oss.str());
-    auto _rep = zpt::allocate_message<zpt::http::basic_reply>();
+    auto _rep = zpt::make_message<zpt::http::basic_reply>();
     _iss >> std::noskipws >> _rep;
 
     check(static_cast<int>(_rep->status()) == 200, "chunked_reply: status is 200");
@@ -153,12 +153,12 @@ auto test_consecutive_messages_on_one_stream() -> void {
     std::istringstream _iss;
     _iss.str("GET /a HTTP/1.1\r\nHost: x\r\n\r\nGET /b HTTP/1.1\r\nHost: x\r\n\r\n");
 
-    auto _req1 = zpt::allocate_message<zpt::http::basic_request>();
+    auto _req1 = zpt::make_message<zpt::http::basic_request>();
     _iss >> std::noskipws >> _req1;
     check(static_cast<std::string>(_req1->resource()) == "/a",
           "consecutive: first request's URI is /a");
 
-    auto _req2 = zpt::allocate_message<zpt::http::basic_request>();
+    auto _req2 = zpt::make_message<zpt::http::basic_request>();
     _iss >> std::noskipws >> _req2;
     check(static_cast<std::string>(_req2->resource()) == "/b",
           "consecutive: second request's URI is /b");

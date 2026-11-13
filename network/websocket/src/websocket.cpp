@@ -174,13 +174,12 @@ auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) c
 }
 
 auto zpt::net::transport::websocket::make_request() const -> zpt::message {
-    auto _to_return = zpt::allocate_message<request_type>();
+    auto _to_return = zpt::make_message<request_type>();
     return _to_return;
 }
 
-auto zpt::net::transport::websocket::make_reply(bool _with_allocator) const -> zpt::message {
-    auto _to_return =
-      _with_allocator ? zpt::allocate_message<reply_type>() : zpt::make_message<reply_type>();
+auto zpt::net::transport::websocket::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<reply_type>();
     return _to_return;
 }
 
@@ -193,7 +192,7 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
   -> zpt::message {
     expect(_stream->transport() == "ws", "Stream underlying transport isn't 'websocket'");
     try {
-        auto _message = zpt::allocate_message<request_type>();
+        auto _message = zpt::make_message<request_type>();
         (*_stream) >> std::noskipws >> _message;
         return _message;
     }

@@ -663,6 +663,9 @@ class basic_message : public zpt::basic_message {
      * @return void (destructors implicitly clean up the object). */
     virtual ~basic_message() = default;
 
+    /** @brief Converts this message to zpt::json.
+     * @return A zpt::json instance with the representation of the message. */
+    virtual operator zpt::json() override;
     /** @brief Returns the HTTP method (GET, POST, etc.).
      * @return HTTP method name. */
     virtual auto performative() const -> zpt::performative override;
