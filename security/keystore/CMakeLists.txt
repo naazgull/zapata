@@ -23,22 +23,13 @@ target_sources(zapata-security-keystore
     ${CMAKE_CURRENT_SOURCE_DIR}/src/keystore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/keys_store.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/key_document.cpp
-  INTERFACE
-    ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata/keystore/keystore.h
-    ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata/keystore/crypto.h
-    ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata/keystore.h
-    ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata/keystore/keys_store.h
-    ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata/keystore/key_document.h
 )
 target_include_directories(zapata-security-keystore
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-  INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-target_include_directories(zapata-security-keystore
-  PUBLIC
     ${SECURITY_KEYSTORE_INCLUDE_DIR}
+  INTERFACE
+    $<BUILD_INTERFACE:${SECURITY_KEYSTORE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-security-keystore
   PUBLIC
@@ -56,6 +47,7 @@ target_link_libraries(zapata-security-keystore
 )
 set_target_properties(zapata-security-keystore
   PROPERTIES
+    EXPORT_NAME security-keystore
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -70,7 +62,7 @@ target_sources(zapata-security-keystore-plugin
 )
 target_include_directories(zapata-security-keystore-plugin
   PUBLIC
-    ${SECURITY_OAUTH2_INCLUDE_DIR}
+    ${SECURITY_KEYSTORE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-security-keystore-plugin
   PUBLIC
@@ -122,11 +114,17 @@ include(GNUInstallDirs)
 install(
   TARGETS
     zapata-security-keystore
-    zapata-security-keystore-plugin
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME
     DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(
+  TARGETS
+    zapata-security-keystore-plugin
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY ${SECURITY_KEYSTORE_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

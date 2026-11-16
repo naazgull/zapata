@@ -21,10 +21,6 @@ target_sources(zapata-storage-mongodb
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
-  INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb.h
-    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb/translate.h
-    ${STORAGE_MONGODB_INCLUDE_DIR}/zapata/mongodb/connector.h
 )
 target_include_directories(zapata-storage-mongodb
   PRIVATE
@@ -34,7 +30,8 @@ target_include_directories(zapata-storage-mongodb
     zapata-storage-connector
     ${STORAGE_MONGODB_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_MONGODB_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-mongodb
   PUBLIC
@@ -47,6 +44,7 @@ target_link_libraries(zapata-storage-mongodb
 )
 set_target_properties(zapata-storage-mongodb
   PROPERTIES
+    EXPORT_NAME storage-mongodb
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -77,7 +75,8 @@ target_include_directories(zapata-storage-mongodb-plugin
     zapata-storage-mongodb
     ${STORAGE_MONGODB_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_MONGODB_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-mongodb-plugin
   PUBLIC
@@ -100,7 +99,12 @@ set_target_properties(zapata-storage-mongodb-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-mongodb zapata-storage-mongodb-plugin
+install(TARGETS zapata-storage-mongodb
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-storage-mongodb-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -2,29 +2,12 @@ set(NETWORK_TCP_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-if (NOT MOSQUITTO_INCLUDE_DIR)
-  find_path(MOSQUITTO_INCLUDE_DIR mosquitto.h)
-endif()
+find_package(Mosquitto QUIET)
 
-if (NOT MOSQUITTO_LIBRARY)
-  find_library(
-    MOSQUITTO_LIBRARY
-    NAMES mosquitto)
-endif()
-
-if(NOT MOSQUITTO_LIBRARY OR NOT MOSQUITTO_INCLUDE_DIR)
+if(NOT Mosquitto_FOUND)
   message(STATUS "zapata-net-mqtt skipped: mosquitto library not found")
   return()
 endif()
-
-include(FindPackageHandleStandardArgs)
-
-find_package_handle_standard_args(
-  MOSQUITTO DEFAULT_MSG
-  MOSQUITTO_LIBRARY MOSQUITTO_INCLUDE_DIR)
-
-set(MOSQUITTO_LIBRARIES ${MOSQUITTO_LIBRARY})
-mark_as_advanced(MOSQUITTO_INCLUDE_DIR MOSQUITTO_LIBRARY)
 
 add_library(zapata-net-mqtt SHARED)
 add_dependencies(zapata-net-mqtt
@@ -43,10 +26,6 @@ target_sources(zapata-net-mqtt
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mqtt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mqtt_stream.cpp
-  INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/mqtt.h
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/mqtt.h
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/mqtt_stream.h
 )
 target_include_directories(zapata-net-mqtt
 
@@ -61,29 +40,30 @@ target_include_directories(zapata-net-mqtt
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${MOSQUITTO_INCLUDE_DIR}
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-mqtt
   PRIVATE
-    zapata-base
     zapata-common-catalog
     zapata-globals
-    zapata-io-stream
     zapata-io-socket
-    zapata-parser-json
     zapata-parser-uri
     zapata-net-self
-    zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
-    ${MOSQUITTO_LIBRARY}
+  PUBLIC
+    zapata-base
+    zapata-parser-json
+    zapata-io-stream
+    zapata-net-transport
+    Mosquitto::Mosquitto
 )
 set_target_properties(zapata-net-mqtt
   PROPERTIES
+    EXPORT_NAME net-mqtt
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -129,11 +109,11 @@ target_include_directories(zapata-net-mqtt-plugin
     zapata-parser-uri
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${MOSQUITTO_INCLUDE_DIR}
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-mqtt-plugin
   PRIVATE
@@ -151,7 +131,6 @@ target_link_libraries(zapata-net-mqtt-plugin
     zapata-parser-uri
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${MOSQUITTO_LIBRARY}
  )
 set_target_properties(zapata-net-mqtt-plugin
@@ -221,7 +200,6 @@ target_link_libraries(zapata-example-mqtt-consumer
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-example-mqtt-consumer
   PROPERTIES
@@ -290,7 +268,6 @@ target_link_libraries(zapata-example-mqtt-producer
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-example-mqtt-producer
   PROPERTIES
@@ -303,6 +280,11 @@ set_target_properties(zapata-example-mqtt-producer
 include(GNUInstallDirs)
 install(TARGETS
     zapata-net-mqtt
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS
     zapata-net-mqtt-plugin
     zapata-example-mqtt-consumer
     zapata-example-mqtt-producer
@@ -340,7 +322,6 @@ target_include_directories(zapata_example_mqtt_transport
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${MOSQUITTO_INCLUDE_DIR}
     ${NETWORK_TCP_INCLUDE_DIR}
 )
@@ -356,7 +337,6 @@ target_link_libraries(zapata_example_mqtt_transport
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${MOSQUITTO_LIBRARY}
 )
 set_target_properties(zapata_example_mqtt_transport

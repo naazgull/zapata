@@ -3,11 +3,11 @@ set(COMMON_BASE_INCLUDE_DIR
 )
 
 find_package(OpenSSL QUIET)
-find_library(MAGIC_LIBRARIES magic)
-find_library(UUID_LIBRARIES uuid)
+find_package(Magic QUIET)
+find_package(Uuid QUIET)
 
-if(NOT (OPENSSL_FOUND AND MAGIC_LIBRARIES AND UUID_LIBRARIES))
-  message(STATUS "zapata-base skipped: missing deps (OpenSSL=${OPENSSL_FOUND}, magic=${MAGIC_LIBRARIES}, uuid=${UUID_LIBRARIES})")
+if(NOT (OPENSSL_FOUND AND Magic_FOUND AND Uuid_FOUND))
+  message(STATUS "zapata-base skipped: missing deps (OpenSSL=${OPENSSL_FOUND}, magic=${Magic_FOUND}, uuid=${Uuid_FOUND})")
   return()
 endif()
 
@@ -46,57 +46,24 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/allocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uuid.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/atomic.cpp
-  INTERFACE
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/chronometer.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoMoreElementsException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoSpaceAvailableException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoSuchElementException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoAttributeNameException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/ParserEOF.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/ClosedException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/Exception.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/ExpectationException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/exceptions.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/SyntaxErrorException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/InterruptedException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/CastException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoHeaderNameException.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/sentry.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/safe_access.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/expect.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/text/manip.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/text/convert.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/file/manip.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/net/manip.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/mem/usage.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha512.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha1.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha256.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/atomics/padded_atomic.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/uuid.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/allocator/allocator.h
 )
 target_include_directories(zapata-base
   PRIVATE
     ${COMMON_BASE_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_BASE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_BASE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-base
   PUBLIC
-    ${MAGIC_LIBRARIES}
-    ${UUID_LIBRARIES}
+    Magic::Magic
+    Uuid::Uuid
     OpenSSL::SSL
     OpenSSL::Crypto
 )
 set_target_properties(zapata-base
   PROPERTIES
+    EXPORT_NAME base
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -106,6 +73,7 @@ set_target_properties(zapata-base
 
 include(GNUInstallDirs)
 install(TARGETS zapata-base
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

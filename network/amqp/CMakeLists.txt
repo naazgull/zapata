@@ -27,10 +27,6 @@ target_sources(zapata-net-amqp
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/amqp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/amqp_stream.cpp
-  INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/amqp.h
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/amqp.h
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/amqp_stream.h
 )
 target_include_directories(zapata-net-amqp
   PRIVATE
@@ -45,10 +41,10 @@ target_include_directories(zapata-net-amqp
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-amqp
   PRIVATE
@@ -56,18 +52,19 @@ target_link_libraries(zapata-net-amqp
     zapata-common-catalog
     zapata-engine-startup
     zapata-globals
-    zapata-io-stream
     zapata-io-socket
     zapata-parser-json
     zapata-parser-uri
     zapata-net-self
-    zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
+  PUBLIC
+    zapata-io-stream
+    zapata-net-transport
     Proton::qpid-proton
 )
 set_target_properties(zapata-net-amqp
   PROPERTIES
+    EXPORT_NAME net-amqp
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -113,10 +110,10 @@ target_include_directories(zapata-net-amqp-plugin
     zapata-parser-uri
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-amqp-plugin
   PRIVATE
@@ -134,7 +131,6 @@ target_link_libraries(zapata-net-amqp-plugin
     zapata-parser-uri
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     Proton::qpid-proton
  )
 set_target_properties(zapata-net-amqp-plugin
@@ -204,7 +200,6 @@ target_link_libraries(zapata-example-amqp-consumer
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-example-amqp-consumer
   PROPERTIES
@@ -273,7 +268,6 @@ target_link_libraries(zapata-example-amqp-producer
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-example-amqp-producer
   PROPERTIES
@@ -286,6 +280,11 @@ set_target_properties(zapata-example-amqp-producer
 include(GNUInstallDirs)
 install(TARGETS
     zapata-net-amqp
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS
     zapata-net-amqp-plugin
     zapata-example-amqp-consumer
     zapata-example-amqp-producer
@@ -323,7 +322,6 @@ target_include_directories(zapata_example_amqp_transport
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     ${NETWORK_TCP_INCLUDE_DIR}
 )
 target_link_libraries(zapata_example_amqp_transport
@@ -338,7 +336,6 @@ target_link_libraries(zapata_example_amqp_transport
     zapata-net-self
     zapata-net-transport
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
     Proton::qpid-proton
 )
 set_target_properties(zapata_example_amqp_transport

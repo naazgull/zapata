@@ -1,0 +1,88 @@
+# Zapata CMake package configuration.
+#
+# Provides the namespaced imported targets (zapata::base, zapata::net-transport,
+# zapata::storage-mysqlx, ...) defined in zapataTargets.cmake.
+
+@PACKAGE_INIT@
+
+# Make the Find modules shipped alongside this package available to the
+# consumer's configuration.
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+include(CMakeFindDependencyMacro)
+
+# Required: referenced by the link interface of zapata-base and
+# zapata-io-socket.
+find_dependency(OpenSSL)
+
+# Optional dependencies: each mirrors a build-time module gate, so they are
+# resolved quietly and only hard-fail at consumer generate time if a target
+# that needs them is actually linked.
+
+# zapata-base link interface.
+if(NOT TARGET Magic::Magic)
+  find_package(Magic QUIET)
+endif()
+if(NOT TARGET Uuid::Uuid)
+  find_package(Uuid QUIET)
+endif()
+
+# zapata-io-stream link interface.
+if(NOT TARGET Systemd::Systemd)
+  find_package(Systemd QUIET)
+endif()
+
+# zapata-storage-sqlite / catalog / engine-rest / network modules.
+if(NOT TARGET SQLite3::SQLite3)
+  find_package(SQLite3 QUIET)
+endif()
+
+# zapata-storage-pgsql link interface.
+if(NOT TARGET PostgreSQL::PostgreSQL)
+  find_package(PostgreSQL 18 QUIET)
+endif()
+
+# zapata-bridge-lua / zapata-common-testing-plugin link interface. CMake's
+# bundled FindLua defines no imported target, so create one here.
+if(NOT TARGET Lua::Lua)
+  find_package(Lua QUIET)
+  if(Lua_FOUND)
+    add_library(Lua::Lua INTERFACE IMPORTED)
+    set_target_properties(Lua::Lua PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}"
+    )
+  endif()
+endif()
+
+# zapata-storage-mongodb link interface (upstream config packages).
+if(NOT TARGET mongo::mongocxx_shared)
+  find_package(mongocxx QUIET)
+endif()
+if(NOT TARGET mongo::bsoncxx_shared)
+  find_package(bsoncxx QUIET)
+endif()
+
+# zapata-net-amqp link interface (upstream config package).
+if(NOT TARGET Proton::qpid-proton)
+  find_package(Proton QUIET)
+endif()
+
+# zapata-bridge-prolog link interface (upstream config package).
+if(NOT TARGET swipl::libswipl)
+  find_package(SWIPL 10 QUIET)
+endif()
+
+# zapata-net-mqtt link interface.
+if(NOT TARGET Mosquitto::Mosquitto)
+  find_package(Mosquitto QUIET)
+endif()
+
+# zapata-storage-mysqlx link interface.
+if(NOT TARGET MySQLClient::MySQLClient)
+  find_package(MySQLClient QUIET)
+endif()
+
+check_required_components(zapata)
+
+include("${CMAKE_CURRENT_LIST_DIR}/zapataTargets.cmake")

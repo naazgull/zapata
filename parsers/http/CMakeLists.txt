@@ -34,13 +34,6 @@ target_sources(zapata-parser-http
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPRep.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPParser.bison.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPLexer.re2c.cpp
-  INTERFACE
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http.h
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPParser.h
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPTokenizerLexer.h
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPTokenizer.h
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/Re2cHTTPLexer.h
-    ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPObj.h
 )
 target_include_directories(zapata-parser-http
   PRIVATE
@@ -51,18 +44,21 @@ target_include_directories(zapata-parser-http
     zapata-parser-uri
     ${PARSERS_HTTP_INCLUDE_DIR}
   INTERFACE
-    ${PARSERS_HTTP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${PARSERS_HTTP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-parser-http
   PRIVATE
-    zapata-base
     zapata-io-stream
+    zapata-parser-uri
+  PUBLIC
+    zapata-base
     zapata-net-transport
     zapata-parser-json
-    zapata-parser-uri
 )
 set_target_properties(zapata-parser-http
   PROPERTIES
+    EXPORT_NAME parser-http
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
@@ -74,6 +70,7 @@ set_target_properties(zapata-parser-http
 
 include(GNUInstallDirs)
 install(TARGETS zapata-parser-http
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

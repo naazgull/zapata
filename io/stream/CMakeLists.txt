@@ -2,9 +2,9 @@ set(IO_STREAM_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_library(SYSTEMD_LIBRARIES systemd)
+find_package(Systemd QUIET)
 
-if(NOT SYSTEMD_LIBRARIES)
+if(NOT Systemd_FOUND)
   message(STATUS "zapata-io-stream skipped: libsystemd not found")
   return()
 endif()
@@ -19,10 +19,6 @@ target_sources(zapata-io-stream
     ${CMAKE_CURRENT_SOURCE_DIR}/src/event_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_set.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/streams.cpp
-  INTERFACE
-    ${IO_STREAM_INCLUDE_DIR}/zapata/streams/streams.h
-    ${IO_STREAM_INCLUDE_DIR}/zapata/streams/event_stream.h
-    ${IO_STREAM_INCLUDE_DIR}/zapata/streams.h
 )
 target_include_directories(zapata-io-stream
   PRIVATE
@@ -30,18 +26,18 @@ target_include_directories(zapata-io-stream
     zapata-lockfree
     ${IO_STREAM_INCLUDE_DIR}
   INTERFACE
-    zapata-lockfree
-    ${IO_STREAM_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${IO_STREAM_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-io-stream
-  PRIVATE
-    ${SYSTEMD_LIBRARIES}
-    zapata-base
   PUBLIC
+    Systemd::Systemd
+    zapata-base
     zapata-lockfree
 )
 set_target_properties(zapata-io-stream
   PROPERTIES
+    EXPORT_NAME io-stream
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -51,6 +47,7 @@ set_target_properties(zapata-io-stream
 
 include(GNUInstallDirs)
 install(TARGETS zapata-io-stream
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -9,6 +9,15 @@ if(NOT Lua_FOUND)
   return()
 endif()
 
+if(NOT TARGET Lua::Lua)
+  add_library(Lua::Lua INTERFACE IMPORTED)
+  set_target_properties(Lua::Lua
+    PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}"
+  )
+endif()
+
 include_directories(
   SYSTEM
     ${LUA_INCLUDE_DIR}
@@ -23,9 +32,6 @@ add_dependencies(zapata-bridge-lua
 target_sources(zapata-bridge-lua
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.cpp
-  INTERFACE
-    ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua.h
-    ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua/lua.h
 )
 target_include_directories(zapata-bridge-lua
   PRIVATE
@@ -34,17 +40,19 @@ target_include_directories(zapata-bridge-lua
     zapata-bridge-base
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
-    ${BRIDGE_LUA_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_LUA_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-bridge-lua
   PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
-    ${LUA_LIBRARIES}
+    Lua::Lua
 )
 set_target_properties(zapata-bridge-lua
   PROPERTIES
+    EXPORT_NAME bridge-lua
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -86,7 +94,8 @@ target_include_directories(zapata-bridge-lua-plugin
     zapata-runtime
     ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
-    ${BRIDGE_LUA_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_LUA_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-bridge-lua-plugin
   PUBLIC
@@ -104,8 +113,7 @@ target_link_libraries(zapata-bridge-lua-plugin
     zapata-parser-json
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
-    ${LUA_LIBRARIES}
+    Lua::Lua
 )
 set_target_properties(zapata-bridge-lua-plugin
   PROPERTIES
@@ -116,7 +124,12 @@ set_target_properties(zapata-bridge-lua-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-bridge-lua zapata-bridge-lua-plugin
+install(TARGETS zapata-bridge-lua
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-bridge-lua-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

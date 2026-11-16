@@ -23,10 +23,6 @@ target_sources(zapata-net-http
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/http.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/retrieve.cpp
-  INTERFACE
-    ${NETWORK_HTTP_INCLUDE_DIR}/zapata/http/retrieve.h
-    ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/http.h
-    ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/transport/http.h
 )
 target_include_directories(zapata-net-http
   PRIVATE
@@ -39,20 +35,23 @@ target_include_directories(zapata-net-http
     zapata-net-transport
     ${NETWORK_HTTP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_HTTP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_HTTP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-http
   PRIVATE
     zapata-base
-    zapata-io-stream
-    zapata-io-socket
     zapata-parser-json
     zapata-parser-uri
-    zapata-parser-http
+  PUBLIC
+    zapata-io-socket
+    zapata-io-stream
     zapata-net-transport
+    zapata-parser-http
 )
 set_target_properties(zapata-net-http
   PROPERTIES
+    EXPORT_NAME net-http
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -94,7 +93,8 @@ target_include_directories(zapata-net-http-plugin
     zapata-parser-http
     ${NETWORK_HTTP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_HTTP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_HTTP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-http-plugin
   PRIVATE
@@ -119,7 +119,12 @@ set_target_properties(zapata-net-http-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-http zapata-net-http-plugin
+install(TARGETS zapata-net-http
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-http-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -22,13 +22,6 @@ target_sources(zapata-parser-uri
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uri.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URIParser.bison.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URILexer.re2c.cpp
-  INTERFACE
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri.h
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URIParser.h
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URITokenizer.h
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/uri.h
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URITokenizerLexer.h
-    ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/Re2cURILexer.h
 )
 target_include_directories(zapata-parser-uri
   PRIVATE
@@ -36,15 +29,17 @@ target_include_directories(zapata-parser-uri
     zapata-parser-json
     ${PARSERS_URI_INCLUDE_DIR}
   INTERFACE
-    ${PARSERS_URI_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${PARSERS_URI_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-parser-uri
-  PRIVATE
+  PUBLIC
     zapata-base
     zapata-parser-json
 )
 set_target_properties(zapata-parser-uri
   PROPERTIES
+    EXPORT_NAME parser-uri
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -54,6 +49,7 @@ set_target_properties(zapata-parser-uri
 
 include(GNUInstallDirs)
 install(TARGETS zapata-parser-uri
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

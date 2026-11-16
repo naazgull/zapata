@@ -25,10 +25,6 @@ target_sources(zapata-storage-pgsql
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
-  INTERFACE
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/pgsql.h
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/pgsql/translate.h
-    ${STORAGE_PGSQL_INCLUDE_DIR}/zapata/pgsql/connector.h
 )
 target_include_directories(zapata-storage-pgsql
   PRIVATE
@@ -38,7 +34,8 @@ target_include_directories(zapata-storage-pgsql
     zapata-storage-connector
     ${STORAGE_PGSQL_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_PGSQL_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_PGSQL_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-pgsql
   PUBLIC
@@ -46,10 +43,11 @@ target_link_libraries(zapata-storage-pgsql
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${PostgreSQL_LIBRARIES}
+    PostgreSQL::PostgreSQL
 )
 set_target_properties(zapata-storage-pgsql
   PROPERTIES
+    EXPORT_NAME storage-pgsql
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -78,9 +76,6 @@ target_include_directories(zapata-storage-pgsql-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-pgsql
-    ${STORAGE_MONGODB_INCLUDE_DIR}
-  INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-pgsql-plugin
   PUBLIC
@@ -90,7 +85,7 @@ target_link_libraries(zapata-storage-pgsql-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-pgsql
-    ${PostgreSQL_LIBRARIES}
+    PostgreSQL::PostgreSQL
 )
 set_target_properties(zapata-storage-pgsql-plugin
   PROPERTIES
@@ -102,7 +97,12 @@ set_target_properties(zapata-storage-pgsql-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-pgsql zapata-storage-pgsql-plugin
+install(TARGETS zapata-storage-pgsql
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-storage-pgsql-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

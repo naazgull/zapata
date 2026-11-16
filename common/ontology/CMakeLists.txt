@@ -14,10 +14,6 @@ target_sources(zapata-ontology
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/message.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/performative.cpp
-  INTERFACE
-    ${COMMON_ONTOLOGY_INCLUDE_DIR}/zapata/ontology/message.h
-    ${COMMON_ONTOLOGY_INCLUDE_DIR}/zapata/ontology/performative.h
-    ${COMMON_ONTOLOGY_INCLUDE_DIR}/zapata/ontology.h
 )
 target_include_directories(zapata-ontology
   PRIVATE
@@ -28,18 +24,21 @@ target_include_directories(zapata-ontology
     zapata-parser-uri
     ${COMMON_ONTOLOGY_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_ONTOLOGY_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_ONTOLOGY_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-ontology
   PRIVATE
+    zapata-lockfree
+    zapata-parser-uri
+  PUBLIC
     zapata-base
     zapata-globals
-    zapata-lockfree
     zapata-parser-json
-    zapata-parser-uri
 )
 set_target_properties(zapata-ontology
   PROPERTIES
+    EXPORT_NAME ontology
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -49,6 +48,7 @@ set_target_properties(zapata-ontology
 
 include(GNUInstallDirs)
 install(TARGETS zapata-ontology
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

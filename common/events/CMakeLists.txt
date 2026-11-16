@@ -14,11 +14,6 @@ target_sources(zapata-events
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/resolver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system_events.cpp
-  INTERFACE
-    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/dispatcher.h
-    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/resolver.h
-    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/system_events.h
-    ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events.h
 )
 target_include_directories(zapata-events
   PRIVATE
@@ -28,10 +23,11 @@ target_include_directories(zapata-events
     zapata-parser-json
     ${COMMON_EVENTS_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_EVENTS_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_EVENTS_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-events
-  PRIVATE
+  PUBLIC
     zapata-base
     zapata-lockfree
     zapata-ontology
@@ -39,6 +35,7 @@ target_link_libraries(zapata-events
 )
 set_target_properties(zapata-events
   PROPERTIES
+    EXPORT_NAME events
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -48,6 +45,7 @@ set_target_properties(zapata-events
 
 include(GNUInstallDirs)
 install(TARGETS zapata-events
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

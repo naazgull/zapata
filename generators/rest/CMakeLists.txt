@@ -12,9 +12,6 @@ add_dependencies(zapata-generator-rest
 target_sources(zapata-generator-rest
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
-  INTERFACE
-    ${GENERATOR_REST_INCLUDE_DIR}/zapata/generator/rest.h
-    ${GENERATOR_REST_INCLUDE_DIR}/zapata/generator/rest/rest.h
 )
 target_include_directories(zapata-generator-rest
   PRIVATE
@@ -24,17 +21,20 @@ target_include_directories(zapata-generator-rest
     zapata-generator-ast
     ${GENERATOR_REST_INCLUDE_DIR}
   INTERFACE
-    ${GENERATOR_REST_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${GENERATOR_REST_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-generator-rest
   PRIVATE
-    zapata-base
-    zapata-parser-json
     zapata-parser-uri
+  PUBLIC
+    zapata-base
     zapata-generator-ast
+    zapata-parser-json
 )
 set_target_properties(zapata-generator-rest
   PROPERTIES
+    EXPORT_NAME generator-rest
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -76,11 +76,14 @@ set_target_properties(zrestgen
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-generator-rest zrestgen
+install(TARGETS zapata-generator-rest
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zrestgen
   RUNTIME
-    DESTINATION ${CMAKE_INSTALL_EXECDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(DIRECTORY ${GENERATOR_REST_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

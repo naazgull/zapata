@@ -19,9 +19,6 @@ add_dependencies(zapata-common-catalog
 target_sources(zapata-common-catalog
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/catalog.cpp
-  INTERFACE
-    ${COMMON_CATALOG_INCLUDE_DIR}/zapata/catalog/catalog.h
-    ${COMMON_CATALOG_INCLUDE_DIR}/zapata/catalog.h
 )
 target_include_directories(zapata-common-catalog
  PRIVATE
@@ -31,20 +28,20 @@ target_include_directories(zapata-common-catalog
     zapata-storage-sqlite
     ${COMMON_CATALOG_INCLUDE_DIR}
  INTERFACE
-    zapata-storage-connector
-    zapata-storage-sqlite
-    ${COMMON_CATALOG_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_CATALOG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-common-catalog
   PRIVATE
     zapata-base
-    zapata-parser-json
     zapata-storage-connector
+  PUBLIC
+    zapata-parser-json
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata-common-catalog
   PROPERTIES
+    EXPORT_NAME common-catalog
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
@@ -54,6 +51,7 @@ set_target_properties(zapata-common-catalog
 
 include(GNUInstallDirs)
 install(TARGETS zapata-common-catalog
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
@@ -89,7 +87,6 @@ target_link_libraries(zapata_example_common_catalog
     zapata-parser-json
     zapata-storage-connector
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata_example_common_catalog
   PROPERTIES

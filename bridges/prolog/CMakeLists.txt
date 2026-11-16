@@ -19,10 +19,6 @@ target_sources(zapata-bridge-prolog
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/prolog.cpp
-  INTERFACE
-    ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog.h
-    ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/helpers.h
-    ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/prolog.h
 )
 target_include_directories(zapata-bridge-prolog
   PRIVATE
@@ -31,11 +27,9 @@ target_include_directories(zapata-bridge-prolog
     zapata-bridge-base
     swipl::libswipl
     ${BRIDGE_PROLOG_INCLUDE_DIR}
-  PUBLIC
-    swipl::libswipl
   INTERFACE
-    swipl::libswipl
-    ${BRIDGE_PROLOG_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_PROLOG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_compile_definitions(zapata-bridge-prolog PRIVATE SWICPP=1)
 target_link_libraries(zapata-bridge-prolog
@@ -47,6 +41,7 @@ target_link_libraries(zapata-bridge-prolog
 )
 set_target_properties(zapata-bridge-prolog
   PROPERTIES
+    EXPORT_NAME bridge-prolog
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -81,7 +76,8 @@ target_include_directories(zapata-bridge-prolog-plugin
     zapata-runtime
     ${BRIDGE_PROLOG_INCLUDE_DIR}
   INTERFACE
-    ${BRIDGE_PROLOG_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_PROLOG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-bridge-prolog-plugin
   PUBLIC
@@ -133,7 +129,8 @@ target_include_directories(zapata_bridge_prolog_bindings
     zapata-runtime
     ${BRIDGE_PROLOG_INCLUDE_DIR}
   INTERFACE
-    ${BRIDGE_PROLOG_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_PROLOG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata_bridge_prolog_bindings
   PUBLIC
@@ -149,7 +146,6 @@ target_link_libraries(zapata_bridge_prolog_bindings
     zapata-engine-transport
     swipl::libswipl
     zapata-runtime
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
 )
 set_target_properties(zapata_bridge_prolog_bindings
@@ -161,7 +157,12 @@ set_target_properties(zapata_bridge_prolog_bindings
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-bridge-prolog zapata-bridge-prolog-plugin zapata_bridge_prolog_bindings
+install(TARGETS zapata-bridge-prolog zapata_bridge_prolog_bindings
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-bridge-prolog-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

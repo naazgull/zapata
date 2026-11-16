@@ -10,17 +10,14 @@ target_sources(zapata-generator-ast
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ast.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp.cpp
-  INTERFACE
-    ${GENERATOR_AST_INCLUDE_DIR}/zapata/ast.h
-    ${GENERATOR_AST_INCLUDE_DIR}/zapata/ast/ast.h
-    ${GENERATOR_AST_INCLUDE_DIR}/zapata/ast/cpp.h
 )
 target_include_directories(zapata-generator-ast
   PRIVATE
     zapata-base
     ${GENERATOR_AST_INCLUDE_DIR}
   INTERFACE
-    ${GENERATOR_AST_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${GENERATOR_AST_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-generator-ast
   PRIVATE
@@ -28,6 +25,7 @@ target_link_libraries(zapata-generator-ast
 )
 set_target_properties(zapata-generator-ast
   PROPERTIES
+    EXPORT_NAME generator-ast
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -37,6 +35,7 @@ set_target_properties(zapata-generator-ast
 
 include(GNUInstallDirs)
 install(TARGETS zapata-generator-ast
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
