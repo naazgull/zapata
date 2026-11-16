@@ -180,17 +180,18 @@ if(NOT TARGET uninstall)
 endif()
 
 # Print flags
-include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_VERSION)
-cmake_print_variables(CMAKE_GENERATOR)
-cmake_print_variables(CMAKE_C_COMPILER)
-cmake_print_variables(CMAKE_CXX_COMPILER)
-cmake_print_variables(CMAKE_CXX_COMPILER_VERSION)
-cmake_print_variables(CMAKE_BUILD_TYPE)
-cmake_print_variables(CMAKE_CXX_FLAGS)
-cmake_print_variables(CMAKE_C_FLAGS)
-cmake_print_variables(CMAKE_CXX_LINK_FLAGS)
-cmake_print_variables(WITH_ASAN)
-cmake_print_variables(WITH_UBSAN)
-cmake_print_variables(WITH_EXCEPTION_PROPAGATION)
-cmake_print_variables(WITH_ALLOCATOR_DEBUGGING)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.5.0")
+  cmake_language(PRINT_VARIABLES NAMED
+    CMAKE_GENERATOR
+    CMAKE_C_COMPILER
+    CMAKE_CXX_COMPILER
+    CMAKE_CXX_COMPILER_VERSION
+    CMAKE_BUILD_TYPE
+    CMAKE_CXX_FLAGS
+    CMAKE_C_FLAGS
+    CMAKE_CXX_LINK_FLAGS
+    WITH_ASAN
+    WITH_UBSAN
+    WITH_EXCEPTION_PROPAGATION
+    WITH_ALLOCATOR_DEBUGGING)
+endif()

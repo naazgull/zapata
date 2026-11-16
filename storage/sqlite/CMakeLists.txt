@@ -9,6 +9,10 @@ if(NOT SQLite3_FOUND)
   return()
 endif()
 
+if(CMAKE_VERSION VERSION_LESS "4.3.0")
+  add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+endif()
+
 add_library(zapata-storage-sqlite SHARED)
 add_dependencies(zapata-storage-sqlite
   zapata-base
