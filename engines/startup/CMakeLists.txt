@@ -17,9 +17,6 @@ add_dependencies(zapata-engine-startup
 target_sources(zapata-engine-startup
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/startup.cpp
-  INTERFACE
-    ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup/startup.h
-    ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup.h
 )
 target_include_directories(zapata-engine-startup
   PRIVATE
@@ -34,8 +31,8 @@ target_include_directories(zapata-engine-startup
     zapata-parser-uri
     ${ENGINE_STARTUP_INCLUDE_DIR}
   INTERFACE
-    zapata-common-config
-    ${ENGINE_STARTUP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${ENGINE_STARTUP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-engine-startup
   PUBLIC
@@ -51,6 +48,7 @@ target_link_libraries(zapata-engine-startup
 )
 set_target_properties(zapata-engine-startup
   PROPERTIES
+    EXPORT_NAME engine-startup
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -60,10 +58,11 @@ set_target_properties(zapata-engine-startup
 
 include(GNUInstallDirs)
 install(TARGETS zapata-engine-startup
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME
-    DESTINATION ${CMAKE_INSTALL_EXECDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(DIRECTORY ${ENGINE_STARTUP_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

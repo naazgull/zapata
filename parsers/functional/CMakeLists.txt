@@ -22,13 +22,6 @@ target_sources(zapata-parser-functional
     ${CMAKE_CURRENT_SOURCE_DIR}/src/functional.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalParser.bison.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalLexer.re2c.cpp
-  INTERFACE
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional.h
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalParser.h
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalTokenizer.h
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/functional.h
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalTokenizerLexer.h
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/Re2cFunctionalLexer.h
 )
 target_include_directories(zapata-parser-functional
   PRIVATE
@@ -36,15 +29,18 @@ target_include_directories(zapata-parser-functional
     zapata-parser-json
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
   INTERFACE
-    ${PARSERS_FUNCTIONAL_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${PARSERS_FUNCTIONAL_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-parser-functional
   PRIVATE
     zapata-base
+  PUBLIC
     zapata-parser-json
 )
 set_target_properties(zapata-parser-functional
   PROPERTIES
+    EXPORT_NAME parser-functional
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -54,6 +50,7 @@ set_target_properties(zapata-parser-functional
 
 include(GNUInstallDirs)
 install(TARGETS zapata-parser-functional
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

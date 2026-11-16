@@ -2,9 +2,9 @@ set(STORAGE_MYSQLX_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-find_library(MYSQLCLIENT_LIBRARIES mysqlclient)
+find_package(MySQLClient QUIET)
 
-if(NOT MYSQLCLIENT_LIBRARIES)
+if(NOT MySQLClient_FOUND)
   message(STATUS "zapata-storage-mysqlx skipped: libmysqlclient not found")
   return()
 endif()
@@ -20,10 +20,6 @@ target_sources(zapata-storage-mysqlx
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
-  INTERFACE
-    ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx.h
-    ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/translate.h
-    ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/connector.h
 )
 target_include_directories(zapata-storage-mysqlx
   PRIVATE
@@ -33,7 +29,8 @@ target_include_directories(zapata-storage-mysqlx
     zapata-storage-connector
     ${STORAGE_MYSQLX_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_MYSQLX_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_MYSQLX_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-mysqlx
   PUBLIC
@@ -41,10 +38,11 @@ target_link_libraries(zapata-storage-mysqlx
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${MYSQLCLIENT_LIBRARIES}
+    MySQLClient::MySQLClient
 )
 set_target_properties(zapata-storage-mysqlx
   PROPERTIES
+    EXPORT_NAME storage-mysqlx
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -73,9 +71,6 @@ target_include_directories(zapata-storage-mysqlx-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-mysqlx
-    ${STORAGE_MONGODB_INCLUDE_DIR}
-  INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-mysqlx-plugin
   PUBLIC
@@ -85,10 +80,11 @@ target_link_libraries(zapata-storage-mysqlx-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-mysqlx
-    ${MYSQLCLIENT_LIBRARIES}
+    MySQLClient::MySQLClient
 )
 set_target_properties(zapata-storage-mysqlx-plugin
   PROPERTIES
+    EXPORT_NAME storage-mysqlx-plugin
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -98,6 +94,7 @@ set_target_properties(zapata-storage-mysqlx-plugin
 
 include(GNUInstallDirs)
 install(TARGETS zapata-storage-mysqlx zapata-storage-mysqlx-plugin
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

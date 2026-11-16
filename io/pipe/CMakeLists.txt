@@ -10,9 +10,6 @@ add_dependencies(zapata-io-pipe
 target_sources(zapata-io-pipe
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipe_stream.cpp
-  INTERFACE
-    ${IO_PIPE_INCLUDE_DIR}/zapata/io/pipe/pipe_stream.h
-    ${IO_PIPE_INCLUDE_DIR}/zapata/io/pipe.h
 )
 target_include_directories(zapata-io-pipe
   PRIVATE
@@ -20,15 +17,17 @@ target_include_directories(zapata-io-pipe
     zapata-io-stream
     ${IO_PIPE_INCLUDE_DIR}
   INTERFACE
-    ${IO_PIPE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${IO_PIPE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-io-pipe
-  PRIVATE
+  PUBLIC
     zapata-base
     zapata-io-stream
 )
 set_target_properties(zapata-io-pipe
   PROPERTIES
+    EXPORT_NAME io-pipe
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -38,10 +37,11 @@ set_target_properties(zapata-io-pipe
 
 include(GNUInstallDirs)
 install(TARGETS zapata-io-pipe
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(DIRECTORY ${COMMON_EVENTS_INCLUDE_DIR}/zapata
+install(DIRECTORY ${IO_PIPE_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
 )

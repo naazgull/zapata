@@ -10,9 +10,6 @@ add_dependencies(zapata-common-os
 target_sources(zapata-common-os
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ps.cpp
-  INTERFACE
-    ${COMMON_OS_INCLUDE_DIR}/zapata/os/ps.h
-    ${COMMON_OS_INCLUDE_DIR}/zapata/os.h
 )
 target_include_directories(zapata-common-os
   PRIVATE
@@ -20,15 +17,18 @@ target_include_directories(zapata-common-os
     zapata-parser-json
     ${COMMON_OS_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_OS_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_OS_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-common-os
   PRIVATE
     zapata-base
+  PUBLIC
     zapata-parser-json
 )
 set_target_properties(zapata-common-os
   PROPERTIES
+    EXPORT_NAME common-os
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -38,6 +38,7 @@ set_target_properties(zapata-common-os
 
 include(GNUInstallDirs)
 install(TARGETS zapata-common-os
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

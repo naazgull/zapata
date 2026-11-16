@@ -15,9 +15,6 @@ add_dependencies(zapata-net-pipe
 target_sources(zapata-net-pipe
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipe.cpp
-  INTERFACE
-    ${NETWORK_PIPE_INCLUDE_DIR}/zapata/net/pipe.h
-    ${NETWORK_PIPE_INCLUDE_DIR}/zapata/net/transport/pipe.h
 )
 target_include_directories(zapata-net-pipe
   PRIVATE
@@ -30,20 +27,23 @@ target_include_directories(zapata-net-pipe
     zapata-net-transport
     ${NETWORK_PIPE_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_PIPE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_PIPE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-pipe
   PRIVATE
     zapata-base
     zapata-globals
-    zapata-io-stream
     zapata-io-pipe
     zapata-parser-json
     zapata-parser-uri
+  PUBLIC
+    zapata-io-stream
     zapata-net-transport
 )
 set_target_properties(zapata-net-pipe
   PROPERTIES
+    EXPORT_NAME net-pipe
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -83,7 +83,8 @@ target_include_directories(zapata-net-pipe-plugin
     zapata-parser-uri
     ${NETWORK_PIPE_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_PIPE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_PIPE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-pipe-plugin
   PRIVATE
@@ -107,7 +108,12 @@ set_target_properties(zapata-net-pipe-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-pipe zapata-net-pipe-plugin
+install(TARGETS zapata-net-pipe
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-pipe-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

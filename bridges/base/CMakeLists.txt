@@ -10,9 +10,6 @@ add_dependencies(zapata-bridge-base
 target_sources(zapata-bridge-base
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge.cpp
-  INTERFACE
-    ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge/bridge.h
-    ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge.h
 )
 target_include_directories(zapata-bridge-base
   PRIVATE
@@ -20,15 +17,18 @@ target_include_directories(zapata-bridge-base
     zapata-parser-json
     ${BRIDGE_BASE_INCLUDE_DIR}
   INTERFACE
-    ${BRIDGE_BASE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${BRIDGE_BASE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-bridge-base
   PRIVATE
     zapata-base
+  PUBLIC
     zapata-parser-json
 )
 set_target_properties(zapata-bridge-base
   PROPERTIES
+    EXPORT_NAME bridge-base
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
@@ -38,6 +38,7 @@ set_target_properties(zapata-bridge-base
 
 include(GNUInstallDirs)
 install(TARGETS zapata-bridge-base
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

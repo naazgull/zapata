@@ -7,16 +7,10 @@ add_dependencies(zapata-lockfree
   zapata-base
   zapata-globals
 )
-target_sources(zapata-lockfree
-  INTERFACE
-    ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree.h
-    ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree/queue.h
-)
 target_include_directories(zapata-lockfree
   INTERFACE
-    zapata-base
-    zapata-globals
-    ${COMMON_LOCKFREE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_LOCKFREE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-lockfree
   INTERFACE
@@ -24,8 +18,14 @@ target_link_libraries(zapata-lockfree
     zapata-globals
 )
 
+set_target_properties(zapata-lockfree
+  PROPERTIES
+    EXPORT_NAME lockfree
+)
+
 include(GNUInstallDirs)
 install(TARGETS zapata-lockfree
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

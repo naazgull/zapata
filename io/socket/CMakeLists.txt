@@ -17,9 +17,6 @@ add_dependencies(zapata-io-socket
 target_sources(zapata-io-socket
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/socket_stream.cpp
-  INTERFACE
-    ${IO_SOCKET_INCLUDE_DIR}/zapata/net/socket/socket_stream.h
-    ${IO_SOCKET_INCLUDE_DIR}/zapata/net/socket.h
 )
 target_include_directories(zapata-io-socket
   PRIVATE
@@ -27,7 +24,8 @@ target_include_directories(zapata-io-socket
     zapata-io-stream
     ${IO_SOCKET_INCLUDE_DIR}
   INTERFACE
-    ${IO_SOCKET_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${IO_SOCKET_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-io-socket
   PUBLIC
@@ -38,6 +36,7 @@ target_link_libraries(zapata-io-socket
 )
 set_target_properties(zapata-io-socket
   PROPERTIES
+    EXPORT_NAME io-socket
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -47,6 +46,7 @@ set_target_properties(zapata-io-socket
 
 include(GNUInstallDirs)
 install(TARGETS zapata-io-socket
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

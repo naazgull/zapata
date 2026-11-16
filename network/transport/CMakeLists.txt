@@ -23,9 +23,6 @@ add_dependencies(zapata-net-transport
 target_sources(zapata-net-transport
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/transport.cpp
-  INTERFACE
-    ${NETWORK_TRANSPORT_INCLUDE_DIR}/zapata/transport.h
-    ${NETWORK_TRANSPORT_INCLUDE_DIR}/zapata/transport/transport.h
 )
 target_include_directories(zapata-net-transport
   PRIVATE
@@ -39,8 +36,8 @@ target_include_directories(zapata-net-transport
     zapata-parser-uri
     ${NETWORK_TRANSPORT_INCLUDE_DIR}
   INTERFACE
-    zapata-common-config
-    ${NETWORK_TRANSPORT_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TRANSPORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-transport
   PUBLIC
@@ -55,6 +52,7 @@ target_link_libraries(zapata-net-transport
 )
 set_target_properties(zapata-net-transport
   PROPERTIES
+    EXPORT_NAME net-transport
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -64,6 +62,7 @@ set_target_properties(zapata-net-transport
 
 include(GNUInstallDirs)
 install(TARGETS zapata-net-transport
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

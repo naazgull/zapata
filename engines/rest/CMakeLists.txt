@@ -32,11 +32,6 @@ target_sources(zapata-engine-rest
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pending_messages.cpp
-  INTERFACE
-    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest.h
-    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/rest.h
-    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/services.h
-    ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/pending_messages.h
 )
 target_include_directories(zapata-engine-rest
   PRIVATE
@@ -57,31 +52,33 @@ target_include_directories(zapata-engine-rest
     zapata-common-catalog
     ${ENGINE_REST_INCLUDE_DIR}
   INTERFACE
-    ${ENGINE_REST_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${ENGINE_REST_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-engine-rest
   PRIVATE
     zapata-base
-    zapata-engine-startup
-    zapata-events
     zapata-globals
     zapata-io-stream
     zapata-io-socket
     zapata-lockfree
     zapata-net-self
-    zapata-net-transport
-    zapata-ontology
     zapata-parser-json
     zapata-parser-uri
     zapata-parser-http
-    zapata-engine-transport
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
+  PUBLIC
     zapata-common-catalog
+    zapata-engine-startup
+    zapata-engine-transport
+    zapata-events
+    zapata-net-transport
+    zapata-ontology
 )
 set_target_properties(zapata-engine-rest
   PROPERTIES
+    EXPORT_NAME engine-rest
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -149,7 +146,6 @@ target_link_libraries(zapata-engine-rest-plugin
     zapata-parser-http
     zapata-engine-transport
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
     zapata-common-catalog
 )
@@ -219,7 +215,6 @@ target_link_libraries(zapata-example-rest-provider
     zapata-parser-uri
     zapata-parser-http
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
     zapata-engine-transport
     zapata-common-catalog
@@ -290,7 +285,6 @@ target_link_libraries(zapata-example-rest-consumer
     zapata-parser-uri
     zapata-parser-http
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
     zapata-storage-sqlite
     zapata-engine-transport
     zapata-common-catalog
@@ -307,6 +301,12 @@ include(GNUInstallDirs)
 install(
   TARGETS
     zapata-engine-rest
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(
+  TARGETS
     zapata-engine-rest-plugin
     zapata-example-rest-provider
     zapata-example-rest-consumer

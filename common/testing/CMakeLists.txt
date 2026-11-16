@@ -9,6 +9,15 @@ if(NOT Lua_FOUND)
   return()
 endif()
 
+if(NOT TARGET Lua::Lua)
+  add_library(Lua::Lua INTERFACE IMPORTED)
+  set_target_properties(Lua::Lua
+    PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}"
+  )
+endif()
+
 include_directories(
   SYSTEM
     ${LUA_INCLUDE_DIR}
@@ -45,7 +54,8 @@ target_include_directories(zapata-common-testing-plugin
     zapata-runtime
     ${COMMON_TESTING_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_TESTING_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_TESTING_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-common-testing-plugin
   PUBLIC
@@ -62,8 +72,7 @@ target_link_libraries(zapata-common-testing-plugin
     zapata-parser-json
     zapata-runtime
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
-    ${LUA_LIBRARIES}
+    Lua::Lua
 )
 set_target_properties(zapata-common-testing-plugin
   PROPERTIES

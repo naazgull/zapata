@@ -22,9 +22,6 @@ add_dependencies(zapata-net-tcp
 target_sources(zapata-net-tcp
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp.cpp
-  INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/tcp.h
-    ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/tcp.h
 )
 target_include_directories(zapata-net-tcp
   PRIVATE
@@ -37,20 +34,23 @@ target_include_directories(zapata-net-tcp
     zapata-net-transport
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-tcp
   PRIVATE
     zapata-base
     zapata-globals
-    zapata-io-stream
-    zapata-io-socket
     zapata-parser-json
     zapata-parser-uri
+  PUBLIC
+    zapata-io-socket
+    zapata-io-stream
     zapata-net-transport
 )
 set_target_properties(zapata-net-tcp
   PROPERTIES
+    EXPORT_NAME net-tcp
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -90,7 +90,8 @@ target_include_directories(zapata-net-tcp-plugin
     zapata-parser-uri
     ${NETWORK_TCP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_TCP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_TCP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-tcp-plugin
   PRIVATE
@@ -114,7 +115,12 @@ set_target_properties(zapata-net-tcp-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-tcp zapata-net-tcp-plugin
+install(TARGETS zapata-net-tcp
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-tcp-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -12,18 +12,13 @@ target_sources(zapata-security-oauth2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/refresh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/validate.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/services/authorize_device.cpp
-  INTERFACE
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/oauth2.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/authorize.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/token.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/refresh.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/validate.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/services/authorize_device.h
-    ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2.h
 )
 target_include_directories(zapata-security-oauth2
-  PUBLIC
+  PRIVATE
     ${SECURITY_OAUTH2_INCLUDE_DIR}
+  INTERFACE
+    $<BUILD_INTERFACE:${SECURITY_OAUTH2_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-security-oauth2
   PUBLIC
@@ -49,6 +44,7 @@ target_link_libraries(zapata-security-oauth2
 
 set_target_properties(zapata-security-oauth2
   PROPERTIES
+    EXPORT_NAME security-oauth2
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
@@ -62,8 +58,11 @@ target_sources(zapata-security-oauth2-plugin
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-security-oauth2-plugin
-  PUBLIC
+  PRIVATE
     ${SECURITY_OAUTH2_INCLUDE_DIR}
+  INTERFACE
+    $<BUILD_INTERFACE:${SECURITY_OAUTH2_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-security-oauth2-plugin
   PUBLIC
@@ -125,6 +124,12 @@ include(GNUInstallDirs)
 install(
   TARGETS
     zapata-security-oauth2
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(
+  TARGETS
     zapata-security-oauth2-plugin
     zapata-example-oauth2-provider
     zapata-example-oauth2-consumer

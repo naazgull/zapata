@@ -22,9 +22,6 @@ add_dependencies(zapata-net-self
 target_sources(zapata-net-self
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/self.cpp
-  INTERFACE
-    ${NETWORK_SELF_INCLUDE_DIR}/zapata/net/self.h
-    ${NETWORK_SELF_INCLUDE_DIR}/zapata/net/transport/self.h
 )
 target_include_directories(zapata-net-self
   PRIVATE
@@ -38,22 +35,24 @@ target_include_directories(zapata-net-self
     zapata-storage-sqlite
     ${NETWORK_SELF_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_SELF_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_SELF_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-self
   PRIVATE
     zapata-base
-    zapata-common-catalog
     zapata-globals
-    zapata-io-stream
-    zapata-net-transport
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
+  PUBLIC
+    zapata-common-catalog
+    zapata-io-stream
+    zapata-net-transport
 )
 set_target_properties(zapata-net-self
   PROPERTIES
+    EXPORT_NAME net-self
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -94,7 +93,8 @@ target_include_directories(zapata-net-self-plugin
     zapata-storage-sqlite
     ${NETWORK_SELF_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_SELF_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_SELF_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-self-plugin
   PRIVATE
@@ -109,7 +109,6 @@ target_link_libraries(zapata-net-self-plugin
     zapata-parser-uri
     zapata-net-self
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
  )
 set_target_properties(zapata-net-self-plugin
   PROPERTIES
@@ -120,7 +119,12 @@ set_target_properties(zapata-net-self-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-self zapata-net-self-plugin
+install(TARGETS zapata-net-self
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-self-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
@@ -165,7 +169,6 @@ target_link_libraries(zapata_example_self_transport
     zapata-parser-json
     zapata-parser-uri
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
 )
 set_target_properties(zapata_example_self_transport
   PROPERTIES

@@ -79,6 +79,10 @@ else()
   add_compile_options(-O3 -fno-omit-frame-pointer -march=native)
 endif()
 
+# Make the project's own Find modules (FindMySQLClient) usable from
+# subdirectories and installable with the package.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+
 add_subdirectory(bridges/base)
 add_subdirectory(bridges/lua)
 add_subdirectory(bridges/prolog)
@@ -125,6 +129,42 @@ add_subdirectory(network/amqp)
 # add_subdirectory(storage/couchdb)
 add_subdirectory(storage/mongodb)
 # add_subdirectory(storage/redis)
+
+# ------------------------------------------------------------------------
+# CMake package: find_package(zapata)
+#
+# Modules add their targets to the 'zapata' export set via
+# install(TARGETS ... EXPORT zapata). The generated zapataTargets.cmake
+# plus the configured zapataConfig.cmake are installed under
+# ${CMAKE_INSTALL_LIBDIR}/cmake/zapata.
+#
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/zapataConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/zapataConfig.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zapata"
+)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/zapataConfigVersion.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/zapataConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/zapataConfigVersion.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/FindMySQLClient.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zapata"
+)
+
+install(EXPORT zapata
+  FILE zapataTargets.cmake
+  NAMESPACE zapata::
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zapata"
+)
 
 # ------------------------------------------------------------------------
 # TARGET: uninstall

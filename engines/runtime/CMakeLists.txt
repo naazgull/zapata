@@ -17,8 +17,6 @@ add_dependencies(zapata-runtime
 target_sources(zapata-runtime
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime.cpp
-  INTERFACE
-    ${ENGINE_RUNTIME_INCLUDE_DIR}/zapata/runtime.h
 )
 target_include_directories(zapata-runtime
   PRIVATE
@@ -33,7 +31,8 @@ target_include_directories(zapata-runtime
     zapata-parser-uri
     ${ENGINE_RUNTIME_INCLUDE_DIR}
   INTERFACE
-    ${ENGINE_RUNTIME_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${ENGINE_RUNTIME_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-runtime
   PUBLIC
@@ -49,6 +48,7 @@ target_link_libraries(zapata-runtime
 )
 set_target_properties(zapata-runtime
   PROPERTIES
+    EXPORT_NAME runtime
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -58,10 +58,11 @@ set_target_properties(zapata-runtime
 
 include(GNUInstallDirs)
 install(TARGETS zapata-runtime
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME
-    DESTINATION ${CMAKE_INSTALL_EXECDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(DIRECTORY ${ENGINE_RUNTIME_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -117,5 +118,5 @@ set_target_properties(zpt
 include(GNUInstallDirs)
 install(TARGETS zpt
   RUNTIME
-    DESTINATION ${CMAKE_INSTALL_EXECDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

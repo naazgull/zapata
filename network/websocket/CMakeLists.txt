@@ -23,9 +23,6 @@ add_dependencies(zapata-net-websocket
 target_sources(zapata-net-websocket
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket.cpp
-  INTERFACE
-  ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/websocket.h
-  ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/transport/websocket.h
 )
 target_include_directories(zapata-net-websocket
   PRIVATE
@@ -39,21 +36,24 @@ target_include_directories(zapata-net-websocket
   zapata-net-transport
   ${NETWORK_WEBSOCKET_INCLUDE_DIR}
   INTERFACE
-  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  $<BUILD_INTERFACE:${NETWORK_WEBSOCKET_INCLUDE_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-websocket
   PRIVATE
   zapata-base
   zapata-globals
-  zapata-io-stream
-  zapata-io-socket
   zapata-parser-http
   zapata-parser-json
   zapata-parser-uri
+  PUBLIC
+  zapata-io-socket
+  zapata-io-stream
   zapata-net-transport
 )
 set_target_properties(zapata-net-websocket
   PROPERTIES
+  EXPORT_NAME net-websocket
   VERSION ${PROJECT_VERSION}
   SOVERSION ${PROJECT_VERSION_MAJOR}
   COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -95,7 +95,8 @@ target_include_directories(zapata-net-websocket-plugin
   zapata-parser-uri
   ${NETWORK_WEBSOCKET_INCLUDE_DIR}
   INTERFACE
-  ${NETWORK_WEBSOCKET_INCLUDE_DIR}
+  $<BUILD_INTERFACE:${NETWORK_WEBSOCKET_INCLUDE_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-websocket-plugin
   PRIVATE
@@ -177,7 +178,6 @@ target_link_libraries(zapata-example-ws-provider
   zapata-parser-uri
   zapata-parser-http
   zapata-storage-connector
-  ${SQLite3_LIBRARIES}
   zapata-storage-sqlite
   zapata-engine-transport
   zapata-common-catalog
@@ -248,7 +248,6 @@ target_link_libraries(zapata-example-ws-consumer
   zapata-parser-uri
   zapata-parser-http
   zapata-storage-connector
-  ${SQLite3_LIBRARIES}
   zapata-storage-sqlite
   zapata-engine-transport
   zapata-common-catalog
@@ -265,6 +264,12 @@ include(GNUInstallDirs)
 install(
   TARGETS
     zapata-net-websocket
+  EXPORT zapata
+  LIBRARY
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(
+  TARGETS
     zapata-net-websocket-plugin
     zapata-example-ws-provider
     zapata-example-ws-consumer

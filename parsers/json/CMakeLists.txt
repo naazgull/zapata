@@ -27,28 +27,22 @@ target_sources(zapata-parser-json
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONLambda.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONParser.bison.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONLexer.re2c.cpp
-  INTERFACE
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/json.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONClass.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONParser.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONTokenizer.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONTokenizerLexer.h
-    ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/Re2cJSONLexer.h
 )
 target_include_directories(zapata-parser-json
   PRIVATE
     zapata-base
     ${PARSERS_JSON_INCLUDE_DIR}
   INTERFACE
-    ${PARSERS_JSON_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${PARSERS_JSON_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-parser-json
-  PRIVATE
+  PUBLIC
     zapata-base
 )
 set_target_properties(zapata-parser-json
   PROPERTIES
+    EXPORT_NAME parser-json
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -58,6 +52,7 @@ set_target_properties(zapata-parser-json
 
 include(GNUInstallDirs)
 install(TARGETS zapata-parser-json
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

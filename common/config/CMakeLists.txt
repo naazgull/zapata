@@ -10,9 +10,6 @@ add_dependencies(zapata-common-config
 target_sources(zapata-common-config
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.cpp
-  INTERFACE
-    ${COMMON_CONFIG_INCLUDE_DIR}/zapata/config/config.h
-    ${COMMON_CONFIG_INCLUDE_DIR}/zapata/config.h
 )
 target_include_directories(zapata-common-config
  PRIVATE
@@ -20,15 +17,17 @@ target_include_directories(zapata-common-config
     zapata-parser-json
     ${COMMON_CONFIG_INCLUDE_DIR}
  INTERFACE
-    ${COMMON_CONFIG_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_CONFIG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-common-config
-  PRIVATE
+  PUBLIC
     zapata-base
     zapata-parser-json
 )
 set_target_properties(zapata-common-config
   PROPERTIES
+    EXPORT_NAME common-config
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
@@ -38,6 +37,7 @@ set_target_properties(zapata-common-config
 
 include(GNUInstallDirs)
 install(TARGETS zapata-common-config
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

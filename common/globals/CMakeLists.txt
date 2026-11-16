@@ -9,25 +9,22 @@ add_dependencies(zapata-globals
 target_sources(zapata-globals
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/globals.cpp
-  INTERFACE
-    ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/thread_local_variable.h
-    ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/cached.h
-    ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/globals.h
-    ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals.h
 )
 target_include_directories(zapata-globals
   PRIVATE
     zapata-base
     ${COMMON_GLOBALS_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_GLOBALS_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_GLOBALS_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-globals
-  PRIVATE
+  PUBLIC
     zapata-base
 )
 set_target_properties(zapata-globals
   PROPERTIES
+    EXPORT_NAME globals
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -37,6 +34,7 @@ set_target_properties(zapata-globals
 
 include(GNUInstallDirs)
 install(TARGETS zapata-globals
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

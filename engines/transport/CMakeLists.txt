@@ -18,8 +18,6 @@ add_dependencies(zapata-engine-transport
 target_sources(zapata-engine-transport
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
-  INTERFACE
-    ${ENGINE_TRANSPORT_INCLUDE_DIR}/zapata/transport/engine.h
 )
 target_include_directories(zapata-engine-transport
   PRIVATE
@@ -35,7 +33,8 @@ target_include_directories(zapata-engine-transport
     zapata-engine-startup
     ${ENGINE_TRANSPORT_INCLUDE_DIR}
   INTERFACE
-    ${ENGINE_TRANSPORT_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${ENGINE_TRANSPORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-engine-transport
   PUBLIC
@@ -51,6 +50,7 @@ target_link_libraries(zapata-engine-transport
 )
 set_target_properties(zapata-engine-transport
   PROPERTIES
+    EXPORT_NAME engine-transport
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -113,7 +113,12 @@ set_target_properties(zapata-engine-transport-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-engine-transport zapata-engine-transport-plugin
+install(TARGETS zapata-engine-transport
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-engine-transport-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

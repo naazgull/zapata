@@ -9,23 +9,22 @@ add_dependencies(zapata-regex-graph
 target_sources(zapata-regex-graph
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp
-  INTERFACE
-    ${COMMON_GRAPH_INCLUDE_DIR}/zapata/graph.h
-    ${COMMON_GRAPH_INCLUDE_DIR}/zapata/graph/node.h
 )
 target_include_directories(zapata-regex-graph
   PRIVATE
     zapata-base
     ${COMMON_GRAPH_INCLUDE_DIR}
   INTERFACE
-    ${COMMON_GRAPH_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${COMMON_GRAPH_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-regex-graph
-  PRIVATE
+  PUBLIC
     zapata-base
 )
 set_target_properties(zapata-regex-graph
   PROPERTIES
+    EXPORT_NAME regex-graph
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -35,6 +34,7 @@ set_target_properties(zapata-regex-graph
 
 include(GNUInstallDirs)
 install(TARGETS zapata-regex-graph
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

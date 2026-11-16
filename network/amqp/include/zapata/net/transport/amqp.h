@@ -33,7 +33,6 @@
  */
 
 #pragma once
-#include <mosquitto.h>
 #include <set>
 #include <string>
 #include <utility>

@@ -14,9 +14,6 @@ add_dependencies(zapata-storage-connector
 target_sources(zapata-storage-connector
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  INTERFACE
-    ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector/connector.h
-    ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector.h
 )
 target_include_directories(zapata-storage-connector
   PRIVATE
@@ -28,8 +25,8 @@ target_include_directories(zapata-storage-connector
     zapata-parser-functional
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
   INTERFACE
-    zapata-common-config
-    ${STORAGE_CONNECTOR_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_CONNECTOR_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-connector
   PUBLIC
@@ -43,6 +40,7 @@ target_link_libraries(zapata-storage-connector
 
 set_target_properties(zapata-storage-connector
   PROPERTIES
+    EXPORT_NAME storage-connector
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -52,6 +50,7 @@ set_target_properties(zapata-storage-connector
 
 include(GNUInstallDirs)
 install(TARGETS zapata-storage-connector
+  EXPORT zapata
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

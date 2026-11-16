@@ -23,9 +23,6 @@ target_sources(zapata-net-local
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/unix.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/file.cpp
-  INTERFACE
-    ${NETWORK_LOCAL_INCLUDE_DIR}/zapata/net/local.h
-    ${NETWORK_LOCAL_INCLUDE_DIR}/zapata/net/transport/local.h
 )
 target_include_directories(zapata-net-local
   PRIVATE
@@ -38,20 +35,23 @@ target_include_directories(zapata-net-local
     zapata-net-transport
     ${NETWORK_LOCAL_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_LOCAL_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_LOCAL_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-local
   PRIVATE
     zapata-base
     zapata-globals
-    zapata-io-stream
-    zapata-io-socket
     zapata-parser-json
     zapata-parser-uri
+  PUBLIC
+    zapata-io-socket
+    zapata-io-stream
     zapata-net-transport
 )
 set_target_properties(zapata-net-local
   PROPERTIES
+    EXPORT_NAME net-local
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -91,7 +91,8 @@ target_include_directories(zapata-net-local-plugin
     zapata-parser-uri
     ${NETWORK_LOCAL_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_LOCAL_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_LOCAL_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-local-plugin
   PRIVATE
@@ -115,7 +116,12 @@ set_target_properties(zapata-net-local-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-local zapata-net-local-plugin
+install(TARGETS zapata-net-local
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-local-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

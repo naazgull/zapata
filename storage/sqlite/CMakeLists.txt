@@ -19,9 +19,6 @@ add_dependencies(zapata-storage-sqlite
 target_sources(zapata-storage-sqlite
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  INTERFACE
-    ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite.h
-    ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite/connector.h
 )
 target_include_directories(zapata-storage-sqlite
   PRIVATE
@@ -31,7 +28,8 @@ target_include_directories(zapata-storage-sqlite
     zapata-storage-connector
     ${STORAGE_SQLITE_INCLUDE_DIR}
   INTERFACE
-    ${STORAGE_SQLITE_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${STORAGE_SQLITE_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-storage-sqlite
   PUBLIC
@@ -39,10 +37,11 @@ target_link_libraries(zapata-storage-sqlite
     zapata-parser-json
     zapata-parser-functional
     zapata-storage-connector
-    ${SQLite3_LIBRARIES}
+    SQLite3::SQLite3
 )
 set_target_properties(zapata-storage-sqlite
   PROPERTIES
+    EXPORT_NAME storage-sqlite
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -71,9 +70,6 @@ target_include_directories(zapata-storage-sqlite-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-sqlite
-    ${STORAGE_MONGODB_INCLUDE_DIR}
-  INTERFACE
-    ${STORAGE_MONGODB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-sqlite-plugin
   PUBLIC
@@ -83,7 +79,7 @@ target_link_libraries(zapata-storage-sqlite-plugin
     zapata-parser-functional
     zapata-storage-connector
     zapata-storage-sqlite
-    ${SQLite3_LIBRARIES}
+    SQLite3::SQLite3
 )
 set_target_properties(zapata-storage-sqlite-plugin
   PROPERTIES
@@ -95,7 +91,12 @@ set_target_properties(zapata-storage-sqlite-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-storage-sqlite zapata-storage-sqlite-plugin
+install(TARGETS zapata-storage-sqlite
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-storage-sqlite-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

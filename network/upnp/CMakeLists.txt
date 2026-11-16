@@ -23,10 +23,6 @@ target_sources(zapata-net-upnp
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/upnp_message.cpp
-  INTERFACE
-    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/transport/upnp_message.h
-    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/upnp.h
-    ${NETWORK_UPNP_INCLUDE_DIR}/zapata/net/transport/upnp.h
 )
 target_include_directories(zapata-net-upnp
   PRIVATE
@@ -39,20 +35,23 @@ target_include_directories(zapata-net-upnp
     zapata-net-transport
     ${NETWORK_UPNP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_UPNP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_UPNP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-upnp
   PRIVATE
     zapata-base
-    zapata-io-stream
     zapata-io-socket
     zapata-parser-json
     zapata-parser-uri
-    zapata-parser-http
+  PUBLIC
+    zapata-io-stream
     zapata-net-transport
+    zapata-parser-http
 )
 set_target_properties(zapata-net-upnp
   PROPERTIES
+    EXPORT_NAME net-upnp
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
@@ -94,7 +93,8 @@ target_include_directories(zapata-net-upnp-plugin
     zapata-parser-http
     ${NETWORK_UPNP_INCLUDE_DIR}
   INTERFACE
-    ${NETWORK_UPNP_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${NETWORK_UPNP_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(zapata-net-upnp-plugin
   PRIVATE
@@ -119,7 +119,12 @@ set_target_properties(zapata-net-upnp-plugin
 )
 
 include(GNUInstallDirs)
-install(TARGETS zapata-net-upnp zapata-net-upnp-plugin
+install(TARGETS zapata-net-upnp
+  EXPORT zapata
+  LIBRARY
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(TARGETS zapata-net-upnp-plugin
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
