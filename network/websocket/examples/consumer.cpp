@@ -97,4 +97,6 @@ extern "C" auto _zpt_load_(zpt::plugin&) -> void {
 
 extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Unloading module 'ws_test_consumer'", zpt::info);
+    zpt::SYSTEM_EVENTS_RESOLVER() //
+      ->remove<ws_test_client_boot>(zpt::SYSTEM_EVENT_REGISTERED_REMOTE_SERVICE);
 }

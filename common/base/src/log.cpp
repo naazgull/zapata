@@ -42,28 +42,12 @@ const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARN
 } // namespace zpt
 
 namespace {
-
 /**
  * @brief Returns the ANSI SGR color code for a log level.
  * @param _l The severity level.
  * @return The color sequence (or an empty string for unknown levels).
  */
-auto level_sgr(zpt::LogLevel _l) -> const char* {
-    switch (_l) {
-        case zpt::emergency:                     // fallthrough
-        case zpt::alert:                         // fallthrough
-        case zpt::critical: return "\033[0;31m"; // red
-        case zpt::error: return "\033[0;35m";    // magenta
-        case zpt::warning: return "\033[0;33m";  // yellow
-        case zpt::notice: return "\033[1;37m";   // bold white
-        case zpt::info: return "\033[0;37m";     // white
-        case zpt::debug: return "\033[0;34m";    // blue
-        case zpt::trace:                         // fallthrough
-        case zpt::verbose: return "\033[0;90m";  // grey
-        default: return "";
-    }
-}
-
+auto level_sgr(zpt::LogLevel _l) -> const char*;
 /**
  * @brief Decides whether the current output should be colored.
  * @param _fmt The active log format (2 = JSON).
@@ -72,12 +56,7 @@ auto level_sgr(zpt::LogLevel _l) -> const char* {
  * Color is disabled for the JSON format (which must stay machine-parseable),
  * when NO_COLOR is set, and when stdout is not an interactive terminal.
  */
-auto color_on(short _fmt) -> bool {
-    if (_fmt == 2) { return false; }
-    if (std::getenv("NO_COLOR") != nullptr) { return false; }
-    return ::isatty(::fileno(stdout));
-}
-
+auto color_on() -> bool;
 } // namespace
 
 auto zpt::log(std::string const& _text,
@@ -87,12 +66,14 @@ auto zpt::log(std::string const& _text,
               std::string const& _file) -> int {
     if (zpt::log_fd == nullptr) { return -1; }
 
-    bool _colored = color_on(zpt::log_format);
+    bool _colored = color_on();
 
     if (!zpt::log_format) {
         std::ostringstream _oss;
-        if (_colored) { _oss << level_sgr(_level); }
-        _oss << "[" << zpt::log_lvl_names[_level] << "] " << _text << std::endl << std::flush;
+        if (_colored) { _oss << "\033[0;36m"; }
+        _oss << zpt::tostr(time(nullptr), "%H:%M:%S");
+        if (_colored) { _oss << "\033[0m" << level_sgr(_level); }
+        _oss << " [" << zpt::log_lvl_names[_level] << "] " << _text << std::endl << std::flush;
         if (_colored) { _oss << "\033[0m"; }
         (*zpt::log_fd) << _oss.str() << std::flush;
         return 0;
@@ -103,17 +84,19 @@ auto zpt::log(std::string const& _text,
 
     if (zpt::log_format == 1) {
         std::ostringstream _oss;
-        if (_colored) { _oss << level_sgr(_level); }
-        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-             << *zpt::log_pname << "[" << zpt::log_pid << "]: [" << zpt::log_lvl_names[_level]
-             << "] " << _text << " (" << std::filesystem::path(_file).filename().string() << ":"
-             << _line << ")" << std::endl
+        if (_colored) { _oss << "\033[0;36m"; }
+        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S");
+        if (_colored) { _oss << "\033[0m" << level_sgr(_level); }
+        _oss << " " << _host << " " << *zpt::log_pname << "[" << zpt::log_pid << "]: ["
+             << zpt::log_lvl_names[_level] << "] " << _text << " ("
+             << std::filesystem::path(_file).filename().string() << ":" << _line << ")" << std::endl
              << std::flush;
         if (_colored) { _oss << "\033[0m"; }
         (*zpt::log_fd) << _oss.str() << std::flush;
     }
     else {
         std::ostringstream _oss;
+        if (_colored) { _oss << level_sgr(_level); }
         _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host
              << "\",\"short_message\":\"" << _text << "\",\"full_message\":\"" << _file << ":"
              << _line << " | " << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"")
@@ -122,6 +105,7 @@ auto zpt::log(std::string const& _text,
              << *zpt::log_pname << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}"
              << std::endl
              << std::flush;
+        if (_colored) { _oss << "\033[0m"; }
         (*zpt::log_fd) << _oss.str() << std::flush;
     }
     return 0;
@@ -138,3 +122,26 @@ auto zpt::log_hostname() -> std::string {
 }
 
 extern "C" auto zpt_base() -> int { return 1; }
+
+namespace {
+auto level_sgr(zpt::LogLevel _l) -> const char* {
+    switch (_l) {
+        case zpt::emergency:                     // fallthrough
+        case zpt::alert:                         // fallthrough
+        case zpt::critical: return "\033[0;31m"; // red
+        case zpt::error: return "\033[0;35m";    // magenta
+        case zpt::warning: return "\033[0;33m";  // yellow
+        case zpt::notice: return "\033[1;37m";   // bold white
+        case zpt::info: return "\033[0;37m";     // white
+        case zpt::debug: return "\033[0;34m";    // blue
+        case zpt::trace:                         // fallthrough
+        case zpt::verbose: return "\033[0;90m";  // grey
+        default: return "";
+    }
+}
+
+auto color_on() -> bool {
+    if (std::getenv("NO_COLOR") != nullptr) { return false; }
+    return ::isatty(::fileno(stdout));
+}
+} // namespace

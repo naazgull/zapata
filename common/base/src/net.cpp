@@ -1,13 +1,13 @@
-#include <fcntl.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <cerrno>
+#include <fcntl.h>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <poll.h>
 #include <set>
 #include <string>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <vector>
 #include <zapata/base/expect.h>
 #include <zapata/net/manip.h>
@@ -158,9 +158,7 @@ auto zpt::net::ping(std::string const& _address, std::uint16_t _port, std::uint3
 
         fcntl(_fd, F_SETFL, O_NONBLOCK);
         _err = connect(_fd, _result->ai_addr, _result->ai_addrlen);
-        if (_err == 0) {
-            _reachable = true;
-        }
+        if (_err == 0) { _reachable = true; }
         else if (_err == -1 && (errno == EINPROGRESS || errno == EAGAIN)) {
             pollfd _poll{ _fd, POLLOUT, 0 };
             if (poll(&_poll, 1, static_cast<int>(_timeout * 1000)) == 1 &&

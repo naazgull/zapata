@@ -4,6 +4,7 @@ project(zapata VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 option(WITH_ASAN "Enable address sanitizer" OFF)
 option(WITH_UBSAN "Enable undefined-behavior sanitizer" OFF)
