@@ -31,7 +31,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
     zpt::TRANSPORT_LAYER() //
-      .add("http", zpt::make_transport<zpt::net::transport::http>());
+      .add("http", zpt::make_transport<zpt::net::transport::http>(), { json_array, "https" });
 
     if (_config("port")->ok()) {
         auto& _server_sock = zpt::HTTP_SERVER_SOCKET(

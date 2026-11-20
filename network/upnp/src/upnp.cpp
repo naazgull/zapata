@@ -36,6 +36,15 @@ auto zpt::net::transport::upnp::has_capability(std::uint64_t _capability) const 
     return (_capabilities & _capability) == _capability;
 }
 
+auto zpt::net::transport::upnp::normalise_uri(zpt::json& _uri) const -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "upnps") {
+        _uri["scheme"] = "upnp";
+        if (!_uri["scheme_options"]->is_array()) { _uri["scheme_options"] = zpt::json::array(); }
+        _uri["scheme_options"] << "ssl";
+    }
+    return (*this);
+}
+
 auto zpt::net::transport::upnp::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::upnp::basic_request>();
     zpt::init(static_cast<zpt::http::basic_request&>(

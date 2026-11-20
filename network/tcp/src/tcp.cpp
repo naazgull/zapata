@@ -26,8 +26,18 @@
 #include <zapata/net/transport/tcp.h>
 
 auto zpt::net::transport::tcp::has_capability(std::uint64_t _capability) const -> bool {
-    static constexpr std::uint64_t _capabilities = zpt::transport_capability::MULTIPLEXED;
+    static constexpr std::uint64_t _capabilities =
+      zpt::transport_capability::MULTIPLEXED | zpt::transport_capability::PERSISTENT;
     return (_capabilities & _capability) == _capability;
+}
+
+auto zpt::net::transport::tcp::normalise_uri(zpt::json& _uri) const -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "tcps") {
+        _uri["scheme"] = "tcp";
+        if (!_uri["scheme_options"]->is_array()) { _uri["scheme_options"] = zpt::json::array(); }
+        _uri["scheme_options"] << "ssl";
+    }
+    return (*this);
 }
 
 auto zpt::net::transport::tcp::make_request() const -> zpt::message {

@@ -30,6 +30,19 @@ auto zpt::net::transport::http::has_capability(std::uint64_t _capability) const 
     return (_capabilities & _capability) == _capability;
 }
 
+auto zpt::net::transport::http::normalise_uri(zpt::json& _uri) const -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "https") {
+        _uri["scheme"] = "http";
+        if (!_uri["scheme_options"]->is_array()) { _uri["scheme_options"] = zpt::json::array(); }
+        _uri["scheme_options"] << "ssl";
+    }
+    if (!_uri("port")->is_integer()) {
+        if (zpt::uri::scheme::is_encrypted(_uri)) { _uri["port"] = 443; }
+        else { _uri["port"] = 80; }
+    }
+    return (*this);
+}
+
 auto zpt::net::transport::http::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::http::basic_request>();
     zpt::init(zpt::message_cast<zpt::http::basic_request>(_to_return));

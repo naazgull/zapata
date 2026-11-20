@@ -128,14 +128,18 @@ zpt::network::layer::layer(zpt::json _global_config)
       "text/xml", zpt::network::layer::translate_from_xml, zpt::network::layer::translate_to_xml);
 }
 
-auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
-  -> zpt::network::layer& {
+auto zpt::network::layer::add(std::string const& _scheme,
+                              zpt::transport _transport,
+                              zpt::json _aliases) -> zpt::network::layer& {
     if (!this->__configuration("transport")("addresses")->ok()) {
         this->__configuration["transport"]["addresses"] = zpt::json::array();
     }
     if (_scheme != "self") {
         std::string _host;
         std::string _port;
+        std::uint32_t _port_i = this->__configuration(_scheme)("port")->ok()
+                                  ? this->__configuration(_scheme)("port")->integer()
+                                  : 0;
 
         if (this->__configuration(_scheme)->ok() &&
             (this->__configuration(_scheme)("bind")->ok() ||
@@ -163,7 +167,7 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
             }
             else {
                 auto _protocol = _scheme == "upnp" ? "udp" : "tcp";
-                auto _port_i = zpt::net::get_available_port(_protocol, 9999);
+                _port_i = zpt::net::get_available_port(_protocol, 9999);
                 _port.assign(std::format(":{}", _port_i));
                 this->__configuration[_scheme]["port"] = _port_i;
             }
@@ -173,7 +177,7 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
         else if (this->__configuration("transport")("default")->ok() &&
                  this->__configuration("transport")("default")->string() == _scheme) {
             auto _protocol = _scheme == "upnp" ? "udp" : "tcp";
-            auto _port_i = zpt::net::get_available_port(_protocol, 9999);
+            _port_i = zpt::net::get_available_port(_protocol, 9999);
             _host.assign(zpt::net::getip());
             _port.assign(std::format(":{}", _port_i));
 
@@ -181,11 +185,27 @@ auto zpt::network::layer::add(std::string const& _scheme, zpt::transport _transp
               { "address", _host, "bind", "0.0.0.0", "port", _port_i };
         }
 
+        if (!this->__configuration(_scheme)("public")->ok() &&
+            !this->__configuration(_scheme)("path")->ok()) {
+            this->__configuration[_scheme]["public"] = { "address",        _host,
+                                                         "port",           _port_i,
+                                                         "scheme_options", zpt::json::array() };
+        }
+        else if (this->__configuration(_scheme)("public")->ok()) {
+            _transport->normalise_uri(this->__configuration[_scheme]["public"]);
+        }
+
         this->__configuration["transport"]["addresses"]
           << std::format("{}://{}{}", _scheme, _host, _port);
     }
 
     this->__underlying.insert(std::make_pair(_scheme, _transport));
+    if (_aliases->ok() && _aliases->is_array()) {
+        this->__configuration[_scheme] << "aliases" << _aliases;
+        for (auto&& [_, __, _alias] : _aliases) {
+            this->__underlying.insert(std::make_pair(static_cast<std::string>(_alias), _transport));
+        }
+    }
     return (*this);
 }
 
@@ -199,6 +219,9 @@ auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::tr
 }
 
 auto zpt::network::layer::remove(std::string const& _scheme) -> zpt::network::layer& {
+    for (auto&& [_, __, _alias] : this->__configuration(_scheme)("aliases")) {
+        this->__underlying.erase(_alias);
+    }
     this->__underlying.erase(_scheme);
     return (*this);
 }
@@ -349,6 +372,10 @@ auto zpt::make_request(std::string const& _transport) -> zpt::message {
 
 auto zpt::make_reply(std::string const& _transport, zpt::message _request) -> zpt::message {
     if (_request == nullptr) { return zpt::TRANSPORT_LAYER().get(_transport)->make_reply(); }
-
     return zpt::TRANSPORT_LAYER().get(_transport)->make_reply(_request);
+}
+
+auto zpt::normalise_uri(zpt::json& _uri) -> void {
+    if (!_uri("scheme")->ok()) { return; };
+    zpt::TRANSPORT_LAYER().get(_uri("scheme")->string())->normalise_uri(_uri);
 }

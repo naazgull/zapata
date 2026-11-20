@@ -173,6 +173,20 @@ auto zpt::net::transport::websocket::has_capability(std::uint64_t _capability) c
     return (_capabilities & _capability) == _capability;
 }
 
+auto zpt::net::transport::websocket::normalise_uri(zpt::json& _uri) const
+  -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "wss") {
+        _uri["scheme"] = "ws";
+        if (!_uri["scheme_options"]->is_array()) { _uri["scheme_options"] = zpt::json::array(); }
+        _uri["scheme_options"] << "ssl";
+    }
+    if (!_uri("port")->is_integer()) {
+        if (zpt::uri::scheme::is_encrypted(_uri)) { _uri["port"] = 443; }
+        else { _uri["port"] = 80; }
+    }
+    return (*this);
+}
+
 auto zpt::net::transport::websocket::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<request_type>();
     return _to_return;

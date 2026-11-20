@@ -134,6 +134,26 @@ auto zpt::uri::to_regex_array(zpt::json const& _in) -> zpt::json {
     return _to_return;
 }
 
+auto zpt::uri::scheme::is_encrypted(zpt::json const& _uri) -> bool {
+    return zpt::uri::scheme::has_option(_uri, "ssl");
+}
+
+auto zpt::uri::scheme::has_option(zpt::json const& _uri, std::string const& _search) -> bool {
+    for (auto&& [_, __, _option] : _uri("scheme_options")) {
+        if (_option == _search) { return true; }
+    }
+    return false;
+}
+
+auto zpt::uri::scheme::to_string(zpt::json const& _uri) -> std::string {
+    std::ostringstream _oss;
+    if (_uri("scheme")->ok()) {
+        _oss << _uri("scheme")->string();
+        if (_uri("scheme_options")->ok()) { _oss << "+" << zpt::join(_uri("scheme_options"), "+"); }
+    }
+    return _oss.str();
+}
+
 auto zpt::uri::path::to_string(zpt::json const& _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {

@@ -99,6 +99,11 @@ class basic_transport {
      * @param _capability Capability flag to check (SYNCHRONOUS, PERSISTENT, etc.).
      * @return True if the transport has this capability. */
     virtual auto has_capability(std::uint64_t _capability) const -> bool = 0;
+    /** @brief Normalises the URI by checking if there is a shorthand for enabling encrypted
+     * connection, if there is a defined port or the default should be added.
+     * @param _uri The decomposed URI to be normalised.
+     * @return Reference to this object, for chaining purposes. */
+    virtual auto normalise_uri(zpt::json& _uri) const -> basic_transport const& = 0;
     /** @brief Creates a new request message for this transport.
      * @return Shared pointer to the new request message. */
     virtual auto make_request() const -> zpt::message = 0;
@@ -189,7 +194,8 @@ class layer {
      * @param _scheme URI scheme string (e.g., "http", "ws").
      * @param _transport Transport instance to register.
      * @return Reference to this layer. */
-    auto add(std::string const& _scheme, zpt::transport _transport) -> layer&;
+    auto add(std::string const& _scheme, zpt::transport _transport, zpt::json _aliases = json_null)
+      -> layer&;
     /** @brief Gets the transport for a URI scheme.
      * @param _scheme URI scheme string.
      * @return Shared pointer to the registered transport, or null if not found. */
@@ -315,6 +321,12 @@ auto make_request(std::string const& _transport) -> zpt::message;
  * @return Shared pointer to the message.
  */
 auto make_reply(std::string const& _transport, zpt::message _request = nullptr) -> zpt::message;
+/**
+ * Checks if the port in the given decomposed URI is instantiated and a valid number and, if not,
+ * instantiates with the protocols default port.
+ * @param _uri The decomposed URI to check the port for.
+ */
+auto normalise_uri(zpt::json& _uri) -> void;
 } // namespace zpt
 
 template<typename T>

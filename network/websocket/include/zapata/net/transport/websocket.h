@@ -100,6 +100,11 @@ class websocket : public zpt::basic_transport {
      * @param _capability Capability flag to check.
      * @return True if the transport has this capability. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Normalises the URI by checking if there is a shorthand for enabling encrypted
+     * connection, if there is a defined port or the default should be added.
+     * @param _uri The decomposed URI to be normalised.
+     * @return Reference to this object, for chaining purposes. */
+    auto normalise_uri(zpt::json& _uri) const -> basic_transport const& override;
     /** @brief Returns the transport this was upgraded from.
      * @return Reference to the source transport name string. */
     auto upgraded_from() const -> std::string const& override;
