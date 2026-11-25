@@ -1018,8 +1018,7 @@ yyreduce:
                 if (!ctx->d_part_is_placeholder) {
                     auto _idx = _scheme.find("+");
                     if (_idx != std::string::npos) {
-                        (**ctx) << "scheme_options"
-                                << zpt::split(_scheme.substr(_idx + 1), "+", true);
+                        (**ctx) << "options" << zpt::split(_scheme.substr(_idx + 1), "+", true);
                         _scheme.assign(_scheme.substr(0, _idx));
                     }
                 }

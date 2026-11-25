@@ -56,7 +56,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
     zpt::TRANSPORT_LAYER() //
-      .add("mqtt", zpt::make_transport<zpt::net::transport::mqtt>());
+      .add("mqtt", zpt::make_transport<zpt::net::transport::mqtt>(), { json_array, "mqtts" });
 
     if (_config("port")->is_integer() && _config("address")->is_string()) {
         zlog("MQTT listener bound to `" << _config("address")->string() << ":"

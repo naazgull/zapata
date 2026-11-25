@@ -32,10 +32,24 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 #include <zapata/net/transport/amqp.h>
+#include <zapata/uri.h>
 
 auto zpt::net::transport::amqp::has_capability(std::uint64_t _capability) const -> bool {
     static constexpr std::uint64_t _capabilities = zpt::transport_capability::PUB_SUB;
     return (_capabilities & _capability) == _capability;
+}
+
+auto zpt::net::transport::amqp::normalise_uri(zpt::json& _uri) const -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "amqps") {
+        _uri["scheme"] = "amqp";
+        if (!_uri("options")->is_array()) { _uri["options"] = zpt::json::array(); }
+        _uri["options"] << "ssl";
+    }
+    if (!_uri("port")->is_integer()) {
+        if (zpt::uri::scheme::is_encrypted(_uri)) { _uri["port"] = 5672; }
+        else { _uri["port"] = 5671; }
+    }
+    return (*this);
 }
 
 auto zpt::net::transport::amqp::make_request() const -> zpt::message {

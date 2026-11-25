@@ -30,6 +30,10 @@ auto zpt::net::transport::unix_socket::has_capability(std::uint64_t _capability)
     return (_capabilities & _capability) == _capability;
 }
 
+auto zpt::net::transport::unix_socket::normalise_uri(zpt::json&) const -> basic_transport const& {
+    return (*this);
+}
+
 auto zpt::net::transport::unix_socket::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;

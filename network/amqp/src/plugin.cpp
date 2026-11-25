@@ -80,7 +80,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
     zpt::TRANSPORT_LAYER() //
-      .add("amqp", zpt::make_transport<zpt::net::transport::amqp>());
+      .add("amqp", zpt::make_transport<zpt::net::transport::amqp>(), { json_array, "amqps" });
 
     if (_config("port")->is_integer() && _config("address")->is_string()) {
         zlog("AMQP listener bound to `" << _config("address")->string() << ":"

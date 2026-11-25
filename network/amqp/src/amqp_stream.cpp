@@ -194,9 +194,9 @@ auto zpt::amqp_stream::subscribe(std::string const& _topic) -> zpt::amqp_stream&
 
 auto zpt::amqp_stream::publish(zpt::message _payload) -> zpt::amqp_stream& {
     auto _uri = _payload->uri();
-    expect(_uri("scheme_options")->is_array(), "URI doesn't contain the publishing target");
+    expect(_uri("options")->is_array(), "URI doesn't contain the publishing target");
     std::ostringstream _queue_oss;
-    for (auto&& [_, __, _part] : _uri("scheme_options")) { _queue_oss << "/" << _part->string(); }
+    for (auto&& [_, __, _part] : _uri("options")) { _queue_oss << "/" << _part->string(); }
     _queue_oss << std::flush;
     auto _topic = _queue_oss.str();
 

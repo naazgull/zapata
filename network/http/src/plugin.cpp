@@ -31,19 +31,31 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
     zpt::TRANSPORT_LAYER() //
-      .add("http", zpt::make_transport<zpt::net::transport::http>());
+      .add("http", zpt::make_transport<zpt::net::transport::http>(), { json_array, "https" });
 
     if (_config("port")->ok()) {
+        std::string _cert_file;
+        std::string _key_file;
+        if (zpt::network::is_encrypted(_config)) {
+            std::tie(_cert_file, _key_file) = zpt::network::default_certificates();
+        }
+
         auto& _server_sock = zpt::HTTP_SERVER_SOCKET(
           _config("bind")->string(),
-          static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
+          static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))),
+          _cert_file,
+          _key_file);
         zlog("HTTP server socket bound to `" << static_cast<std::string>(*_server_sock) << "`",
              zpt::trace);
 
-        _plugin.add_thread([&]() -> void {
+        _plugin.add_thread([&_plugin]() -> void {
+            auto& _server_sock = zpt::HTTP_SERVER_SOCKET();
+            auto& _config = _plugin.config();
             zpt::this_thread::name("listener@http");
             auto _polling = zpt::STREAM_POLLING();
-            zlog("Started HTTP transport on port " << _config("port"), zpt::info);
+            zlog("Started HTTP" << (zpt::network::is_encrypted(_config) ? "(s)" : "")
+                                << " transport on port " << _config("port"),
+                 zpt::info);
 
             do {
                 try {

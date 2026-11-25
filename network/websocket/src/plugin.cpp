@@ -42,7 +42,7 @@ static zpt::padded_atomic<bool> _has_exited{ false };
  * @param _plugin Plugin handle (unused). */
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {
     zpt::TRANSPORT_LAYER() //
-      .add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+      .add("ws", zpt::make_transport<zpt::net::transport::websocket>(), { json_array, "wss" });
     zlog("Loaded WebSocket connection upgrade support", zpt::info);
 }
 

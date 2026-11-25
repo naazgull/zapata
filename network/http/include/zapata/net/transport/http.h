@@ -67,6 +67,11 @@ class http : public zpt::basic_transport {
      * @param _capability Capability flag to check.
      * @return True if checking for SYNCHRONOUS. */
     auto has_capability(std::uint64_t _capability) const -> bool override;
+    /** @brief Normalises the URI by checking if there is a shorthand for enabling encrypted
+     * connection, if there is a defined port or the default should be added.
+     * @param _uri The decomposed URI to be normalised.
+     * @return Reference to this object, for chaining purposes. */
+    auto normalise_uri(zpt::json& _uri) const -> basic_transport const& override;
     /** @brief Creates a new HTTP request message.
      * @return Shared pointer to the new request message. */
     auto make_request() const -> zpt::message override;
@@ -97,8 +102,12 @@ class http : public zpt::basic_transport {
  * @brief Returns the global HTTP server socket.
  * @param _address Address to bind (default: "0.0.0.0").
  * @param _port Port to bind (0 for configured default).
+ * @param _cert_file Path to the PEM certificate (chain) file.
+ * @param _key_file Path to the PEM private key file.
  * @return Reference to the global server socket stream.
  */
-auto HTTP_SERVER_SOCKET(std::string const& _address = "0.0.0.0", std::uint16_t _port = 0)
-  -> zpt::serversocketstream&;
+auto HTTP_SERVER_SOCKET(std::string const& _address = "0.0.0.0",
+                        std::uint16_t _port = 0,
+                        std::string const& _cert_file = {},
+                        std::string const& _key_file = {}) -> zpt::serversocketstream&;
 } // namespace zpt

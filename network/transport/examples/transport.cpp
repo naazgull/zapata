@@ -27,6 +27,8 @@ class some_protocol : public zpt::basic_transport {
   public:
     auto has_capability(std::uint64_t) const -> bool override { return true; }
 
+    auto normalise_uri(zpt::json&) const -> some_protocol const& override { return (*this); }
+
     auto make_request() const -> zpt::message override { return nullptr; }
 
     auto make_reply() const -> zpt::message override { return nullptr; }

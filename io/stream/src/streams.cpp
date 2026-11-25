@@ -77,8 +77,10 @@ auto zpt::basic_stream::close() -> zpt::basic_stream& {
 
 auto zpt::basic_stream::upgrade(const std::string& _rhs) -> zpt::basic_stream& {
     this->__transport = _rhs;
-    this->__uri =
-      std::format("{}{}", this->__transport, this->__uri.substr(this->__uri.find("://")));
+    this->__uri = std::format("{}{}{}",
+                              this->__transport,
+                              (this->__is_encrypted ? "+ssl" : ""),
+                              this->__uri.substr(this->__uri.find("://")));
     return (*this);
 }
 
@@ -94,6 +96,8 @@ auto zpt::basic_stream::state(zpt::stream_state _rhs) -> basic_stream& {
 auto zpt::basic_stream::state() const -> zpt::stream_state { return this->__state; }
 
 auto zpt::basic_stream::persistent() const -> bool { return true; }
+
+auto zpt::basic_stream::encrypted() const -> bool { return this->__is_encrypted; }
 
 auto zpt::basic_stream::metadata(std::any _metadata) -> basic_stream& {
     this->__metadata = _metadata;
@@ -247,9 +251,7 @@ auto zpt::polling::poll() -> zpt::polling& {
         }
         for (auto _it = this->__pending_events.begin(); _it != this->__pending_events.end();) {
             auto& _event = *_it;
-            if (this->process_event(_event) || (_event.events & EPOLLIN) == 0) {
-                _it = this->__pending_events.erase(_it);
-            }
+            if (this->process_event(_event)) { _it = this->__pending_events.erase(_it); }
             else { ++_it; }
         }
 

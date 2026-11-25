@@ -208,13 +208,11 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      * @return Reference to the underlying iostream.
      */
     auto operator*() -> std::iostream&;
-
     /**
      * @brief Returns the file descriptor.
      * @return File descriptor value.
      */
     virtual operator int();
-
     /**
      * @brief Sets the peer address and port on the underlying socket.
      * @tparam IOStream Underlying stream type.
@@ -267,6 +265,11 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
      */
     virtual auto persistent() const -> bool;
     /**
+     * @brief Returns whether the stream is using an encrypted channel.
+     * @return True if stream is using an encrypted channel.
+     */
+    virtual auto encrypted() const -> bool;
+    /**
      * @brief Sets arbitrary metadata on this stream.
      * @param _metadata Metadata to attach.
      * @return Reference to this stream.
@@ -301,6 +304,8 @@ class basic_stream : public std::enable_shared_from_this<basic_stream> {
     std::string __transport{ "" };
     /** @brief URI string representation of this stream. */
     std::string __uri{ "" };
+    /** @brief Whether or not the stream is using an encrypted channel. */
+    bool __is_encrypted{ false };
     /** @brief Arbitrary metadata attached to this stream. */
     std::any __metadata;
     /** @brief Lazily-created stable epoll event data block (see event_data()). */
@@ -623,9 +628,10 @@ zpt::basic_stream::basic_stream(std::in_place_type_t<T>,
     }
     if constexpr (std::is_convertible<T, std::string>::value) {
         auto _socket_uri = static_cast<std::string>(static_cast<T&>(*this->__underlying));
+        this->__is_encrypted = (_socket_uri.find("+ssl") != std::string::npos);
         this->__uri = std::format("{}{}{}",
                                   this->__transport,
-                                  _socket_uri.find("+ssl") != std::string::npos ? "+ssl" : "",
+                                  this->__is_encrypted ? "+ssl" : "",
                                   _socket_uri.substr(_socket_uri.find("://")));
     }
     zlog("Opening connection to " << this->__uri, zpt::trace);

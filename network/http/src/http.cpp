@@ -30,6 +30,19 @@ auto zpt::net::transport::http::has_capability(std::uint64_t _capability) const 
     return (_capabilities & _capability) == _capability;
 }
 
+auto zpt::net::transport::http::normalise_uri(zpt::json& _uri) const -> basic_transport const& {
+    if (_uri("scheme")->ok() && _uri("scheme") == "https") {
+        _uri["scheme"] = "http";
+        if (!_uri("options")->is_array()) { _uri["options"] = zpt::json::array(); }
+        _uri["options"] << "ssl";
+    }
+    if (!_uri("port")->is_integer()) {
+        if (zpt::uri::scheme::is_encrypted(_uri)) { _uri["port"] = 443; }
+        else { _uri["port"] = 80; }
+    }
+    return (*this);
+}
+
 auto zpt::net::transport::http::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::http::basic_request>();
     zpt::init(zpt::message_cast<zpt::http::basic_request>(_to_return));
@@ -76,8 +89,10 @@ auto zpt::net::transport::http::copy(zpt::message const& _to_copy) const -> zpt:
     else { return _to_copy->copy<zpt::http::basic_request>(); }
 }
 
-auto zpt::HTTP_SERVER_SOCKET(std::string const& _address, std::uint16_t _port)
-  -> zpt::serversocketstream& {
-    static zpt::serversocketstream _global{ "http", _address, _port };
+auto zpt::HTTP_SERVER_SOCKET(std::string const& _address,
+                             std::uint16_t _port,
+                             std::string const& _cert_file,
+                             std::string const& _key_file) -> zpt::serversocketstream& {
+    static zpt::serversocketstream _global{ "http", _address, _port, _cert_file, _key_file };
     return _global;
 }

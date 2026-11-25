@@ -140,16 +140,21 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     /**
      * @brief Configures SSL/TLS context and initiates handshake.
      * @param _ctx SSL context to use.
+     * @param _is_server Whether or not the context belongs to a server socket.
      * @return void
      */
-    auto set_context(SSL_CTX* _ctx) -> void;
+    auto set_context(SSL_CTX* _ctx, bool _is_server = false) -> void;
+    /**
+     * @brief Retrieves the underlying SSL object, responsible for decrypting received data.
+     * @return A pointer to the SSL object or `nullptr` in case the socket isn't secure.
+     */
+    auto get_ssl() -> SSL*;
     /**
      * @brief Sets the protocol (IPPROTO_TCP, IPPROTO_UDP, or UNIXPROTO_RAW).
      * @param _protocol Protocol type.
      * @return void
      */
     auto set_protocol(short _protocol) -> void;
-
     /**
      * @brief Returns the local socket address.
      * @return Reference to local sockaddr structure.
@@ -185,7 +190,6 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
      * @return Reference to timeout value.
      */
     auto timeout() -> unsigned long long&;
-
     /**
      * @brief Returns the last error code.
      * @return Reference to error code.
@@ -196,7 +200,6 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
      * @return Reference to error description string.
      */
     auto error_string() -> std::string&;
-
     /**
      * @brief Returns true if the socket is in a valid state.
      * @return True if socket is valid and ready.
@@ -218,6 +221,7 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     short __protocol{ INVALID_PROTOCOL };
     SSL* __sslstream{ nullptr };
     SSL_CTX* __context{ nullptr };
+    bool __is_server_context{ false };
     unsigned long long __timeout{ 0 };
     unsigned int __error_code{ 0 };
     std::string __error_string;
@@ -239,7 +243,6 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
 };
 
 using socketbuf = basic_socketbuf<char>;
-using wsocketbuf = basic_socketbuf<wchar_t>;
 
 /**
  * @brief iostream wrapper around a network socket.
@@ -348,6 +351,11 @@ class basic_socketstream : public std::basic_iostream<Char> {
      */
     auto ssl() -> bool&;
     /**
+     * @brief Retrieves the underlying SSL object, responsible for decrypting received data.
+     * @return A pointer to the SSL object or `nullptr` in case the socket isn't secure.
+     */
+    auto get_ssl() -> SSL*;
+    /**
      * @brief Returns the remote hostname.
      * @return Reference to hostname string.
      */
@@ -362,7 +370,6 @@ class basic_socketstream : public std::basic_iostream<Char> {
      * @return Protocol type.
      */
     auto protocol() -> short;
-
     /**
      * @brief Assigns a raw socket file descriptor (no SSL).
      * @param _sockfd Socket file descriptor.
@@ -406,7 +413,6 @@ class basic_socketstream : public std::basic_iostream<Char> {
      * @return Reference to error description string.
      */
     auto error_string() -> std::string&;
-
     /**
      * @brief Opens a TCP/UDP connection to a remote host.
      * @param _host Hostname or IP address.
@@ -441,7 +447,6 @@ class basic_socketstream : public std::basic_iostream<Char> {
 };
 
 using socketstream = zpt::basic_socketstream<char>;
-using wsocketstream = zpt::basic_socketstream<wchar_t>;
 
 /**
  * @brief Server-side socket that listens for incoming connections.
@@ -497,7 +502,7 @@ class basic_serversocketstream {
      * @brief Returns a URI representation (e.g., "tcp://host:port").
      * @return URI string representation.
      */
-    operator std::string();
+    virtual operator std::string();
     /**
      * @brief Closes the server socket.
      * @return void
@@ -531,7 +536,7 @@ class basic_serversocketstream {
      * @return Stream wrapping the new client connection.
      * @throws zpt::ClosedException If the server socket is closed.
      */
-    auto accept() -> zpt::stream;
+    virtual auto accept() -> zpt::stream;
 
   protected:
     int __sockfd{ INVALID_FD };
@@ -540,6 +545,58 @@ class basic_serversocketstream {
     std::string __path{ "" };
     std::uint16_t __port{ INVALID_PORT };
     std::string __transport{ "" };
+};
+
+/**
+ * @brief SSL/TLS server-side socket that listens for incoming connections.
+ *
+ * Mirrors zpt::basic_serversocketstream but terminates TLS. The constructor
+ * binds the TCP socket (via the base class) and loads a PEM certificate/key
+ * pair into an SSL_CTX; accept() runs the server-side handshake (SSL_accept)
+ * against the raw accepted socket descriptor before returning the established
+ * connection as a zpt::stream.
+ *
+ * @tparam Char Character type (typically char or wchar_t).
+ *
+ * @see zpt::basic_serversocketstream
+ */
+template<typename Char>
+class basic_ssl_serversocketstream : public zpt::basic_serversocketstream<Char> {
+  public:
+    /**
+     * @brief Binds to a TCP port and loads the TLS certificate/key.
+     * @param _transport Transport scheme.
+     * @param _address Bind address.
+     * @param _port Port number.
+     * @param _cert_file Path to the PEM certificate (chain) file.
+     * @param _key_file Path to the PEM private key file.
+     * @return void (constructors implicitly initialize the object).
+     */
+    basic_ssl_serversocketstream(std::string const& _transport,
+                                 std::string const& _address,
+                                 std::uint16_t _port,
+                                 std::string const& _cert_file,
+                                 std::string const& _key_file);
+    /**
+     * @brief Destructor. Releases the SSL context.
+     * @return void (destructors implicitly clean up the object).
+     */
+    virtual ~basic_ssl_serversocketstream();
+
+    /**
+     * @brief Returns a URI representation (e.g., "tcp://host:port").
+     * @return URI string representation.
+     */
+    operator std::string() override;
+    /**
+     * @brief Accepts an incoming connection and completes the TLS handshake.
+     * @return Stream wrapping the new, TLS-established client connection.
+     * @throws zpt::ClosedException If the server socket is closed or the handshake fails.
+     */
+    auto accept() -> zpt::stream override;
+
+  protected:
+    SSL_CTX* __context{ nullptr };
 };
 
 /**
@@ -560,11 +617,15 @@ class serversocketstream {
      * @param _transport Transport scheme.
      * @param _address Bind address.
      * @param _port Port number.
+     * @param _cert_file Path to the PEM certificate (chain) file.
+     * @param _key_file Path to the PEM private key file.
      * @return void (constructors implicitly initialize the object).
      */
     serversocketstream(std::string const& _transport,
                        std::string const& _address,
-                       std::uint16_t _port);
+                       std::uint16_t _port,
+                       std::string const& _cert_file = {},
+                       std::string const& _key_file = {});
     /**
      * @brief Binds to a Unix domain socket path.
      * @param _transport Transport scheme.
@@ -594,57 +655,6 @@ class serversocketstream {
     std::shared_ptr<zpt::basic_serversocketstream<char>> __underlying;
 };
 
-/**
- * @brief Shared-pointer wrapper for basic_serversocketstream<wchar_t>.
- *
- * Wide-character variant of serversocketstream.
- */
-class wserversocketstream {
-  public:
-    /**
-     * @brief Default constructor (unbound).
-     * @return void (constructors implicitly initialize the object).
-     */
-    wserversocketstream();
-    /**
-     * @brief Binds to a TCP port.
-     * @param _transport Transport scheme.
-     * @param _address Bind address.
-     * @param _port Port number.
-     * @return void (constructors implicitly initialize the object).
-     */
-    wserversocketstream(std::string const& _transport,
-                        std::string const& _address,
-                        std::uint16_t _port);
-    /**
-     * @brief Binds to a Unix domain socket path.
-     * @param _transport Transport scheme.
-     * @param _path Filesystem path for the socket.
-     * @return void (constructors implicitly initialize the object).
-     */
-    wserversocketstream(std::string const& _transport, std::string const& _path);
-    wserversocketstream(const zpt::wserversocketstream& _rhs);
-    wserversocketstream(zpt::wserversocketstream&& _rhs);
-    virtual ~wserversocketstream() = default;
-
-    auto operator=(const zpt::wserversocketstream& _rhs) -> zpt::wserversocketstream&;
-    auto operator=(zpt::wserversocketstream&& _rhs) -> zpt::wserversocketstream&;
-
-    /**
-     * @brief Access the underlying server socket.
-     * @return Pointer to the underlying wide-char server socket.
-     */
-    auto operator->() -> zpt::basic_serversocketstream<wchar_t>*;
-    /**
-     * @brief Dereference the underlying server socket.
-     * @return Reference to the underlying wide-char server socket.
-     */
-    auto operator*() -> zpt::basic_serversocketstream<wchar_t>&;
-
-  private:
-    std::shared_ptr<zpt::basic_serversocketstream<wchar_t>> __underlying;
-};
-
 #define CRLF "\r\n"
 } // namespace zpt
 
@@ -672,7 +682,7 @@ zpt::basic_socketbuf<Char>::~basic_socketbuf() {
     }
     if (this->__sslstream != nullptr) {
         SSL_free(this->__sslstream);
-        SSL_CTX_free(this->__context);
+        if (!this->__is_server_context) { SSL_CTX_free(this->__context); }
     }
 }
 
@@ -702,13 +712,17 @@ auto zpt::basic_socketbuf<Char>::get_socket() -> int {
 }
 
 template<typename Char>
-auto zpt::basic_socketbuf<Char>::set_context(SSL_CTX* _ctx) -> void {
+auto zpt::basic_socketbuf<Char>::set_context(SSL_CTX* _ctx, bool _is_server) -> void {
     this->__ssl = true;
     this->__context = _ctx;
     this->__sslstream = SSL_new(_ctx);
-    SSL_set_tlsext_host_name(this->__sslstream, this->__host.data());
+    this->__is_server_context = _is_server;
     SSL_set_fd(this->__sslstream, this->__sock);
-    SSL_connect(this->__sslstream);
+}
+
+template<typename Char>
+auto zpt::basic_socketbuf<Char>::get_ssl() -> SSL* {
+    return this->__sslstream;
 }
 
 template<typename Char>
@@ -880,17 +894,26 @@ auto zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
 template<typename Char>
 auto zpt::basic_socketbuf<Char>::output_buffer_ssl() -> __int_type {
     auto _num = __buf_type::pptr() - __buf_type::pbase();
+    if (_num == 0) { return 0; }
     auto _actually_written = 0;
+    bool _want_write{ false };
+
     do {
-        if ((_actually_written =
-               SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
-            if (SSL_get_error(this->__sslstream, _actually_written) != SSL_ERROR_WANT_WRITE) {
-                SSL_free(this->__sslstream);
-                SSL_CTX_free(this->__context);
-                this->report_ssl_error();
-            }
+        auto _written = 0;
+        _want_write = false;
+
+        if ((_written = SSL_write(this->__sslstream,
+                                  reinterpret_cast<char*>(obuf),
+                                  (_num - _actually_written) * char_size)) < 0) {
+            auto _error = SSL_get_error(this->__sslstream, _written);
+            _want_write = (_error == SSL_ERROR_WANT_WRITE);
+            if (!_want_write) { this->report_ssl_error(); }
+            break;
         }
-    } while (SSL_get_error(this->__sslstream, _actually_written) == SSL_ERROR_WANT_WRITE);
+
+        if (_written > 0) { _actually_written += _written; }
+    } while (_actually_written < _num && _want_write);
+
     __buf_type::pbump(-_actually_written);
     return _actually_written;
 }
@@ -926,17 +949,24 @@ auto zpt::basic_socketbuf<Char>::underflow_udp() -> __int_type {
 
 template<typename Char>
 auto zpt::basic_socketbuf<Char>::underflow_ssl() -> __int_type {
-    auto _actually_read = -1;
+    auto _actually_read = 0;
+    bool _want_read{ false };
+
     do {
-        if ((_actually_read =
-               SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
-            if (SSL_get_error(this->__sslstream, _actually_read) != SSL_ERROR_WANT_READ) {
-                SSL_free(this->__sslstream);
-                SSL_CTX_free(this->__context);
-                this->report_ssl_error();
-            }
+        _want_read = false;
+        auto _read = 0;
+
+        if ((_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) <
+            0) {
+            auto _error = SSL_get_error(this->__sslstream, _read);
+            _want_read = (_error == SSL_ERROR_WANT_READ);
+            if (!_want_read) { this->report_ssl_error(); }
+            break;
         }
-    } while (SSL_get_error(this->__sslstream, _actually_read) == SSL_ERROR_WANT_READ);
+
+        if (_read > 0) { _actually_read += _read; }
+    } while (_want_read);
+
     if (_actually_read == 0) { return __traits_type::eof(); }
     __buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
     return __traits_type::to_int_type(*__buf_type::gptr());
@@ -955,6 +985,7 @@ auto zpt::basic_socketbuf<Char>::report_ssl_error() -> void {
     this->__context = nullptr;
     this->__error_code = ERR_get_error();
     this->__error_string = zpt::ssl_error_print(this->__error_code);
+    zlog(this->__error_string, zpt::error);
     throw zpt::ClosedException(this->__error_string);
 }
 
@@ -1085,6 +1116,11 @@ auto zpt::basic_socketstream<Char>::ssl() -> bool& {
 }
 
 template<typename Char>
+auto zpt::basic_socketstream<Char>::get_ssl() -> SSL* {
+    return this->__buf.get_ssl();
+}
+
+template<typename Char>
 auto zpt::basic_socketstream<Char>::host() -> std::string& {
     return this->__buf.host();
 }
@@ -1108,7 +1144,7 @@ auto zpt::basic_socketstream<Char>::assign(int _sockfd) -> void {
 template<typename Char>
 auto zpt::basic_socketstream<Char>::assign(int _sockfd, SSL_CTX* _ctx) -> void {
     this->__buf.set_socket(_sockfd);
-    this->__buf.set_context(_ctx);
+    this->__buf.set_context(_ctx, this->__is_accepted);
     this->__buf.ssl() = true;
 }
 
@@ -1268,7 +1304,28 @@ auto zpt::basic_socketstream<Char>::open_ssl() -> bool {
         SSL_load_error_strings();
         SSL_CTX* _context = SSL_CTX_new(SSLv23_method());
         if (_context == nullptr) { this->report_ssl_error(); }
-        else { this->assign(_sd, _context); }
+        else {
+            this->assign(_sd, _context);
+            SSL_set_tlsext_host_name(this->__buf.get_ssl(), this->__buf.host().data());
+            auto _connected = SSL_connect(this->__buf.get_ssl());
+            expect(_connected > 0,
+                   "error while accepting new connection: "
+                     << zpt::ssl_error_print(this->__buf.get_ssl(), _connected));
+
+            struct timeval _rto_on{ .tv_sec = 0, .tv_usec = 500 };
+            ::setsockopt(
+              this->__buf.get_socket(), SOL_SOCKET, SO_RCVTIMEO, &_rto_on, sizeof(_rto_on));
+
+            char _tmp[4096];
+            auto _read = SSL_read(this->__buf.get_ssl(), _tmp, sizeof(_tmp));
+            auto _error = SSL_get_error(this->__buf.get_ssl(), _read);
+            expect(_error > 0 || _error == SSL_ERROR_WANT_READ,
+                   "error while waiting for TLS ticket");
+
+            struct timeval _rto_off{ .tv_sec = 0, .tv_usec = 0 };
+            ::setsockopt(
+              this->__buf.get_socket(), SOL_SOCKET, SO_RCVTIMEO, &_rto_off, sizeof(_rto_off));
+        }
     }
     return true;
 }
@@ -1339,7 +1396,7 @@ zpt::basic_serversocketstream<Char>::operator std::string() {
     std::ostringstream _oss;
     switch (this->__protocol) {
         case IPPROTO_TCP: {
-            _oss << "tcp" << "://" << this->__address << ":" << this->__port;
+            _oss << "tcp://" << this->__address << ":" << this->__port;
             break;
         }
         case UNIXPROTO_RAW: {
@@ -1477,4 +1534,71 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
         }
     }
     return nullptr;
+}
+
+template<typename Char>
+zpt::basic_ssl_serversocketstream<Char>::basic_ssl_serversocketstream(std::string const& _transport,
+                                                                      std::string const& _address,
+                                                                      std::uint16_t _port,
+                                                                      std::string const& _cert_file,
+                                                                      std::string const& _key_file)
+  : zpt::basic_serversocketstream<Char>(_transport, _address, _port)
+  , __context{ nullptr } {
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+    this->__context = SSL_CTX_new(SSLv23_method());
+    expect(this->__context != nullptr,
+           "unable to create the SSL context: " << zpt::ssl_error_print());
+    expect(SSL_CTX_use_certificate_file(this->__context, _cert_file.c_str(), SSL_FILETYPE_PEM) == 1,
+           "unable to load the SSL certificate '" << _cert_file << "': " << zpt::ssl_error_print());
+    expect(SSL_CTX_use_PrivateKey_file(this->__context, _key_file.c_str(), SSL_FILETYPE_PEM) == 1,
+           "unable to load the SSL private key '" << _key_file << "': " << zpt::ssl_error_print());
+    expect(SSL_CTX_check_private_key(this->__context) == 1,
+           "the SSL private key '" << _key_file << "' does not match the certificate");
+}
+
+template<typename Char>
+zpt::basic_ssl_serversocketstream<Char>::~basic_ssl_serversocketstream() {
+    if (this->__context != nullptr) { SSL_CTX_free(this->__context); }
+}
+
+template<typename Char>
+zpt::basic_ssl_serversocketstream<Char>::operator std::string() {
+    std::ostringstream _oss;
+    _oss << "tcp+ssl://" << this->__address << ":" << this->__port << std::flush;
+    return _oss.str();
+}
+
+template<typename Char>
+auto zpt::basic_ssl_serversocketstream<Char>::accept() -> zpt::stream {
+    expect(this->__sockfd != INVALID_FD, "server socket file descriptor is invalid");
+
+    zpt::sockaddrin_t _cli_addr{};
+    socklen_t _clilen = sizeof(zpt::sockaddrin_t);
+    auto _newsockfd =
+      ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
+
+    if (this->__sockfd == INVALID_FD) {
+        throw zpt::ClosedException("server socket file descriptor has been closed");
+    }
+    expect(_newsockfd > 0,
+           "error while accepting new connection: " << std::string(std::strerror(errno)));
+
+    struct linger _so_linger;
+    _so_linger.l_onoff = 1;
+    _so_linger.l_linger = 30;
+    ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+
+    auto _stream = zpt::make_stream<zpt::basic_socketstream<Char>>(
+      this->__transport, _newsockfd, _cli_addr, zpt::USE_SSL, this->__protocol);
+    auto& _underlying = zpt::stream_cast<zpt::basic_socketstream<Char>>(_stream);
+    _underlying.assign(_newsockfd, this->__context);
+
+    auto _handshake = SSL_accept(_underlying.get_ssl());
+    expect(_handshake > 0,
+           "error while accepting new connection: " << zpt::ssl_error_print(_underlying.get_ssl(),
+                                                                            _handshake));
+
+    return _stream;
 }
