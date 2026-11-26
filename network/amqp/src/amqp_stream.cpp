@@ -40,14 +40,6 @@
 #include <zapata/net/transport/amqp.h>
 #include <zapata/startup/startup.h>
 
-namespace {
-/** @brief Wraps a system call error check, throwing on non-zero errno.
- * @param _operation Description of the operation that failed.
- * @param _errno errno value to check.
- * @return void */
-auto check_error(std::string const& _operation, int _errno) -> void;
-} // namespace
-
 zpt::amqp_stream::amqp_stream(zpt::json _config)
   : zpt::basic_stream{ "amqp" }
   , __config{ _config } {}
@@ -112,9 +104,10 @@ auto zpt::amqp_stream::connect() -> amqp_stream& {
     _hints.ai_family = AF_INET;
     _hints.ai_socktype = SOCK_STREAM;
     struct addrinfo* _resolved{ nullptr };
-    errno = 0;
-    ::check_error("resolving address",
-                  getaddrinfo(_host.data(), std::to_string(_port).data(), &_hints, &_resolved));
+    auto _errno = getaddrinfo(_host.data(), std::to_string(_port).data(), &_hints, &_resolved);
+    expect(_errno == 0,
+           "Error while resolving address: E(" << _errno << ") " << std::strerror(_errno));
+    zpt::sentry _guard{ [_resolved]() { ::freeaddrinfo(_resolved); } };
 
     try {
         std::unique_lock _guard{ this->__driver_mutex };
@@ -122,19 +115,17 @@ auto zpt::amqp_stream::connect() -> amqp_stream& {
                "Connection still active, can't reconnect");
 
         auto _fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        errno = 0;
-        if (::connect(_fd, _resolved->ai_addr, _resolved->ai_addrlen) < 0) {
-            ::freeaddrinfo(_resolved);
-            ::check_error("connecting", errno);
-        }
-        ::freeaddrinfo(_resolved);
+        _errno = ::connect(_fd, _resolved->ai_addr, _resolved->ai_addrlen);
+        expect(_errno == 0,
+               "Error while connecting: E(" << _errno << ") " << std::strerror(_errno));
 
         this->__fd = _fd;
         this->__driver = std::make_unique<pn_connection_driver_t>();
 
-        errno = 0;
-        ::check_error("initializing connection driver",
-                      pn_connection_driver_init(this->__driver.get(), nullptr, nullptr));
+        _errno = pn_connection_driver_init(this->__driver.get(), nullptr, nullptr);
+        expect(_errno == 0,
+               "Error while initializing connection driver: E(" << _errno << ") "
+                                                                << std::strerror(_errno));
 
         if (zpt::log_lvl <= zpt::trace) {
             pn_transport_trace(this->__driver->transport, PN_TRACE_FRM);
@@ -279,7 +270,7 @@ auto zpt::amqp_stream::pump_io() -> void {
             break;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
-        ::check_error("reading", errno);
+        expect(errno == 0, "Error while reading: E(" << errno << ") " << std::strerror(errno));
     }
 
     this->process_events();
@@ -295,7 +286,7 @@ auto zpt::amqp_stream::pump_io() -> void {
             continue;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
-        ::check_error("writing", errno);
+        expect(errno == 0, "Error while writing: E(" << errno << ") " << std::strerror(errno));
     }
 }
 
@@ -386,11 +377,3 @@ auto zpt::amqp_stream::on_delivery(pn_event_t* _event) -> void {
 auto zpt::amqp_stream::on_log(std::string const& _message, zpt::LogLevel _level) -> void {
     zlog(_message, _level);
 }
-
-namespace {
-auto check_error(std::string const& _operation, int _errno) -> void {
-    if (_errno == 0) { return; }
-    expect(_errno == 0,
-           "Error while " << _operation << ": E(" << _errno << ") " << std::strerror(_errno));
-}
-} // namespace

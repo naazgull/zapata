@@ -28,7 +28,7 @@
 #include <zapata/net/transport/mqtt.h>
 
 namespace {
-auto check_error(std::string const& _operation, int _return, int _errno) -> void;
+auto check_error(std::string const& _operation, int _return, int _errno) -> std::string;
 }
 
 zpt::mqtt_stream::mqtt_stream(zpt::json _config)
@@ -117,14 +117,15 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
         if (_tls) {
             errno = 0;
             auto _ret = mosquitto_tls_insecure_set(this->__mosq, false);
-            ::check_error("setting TLS insecure", _ret, errno);
+            expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("setting TLS insecure", _ret, errno));
 
             errno = 0, _ret = mosquitto_tls_opts_set(this->__mosq, 1, nullptr, nullptr);
-            ::check_error("setting TLS", _ret, errno);
+            expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("setting TLS", _ret, errno));
 
             errno = 0, _ret = mosquitto_tls_set(
                          this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
-            ::check_error("setting TLS certificate directory", _ret, errno);
+            expect(_ret == MOSQ_ERR_SUCCESS,
+                   ::check_error("setting TLS certificate directory", _ret, errno));
         }
 
         // Connects to the MQTT mqtt_stream.
@@ -132,12 +133,12 @@ auto zpt::mqtt_stream::connect() -> mqtt_stream& {
         zlog("Going to connect to " << this->__uri, zpt::trace);
         errno = 0;
         auto _ret = mosquitto_connect(this->__mosq, _host.data(), _port, _keep_alive);
-        ::check_error("connecting", _ret, errno);
+        expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("connecting", _ret, errno));
 
         do {
             errno = 0;
             _ret = mosquitto_loop(this->__mosq, 100, 1);
-            ::check_error("connecting", _ret, errno);
+            expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("connecting", _ret, errno));
         } while (!this->__connected->load());
     }
 
@@ -177,7 +178,7 @@ auto zpt::mqtt_stream::publish(zpt::message _payload) -> zpt::mqtt_stream& {
                                   _payload_str.data(),
                                   0,
                                   false);
-    ::check_error("publishing", _ret, errno);
+    expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("publishing", _ret, errno));
     mosquitto_loop_write(this->__mosq, 1);
     mosquitto_loop_misc(this->__mosq);
 
@@ -198,7 +199,7 @@ auto zpt::mqtt_stream::credentials(std::string const& _user, std::string const& 
     // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_username_pw_set
     errno = 0;
     auto _ret = mosquitto_username_pw_set(this->__mosq, _user.data(), _passwd.data());
-    ::check_error("setting credentials", _ret, errno);
+    expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("setting credentials", _ret, errno));
 }
 
 auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_stream& {
@@ -213,7 +214,7 @@ auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_st
         int _;
         errno = 0;
         auto _ret = mosquitto_subscribe(this->__mosq, &_, _topic.data(), 0);
-        ::check_error("subscribing", _ret, errno);
+        expect(_ret == MOSQ_ERR_SUCCESS, ::check_error("subscribing", _ret, errno));
         mosquitto_loop_write(this->__mosq, 1);
         mosquitto_loop_misc(this->__mosq);
     }
@@ -249,8 +250,8 @@ auto zpt::mqtt_stream::on_log(struct mosquitto*, void*, int _level, const char* 
 }
 
 namespace {
-auto check_error(std::string const& _operation, int _return, int _errno) -> void {
-    if (_return == MOSQ_ERR_SUCCESS) { return; }
+auto check_error(std::string const& _operation, int _return, int _errno) -> std::string {
+    if (_return == MOSQ_ERR_SUCCESS) { return ""; }
 
     std::string _error_description;
     switch (_return) {
@@ -277,7 +278,6 @@ auto check_error(std::string const& _operation, int _return, int _errno) -> void
         default: _error_description = std::string("unknown error: code=") + std::to_string(_return);
     }
 
-    expect(_return == MOSQ_ERR_SUCCESS,
-           "Error while " << _operation << ": E(" << _errno << ") " << _error_description);
+    return std::format("Error while {}: E({}) {} ", _operation, _errno, _error_description);
 };
 } // namespace
