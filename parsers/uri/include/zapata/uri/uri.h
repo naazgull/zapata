@@ -67,6 +67,12 @@ auto to_regex_object(zpt::json const& _in) -> zpt::json;
  */
 auto to_regex_array(zpt::json const& _in) -> zpt::json;
 
+namespace scheme {
+auto is_encrypted(zpt::json const& _uri) -> bool;
+auto has_option(zpt::json const& _uri, std::string const& _option) -> bool;
+auto to_string(zpt::json const& _uri) -> std::string;
+} // namespace scheme
+
 /**
  * @brief Path-specific serialization functions.
  */

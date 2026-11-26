@@ -26,6 +26,7 @@
 #include <strings.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <zapata/base/expect.h>
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
 
@@ -42,12 +43,93 @@ const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARN
 } // namespace zpt
 
 namespace {
-
 /**
  * @brief Returns the ANSI SGR color code for a log level.
  * @param _l The severity level.
  * @return The color sequence (or an empty string for unknown levels).
  */
+auto level_sgr(zpt::LogLevel _l) -> const char*;
+/**
+ * @brief Decides whether the current output should be colored.
+ * @param _fmt The active log format (2 = JSON).
+ * @return True when color is enabled.
+ *
+ * Color is disabled for the JSON format (which must stay machine-parseable),
+ * when NO_COLOR is set, and when stdout is not an interactive terminal.
+ */
+auto color_on() -> bool;
+} // namespace
+
+auto zpt::log(std::string const& _text,
+              zpt::LogLevel _level,
+              std::string const& _host,
+              int _line,
+              std::string const& _file) -> int {
+    if (zpt::log_fd == nullptr) { return -1; }
+
+    bool _colored = color_on();
+
+    switch (zpt::log_format) {
+        case 0: {
+            std::ostringstream _oss;
+            if (_colored) { _oss << "\033[0;36m"; }
+            _oss << zpt::tostr(time(nullptr), "%H:%M:%S");
+            if (_colored) { _oss << "\033[0m" << level_sgr(_level); }
+            _oss << " [" << zpt::log_lvl_names[_level] << "] " << _text << std::endl << std::flush;
+            if (_colored) { _oss << "\033[0m"; }
+            (*zpt::log_fd) << _oss.str() << std::flush;
+            break;
+        }
+        case 1: {
+            std::ostringstream _oss;
+            if (_colored) { _oss << "\033[0;36m"; }
+            _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S");
+            if (_colored) { _oss << "\033[0m" << level_sgr(_level); }
+            _oss << " " << _host << " " << *zpt::log_pname << "[" << zpt::log_pid << "]: ["
+                 << zpt::log_lvl_names[_level] << "] {" << zpt::this_thread::name() << "} " << _text
+                 << " (" << std::filesystem::path(_file).filename().string() << ":" << _line << ")"
+                 << std::endl
+                 << std::flush;
+            if (_colored) { _oss << "\033[0m"; }
+            (*zpt::log_fd) << _oss.str() << std::flush;
+            break;
+        }
+        case 2: {
+            struct timeval _tp;
+            gettimeofday(&_tp, nullptr);
+
+            std::ostringstream _oss;
+            if (_colored) { _oss << level_sgr(_level); }
+            _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host
+                 << "\",\"short_message\":\"" << _text << "\",\"full_message\":\"" << _file << ":"
+                 << _line << " | "
+                 << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"")
+                 << "\",\"timestamp\":" << _tp.tv_sec << "." << (int)(_tp.tv_usec / 1000)
+                 << ",\"level\":" << (int)_level << ",\"pid\":" << zpt::log_pid
+                 << ",\"thread\":" << zpt::this_thread::name() << ",\"exec\":\"" << *zpt::log_pname
+                 << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}" << std::endl
+                 << std::flush;
+            if (_colored) { _oss << "\033[0m"; }
+            (*zpt::log_fd) << _oss.str() << std::flush;
+            break;
+        }
+    }
+    return 0;
+}
+
+auto zpt::log_hostname() -> std::string {
+    if (zpt::log_hname.length() == 0) {
+        char buffer[65];
+        bzero(buffer, 65);
+        gethostname(buffer, 64);
+        zpt::log_hname.assign(buffer);
+    }
+    return zpt::log_hname;
+}
+
+extern "C" auto zpt_base() -> int { return 1; }
+
+namespace {
 auto level_sgr(zpt::LogLevel _l) -> const char* {
     switch (_l) {
         case zpt::emergency:                     // fallthrough
@@ -64,77 +146,8 @@ auto level_sgr(zpt::LogLevel _l) -> const char* {
     }
 }
 
-/**
- * @brief Decides whether the current output should be colored.
- * @param _fmt The active log format (2 = JSON).
- * @return True when color is enabled.
- *
- * Color is disabled for the JSON format (which must stay machine-parseable),
- * when NO_COLOR is set, and when stdout is not an interactive terminal.
- */
-auto color_on(short _fmt) -> bool {
-    if (_fmt == 2) { return false; }
+auto color_on() -> bool {
     if (std::getenv("NO_COLOR") != nullptr) { return false; }
     return ::isatty(::fileno(stdout));
 }
-
 } // namespace
-
-auto zpt::log(std::string const& _text,
-              zpt::LogLevel _level,
-              std::string const& _host,
-              int _line,
-              std::string const& _file) -> int {
-    if (zpt::log_fd == nullptr) { return -1; }
-
-    bool _colored = color_on(zpt::log_format);
-
-    if (!zpt::log_format) {
-        std::ostringstream _oss;
-        if (_colored) { _oss << level_sgr(_level); }
-        _oss << "[" << zpt::log_lvl_names[_level] << "] " << _text << std::endl << std::flush;
-        if (_colored) { _oss << "\033[0m"; }
-        (*zpt::log_fd) << _oss.str() << std::flush;
-        return 0;
-    }
-
-    struct timeval _tp;
-    gettimeofday(&_tp, nullptr);
-
-    if (zpt::log_format == 1) {
-        std::ostringstream _oss;
-        if (_colored) { _oss << level_sgr(_level); }
-        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-             << *zpt::log_pname << "[" << zpt::log_pid << "]: [" << zpt::log_lvl_names[_level]
-             << "] " << _text << " (" << std::filesystem::path(_file).filename().string() << ":"
-             << _line << ")" << std::endl
-             << std::flush;
-        if (_colored) { _oss << "\033[0m"; }
-        (*zpt::log_fd) << _oss.str() << std::flush;
-    }
-    else {
-        std::ostringstream _oss;
-        _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host
-             << "\",\"short_message\":\"" << _text << "\",\"full_message\":\"" << _file << ":"
-             << _line << " | " << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"")
-             << "\",\"timestamp\":" << _tp.tv_sec << "." << (int)(_tp.tv_usec / 1000)
-             << ",\"level\":" << (int)_level << ",\"pid\":" << zpt::log_pid << ",\"exec\":\""
-             << *zpt::log_pname << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}"
-             << std::endl
-             << std::flush;
-        (*zpt::log_fd) << _oss.str() << std::flush;
-    }
-    return 0;
-}
-
-auto zpt::log_hostname() -> std::string {
-    if (zpt::log_hname.length() == 0) {
-        char buffer[65];
-        bzero(buffer, 65);
-        gethostname(buffer, 64);
-        zpt::log_hname.assign(buffer);
-    }
-    return zpt::log_hname;
-}
-
-extern "C" auto zpt_base() -> int { return 1; }

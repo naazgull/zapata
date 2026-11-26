@@ -41,7 +41,7 @@ class test_client_service : public zpt::events::process_call_reply {
         if (__count == 0) {
             ++__count;
             auto _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->string();
-            auto _test_message = zpt::make_request("tcp");
+            auto _test_message = zpt::make_request(zpt::network::default_transport());
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
@@ -68,7 +68,7 @@ class test_client_boot : public zpt::system_event {
             this->__received->body()("_id")->string().find("/test_plugin") != std::string::npos) {
 
             auto _prefix = zpt::GLOBAL_CONFIG()("rest")("prefix")->string();
-            auto _test_message = zpt::make_request("tcp");
+            auto _test_message = zpt::make_request(zpt::network::default_transport());
             _test_message //
               ->performative(zpt::Post)
               .uri(std::format("{}/test_plugin", _prefix))
@@ -91,9 +91,14 @@ class test_client_stream_state : public zpt::system_event {
     ~test_client_stream_state() = default;
 
     auto operator()(zpt::events::dispatcher::ptr) -> zpt::events::state override {
-        zlog("Stream state:" << this->__received->body(), zpt::info);
+        if (this->__received->body()("state") == "opened") { ++this->__connecting; }
+        else { ++this->__disconnecting; }
         return zpt::events::finish;
     }
+
+  private:
+    std::uint64_t __connecting{ 0 };
+    std::uint64_t __disconnecting{ 0 };
 };
 
 extern "C" auto _zpt_load_(zpt::plugin&) -> void {

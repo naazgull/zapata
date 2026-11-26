@@ -29,11 +29,13 @@ zpt::HTTPTokenizerLexer::~HTTPTokenizerLexer() {}
 
 auto zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_request& _root) -> void {
     this->__root_req = &_root;
+    this->__root_rep = nullptr;
     this->begin(zpt::re2c_cond::INITIAL);
 }
 
 auto zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_reply& _root) -> void {
     this->__root_rep = &_root;
+    this->__root_req = nullptr;
     this->begin(zpt::re2c_cond::INITIAL);
 }
 

@@ -31,6 +31,9 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     expect(_config->type() == zpt::JSObject, "Configuration 'identity' must be defined");
 
     for (auto const& [_protocol, _] : zpt::TRANSPORT_LAYER()) {
+        if (!_global_config(_protocol)->ok()) { // Is an alias
+            continue;
+        }
         _config["protocols"]["registered"][_protocol] = _global_config(_protocol);
     }
     _config["protocols"]["default"] = _global_config("transport")("default");

@@ -349,7 +349,7 @@ auto zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSON
         _out.append(std::string(_n_tabs + 1, '\t'));
         _out.append("\"");
         _out.append(_element.first);
-        _out.append("\" : ");
+        _out.append("\": ");
         _element.second->prettify(_out, _n_tabs + 1);
     }
     if (!_first) {

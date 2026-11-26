@@ -717,6 +717,7 @@ auto zpt::events::call<T>::resolve_uri() -> void {
 
     auto& _uri = this->__to_send->uri();
     expect(_uri("path")->ok(), "Can't send a message without a resource path");
+    zpt::normalise_uri(_uri);
 
     std::string _upgraded_from_scheme;
     if (_uri("scheme")->is_string()) {
@@ -732,10 +733,7 @@ auto zpt::events::call<T>::resolve_uri() -> void {
     }
 
     bool _is_self{ false };
-    auto const& _options = _uri("scheme_options");
-    if (_options->is_array() && _options->size() != 0 && _options(0) == "uuid") {
-        _uri["is_stream"] = true;
-    }
+    if (zpt::uri::scheme::has_option(_uri, "uuid")) { _uri["is_stream"] = true; }
     else if (!_uri("scheme")->ok() || !_uri("domain")->ok() || !_uri("port")->ok()) {
         auto _found = this->__resolver->search(
           std::format("/{}{}",
@@ -755,14 +753,26 @@ auto zpt::events::call<T>::resolve_uri() -> void {
             if (!_uri("scheme")->ok()) { _uri["scheme"] = _provider(0)("protocols")("default"); }
             auto _scheme =
               _upgraded_from_scheme.empty() ? _uri("scheme")->string() : _upgraded_from_scheme;
-            expect(_provider(0)("protocols")("registered")(_scheme)("address")->ok(),
+
+            auto _info = _provider(0)("protocols")("registered")(_scheme);
+            if (_info("public")->ok()) { _info = _info("public"); }
+            expect(_info("address")->ok(),
                    "Provider " << _found(0)("provider_id") << " doesn't define an address for '"
                                << _scheme << "' transport");
-            expect(_provider(0)("protocols")("registered")(_scheme)("port")->ok(),
+            expect(_info("port")->ok(),
                    "Provider " << _found(0)("provider_id") << " doesn't define a port for '"
                                << _scheme << "' transport");
-            _uri["domain"] = _provider(0)("protocols")("registered")(_scheme)("address");
-            _uri["port"] = _provider(0)("protocols")("registered")(_scheme)("port");
+
+            _uri["domain"] = _info("address");
+            _uri["port"] = _info("port");
+            _uri["options"] = _info("options");
+            if (_upgraded_from_scheme.empty() && _info("path")->is_array()) {
+                (**_uri["path"]->array())
+                  .insert((**_uri["path"]->array()).begin(),
+                          (**_info("path")->array()).begin(),
+                          (**_info("path")->array()).end());
+                _uri["raw_path"] = zpt::uri::path::to_string(_uri);
+            }
         }
     }
 
@@ -825,16 +835,19 @@ auto zpt::events::call<T>::send_externally() -> zpt::events::state {
         auto _host = _uri("domain")->string();
         auto _port = _uri("port")->integer();
         try {
-            _stream = this->__polling->mute(std::format("{}://{}:{}", _scheme, _host, _port));
+            _stream = this->__polling->mute(
+              std::format("{}://{}:{}", zpt::uri::scheme::to_string(_uri), _host, _port));
             if (_stream == nullptr) { return zpt::events::retrigger; }
         }
         catch (zpt::NoSuchElementException const& _e) {
-            _stream =
-              zpt::make_stream<zpt::socketstream>(_scheme, _host, _port, zpt::NO_SSL, IPPROTO_TCP);
-            this
-              ->__polling //
-              ->listen_on(_stream)
-              .mute(_stream);
+            _stream = zpt::make_stream<zpt::socketstream>(
+              _scheme, _host, _port, zpt::uri::scheme::is_encrypted(_uri), IPPROTO_TCP);
+            if (!this
+                   ->__polling //
+                   ->listen_on(_stream)
+                   .mute(_stream)) {
+                return zpt::events::retrigger;
+            }
         }
     }
 

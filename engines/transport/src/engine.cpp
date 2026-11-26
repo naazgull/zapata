@@ -77,7 +77,7 @@ zpt::events::receive::receive(zpt::transports::engine::ptr _engine,
   , __stream{ _stream } {}
 
 zpt::events::receive::~receive() {
-    this->__polling->unmute(this->__stream);
+    if (!this->__polling->unmute(this->__stream)) { return; }
     for (auto& _event : this->__events) {
         this->__engine->dispatcher()->trigger(std::move(_event));
     }
@@ -95,8 +95,9 @@ auto zpt::events::receive::catch_error(std::exception const& _e,
     if (_reply != nullptr) {
         this->__events.push_back(
           std::move(_dispatcher->make<zpt::events::send>(this->__polling, this->__stream, _reply)));
+        return true;
     }
-    return true;
+    return false;
 }
 
 auto zpt::events::receive::catch_error(std::bad_alloc const& _e,
@@ -105,8 +106,9 @@ auto zpt::events::receive::catch_error(std::bad_alloc const& _e,
     if (_reply != nullptr) {
         this->__events.push_back(
           std::move(_dispatcher->make<zpt::events::send>(this->__polling, this->__stream, _reply)));
+        return true;
     }
-    return true;
+    return false;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
@@ -115,8 +117,9 @@ auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e,
     if (_reply != nullptr) {
         this->__events.push_back(
           std::move(_dispatcher->make<zpt::events::send>(this->__polling, this->__stream, _reply)));
+        return true;
     }
-    return true;
+    return false;
 }
 
 auto zpt::events::receive::check_upgrade(zpt::message _received,
@@ -262,15 +265,14 @@ auto zpt::events::send::catch_error(zpt::failed_expectation const&, zpt::events:
 }
 
 auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events::state {
-    try {
-        this->__polling->mute(this->__stream);
-    }
-    catch (zpt::NoSuchElementException const& _e) {
-        return zpt::events::abort;
-    }
-    catch (zpt::failed_expectation const& _e) {
+    if (!this->__polling->mute(this->__stream)) {
         if (this->__polling->is_alive(this->__stream->uuid())) { return zpt::events::retrigger; }
-        return zpt::events::abort;
+        else {
+            zlog("Cancelling message to '" << this->__stream->uri()
+                                           << "', stream is no longer alive",
+                 zpt::warning);
+            return zpt::events::abort;
+        }
     }
 
     auto _transport = zpt::TRANSPORT_LAYER() //
@@ -282,12 +284,7 @@ auto zpt::events::send::operator()(zpt::events::dispatcher::ptr) -> zpt::events:
         zlog("Stream failure on '" << this->__stream->uri() << "': " << _e.what(), zpt::error);
     }
 
-    try {
-        this->__polling->unmute(this->__stream);
-    }
-    catch (zpt::NoSuchElementException const& _e) {
-        return zpt::events::abort;
-    }
+    if (!this->__polling->unmute(this->__stream)) { return zpt::events::abort; }
 
     return zpt::events::finish;
 }
