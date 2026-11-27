@@ -60,7 +60,9 @@ auto zpt::mqtt_stream::close() -> zpt::mqtt_stream& {
 
 auto zpt::mqtt_stream::read_without_io(std::any& _out) -> zpt::mqtt_stream& {
     std::unique_lock _guard{ this->__mosq_mutex };
-    if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (this->__mosq == nullptr) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
 
     if (this->__buffer.size() == 0) {
         mosquitto_loop_read(this->__mosq, 1);
@@ -68,7 +70,7 @@ auto zpt::mqtt_stream::read_without_io(std::any& _out) -> zpt::mqtt_stream& {
     }
 
     if (this->__buffer.size() == 0) {
-        throw zpt::InterruptedException{ "control message received on MQTT socket" };
+        throw_with_line_nr(zpt::InterruptedException, "control message received on MQTT socket");
     }
 
     _out = std::make_any<zpt::message>(this->__buffer.back());
@@ -167,7 +169,9 @@ auto zpt::mqtt_stream::publish(zpt::message _payload) -> zpt::mqtt_stream& {
     // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
     std::unique_lock _guard{ this->__mosq_mutex };
     expect(this->__connected->load(), "Socket is disconnected, unable to publish message");
-    if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (this->__mosq == nullptr) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
 
     int _message_id{ 0 };
     errno = 0;
@@ -189,7 +193,9 @@ auto zpt::mqtt_stream::loop_misc() -> mqtt_stream& {
     if (!this->__connected->load()) { return (*this); }
 
     std::unique_lock _guard{ this->__mosq_mutex };
-    if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (this->__mosq == nullptr) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
     mosquitto_loop_misc(this->__mosq);
     return (*this);
 }
@@ -208,7 +214,9 @@ auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_st
         // Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic
         // subscription patterns.
         // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
-        if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+        if (this->__mosq == nullptr) {
+            throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+        }
 
         int _;
         errno = 0;
@@ -223,7 +231,9 @@ auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_st
 auto zpt::mqtt_stream::on_connect(struct mosquitto*, void* _ptr, int _rc) -> void {
     zpt::mqtt_stream::ptr _self =
       std::static_pointer_cast<zpt::mqtt_stream>(((zpt::mqtt_stream*)_ptr)->shared_from_this());
-    if (_self->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (_self->__mosq == nullptr) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
 
     _self->__connected->store(_rc == 0);
     _self->__fd = mosquitto_socket(_self->__mosq);

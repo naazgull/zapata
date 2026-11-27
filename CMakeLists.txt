@@ -127,9 +127,8 @@ add_subdirectory(storage/sqlite)
 add_subdirectory(storage/pgsql)
 add_subdirectory(network/mqtt)
 add_subdirectory(network/amqp)
-# add_subdirectory(storage/couchdb)
 add_subdirectory(storage/mongodb)
-# add_subdirectory(storage/redis)
+# add_subdirectory(cache/redis)
 
 # ------------------------------------------------------------------------
 # CMake package: find_package(zapata)

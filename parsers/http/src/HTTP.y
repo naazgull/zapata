@@ -145,8 +145,7 @@ int yylex(YYSTYPE* yylval, zpt::HTTPTokenizerLexer* ctx) {
 
 void yyerror(zpt::HTTPTokenizerLexer* ctx, char const* msg) {
     (void) msg;
-    throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") +
-                                    std::to_string(ctx->lineNr()));
+    throw_with_line_nr(zpt::SyntaxErrorException, "HTTP: Syntax error in line " << ctx->lineNr());
 }
 
 #pragma GCC diagnostic pop

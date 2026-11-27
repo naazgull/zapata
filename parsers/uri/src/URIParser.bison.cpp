@@ -1357,8 +1357,7 @@ yyreturnlab:
 int yylex(YYSTYPE*, zpt::URITokenizerLexer* ctx) { return ctx->lex(); }
 
 void yyerror(zpt::URITokenizerLexer* ctx, char const*) {
-    throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") +
-                                    std::to_string(ctx->lineNr()));
+    throw_with_line_nr(zpt::SyntaxErrorException, "URI: Syntax error in line " << ctx->lineNr());
 }
 
 #pragma GCC diagnostic pop

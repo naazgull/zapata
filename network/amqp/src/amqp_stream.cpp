@@ -71,12 +71,14 @@ auto zpt::amqp_stream::close() -> zpt::amqp_stream& {
 
 auto zpt::amqp_stream::read_without_io(std::any& _out) -> zpt::amqp_stream& {
     std::unique_lock _guard{ this->__driver_mutex };
-    if (!this->__connected->load()) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (!this->__connected->load()) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
 
     if (this->__buffer.size() == 0) { this->pump_io(); }
 
     if (this->__buffer.size() == 0) {
-        throw zpt::InterruptedException{ "control message received on AMQP socket" };
+        throw_with_line_nr(zpt::InterruptedException, "control message received on AMQP socket");
     }
 
     _out = std::make_any<zpt::message>(this->__buffer.back());
@@ -177,7 +179,9 @@ auto zpt::amqp_stream::is_connected() const -> bool { return this->__connected->
 
 auto zpt::amqp_stream::subscribe(std::string const& _topic) -> zpt::amqp_stream& {
     std::unique_lock _guard{ this->__driver_mutex };
-    if (!this->__connected->load()) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (!this->__connected->load()) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
     this->send_subscribe(_topic);
     this->__subscriptions.insert(_topic);
     return (*this);
@@ -198,7 +202,9 @@ auto zpt::amqp_stream::publish(zpt::message _payload) -> zpt::amqp_stream& {
     _oss.flush();
     auto _payload_str = _oss.str();
     std::unique_lock _guard{ this->__driver_mutex };
-    if (!this->__connected->load()) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (!this->__connected->load()) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
 
     auto _content_type = _payload->headers()("Content-Type");
     auto* _msg = pn_message();
@@ -228,7 +234,9 @@ auto zpt::amqp_stream::publish(zpt::message _payload) -> zpt::amqp_stream& {
 
 auto zpt::amqp_stream::loop_misc() -> amqp_stream& {
     std::unique_lock _guard{ this->__driver_mutex };
-    if (!this->__connected->load()) { throw zpt::ClosedException("socket has been shutdown"); }
+    if (!this->__connected->load()) {
+        throw_with_line_nr(zpt::ClosedException, "socket has been shutdown");
+    }
     this->pump_io();
     return (*this);
 }

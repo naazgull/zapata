@@ -217,7 +217,8 @@ auto zpt::net::transport::websocket::process_incoming_request(zpt::stream _strea
             _message->body() = _e.__original;
             return _message;
         }
-        throw zpt::SyntaxErrorException{ std::format("Unparsable message: {}", _e.__original) };
+        throw_with_line_nr(zpt::SyntaxErrorException,
+                           std::format("Unparsable message: {}", _e.__original));
     }
 }
 

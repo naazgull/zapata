@@ -62,7 +62,7 @@ auto zpt::basic_transport::receive(zpt::stream _stream) const -> zpt::message {
     }
     catch (zpt::ClosedException const& _e) {
         _stream->state(zpt::stream_state::ERRORING_OUT);
-        throw std::ios_base::failure{ _e.what() };
+        throw_with_line_nr(std::ios_base::failure, _e.what());
     }
     catch (std::ios_base::failure const& _e) {
         _stream->state(zpt::stream_state::ERRORING_OUT);
@@ -93,7 +93,7 @@ auto zpt::basic_transport::send(zpt::stream _stream, zpt::message _to_send) cons
     }
     catch (zpt::ClosedException const& _e) {
         _stream->state(zpt::stream_state::ERRORING_OUT);
-        throw std::ios_base::failure{ _e.what() };
+        throw_with_line_nr(std::ios_base::failure, _e.what());
     }
     catch (std::ios_base::failure const& _e) {
         _stream->state(zpt::stream_state::ERRORING_OUT);
@@ -222,8 +222,8 @@ auto zpt::network::layer::add(std::string const& _scheme,
 auto zpt::network::layer::get(std::string const& _scheme) const -> const zpt::transport {
     auto _found = this->__underlying.find(_scheme);
     if (_found == this->__underlying.end()) {
-        throw zpt::NoMoreElementsException(std::string{ "there is no such transport '" } + _scheme +
-                                           std::string{ "'" });
+        throw_with_line_nr(zpt::NoMoreElementsException,
+                           "there is no such transport '" << _scheme << "'");
     }
     return _found->second;
 }

@@ -179,14 +179,14 @@ auto zpt::polling::mute(zpt::stream _stream) -> bool {
 
 auto zpt::polling::mute(zpt::uuid const& _id) -> zpt::stream {
     auto _stream = this->__polled_streams.get(_id);
-    if (_stream == nullptr) { throw zpt::NoSuchElementException{ "No such stream" }; }
+    if (_stream == nullptr) { throw_with_line_nr(zpt::NoSuchElementException, "No such stream"); }
     if (this->mute(_stream)) { return _stream; }
     return nullptr;
 }
 
 auto zpt::polling::mute(std::string const& _uri) -> zpt::stream {
     auto _stream = this->__polled_streams.get(_uri);
-    if (_stream == nullptr) { throw zpt::NoSuchElementException{ "No such stream" }; }
+    if (_stream == nullptr) { throw_with_line_nr(zpt::NoSuchElementException, "No such stream"); }
     if (this->mute(_stream)) { return _stream; }
     return nullptr;
 }

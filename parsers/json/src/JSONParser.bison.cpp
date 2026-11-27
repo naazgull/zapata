@@ -1434,8 +1434,7 @@ yyreturnlab:
 int yylex(YYSTYPE*, zpt::JSONTokenizerLexer* ctx) { return ctx->lex(); }
 
 void yyerror(zpt::JSONTokenizerLexer* ctx, char const*) {
-    throw zpt::SyntaxErrorException(std::string("JSON: Syntax error in line ") +
-                                    std::to_string(ctx->lineNr()));
+    throw_with_line_nr(zpt::SyntaxErrorException, "JSON: Syntax error in line " << ctx->lineNr());
 }
 
 #pragma GCC diagnostic pop

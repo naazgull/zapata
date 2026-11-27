@@ -98,8 +98,8 @@ int yylex(YYSTYPE*, zpt::FunctionalTokenizerLexer* ctx) {
 }
 
 void yyerror(zpt::FunctionalTokenizerLexer* ctx, char const*) {
-    throw zpt::SyntaxErrorException(std::string("Functional: Syntax error in line ") +
-                                     std::to_string(ctx->lineNr()));
+    throw_with_line_nr(zpt::SyntaxErrorException,
+                       "Functional: Syntax error in line " << ctx->lineNr());
 }
 
 #pragma GCC diagnostic pop

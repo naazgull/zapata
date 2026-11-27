@@ -45,7 +45,7 @@ namespace zpt {
  *
  * @par Example Usage
  * @code
- * throw zpt::exception("Something went wrong");
+ * throw_with_line_number( zpt::exception,"Something went wrong");
  * @endcode
  *
  * @see zpt::ExpectationException

@@ -228,7 +228,7 @@ void URILexerBase::pushStream(std::string const& name) {
     std::istream* streamPtr = new std::ifstream(name);
     if (!*streamPtr) {
         delete streamPtr;
-        throw std::runtime_error("Cannot read " + name);
+        throw_with_line_nr(std::runtime_error, "Cannot read " + name);
     }
     p_pushStream(name, streamPtr);
 }
@@ -263,7 +263,7 @@ std::string URILexerBase::chgWorkingDir(std::string const& name) // any name
 void URILexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
     if (d_streamStack.size() == s_maxSizeofStreamStack_) {
         delete streamPtr;
-        throw std::length_error("Max stream stack size exceeded");
+        throw_with_line_nr(std::length_error, "Max stream stack size exceeded");
     }
 
     d_filename = name;

@@ -647,7 +647,7 @@ auto zpt::basic_stream::read(T& _out) -> zpt::basic_stream& {
             std::any _without_io;
             this->read_without_io(_without_io);
             if (_without_io.has_value()) { _out = std::any_cast<T>(_without_io); }
-            else { throw zpt::InterruptedException{ "Empty message" }; }
+            else { throw_with_line_nr(zpt::InterruptedException, "Empty message"); }
         }
         return (*this);
     }

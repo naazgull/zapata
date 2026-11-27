@@ -976,7 +976,7 @@ template<typename Char>
 auto zpt::basic_socketbuf<Char>::report_error() -> void {
     this->__error_code = errno;
     this->__error_string = std::string(std::strerror(errno));
-    throw zpt::ClosedException(this->__error_string);
+    throw_with_line_nr(zpt::ClosedException, this->__error_string);
 }
 
 template<typename Char>
@@ -986,7 +986,7 @@ auto zpt::basic_socketbuf<Char>::report_ssl_error() -> void {
     this->__error_code = ERR_get_error();
     this->__error_string = zpt::ssl_error_print(this->__error_code);
     zlog(this->__error_string, zpt::error);
-    throw zpt::ClosedException(this->__error_string);
+    throw_with_line_nr(zpt::ClosedException, this->__error_string);
 }
 
 template<typename Char>
@@ -1337,7 +1337,7 @@ auto zpt::basic_socketstream<Char>::report_error() -> void {
     this->__buf.error_code() = errno;
     this->__buf.error_string() =
       std::format("{}: {}", std::strerror(errno), static_cast<std::string>(*this));
-    throw zpt::ClosedException(this->__buf.error_string());
+    throw_with_line_nr(zpt::ClosedException, this->__buf.error_string());
 }
 
 template<typename Char>
@@ -1346,7 +1346,7 @@ auto zpt::basic_socketstream<Char>::report_ssl_error() -> void {
     this->__is_error = true;
     this->__buf.error_code() = ERR_get_error();
     this->__buf.error_string() = zpt::ssl_error_print(this->__buf.error_code());
-    throw zpt::ClosedException(this->__buf.error_string());
+    throw_with_line_nr(zpt::ClosedException, this->__buf.error_string());
 }
 
 template<typename Char>
@@ -1445,7 +1445,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::string const& _address, std:
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = INVALID_FD;
-        throw zpt::ClosedException(std::strerror(errno));
+        throw_with_line_nr(zpt::ClosedException, std::strerror(errno));
     }
 
     struct sockaddr_in _serv_addr;
@@ -1464,7 +1464,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::string const& _address, std:
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = INVALID_FD;
-        throw zpt::ClosedException(std::strerror(errno));
+        throw_with_line_nr(zpt::ClosedException, std::strerror(errno));
     }
     ::listen(this->__sockfd, 100);
     return true;
@@ -1486,7 +1486,7 @@ auto zpt::basic_serversocketstream<Char>::bind(std::string const& _path) -> bool
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = INVALID_FD;
-        throw zpt::ClosedException(std::strerror(errno));
+        throw_with_line_nr(zpt::ClosedException, std::strerror(errno));
     }
     ::listen(this->__sockfd, 100);
     return true;
@@ -1503,7 +1503,8 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
               ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
 
             if (this->__sockfd == INVALID_FD) {
-                throw zpt::ClosedException("server socket file descriptor has been closed");
+                throw_with_line_nr(zpt::ClosedException,
+                                   "server socket file descriptor has been closed");
             }
 
             expect(_newsockfd > 0,
@@ -1524,7 +1525,8 @@ auto zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
             auto _newsockfd = ::accept(this->__sockfd, nullptr, nullptr);
 
             if (this->__sockfd == INVALID_FD) {
-                throw zpt::ClosedException("server socket file descriptor has been closed");
+                throw_with_line_nr(zpt::ClosedException,
+                                   "server socket file descriptor has been closed");
             }
 
             expect(_newsockfd > 0, "error while accepting new connection");
@@ -1580,7 +1582,7 @@ auto zpt::basic_ssl_serversocketstream<Char>::accept() -> zpt::stream {
       ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
 
     if (this->__sockfd == INVALID_FD) {
-        throw zpt::ClosedException("server socket file descriptor has been closed");
+        throw_with_line_nr(zpt::ClosedException, "server socket file descriptor has been closed");
     }
     expect(_newsockfd > 0,
            "error while accepting new connection: " << std::string(std::strerror(errno)));

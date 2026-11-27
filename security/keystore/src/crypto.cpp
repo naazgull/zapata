@@ -23,6 +23,7 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <stdexcept>
+#include <zapata/base/expect.h>
 #include <zapata/keystore/crypto.h>
 
 namespace zpt {
@@ -32,7 +33,7 @@ namespace crypto {
 auto random_bytes(std::vector<unsigned char>& _out, std::size_t _size) -> void {
     _out.resize(_size);
     if (_size > 0 && RAND_bytes(_out.data(), static_cast<int>(_size)) != 1) {
-        throw std::runtime_error("keystore: failed to generate random bytes");
+        throw_with_line_nr(std::runtime_error, "keystore: failed to generate random bytes");
     }
 }
 
@@ -47,7 +48,9 @@ auto seal(std::vector<unsigned char> const& _key,
     _ciphertext.assign(_plaintext.size(), 0);
 
     EVP_CIPHER_CTX* _ctx = EVP_CIPHER_CTX_new();
-    if (_ctx == nullptr) { throw std::runtime_error("keystore: failed to create cipher context"); }
+    if (_ctx == nullptr) {
+        throw_with_line_nr(std::runtime_error, "keystore: failed to create cipher context");
+    }
 
     bool _ok = EVP_EncryptInit_ex(_ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) == 1 &&
                EVP_CIPHER_CTX_ctrl(
@@ -70,7 +73,7 @@ auto seal(std::vector<unsigned char> const& _key,
     }
 
     EVP_CIPHER_CTX_free(_ctx);
-    if (!_ok) { throw std::runtime_error("keystore: AES-256-GCM encryption failed"); }
+    if (!_ok) { throw_with_line_nr(std::runtime_error, "keystore: AES-256-GCM encryption failed"); }
 }
 
 auto open(std::vector<unsigned char> const& _key,
@@ -123,7 +126,8 @@ auto derive_key(std::string const& _passphrase,
                           EVP_sha256(),
                           static_cast<int>(key_size),
                           _key.data()) != 1) {
-        throw std::runtime_error("keystore: PBKDF2-HMAC-SHA256 key derivation failed");
+        throw_with_line_nr(std::runtime_error,
+                           "keystore: PBKDF2-HMAC-SHA256 key derivation failed");
     }
 }
 

@@ -96,7 +96,7 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
         if (_term != 0) {
             auto _message = zpt::prolog::term_to_string(_term);
             PL_clear_exception();
-            throw zpt::exception{ _message };
+            throw_with_line_number(zpt::exception, _message);
         }
         expect(_result != PL_S_FALSE, "unable to properly load `" << _external_path << "`");
     }
@@ -112,7 +112,7 @@ auto zpt::prolog::bridge::setup_module(zpt::json _conf, std::string _external_pa
                 _oss << "\n    " << (_idx + 1) << ". " << _message;
             }
             _oss << std::flush;
-            throw zpt::exception{ _oss.str() };
+            throw_with_line_number(zpt::exception, _oss.str());
         }
     }
 
@@ -209,7 +209,7 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
             if (_term != 0) {
                 auto _message = zpt::prolog::term_to_string(_term);
                 PL_clear_exception();
-                throw zpt::exception{ _message };
+                throw_with_line_number(zpt::exception, _message);
             }
         }
     }
@@ -228,7 +228,7 @@ auto zpt::prolog::bridge::execute(zpt::prolog::term _to_call) -> zpt::prolog::br
             if (_term != 0) {
                 auto _message = zpt::prolog::term_to_string(_term);
                 PL_clear_exception();
-                throw zpt::exception{ _message };
+                throw_with_line_number(zpt::exception, _message);
             }
         }
 

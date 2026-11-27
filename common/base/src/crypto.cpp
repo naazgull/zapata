@@ -1,3 +1,4 @@
+#include <zapata/base/expect.h>
 #include <zapata/crypto.h>
 
 zpt::aes_crypto::aes_crypto() {
@@ -15,11 +16,11 @@ zpt::aes_crypto::aes_crypto(std::string const& _key_str, std::string const& _iv_
 
 auto zpt::aes_crypto::encrypt(std::string const& _plaintext) -> std::vector<unsigned char> {
     EVP_CIPHER_CTX* _ctx = EVP_CIPHER_CTX_new();
-    if (!_ctx) { throw std::runtime_error("Failed to create cipher context"); }
+    if (!_ctx) { throw_with_line_nr(std::runtime_error, "Failed to create cipher context"); }
 
     if (EVP_EncryptInit_ex(_ctx, EVP_aes_256_cbc(), nullptr, this->__key, this->__iv) != 1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Failed to initialize encryption");
+        throw_with_line_nr(std::runtime_error, "Failed to initialize encryption");
     }
 
     std::vector<unsigned char> _ciphertext(_plaintext.length() + AES_BLOCK_SIZE);
@@ -32,13 +33,13 @@ auto zpt::aes_crypto::encrypt(std::string const& _plaintext) -> std::vector<unsi
                           reinterpret_cast<const unsigned char*>(_plaintext.c_str()),
                           _plaintext.length()) != 1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Encryption failed");
+        throw_with_line_nr(std::runtime_error, "Encryption failed");
     }
     _ciphertext_len = _len;
 
     if (EVP_EncryptFinal_ex(_ctx, _ciphertext.data() + _len, &_len) != 1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Final encryption failed");
+        throw_with_line_nr(std::runtime_error, "Final encryption failed");
     }
     _ciphertext_len += _len;
 
@@ -50,11 +51,11 @@ auto zpt::aes_crypto::encrypt(std::string const& _plaintext) -> std::vector<unsi
 
 auto zpt::aes_crypto::decrypt(std::vector<unsigned char> const& _ciphertext) -> std::string {
     EVP_CIPHER_CTX* _ctx = EVP_CIPHER_CTX_new();
-    if (!_ctx) { throw std::runtime_error("Failed to create cipher context"); }
+    if (!_ctx) { throw_with_line_nr(std::runtime_error, "Failed to create cipher context"); }
 
     if (EVP_DecryptInit_ex(_ctx, EVP_aes_256_cbc(), nullptr, this->__key, this->__iv) != 1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Failed to initialize decryption");
+        throw_with_line_nr(std::runtime_error, "Failed to initialize decryption");
     }
 
     std::vector<unsigned char> _plaintext(_ciphertext.size() + AES_BLOCK_SIZE);
@@ -64,13 +65,13 @@ auto zpt::aes_crypto::decrypt(std::vector<unsigned char> const& _ciphertext) -> 
     if (EVP_DecryptUpdate(_ctx, _plaintext.data(), &_len, _ciphertext.data(), _ciphertext.size()) !=
         1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Decryption failed");
+        throw_with_line_nr(std::runtime_error, "Decryption failed");
     }
     _plaintext_len = _len;
 
     if (EVP_DecryptFinal_ex(_ctx, _plaintext.data() + _len, &_len) != 1) {
         EVP_CIPHER_CTX_free(_ctx);
-        throw std::runtime_error("Final decryption failed");
+        throw_with_line_nr(std::runtime_error, "Final decryption failed");
     }
     _plaintext_len += _len;
 
