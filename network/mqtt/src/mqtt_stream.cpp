@@ -208,7 +208,6 @@ auto zpt::mqtt_stream::send_subscribe(std::string const& _topic) -> zpt::mqtt_st
         // Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic
         // subscription patterns.
         // http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
-        std::unique_lock _guard{ this->__mosq_mutex };
         if (this->__mosq == nullptr) { throw zpt::ClosedException("socket has been shutdown"); }
 
         int _;

@@ -68,6 +68,13 @@
         throw zpt::ExpectationException(__OSS__.str(), #x, __LINE__, __FILE__, c);                 \
     }
 
+#define throw_with_line_nr(x, y)                                                                   \
+    {                                                                                              \
+        std::ostringstream __OSS__;                                                                \
+        __OSS__ << y << " (" << __FILE__ << ":" << __LINE__ << ")" << std::flush;                  \
+        throw x(__OSS__.str());                                                                    \
+    }
+
 namespace zpt {
 
 /**

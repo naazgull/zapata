@@ -77,7 +77,7 @@ zpt::events::receive::receive(zpt::transports::engine::ptr _engine,
   , __stream{ _stream } {}
 
 zpt::events::receive::~receive() {
-    if (!this->__polling->unmute(this->__stream)) { return; }
+    this->__polling->unmute(this->__stream);
     for (auto& _event : this->__events) {
         this->__engine->dispatcher()->trigger(std::move(_event));
     }

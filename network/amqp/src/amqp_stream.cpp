@@ -167,7 +167,7 @@ auto zpt::amqp_stream::connect() -> amqp_stream& {
         zlog("Connected to " << this->__uri, zpt::trace);
     }
     catch (...) {
-        if (this->__driver != nullptr) { this->close(); }
+        this->close();
         throw;
     }
     return (*this);
@@ -270,6 +270,11 @@ auto zpt::amqp_stream::pump_io() -> void {
             break;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
+        if (errno == EPIPE) {
+            this->close();
+            throw_with_line_nr(zpt::ClosedException,
+                               "Error while reading: E(" << errno << ") " << std::strerror(errno));
+        }
         expect(errno == 0, "Error while reading: E(" << errno << ") " << std::strerror(errno));
     }
 
@@ -286,6 +291,11 @@ auto zpt::amqp_stream::pump_io() -> void {
             continue;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
+        if (errno == EPIPE) {
+            this->close();
+            throw_with_line_nr(zpt::ClosedException,
+                               "Error while writing: E(" << errno << ") " << std::strerror(errno));
+        }
         expect(errno == 0, "Error while writing: E(" << errno << ") " << std::strerror(errno));
     }
 }
