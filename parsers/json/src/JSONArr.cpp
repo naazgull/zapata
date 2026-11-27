@@ -313,12 +313,12 @@ auto zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) const -> JSONArrT 
         if (!_first) { _out.append(","); }
         _out.append("\n");
         _first = false;
-        _out.append(std::string(_n_tabs + 1, '\t'));
+        _out.append(std::string((_n_tabs + 1) * 4, ' '));
         _i->prettify(_out, _n_tabs + 1);
     }
     if (!_first) {
         _out.append("\n");
-        _out.append(std::string(_n_tabs, '\t'));
+        _out.append(std::string(_n_tabs * 4, ' '));
     }
     _out.append("]");
     return (*this);
@@ -331,10 +331,10 @@ auto zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONArrT
         if (!_first) { _out << ","; }
         _out << "\n ";
         _first = false;
-        _out << std::string(_n_tabs + 1, '\t');
+        _out << std::string((_n_tabs + 1) * 4, ' ');
         _i->prettify(_out, _n_tabs + 1);
     }
-    if (!_first) { _out << "\n" << std::string(_n_tabs, '\t'); }
+    if (!_first) { _out << "\n" << std::string(_n_tabs * 4, ' '); }
     _out << "]";
     return (*this);
 }
