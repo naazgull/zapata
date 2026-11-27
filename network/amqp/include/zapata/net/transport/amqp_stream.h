@@ -65,13 +65,9 @@ class amqp_stream : public basic_stream {
      * @return Reference to this stream.
      */
     auto operator<<(ostream_manipulator _in) -> amqp_stream&;
-    /** @brief Closes the AMQP connection, releasing all resources.
-
-     Unregisters subscriptions, closes the proton connection, and resets
-     all internal state.
-     @return Reference to this stream.
-     @throws ClosedException if the connection is not active.
-     */
+    /** @brief Closes the AMQP connection, releasing all resources. Unregisters subscriptions,
+        closes the proton connection, and resets all internal state.
+     * @return Reference to this stream. */
     auto close() -> amqp_stream& override;
     /**
      * @brief Reads content from the internal buffer without I/O.
@@ -176,5 +172,9 @@ class amqp_stream : public basic_stream {
      * @param _level Log severity level.
      * @return void */
     auto on_log(std::string const& _message, zpt::LogLevel _level) -> void;
+    /** @brief Closes the AMQP connection, releasing all resources. Unregisters subscriptions,
+        closes the proton connection, and resets all internal state.
+     * @return Reference to this stream. */
+    auto dispose() -> amqp_stream&;
 };
 } // namespace zpt

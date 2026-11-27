@@ -49,24 +49,8 @@ auto zpt::amqp_stream::operator=(int) -> zpt::amqp_stream& { return (*this); }
 auto zpt::amqp_stream::operator<<(ostream_manipulator) -> zpt::amqp_stream& { return (*this); }
 
 auto zpt::amqp_stream::close() -> zpt::amqp_stream& {
-    zlog("Closing connection to " << this->__uri, zpt::trace);
-
     std::unique_lock _guard{ this->__driver_mutex };
-    if (this->__driver != nullptr) {
-        pn_connection_driver_close(this->__driver.get());
-        pn_connection_driver_destroy(this->__driver.get());
-        this->__driver.reset();
-    }
-
-    this->__connected->store(false);
-    this->__sender = nullptr;
-    this->__receiver = nullptr;
-
-    this->__underlying.reset(nullptr);
-    this->__fd = -1;
-    this->__state = zpt::stream_state::IDLE;
-
-    return (*this);
+    return this->dispose();
 }
 
 auto zpt::amqp_stream::read_without_io(std::any& _out) -> zpt::amqp_stream& {
@@ -279,7 +263,7 @@ auto zpt::amqp_stream::pump_io() -> void {
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
         if (errno == EPIPE) {
-            this->close();
+            this->dispose();
             throw_with_line_nr(zpt::ClosedException,
                                "Error while reading: E(" << errno << ") " << std::strerror(errno));
         }
@@ -300,7 +284,7 @@ auto zpt::amqp_stream::pump_io() -> void {
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
         if (errno == EPIPE) {
-            this->close();
+            this->dispose();
             throw_with_line_nr(zpt::ClosedException,
                                "Error while writing: E(" << errno << ") " << std::strerror(errno));
         }
@@ -394,4 +378,24 @@ auto zpt::amqp_stream::on_delivery(pn_event_t* _event) -> void {
 
 auto zpt::amqp_stream::on_log(std::string const& _message, zpt::LogLevel _level) -> void {
     zlog(_message, _level);
+}
+
+auto zpt::amqp_stream::dispose() -> zpt::amqp_stream& {
+    zlog("Closing connection to " << this->__uri, zpt::trace);
+
+    if (this->__driver != nullptr) {
+        pn_connection_driver_close(this->__driver.get());
+        pn_connection_driver_destroy(this->__driver.get());
+        this->__driver.reset();
+    }
+
+    this->__connected->store(false);
+    this->__sender = nullptr;
+    this->__receiver = nullptr;
+
+    this->__underlying.reset(nullptr);
+    this->__fd = -1;
+    this->__state = zpt::stream_state::IDLE;
+
+    return (*this);
 }
